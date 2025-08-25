@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/configurations
+      # true -> docker environment will override it
+      # false -> we trust the config server we don't override configuration
+      override-system-properties: false
+
+
+server:
+  port: 8888
+
+# we don't need to register the config to the eureka discovery server
+eureka:
+  client:
+    fetch-registry: false
+    register-with-eureka: false

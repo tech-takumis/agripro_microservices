@@ -1,0 +1,72 @@
+services:
+
+  postgres:
+    container_name: agripro_db
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: agripro
+      POSTGRES_PASSWORD: agripro
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - agripro_postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - agripro_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U agripro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+#  Kafka Service
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 200
+    ports:
+      - 22181:2181
+    networks:
+      - agripro_network
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "echo ruok | nc -w 2 localhost 2181 | grep imok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka:9092", "--list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+    networks:
+      - agripro_network
+
+
+networks:
+  agripro_network:
+    driver: bridge
+    name: agripro_network
+
+volumes:
+  agripro_postgres:

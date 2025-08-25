@@ -1,0 +1,12 @@
+# TODO Note: This is a global config that so every service that declare the config server will override this
+# TODO       that is why we declare here the common configuration for each service
+spring:
+  application:
+    name: global-config
+  main:
+    lazy-initialization: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
