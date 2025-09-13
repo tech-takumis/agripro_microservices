@@ -1,5 +1,7 @@
-services:
+version: '3.8'
 
+services:
+  # 🐘 Postgres
   postgres:
     container_name: agripro_db
     image: postgres:latest
@@ -20,58 +22,57 @@ services:
       timeout: 5s
       retries: 5
 
-#  Kafka Service
+  # 🐝 Zookeeper (reused from local)
   zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 200
     ports:
-      - 22181:2181
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     networks:
       - agripro_network
-    healthcheck:
-      test: [ "CMD", "bash", "-c", "echo ruok | nc -w 2 localhost 2181 | grep imok" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    restart: unless-stopped
 
+  # 🦜 Kafka (same configuration as local)
   kafka:
+    image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
-    image: confluentinc/cp-kafka:latest
-    ports:
-      - 9092:9092
+    hostname: kafka
     depends_on:
       - zookeeper
+    ports:
+      - "29092:29092"  # use one advertised port for host apps
     environment:
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - agripro_network
+    restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka:9092", "--list" ]
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:29092", "--list" ]
       interval: 10s
       timeout: 10s
       retries: 10
 
-    networks:
-      - agripro_network
-
+  # ⚙ Config Server
   config-server:
-    image: config-server:latest
-    container_name: config-server
     build:
       context: ./services/config-server
       dockerfile: Dockerfile
-    networks:
-      - agripro_network
+    image: config-server:latest
+    container_name: config-server
     ports:
       - 8888:8888
+    networks:
+      - agripro_network
     environment:
       SPRING_APPLICATION_NAME: config-server
     volumes:
@@ -80,13 +81,15 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
       interval: 10s
       timeout: 5s
+      retries: 5
 
+  # 🔎 Discovery Server
   discovery-server:
-    image: discovery-server:latest
-    container_name: discovery-server
     build:
       context: ./services/discovery-server
       dockerfile: Dockerfile
+    image: discovery-server:latest
+    container_name: discovery-server
     ports:
       - 8761:8761
     networks:
@@ -95,20 +98,22 @@ services:
       config-server:
         condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_APPLICATION_NAME=discovery-server
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_APPLICATION_NAME: discovery-server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       timeout: 5s
+      retries: 5
 
+  # 👤 User Service
   user-service:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
     image: user-service:latest
     container_name: user-service
-    build:
-      context: ./services/user-service
-      dockerfile: Dockerfile
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -128,52 +133,26 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8010/actuator/health" ]
       interval: 10s
       timeout: 5s
+      retries: 5
 
-  application-service:
-    image: application-service:latest
-    container_name: application-service
+  # 🌐 Gateway Service
+  gateway-service:
     build:
-      context: ./services/application-service
+      context: ./services/gateway
       dockerfile: Dockerfile
+    image: gateway-service:latest
+    container_name: gateway-service
     depends_on:
       discovery-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
-    networks:
-      - agripro_network
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_APPLICATION_NAME: application-service
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agripro_application
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8020/actuator/health" ]
-      interval: 10s
-      timeout: 5s
-
-  gateway-service:
-    image: gateway-service:latest
-    container_name: gateway-service
-    build:
-      context: ./services/gateway-service
-      dockerfile: Dockerfile
-    networks:
-      - agripro_network
-    depends_on:
-       discovery-server:
-         condition: service_healthy
-       config-server:
-        condition: service_healthy
-       application-service:
-        condition: service_started
-       user-service:
+      user-service:
         condition: service_started
     ports:
       - 9000:9000
+    networks:
+      - agripro_network
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_APPLICATION_NAME: gateway-service
@@ -183,6 +162,7 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/actuator/health" ]
       interval: 10s
       timeout: 5s
+      retries: 5
 
 networks:
   agripro_network:

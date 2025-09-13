@@ -1,20 +1,53 @@
 spring:
-  application:
-    name: application-service
+  servlet:
+    multipart:
+      max-file-size: 50MB        # individual file size limit
+      max-request-size: 100MB    # total request size limit
   datasource:
     url: jdbc:postgresql://localhost:5432/agripro_application
     username: agripro
     password: agripro
     driver-class-name: org.postgresql.Driver
   jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    generate-ddl: true
+    database: postgresql
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
-    database: postgresql
+  kafka:
+    bootstrap-servers: localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract
+        spring.json.add.type.headers: true
+    consumer:
+      group-id: application-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.hashjosh.kafkacommon"
+        spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract,verificationContract:com.hashjosh.kafkacommon.verification.VerificationContract
+
+token:
+  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+  accessTokenExpirationMs: 14400000                # 4 hours
+  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
+  refreshTokenExpirationMs: 86400000               # 1 day
+  refreshTokenExpirationRememberMeMs: 345600000
+
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -25,13 +58,7 @@ management:
     health:
       show-details: always
 
-jwt:
-  cookieName: jwt
-  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
-  expiration: 86400000
-
-frontend:
-  url: http://localhost:3000
 
 server:
-  port: 8020
+  port: 8010
+

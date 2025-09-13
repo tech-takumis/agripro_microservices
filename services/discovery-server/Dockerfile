@@ -5,7 +5,6 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Step 2: Run the jar with JDK
 FROM eclipse-temurin:21-jdk
 COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]

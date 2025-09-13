@@ -12,7 +12,6 @@ spring:
       # false -> we trust the config server we don't override configuration
       override-system-properties: false
 
-
 server:
   port: 8888
 
@@ -21,3 +20,4 @@ eureka:
   client:
     fetch-registry: false
     register-with-eureka: false
+

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: john
+      changes:
+        - dropNotNullConstraint:
+            tableName: refresh_tokens
+            columnName: created_at
+            columnDataType: timestamp

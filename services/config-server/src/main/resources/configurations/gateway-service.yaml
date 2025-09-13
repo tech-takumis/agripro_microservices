@@ -1,6 +1,8 @@
 spring:
   cloud:
     gateway:
+      default-filters:
+        - RemoveRequestHeader=Cookie
       server:
         webflux:
           discovery:
@@ -11,14 +13,55 @@ spring:
             - id: user-service
               uri: lb://user-service
               predicates:
-                - Path=/api/v1/users/**,/api/v1/auth/**,/api/v1/roles/**,/api/v1/authorities/**
+                - Path=/api/v1/profiles/**,/api/v1/users/**,/api/v1/auth/**
+
             - id: application-service
               uri: lb://application-service
               predicates:
-                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,
+                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,\
+
+            - id: document-service
+              uri: lb://document-service
+              predicates:
+                - Path=/api/v1/documents/**
+
+            - id: insurance-service
+              uri: lb://insurance-service
+              predicates:
+                - Path=/api/v1/documents/**
+
+            - id: verification-service
+              uri: lb://verification-service
+              predicates:
+                - Path=/api/v1/verify/**
+
+            - id: workflow-service
+              uri: lb://workflow-service
+              predicates:
+                - Path=/api/v1/workflow/**
+
+            - id: role-service
+              uri: lb://role-service
+              predicates:
+                - Path=/api/v1/roles/**,/api/v1/authorities/**
+
+token:
+  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+  accessTokenExpirationMs: 14400000                # 4 hours
+  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
+  refreshTokenExpirationMs: 86400000               # 1 day
+  refreshTokenExpirationRememberMeMs: 345600000
+
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
 
 server:
-  port: 9000
+  port: 9001
 
 management:
   endpoints:
@@ -29,7 +72,5 @@ management:
     health:
       show-details: always
 
-jwt:
-  cookieName: jwt
-  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
-  expiration: 86400000
+
+
