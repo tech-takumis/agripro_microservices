@@ -1,10 +1,10 @@
 package com.hashjosh.users.wrapper;
 
 import com.hashjosh.users.dto.UserRegistrationRequest;
-import com.hashjosh.users.entity.UserType;
+import com.hashjosh.users.entity.TenantType;
 
 public record UserRegistrationRequestWrapper (
-        UserType userType,
+        TenantType tenantType,
         UserRegistrationRequest request
 ){
 }

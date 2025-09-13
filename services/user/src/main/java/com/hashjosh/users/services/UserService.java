@@ -2,11 +2,15 @@ package com.hashjosh.users.services;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.users.config.CustomUserDetails;
+import com.hashjosh.users.dto.AuthenticatedResponse;
 import com.hashjosh.users.dto.LoginRequest;
 import com.hashjosh.users.dto.LoginResponse;
+import com.hashjosh.users.entity.Role;
+import com.hashjosh.users.entity.TenantType;
 import com.hashjosh.users.entity.User;
-import com.hashjosh.users.entity.UserType;
 import com.hashjosh.users.exception.UserException;
+import com.hashjosh.users.mapper.UserMapper;
+import com.hashjosh.users.repository.RoleRepository;
 import com.hashjosh.users.repository.UserRepository;
 import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import jakarta.annotation.PostConstruct;
@@ -19,17 +23,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserServiceRefreshTokenStore refreshTokenStore;
+    private final UserMapper userMapper;
+    private final RoleRepository repository;
 
     @PostConstruct
     public void init() {
@@ -46,12 +53,24 @@ public class UserService {
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         User user = userDetails.getUser();
 
+        Set<String> roles = new HashSet<>();
+        Set<String> permissions = new HashSet<>();
+
+        user.getRoles().forEach(role -> {
+            role.getPermissions().forEach(permission -> {
+                permissions.add(permission.getName());
+            });
+
+            roles.add(role.getName());
+        });
+
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
                 user.getId(),
                 user.getUsername(),
                 tenantId,
-                Map.of("role", user.getUserType().name()),
+                Map.of("roles",roles, "permissions",permissions,
+                        "email", user.getEmail()),
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
@@ -69,23 +88,33 @@ public class UserService {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
-        User user = User.builder()
-                .username(wrapper.request().getUsername())
-                .password(passwordEncoder.encode(wrapper.request().getPassword()))
-                .firstName(wrapper.request().getFirstName())
-                .lastName(wrapper.request().getLastName())
-                .email(wrapper.request().getEmail())
-                .phoneNumber(wrapper.request().getPhoneNumber())
-                .address(wrapper.request().getAddress())
-                .userType(wrapper.userType())
-                .build();
+        Set<Role> roles = new HashSet<>();
+
+        wrapper.request().getRolesId().forEach(roleId -> {
+            Role role = repository.findById(roleId).orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
+            roles.add(role);
+        });
+
+        User user = userMapper.toEntity(wrapper, roles);
+        user.setRoles(roles);
 
         return userRepository.save(user);
     }
 
-    public List<User> getUsersByType(UserType userType) {
-        return userRepository.findByUserType(userType);
+    public List<User> getUsersByType(TenantType tenantType) {
+        return userRepository.findByTenantType(tenantType);
     }
 
 
+    @Transactional(readOnly = true)
+    public AuthenticatedResponse getAuthenticatedUser(User user) {
+
+        User u = userRepository.findByIdWithRolesAndPermissions(user.getId())
+                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
+
+        // Force initialization of lazy collections
+        u.getRoles().forEach(role -> role.getPermissions().size());
+
+        return userMapper.toAuthenticatedResponse(u);
+    }
 }

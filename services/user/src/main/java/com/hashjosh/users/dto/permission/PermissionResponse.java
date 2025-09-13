@@ -1,4 +1,16 @@
-package com.hashjosh.users.dto.role;
+package com.hashjosh.users.dto.permission;
 
-public record PermissionResponse() {
+import lombok.*;
+
+import java.util.UUID;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PermissionResponse {
+    private UUID id;
+    private String name;
+    private String slug;
+    private String description;
 }

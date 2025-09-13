@@ -16,13 +16,11 @@ public class TokenRenewalService {
 
     public Map<String, String> refreshTokens(
             UUID userId, String oldRefreshToken, String username,
-            String tenantId, String role, String clientIp, String userAgent,
+            String tenantId, Map<String,Object> claims, String clientIp, String userAgent,
             boolean rememberMe) {
 
         // 1️⃣ Invalidate old refresh token
         jwtService.invalidateRefreshToken(oldRefreshToken);
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
 
         // 2️⃣ Generate new tokens
         String newAccessToken = jwtService.generateAccessToken(

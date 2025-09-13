@@ -1,11 +1,13 @@
 package com.hashjosh.users.controller;
 
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.users.config.CustomUserDetails;
+import com.hashjosh.users.dto.AuthenticatedResponse;
 import com.hashjosh.users.dto.LoginRequest;
 import com.hashjosh.users.dto.LoginResponse;
 import com.hashjosh.users.dto.UserRegistrationRequest;
+import com.hashjosh.users.entity.TenantType;
 import com.hashjosh.users.entity.User;
-import com.hashjosh.users.entity.UserType;
 import com.hashjosh.users.exception.TenantIdException;
 import com.hashjosh.users.services.RefreshTokenService;
 import com.hashjosh.users.services.UserService;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -44,9 +47,9 @@ public class AuthenticationController {
             );
         }
 
-        UserType userType;
+        TenantType tenantType;
         try {
-            userType = UserType.valueOf(tenantHeader.trim().toUpperCase());
+            tenantType = TenantType.valueOf(tenantHeader.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new TenantIdException(
                     "Invalid tenant id",
@@ -56,7 +59,7 @@ public class AuthenticationController {
 
         // Wrap request and pass to service
         UserRegistrationRequestWrapper wrapper =
-                new UserRegistrationRequestWrapper(userType, request);
+                new UserRegistrationRequestWrapper(tenantType, request);
 
         return ResponseEntity.ok(userService.registerUser(wrapper));
     }
@@ -139,6 +142,29 @@ public class AuthenticationController {
 
         // Default: handle unknown tenants gracefully
         return ResponseEntity.ok("Logged out");
+    }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthenticatedResponse> getAuthenticatedUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof CustomUserDetails customUserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = customUserDetails.getUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        AuthenticatedResponse response = userService.getAuthenticatedUser(user);
+        return ResponseEntity.ok(response);
     }
 
     private Cookie buildCookie(String name, String value, int maxAgeSeconds) {

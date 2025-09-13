@@ -1,4 +1,4 @@
-package com.hashjosh.users.services;
+package com.hashjosh.users.config;
 
 import com.hashjosh.jwtshareable.service.TenantContext;
 import lombok.NoArgsConstructor;

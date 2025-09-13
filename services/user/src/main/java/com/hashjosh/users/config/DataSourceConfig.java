@@ -1,7 +1,6 @@
 package com.hashjosh.users.config;
 
 import com.hashjosh.users.properties.TenantProperties;
-import com.hashjosh.users.services.TenantRoutingDataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,5 +36,7 @@ public class DataSourceConfig {
         dataSource.afterPropertiesSet();
         return dataSource;
     }
+
+
 }
 

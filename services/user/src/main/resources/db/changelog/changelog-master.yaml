@@ -7,3 +7,9 @@ databaseChangeLog:
       file: db/changelog/003-drop-refreshtoken-constrain.yaml
   - include:
       file: db/changelog/004-change-column-refresh-column-length.yaml
+  - include:
+      file: db/changelog/005-set-all-refreshtoken-to-text.yaml
+  - include:
+      file: db/changelog/006-initial-rbac-with-permission.yaml
+  - include:
+      file: db/changelog/007-add-slug-column-to-role-and-permission.yaml
