@@ -44,7 +44,7 @@ databaseChangeLog:
                   name: address
                   type: VARCHAR(255)
               - column:
-                  name: user_type
+                  name: tenant_type
                   type: VARCHAR(50)
                   constraints:
                     nullable: false

@@ -2,7 +2,7 @@
 # TODO       that is why we declare here the common configuration for each service
 spring:
   main:
-    lazy-initialization: false
+    lazy-initialization: true
 
 eureka:
   client:

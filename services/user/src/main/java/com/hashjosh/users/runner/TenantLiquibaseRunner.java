@@ -1,4 +1,4 @@
-package com.hashjosh.users.command_line_runner;
+package com.hashjosh.users.runner;
 
 import com.hashjosh.users.config.MultiTenantConfig;
 import com.hashjosh.users.properties.TenantProperties;

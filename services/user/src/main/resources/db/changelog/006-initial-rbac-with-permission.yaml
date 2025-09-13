@@ -3,149 +3,110 @@ databaseChangeLog:
       id: 006-initial-rbac-with-permission
       author: jpracullos
       changes:
-
-        # User table
-        - createTable:
-            tableName: "user"
-            columns:
-              - column:
-                  name: "id"
-                  type: "UUID"
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: "username"
-                  type: "VARCHAR(100)"
-                  constraints:
-                    nullable: false
-                    unique: true
-              - column:
-                  name: "password"
-                  type: "VARCHAR(255)"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "email"
-                  type: "VARCHAR(255)"
-              - column:
-                  name: "created_at"
-                  type: "TIMESTAMP"
-                  defaultValueComputed: "CURRENT_TIMESTAMP"
-              - column:
-                  name: "updated_at"
-                  type: "TIMESTAMP"
-                  defaultValueComputed: "CURRENT_TIMESTAMP"
-
         # Role table
         - createTable:
-            tableName: "role"
+            tableName: role
             columns:
               - column:
-                  name: "id"
-                  type: "UUID"
+                  name: id
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: "name"
-                  type: "VARCHAR(100)"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "user_id"
-                  type: "UUID"
+                  name: name
+                  type: VARCHAR(100)
                   constraints:
                     nullable: false
 
         # Permission table
         - createTable:
-            tableName: "permission"
+            tableName: permission
             columns:
               - column:
-                  name: "id"
-                  type: "UUID"
+                  name: id
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: "name"
-                  type: "VARCHAR(100)"
+                  name: name
+                  type: VARCHAR(100)
                   constraints:
                     nullable: false
                     unique: true
               - column:
-                  name: "description"
-                  type: "VARCHAR(255)"
+                  name: description
+                  type: VARCHAR(255)
 
         # user_role table (many-to-many)
         - createTable:
-            tableName: "user_role"
+            tableName: user_role
             columns:
               - column:
-                  name: "user_id"
-                  type: "UUID"
+                  name: user_id
+                  type: UUID
                   constraints:
                     nullable: false
               - column:
-                  name: "role_id"
-                  type: "UUID"
+                  name: role_id
+                  type: UUID
                   constraints:
                     nullable: false
 
         - addPrimaryKey:
-            tableName: "user_role"
-            columnNames: "user_id, role_id"
-            constraintName: "pk_user_role"
+            tableName: user_role
+            columnNames: user_id, role_id
+            constraintName: pk_user_role
 
         - addForeignKeyConstraint:
-            baseTableName: "user_role"
-            baseColumnNames: "user_id"
-            referencedTableName: "user"
-            referencedColumnNames: "id"
-            constraintName: "fk_user_role_user"
+            baseTableName: user_role
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_role_user
             onDelete: CASCADE
 
         - addForeignKeyConstraint:
-            baseTableName: "user_role"
-            baseColumnNames: "role_id"
-            referencedTableName: "role"
-            referencedColumnNames: "id"
-            constraintName: "fk_user_role_role"
+            baseTableName: user_role
+            baseColumnNames: role_id
+            referencedTableName: role
+            referencedColumnNames: id
+            constraintName: fk_user_role_role
             onDelete: CASCADE
 
         # role_permission table (many-to-many)
         - createTable:
-            tableName: "role_permission"
+            tableName: role_permission
             columns:
               - column:
-                  name: "role_id"
-                  type: "UUID"
+                  name: role_id
+                  type: UUID
                   constraints:
                     nullable: false
               - column:
-                  name: "permission_id"
-                  type: "UUID"
+                  name: permission_id
+                  type: UUID
                   constraints:
                     nullable: false
 
         - addPrimaryKey:
-            tableName: "role_permission"
-            columnNames: "role_id, permission_id"
-            constraintName: "pk_role_permission"
+            tableName: role_permission
+            columnNames: role_id, permission_id
+            constraintName: pk_role_permission
 
         - addForeignKeyConstraint:
-            baseTableName: "role_permission"
-            baseColumnNames: "role_id"
-            referencedTableName: "role"
-            referencedColumnNames: "id"
-            constraintName: "fk_role_permission_role"
+            baseTableName: role_permission
+            baseColumnNames: role_id
+            referencedTableName: role
+            referencedColumnNames: id
+            constraintName: fk_role_permission_role
             onDelete: CASCADE
 
         - addForeignKeyConstraint:
-            baseTableName: "role_permission"
-            baseColumnNames: "permission_id"
-            referencedTableName: "permission"
-            referencedColumnNames: "id"
-            constraintName: "fk_role_permission_permission"
+            baseTableName: role_permission
+            baseColumnNames: permission_id
+            referencedTableName: permission
+            referencedColumnNames: id
+            constraintName: fk_role_permission_permission
             onDelete: CASCADE

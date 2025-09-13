@@ -1,7 +1,9 @@
 package com.hashjosh.users.dto;
 
-import com.hashjosh.users.entity.UserType;
 import lombok.Data;
+
+import java.util.Set;
+import java.util.UUID;
 
 @Data
 public class UserRegistrationRequest {
@@ -12,5 +14,6 @@ public class UserRegistrationRequest {
     private String email;
     private String phoneNumber;
     private String address;
+    private Set<UUID> rolesId;
 }
 

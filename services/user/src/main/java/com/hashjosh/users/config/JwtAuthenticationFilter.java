@@ -52,12 +52,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtService.getClaimsAllowExpired(accessToken);
                     String username = claims.getSubject();
                     String tenantId = claims.get("tenantId", String.class);
-                    String role = claims.get("role", String.class);
+                    String email = claims.get("email", String.class);
+                    List<String> roles = claims.get("roles", List.class);
+                    List<String> permissions = claims.get("permissions", List.class);
                     String userIdstr = claims.get("userId", String.class);
                     UUID userId = UUID.fromString(userIdstr);
 
+
+                    // Build the new claims for new token
+                    Map<String, Object> claimsMap = new HashMap<>();
+                    claimsMap.put("userId", userId);
+                    claimsMap.put("tenantId", tenantId);
+                    claimsMap.put("email", email);
+                    claimsMap.put("roles", roles);
+                    claimsMap.put("permissions", permissions);
+
                     Map<String, String> newTokens = tokenRenewalService.refreshTokens(
-                            userId,refreshToken, username, tenantId,role, clientIp, userAgent, false);
+                            userId,refreshToken, username, tenantId,claimsMap, clientIp, userAgent, false);
 
                     // ⬆ Set Authentication for downstream
                     setAuthentication(newTokens.get("accessToken"));
@@ -90,17 +101,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(accessToken);
         String username = claims.getSubject();
         String tenantId = claims.get("tenantId", String.class);
+        String userIdstr = claims.get("userId", String.class);
+        String email = claims.get("email", String.class);
+        List<String> roles = claims.get("roles", List.class);
+        List<String> permissions = claims.get("permissions", List.class);
 
-        String role = claims.get("role", String.class);
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+        List<SimpleGrantedAuthority> roleAndPermissions = new ArrayList<>();
+
+        roles.forEach(role -> roleAndPermissions.add(new SimpleGrantedAuthority("ROLE"+role)));
+        permissions.forEach(permission -> roleAndPermissions.add(new SimpleGrantedAuthority(permission)));
 
         if (tenantId != null) TenantContext.setTenantId(tenantId);
 
         CustomUserDetails customUser =
                 (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, authorities);
+        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, roleAndPermissions);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

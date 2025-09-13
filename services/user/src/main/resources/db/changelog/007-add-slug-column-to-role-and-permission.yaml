@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 7-add-slug-column
+      author: jp
+      changes:
+#        Add slug column to role table
+        - addColumn:
+            tableName: role
+            columns:
+              - column:
+                  name: slug
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+
+        - addColumn:
+            tableName: permission
+            columns:
+              - column:
+                  name: slug
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: role
+            columnNames: slug
+            constraintName: uq_role_slug
+
+        - addUniqueConstraint:
+            tableName: permission
+            columnNames: slug
+            constraintName: uq_permission_slug
+

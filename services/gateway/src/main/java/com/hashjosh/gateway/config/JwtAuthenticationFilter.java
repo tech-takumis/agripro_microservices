@@ -29,14 +29,14 @@ public class JwtAuthenticationFilter implements WebFilter {
         String refreshToken = extractRefreshToken(request);
 
         if (accessToken != null && jwtService.validateToken(accessToken)) {
-            // Extract username and tenant
             String username = jwtService.getUsernameFromToken(accessToken);
-            String tenantId = jwtService.getAllClaims(accessToken).get("tenantId", String.class);
+            String tenantId = extractTenantFromToken(accessToken);
 
+            // Authentication object
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(username, null, null);
 
-            // ✅ Mutate request to add downstream headers
+            // Mutate request headers for downstream services
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .headers(headers -> {
@@ -56,37 +56,47 @@ public class JwtAuthenticationFilter implements WebFilter {
                     });
         }
 
+        // No valid token → proceed without authentication
         return chain.filter(exchange);
     }
 
     /**
-     * Extracts Access Token from Authorization header or cookies.
+     * Extract access token from header or cookie.
      */
     private String extractAccessToken(ServerHttpRequest request) {
+        // 1️⃣ Header
         String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        List<HttpCookie> cookies = request.getCookies().get("access_token");
+
+        // 2️⃣ Cookie
+        List<HttpCookie> cookies = request.getCookies().get("ACCESS_TOKEN");
         if (cookies != null && !cookies.isEmpty()) {
-            return cookies.get(0).getValue();
+            return cookies.getFirst().getValue();
         }
+
         return null;
     }
 
     /**
-     * Extracts Refresh Token from header or cookies.
-     * Priority: Header `X-Refresh-Token` → Cookie `refresh_token`
+     * Extract refresh token from header or cookie.
      */
     private String extractRefreshToken(ServerHttpRequest request) {
         String headerToken = request.getHeaders().getFirst("X-Refresh-Token");
         if (headerToken != null && !headerToken.isEmpty()) {
             return headerToken;
         }
-        List<HttpCookie> cookies = request.getCookies().get("refresh_token");
+
+        List<HttpCookie> cookies = request.getCookies().get("REFRESH_TOKEN");
         if (cookies != null && !cookies.isEmpty()) {
-            return cookies.get(0).getValue();
+            return cookies.getFirst().getValue();
         }
+
         return null;
+    }
+
+    private String extractTenantFromToken(String token) {
+        return jwtService.getAllClaims(token).get("tenantId", String.class);
     }
 }
