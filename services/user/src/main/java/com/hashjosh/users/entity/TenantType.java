@@ -1,6 +1,6 @@
 package com.hashjosh.users.entity;
 
-public enum UserType {
+public enum Tenanttype {
     FARMER,
     PCIC,
     AGRICULTURE
