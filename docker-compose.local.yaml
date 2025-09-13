@@ -1,5 +1,6 @@
-services:
+version: '3.8'
 
+services:
   postgres:
     container_name: agripro_db
     image: postgres:latest
@@ -20,48 +21,71 @@ services:
       timeout: 5s
       retries: 5
 
-#  Kafka Service
   zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 200
     ports:
-      - 22181:2181
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     networks:
       - agripro_network
-    healthcheck:
-      test: [ "CMD", "bash", "-c", "echo ruok | nc -w 2 localhost 2181 | grep imok" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   kafka:
+    image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
-    image: confluentinc/cp-kafka:latest
-    ports:
-      - 9092:9092
+    hostname: kafka
     depends_on:
       - zookeeper
+    ports:
+      - "29092:29092"   # Single port for both host + containers
     environment:
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      # Only one listener (always use localhost:29092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - agripro_network
     healthcheck:
-      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka:9092", "--list" ]
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:29092", "--list" ]
       interval: 10s
       timeout: 10s
       retries: 10
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"   # API for SDKs (Spring, MinioClient)
+      - "9090:9090"   # Console UI in browser
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9090"
     networks:
       - agripro_network
+    volumes:
+      - minio_data:/data
 
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:24.0.5
+    command:
+      - start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+    ports:
+      - "8080:8080"
+    networks:
+      - agripro_network
+    restart: unless-stopped
 
 networks:
   agripro_network:
@@ -70,3 +94,5 @@ networks:
 
 volumes:
   agripro_postgres:
+  kafka-data:
+  minio_data:

@@ -1,0 +1,6 @@
+token:
+  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+  accessTokenExpirationMs: 14400000                # 4 hours
+  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
+  refreshTokenExpirationMs: 86400000               # 1 day
+  refreshTokenExpirationRememberMeMs: 345600000

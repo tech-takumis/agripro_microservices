@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: document-service
+  config:
+    import: optional:configserver:http://config-server:8888
+
+minio:
+  url: http://minio:9000
+  accessKey: minio
+  secretKey: minio123
+  bucket: documents
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/

@@ -1,0 +1,9 @@
+application -> 8010
+document ->    8020
+pcic ->        9030
+verification -> 9040
+workflow ->    8050
+rsbsa ->       9060
+role ->        8070
+discovery-server -> 8761
+gateway-service -> 9000
