@@ -39,6 +39,12 @@ public class Application implements Serializable {
     @JsonProperty("userId")
     private UUID userId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id", nullable = true) // Nullable to allow standalone applications
+    @JsonIgnore
+    @JsonProperty("batchId")
+    private ApplicationBatch batch;
+
     @Type(JsonBinaryType.class)
     @Column(name = "dynamic_fields", columnDefinition = "jsonb", nullable = false)
     @JsonProperty("dynamicFields")

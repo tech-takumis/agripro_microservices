@@ -1,96 +1,104 @@
 package com.hashjosh.application.configs;
 
+import com.hashjosh.application.clients.RoleResponse;
+import com.hashjosh.application.clients.UserResponse;
+import com.hashjosh.application.clients.UserServiceClient;
 import com.hashjosh.jwtshareable.service.JwtService;
-import com.hashjosh.jwtshareable.service.TenantContext;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-@Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserServiceClient userServiceClient;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
 
-        try {
-            String accessToken = extractAccessToken(request);
+        String token = authHeader.substring(7);
 
-            if (accessToken != null && !jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
-                    // ✅ Normal authentication flow
-                    setAuthentication(accessToken);
-             }
-
-            filterChain.doFilter(request, response);
-
-        } finally {
-            TenantContext.clear();
+        if(token.trim().isEmpty()){
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    """
+                            "message": "Unauthorized - Invalid or null token"
+                            """
+            );
+            response.getWriter().flush();
+            return;
         }
-    }
 
-    private void setAuthentication(String accessToken) {
-        Claims claims = jwtService.getAllClaims(accessToken);
-        String username = claims.getSubject();
-        String tenantId = claims.get("tenantId", String.class);
+        if (!jwtService.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    """
+                    {
+                      "message": "Unauthorized: invalid or expired token"
+                    }
+                    """
+            );
+            response.getWriter().flush();
+            return; // stop filter chain
+        }
+
+        Claims claims = jwtService.getAllClaims(token);
+        String username = jwtService.getUsernameFromToken(token);
         String userId = claims.get("userId", String.class);
-        String email = claims.get("email", String.class);
-        List<String> roles = claims.get("roles", List.class);
-        List<String> permissions = claims.get("permissions", List.class);
+        String tenantId = claims.get("tenantId", String.class);
 
-        List<SimpleGrantedAuthority> rolesAndPermissions = new ArrayList<>();
+        UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
 
-        if(roles != null) {
-            roles.forEach(role -> rolesAndPermissions.add(
-                    new SimpleGrantedAuthority("ROLE_"+role)));
-        }
+        Set<SimpleGrantedAuthority> roles = new HashSet<>();
 
-        if(permissions != null) {
-            permissions.forEach(permission -> rolesAndPermissions.add(
-                    new SimpleGrantedAuthority(permission)));
-        }
+        user.getRoles().forEach(role -> {
+            roles.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
+            role.getPermissions().forEach(
+                    permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
+            );
 
-        if (tenantId != null) TenantContext.setTenantId(tenantId);
+        });
 
-        CustomUserDetails customUserDetails = new CustomUserDetails(
+        CustomUserDetails userDetails = new CustomUserDetails(
+                token,
                 userId,
+                tenantId,
                 username,
-                email,
-                rolesAndPermissions
+                user.getEmail(),
+                roles
         );
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUserDetails,
-                null, rolesAndPermissions);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        roles
+                );
 
-    private String extractAccessToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        filterChain.doFilter(request, response);
     }
 }

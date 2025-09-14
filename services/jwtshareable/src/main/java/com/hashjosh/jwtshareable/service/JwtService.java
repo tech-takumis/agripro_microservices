@@ -43,19 +43,15 @@ public class JwtService {
     }
 
     /**Generate Access token**/
-    public String generateAccessToken(UUID userId,String subject,String tenantId,
-                                      Map<String, Object> claims,
+    public String generateAccessToken(String subject,Map<String,Object> claims,
                                       long expiryMillis) {
 
-        Map<String, Object> mutableClaims = new HashMap<>(claims);
-        mutableClaims.put("tenantId", tenantId);
-        mutableClaims.put("userId", userId);
 
         return Jwts.builder()
                 .subject(subject)
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plusMillis(expiryMillis)))
-                .claims(mutableClaims)
+                .claims(claims)
                 .signWith(secretKey)
                 .compact();
 

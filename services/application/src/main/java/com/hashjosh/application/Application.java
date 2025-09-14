@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 
 @SpringBootApplication
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class})
 @EnableKafka
 @Import(JwtService.class)
 public class Application {

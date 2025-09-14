@@ -2,6 +2,8 @@ package com.hashjosh.users.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.jwtshareable.service.TenantContext;
+import com.hashjosh.users.entity.Role;
+import com.hashjosh.users.entity.User;
 import com.hashjosh.users.services.TokenRenewalService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -52,23 +54,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtService.getClaimsAllowExpired(accessToken);
                     String username = claims.getSubject();
                     String tenantId = claims.get("tenantId", String.class);
-                    String email = claims.get("email", String.class);
-                    List<String> roles = claims.get("roles", List.class);
-                    List<String> permissions = claims.get("permissions", List.class);
-                    String userIdstr = claims.get("userId", String.class);
-                    UUID userId = UUID.fromString(userIdstr);
-
+                    String userId = claims.get("userId", String.class);
 
                     // Build the new claims for new token
                     Map<String, Object> claimsMap = new HashMap<>();
                     claimsMap.put("userId", userId);
                     claimsMap.put("tenantId", tenantId);
-                    claimsMap.put("email", email);
-                    claimsMap.put("roles", roles);
-                    claimsMap.put("permissions", permissions);
 
                     Map<String, String> newTokens = tokenRenewalService.refreshTokens(
-                            userId,refreshToken, username, tenantId,claimsMap, clientIp, userAgent, false);
+                            UUID.fromString(userId),refreshToken, username,
+                            tenantId,claimsMap, clientIp, userAgent, false);
 
                     // ⬆ Set Authentication for downstream
                     setAuthentication(newTokens.get("accessToken"));
@@ -101,32 +96,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(accessToken);
         String username = claims.getSubject();
         String tenantId = claims.get("tenantId", String.class);
-        String userIdstr = claims.get("userId", String.class);
-        String email = claims.get("email", String.class);
-        List<String> roles = claims.get("roles", List.class);
-        List<String> permissions = claims.get("permissions", List.class);
-
-        List<SimpleGrantedAuthority> roleAndPermissions = new ArrayList<>();
-
-        roles.forEach(role -> roleAndPermissions.add(new SimpleGrantedAuthority("ROLE"+role)));
-        permissions.forEach(permission -> roleAndPermissions.add(new SimpleGrantedAuthority(permission)));
 
         if (tenantId != null) TenantContext.setTenantId(tenantId);
 
         CustomUserDetails customUser =
                 (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, roleAndPermissions);
+        User user = customUser.getUser();
+        List<SimpleGrantedAuthority> roles = new ArrayList<>();
+
+        user.getRoles().forEach(role -> {
+            roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
+            role.getPermissions().forEach(permission -> {
+                roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+            });
+        });
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, roles);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        var accessCookie = new jakarta.servlet.http.Cookie("access_token", accessToken);
+        var accessCookie = new jakarta.servlet.http.Cookie("ACCESS_TOKEN", accessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setPath("/");
         response.addCookie(accessCookie);
 
-        var refreshCookie = new jakarta.servlet.http.Cookie("refresh_token", refreshToken);
+        var refreshCookie = new jakarta.servlet.http.Cookie("REFRESH_TOKEN", refreshToken);
         refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/");
         response.addCookie(refreshCookie);

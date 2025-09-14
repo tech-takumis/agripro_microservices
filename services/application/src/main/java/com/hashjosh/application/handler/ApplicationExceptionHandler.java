@@ -3,10 +3,7 @@ package com.hashjosh.application.handler;
 
 import com.hashjosh.application.dto.ErrorResponse;
 import com.hashjosh.application.dto.ExceptionResponse;
-import com.hashjosh.application.exceptions.ApplicationNotFoundException;
-import com.hashjosh.application.exceptions.ApplicationNotSupportedDatatypeException;
-import com.hashjosh.application.exceptions.FileUploadException;
-import com.hashjosh.application.exceptions.InvalidStatusException;
+import com.hashjosh.application.exceptions.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -39,5 +36,10 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(InvalidStatusException.class)
     public ResponseEntity<ErrorResponse> invalidStatus(InvalidStatusException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getErrorResponse());
+    }
+
+    @ExceptionHandler(ApplicationException.class)
+    public ResponseEntity<ExceptionResponse> applicationException(ApplicationException ex){
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getExceptionResponse());
     }
 }

@@ -4,7 +4,6 @@ import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -69,10 +68,11 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(token);
         String username = jwtService.getUsernameFromToken(token);
         String userId = claims.get("userId", String.class);
-        UUID uuid = UUID.fromString(userId);
+        String email = claims.get("email", String.class);
         String role = claims.get("role", String.class);
         List<String> permissions = claims.get("permissions", List.class);
-        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(role));
 
         if(!permissions.isEmpty()) {
@@ -80,8 +80,9 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
 
         CustomUserDetails userDetails = new CustomUserDetails(
-                uuid,
+                userId,
                 username,
+                email,
                 authorities
         );
 
