@@ -20,8 +20,6 @@ public class VerificationMapper {
                 .eventId(contract.eventId())
                 .applicationId(contract.applicationId())
                 .status(verificationStatus)
-                .approvedByAdjuster(false)
-                .verifiedByUnderwriter(false)
                 .inspectionType(null)
                 .rejectionReason(null)
                 .report(null)
@@ -41,8 +39,6 @@ public class VerificationMapper {
                 .eventId(saved.getEventId())
                 .applicationId(saved.getApplicationId())
                 .status(VerificationStatus.valueOf(dto.status()))
-                .approvedByAdjuster(dto.approvedByAdjuster())
-                .verifiedByUnderwriter(dto.verifiedByUnderwriter())
                 .inspectionType(dto.inspectionType())
                 .rejectionReason(dto.rejectionReason())
                 .report(dto.report())
@@ -55,8 +51,6 @@ public class VerificationMapper {
             verificationResult.getId(),
                 verificationResult.getApplicationId(),
                 verificationResult.getStatus().name(),
-                verificationResult.getApprovedByAdjuster(),
-                verificationResult.getVerifiedByUnderwriter(),
                 verificationResult.getInspectionType(),
                 verificationResult.getRejectionReason(),
                 verificationResult.getReport(),

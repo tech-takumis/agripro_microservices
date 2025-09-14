@@ -8,15 +8,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
+    private final String token;
     private final String userId;
+    private final String tenantId;
     private final String username;
     private final String email;
-    private final  List<SimpleGrantedAuthority> authorities;
+    private final Set<SimpleGrantedAuthority> authorities;
 
 
     @Override

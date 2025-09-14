@@ -30,13 +30,7 @@ public class VerificationResult {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 50)
-    private VerificationStatus status; // APPROVED, REJECTED, PENDING
-
-    @Column(name = "approved_by_adjuster")
-    private Boolean approvedByAdjuster;
-
-    @Column(name = "is_verified_by_underwriter")
-    private Boolean verifiedByUnderwriter;
+    private VerificationStatus status; 
 
     @Column(name = "inspection_type", length = 50)
     private String inspectionType; // e.g., FIELD_VISIT, REMOTE

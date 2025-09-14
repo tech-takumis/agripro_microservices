@@ -13,7 +13,6 @@ import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,6 +47,45 @@ public class ApplicationController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid application ID"));
             }
 
+
+            // Wrap into DTO
+            ApplicationSubmissionDto submission = new ApplicationSubmissionDto(fieldValues,
+                    files != null ? files : Map.of());
+
+            List<ValidationErrors> errors =
+                    applicationService.submitApplication(submission, applicationTypeId, request);
+
+            if (!errors.isEmpty()) {
+                return ResponseEntity.badRequest().body(errors);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Application submitted successfully",
+                    "applicationId", applicationTypeId
+            ));
+
+        } catch (FileUploadException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "File upload failed: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{application-type-id}/submit-test")
+    public ResponseEntity<?> submitTestApplication(
+            @PathVariable("application-type-id") UUID applicationTypeId,
+            @RequestPart("fieldValues") String fieldValues,
+            @RequestPart(required = false) Map<String, MultipartFile> files, // use map keyed by field keys
+            HttpServletRequest request
+    ) {
+        try {
+            log.info("Content type submitted: {}", request.getContentType());
+
+            if (applicationTypeId == null || applicationTypeId.toString().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid application ID"));
+            }
 
             // Wrap into DTO
             ApplicationSubmissionDto submission = new ApplicationSubmissionDto(fieldValues,

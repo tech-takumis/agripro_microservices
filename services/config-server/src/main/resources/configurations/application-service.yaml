@@ -61,7 +61,8 @@ management:
     health:
       show-details: always
 
-
 server:
   port: 8010
+
+
 

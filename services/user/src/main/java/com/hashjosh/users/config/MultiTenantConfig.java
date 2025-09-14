@@ -30,7 +30,7 @@ public class MultiTenantConfig {
         return new TenantRoutingDataSource(defaultDataSource, dataSources);
     }
 
-    private DataSource createDataSource(TenantProperties.DataSourceProperties properties) {
+    public DataSource createDataSource(TenantProperties.DataSourceProperties properties) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(properties.getUrl());
         dataSource.setUsername(properties.getUsername());

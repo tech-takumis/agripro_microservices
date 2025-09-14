@@ -1,25 +1,23 @@
 package com.hashjosh.verification.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
-@Setter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private UUID userId;
-    private  String username;
-    private  List<GrantedAuthority> authorities;
+    private final String userId;
+    private final String username;
+    private final String email;
+    private final  List<SimpleGrantedAuthority> authorities;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
