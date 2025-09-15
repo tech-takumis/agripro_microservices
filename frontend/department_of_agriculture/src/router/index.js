@@ -1,216 +1,224 @@
-import { createWebHistory, createRouter } from "vue-router"
-import { useUserStore } from "@/stores/user"
+import { defineStore } from "pinia"
+import { ref, computed } from "vue"
+import {
+    REGIONAL_FIELD_OFFICES_NAVIGATION,
+    REGIONAL_RICE_FOCAL_NAVIGATION,
+    PROVINCIAL_COORDINATOR_NAVIGATION,
+    MUNICIPAL_AGRICULTURISTS_NAVIGATION,
+    RICE_SPECIALISTS_NAVIGATION,
+    AGRICULTURAL_EXTENSION_NAVIGATION,
+} from "../lib/constants.js"
 
-const APP_NAME = import.meta.env.VITE_APP_NAME
+export const useAgricultureStore = defineStore("agriculture", () => {
+    // State
+    const currentRole = ref(null)
+    const userPermissions = ref([])
+    const claims = ref([])
+    const programs = ref([])
+    const users = ref([])
+    const loading = ref(false)
+    const error = ref(null)
 
-const routes = [
-  // Admin Dashboard
-  {
-    path: "/admin/dashboard",
-    name: "admin-dashboard",
-    component: () => import("@/pages/admin/AdminDashboard.vue"),
-    meta: {
-      title: "Admin Dashboard",
-      guard: "auth",
-      roles: ["Admin"],
-    },
-  },
-  // Register Staff Page for Admin
-  {
-    path: "/admin/staff/register",
-    name: "admin-register-staff",
-    component: () => import("@/pages/admin/staff/RegisterStaff.vue"),
-    meta: {
-      title: "Register New Staff",
-      guard: "auth",
-      roles: ["Admin"],
-    },
-  },
-  // Create New Application Type Page for Admin
-  {
-    path: "/admin/applications/new",
-    name: "admin-new-application",
-    component: () => import("@/pages/admin/applications/NewApplication.vue"),
-    meta: {
-      title: "Create New Application Type",
-      guard: "auth",
-      roles: ["Admin"],
-    },
-  },
-  // View All Applications Page for Admin
-  {
-    path: "/admin/applications/all",
-    name: "admin-view-applications",
-    component: () => import("@/pages/admin/applications/ViewApplications.vue"),
-    meta: {
-      title: "All Application Types",
-      guard: "auth",
-      roles: ["Admin"],
-    },
-  },
-  // Roles & Permissions Page for Admin
-  {
-    path: "/admin/roles",
-    name: "admin-roles-permissions",
-    component: () => import("@/pages/admin/roles/RolesPermissions.vue"),
-    meta: {
-      title: "Roles & Permissions",
-      guard: "auth",
-      roles: ["Admin"],
-    },
-  },
-
-
-  // Login
-  {
-    path: "/",
-    name: "login",
-    component: () => import("@/pages/auth/Login.vue"),
-    query: {
-      reset: "reset",
-    },
-    meta: {
-      title: "PCIC Staff Login",
-      guard: "guest",
-    },
-  },
-
-  // Error Pages
-  {
-    path: "/access-denied",
-    name: "access-denied",
-    component: () => import("@/pages/errors/AccessDenied.vue"),
-    meta: {
-      title: "Access Denied",
-    },
-  },
-  {
-    path: "/page-not-found",
-    name: "page-not-found",
-    component: () => import("@/pages/errors/404.vue"),
-    meta: {
-      title: "Page Not Found",
-    },
-  },
-  {
-    path: "/:pathMatch(.*)*",
-    redirect: "/page-not-found",
-  },
-]
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-})
-
-// Main navigation guard
-router.beforeEach(async (to, from, next) => {
-  const store = useUserStore()
-
-  const requiresAuth = to.matched.some((route) => route.meta.guard === "auth")
-  const requiresGuest = to.matched.some((route) => route.meta.guard === "guest")
-  const requiredRoles = to.meta.roles
-
-  // Only fetch user data if route requires auth and user is not authenticated
-  if (requiresAuth && !store.isAuthenticate) {
-    try {
-      console.log("Fetching user data...")
-      await store.getData()
-      console.log("User data fetched successfully")
-    } catch (error) {
-      console.error("Auth check failed:", error)
-      return next({ name: "login" })
-    }
-  }
-
-  // Check authentication and role-based access
-  if (requiresAuth) {
-    if (!store.isAuthenticate) {
-      console.log("User not authenticated, redirecting to login")
-      return next({ name: "login" })
-    }
-
-    // Validate PCIC staff access
-    if (!store.isValidStaff) {
-      console.error("User is not valid staff:", store.userData?.roles)
-      return next({ name: "access-denied" })
-    }
-
-    console.log("User is valid staff with roles:", store.userData?.roles)
-
-    // Check role-based access (user must have at least one of the required roles)
-    if (requiredRoles && requiredRoles.length > 0) {
-      const userRoles = store.userData?.roles || []
-
-      console.log("Checking role access - User roles:", userRoles, "Required roles:", requiredRoles)
-
-      const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role))
-
-      if (!hasRequiredRole) {
-        console.log("User roles not allowed for this route, redirecting to appropriate dashboard")
-        // Redirect to appropriate dashboard based on role
-        return next(store.getRedirectPath())
-      }
-    }
-
-    // If user is authenticated and trying to access a general dashboard,
-    // redirect to their role-specific dashboard
-    if (to.name === "dashboard" || to.name === "staff-dashboard") {
-      const redirectPath = store.getRedirectPath()
-      if (redirectPath.name !== to.name) {
-        console.log("Redirecting to role-specific dashboard:", redirectPath)
-        return next(redirectPath)
-      }
-    }
-  }
-
-  // Guest routes (login, register, etc.)
-  if (requiresGuest && store.isAuthenticate) {
-    console.log("Authenticated user trying to access guest route, redirecting to dashboard")
-    return next(store.getRedirectPath())
-  }
-
-  console.log("Navigation allowed to:", to.name)
-  next()
-})
-
-// Page Title and Metadata
-router.beforeEach((to, from, next) => {
-  const nearestWithTitle = to.matched
-    .slice()
-    .reverse()
-    .find((r) => r.meta && r.meta.title)
-
-  const nearestWithMeta = to.matched
-    .slice()
-    .reverse()
-    .find((r) => r.meta && r.meta.metaTags)
-
-  if (nearestWithTitle) {
-    document.title = nearestWithTitle.meta.title + " - " + APP_NAME
-  } else {
-    document.title = APP_NAME
-  }
-
-  Array.from(document.querySelectorAll("[data-vue-router-controlled]")).map((el) => el.parentNode.removeChild(el))
-
-  if (!nearestWithMeta) return next()
-
-  nearestWithMeta.meta.metaTags
-    .map((tagDef) => {
-      const tag = document.createElement("meta")
-
-      Object.keys(tagDef).forEach((key) => {
-        tag.setAttribute(key, tagDef[key])
-      })
-
-      tag.setAttribute("data-vue-router-controlled", "")
-
-      return tag
+    // Getters
+    const hasPermission = computed(() => {
+        return (permission) => {
+            return userPermissions.value.includes(permission)
+        }
     })
-    .forEach((tag) => document.head.appendChild(tag))
 
-  next()
+    const canApproveClaimsRole = computed(() => {
+        return currentRole.value?.permissions?.includes("CAN_APPROVE_CLAIM") || false
+    })
+
+    const canProcessClaimsRole = computed(() => {
+        return currentRole.value?.permissions?.includes("CAN_PROCESS_CLAIM") || false
+    })
+
+    const canManageFinanceRole = computed(() => {
+        return currentRole.value?.permissions?.includes("CAN_MANAGE_FINANCE") || false
+    })
+
+    const canManageRolesRole = computed(() => {
+        return currentRole.value?.permissions?.includes("CAN_MANAGE_ROLES") || false
+    })
+
+    const roleNavigation = computed(() => {
+        if (!currentRole.value) return []
+
+        const roleSlug = currentRole.value.slug
+        switch (roleSlug) {
+            case "regional-field-offices":
+                return REGIONAL_FIELD_OFFICES_NAVIGATION
+            case "regional-rice-focal-person":
+                return REGIONAL_RICE_FOCAL_NAVIGATION
+            case "provincial-rice-program-coordinator":
+                return PROVINCIAL_COORDINATOR_NAVIGATION
+            case "municipal-agriculturists":
+                return MUNICIPAL_AGRICULTURISTS_NAVIGATION
+            case "rice-specialists":
+                return RICE_SPECIALISTS_NAVIGATION
+            case "agricultural-extension-workers":
+                return AGRICULTURAL_EXTENSION_NAVIGATION
+            default:
+                return []
+        }
+    })
+
+    // Actions
+    const setCurrentRole = (role) => {
+        currentRole.value = role
+        userPermissions.value = role?.permissions || []
+    }
+
+    const fetchClaims = async () => {
+        loading.value = true
+        error.value = null
+        try {
+            // Mock API call
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            claims.value = [
+                {
+                    id: "1",
+                    claimNumber: "CLM-2024-001",
+                    farmerName: "Juan Dela Cruz",
+                    cropType: "Rice",
+                    area: "2.5 hectares",
+                    status: "Pending Review",
+                    dateSubmitted: "2024-03-15",
+                    amount: 125000,
+                },
+                {
+                    id: "2",
+                    claimNumber: "CLM-2024-002",
+                    farmerName: "Maria Santos",
+                    cropType: "Corn",
+                    area: "1.8 hectares",
+                    status: "Under Processing",
+                    dateSubmitted: "2024-03-14",
+                    amount: 89000,
+                },
+            ]
+        } catch (err) {
+            error.value = err.message
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const fetchPrograms = async () => {
+        loading.value = true
+        error.value = null
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 800))
+            programs.value = [
+                {
+                    id: "1",
+                    name: "Rice Insurance Program",
+                    description: "Comprehensive rice crop insurance",
+                    coverage: "₱50,000 per hectare",
+                    participants: 1250,
+                    status: "Active",
+                },
+                {
+                    id: "2",
+                    name: "Corn Protection Scheme",
+                    description: "Corn crop protection program",
+                    coverage: "₱35,000 per hectare",
+                    participants: 890,
+                    status: "Active",
+                },
+            ]
+        } catch (err) {
+            error.value = err.message
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const fetchUsers = async () => {
+        loading.value = true
+        error.value = null
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 600))
+            users.value = [
+                {
+                    id: "1",
+                    name: "John Smith",
+                    email: "john.smith@pcic.gov.ph",
+                    role: "Regional Field Officer",
+                    status: "Active",
+                    lastLogin: "2024-03-15 09:30:00",
+                },
+                {
+                    id: "2",
+                    name: "Jane Doe",
+                    email: "jane.doe@pcic.gov.ph",
+                    role: "Rice Specialist",
+                    status: "Active",
+                    lastLogin: "2024-03-15 08:45:00",
+                },
+            ]
+        } catch (err) {
+            error.value = err.message
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const approveClaim = async (claimId) => {
+        loading.value = true
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            const claimIndex = claims.value.findIndex((c) => c.id === claimId)
+            if (claimIndex !== -1) {
+                claims.value[claimIndex].status = "Approved"
+            }
+        } catch (err) {
+            error.value = err.message
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const processClaim = async (claimId) => {
+        loading.value = true
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            const claimIndex = claims.value.findIndex((c) => c.id === claimId)
+            if (claimIndex !== -1) {
+                claims.value[claimIndex].status = "Processing"
+            }
+        } catch (err) {
+            error.value = err.message
+        } finally {
+            loading.value = false
+        }
+    }
+
+    return {
+        // State
+        currentRole,
+        userPermissions,
+        claims,
+        programs,
+        users,
+        loading,
+        error,
+
+        // Getters
+        hasPermission,
+        canApproveClaimsRole,
+        canProcessClaimsRole,
+        canManageFinanceRole,
+        canManageRolesRole,
+        roleNavigation,
+
+        // Actions
+        setCurrentRole,
+        fetchClaims,
+        fetchPrograms,
+        fetchUsers,
+        approveClaim,
+        processClaim,
+    }
 })
-
-export default router
