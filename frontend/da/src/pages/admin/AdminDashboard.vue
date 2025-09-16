@@ -13,7 +13,7 @@
         <div class="flex items-center space-x-2">
           <span class="text-sm text-gray-500">{{ currentDate }}</span>
           <div class="h-4 w-px bg-gray-300"></div>
-          <span class="text-sm font-medium text-purple-600">{{ store.userLocation }}</span>
+          <span class="text-sm font-medium text-purple-600">{{ authStore.userLocation }}</span>
         </div>
       </div>
     </template>
@@ -166,12 +166,12 @@ import {
   Users, FileText, ClipboardList, Activity, UserPlus, Settings, BarChart3
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
-import ApplicationCard from '@/components/underwriter/ApplicationCard.vue' // Reusing for stats
-import UnderwriterQuickActionButton from '@/components/underwriter/UnderwriterQuickActionButton.vue' // Reusing for quick actions
-import { useUserStore } from '@/stores/user'
+import ApplicationCard from '@/components/ApplicationCard.vue' // Reusing for stats
+import UnderwriterQuickActionButton from '@/components/UnderwriterQuickActionButton.vue' // Reusing for quick actions
+import {useAuthStore} from '@/stores/auth'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
 
-const store = useUserStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const adminNavigation = ADMIN_NAVIGATION

@@ -24,18 +24,31 @@
           <!-- Personal Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span class="text-red-500">*</span>
+              <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1">
+                First Name <span class="text-red-500">*</span>
               </label>
               <input
-                v-model="form.fullname"
+                v-model="form.firstname"
                 type="text"
-                id="fullname"
+                id="firstname"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="e.g., Juan Dela Cruz"
+                placeholder="e.g., Juan"
               />
             </div>
+              <div>
+                  <label for="lastname" class="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                      v-model="form.lastname"
+                      type="text"
+                      id="lastname"
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="e.g Dela Cruz"
+                  />
+              </div>
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
                 Email <span class="text-red-500">*</span>
@@ -49,30 +62,30 @@
                 placeholder="e.g., juan.delacruz@pcic.gov.ph"
               />
             </div>
+<!--            <div>-->
+<!--              <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">-->
+<!--                Gender <span class="text-red-500">*</span>-->
+<!--              </label>-->
+<!--              <select-->
+<!--                v-model="form.gender"-->
+<!--                id="gender"-->
+<!--                required-->
+<!--                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"-->
+<!--              >-->
+<!--                <option value="">Select Gender</option>-->
+<!--                <option value="Male">Male</option>-->
+<!--                <option value="Female">Female</option>-->
+<!--                <option value="Other">Other</option>-->
+<!--              </select>-->
+<!--            </div>-->
             <div>
-              <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">
-                Gender <span class="text-red-500">*</span>
-              </label>
-              <select
-                v-model="form.gender"
-                id="gender"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label for="contactNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">
                 Contact Number
               </label>
               <input
-                v-model="form.contactNumber"
+                v-model="form.phoneNumber"
                 type="text"
-                id="contactNumber"
+                id="phoneNumber"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 placeholder="e.g., 09123456789"
               />
@@ -119,19 +132,6 @@
               />
             </div>
             <div>
-              <label for="department" class="block text-sm font-medium text-gray-700 mb-1">
-                Department <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model="form.department"
-                type="text"
-                id="department"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="e.g., Agriculture Insurance"
-              />
-            </div>
-            <div>
               <label for="location" class="block text-sm font-medium text-gray-700 mb-1">
                 Location <span class="text-red-500">*</span>
               </label>
@@ -152,10 +152,12 @@
                 v-model="form.roleId"
                 id="role"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                class="w-full px-3 py-2 border border-gray-300 rounded-
+                md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               >
                 <option value="">Select Role</option>
-                <option v-for="roleOption in rolePermission?.roles" :key="roleOption?.id" :value="roleOption.id">
+                <option v-for="roleOption in roleStore.allRoles" :key
+                    ="roleOption?.id" :value="roleOption.id">
                   {{ roleOption.name }}
                 </option>
               </select>
@@ -190,26 +192,29 @@
 import { onMounted, ref } from 'vue'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../../layouts/AuthenticatedLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
-import { useRolePermissionStore } from '../../../stores/rolePermission'
-
+import { useRoleStore } from '@/stores/role'
+import { usePermissionStore } from '@/stores/permission'
+const authStore = useAuthStore()
 const userStore = useUserStore()
-const rolePermission = useRolePermissionStore()
+
+const roleStore = useRoleStore()
+const permissionStore = usePermissionStore()
 
 const adminNavigation = ADMIN_NAVIGATION
 
 const form = ref({
-  fullname: '',
-  email: '',
-  gender: '',
-  contactNumber: '',
-  civilStatus: '',
-  address: '',
-  position: '',
-  department: '',
-  location: '',
-  roleId: '',
+    firstname: '',
+    lastname: '',
+    email: '',
+    password: '',
+    phoneNumber: '',
+    civilStatus: '',
+    address: '',
+    location: '',
+    roleId: '',
 })
 
 const processing = ref(false)
@@ -230,20 +235,20 @@ const submitRegistration = async () => {
 
 const resetForm = () => {
   form.value = {
-    fullname: '',
+    firstname: '',
+      lastname: '',
     email: '',
-    gender: '',
-    contactNumber: '',
+      password: '',
+    phoneNumber: '',
     civilStatus: '',
     address: '',
-    position: '',
-    department: '',
     location: '',
-    role: '',
+    roleId: '',
   }
 }
 
 onMounted(() => {
-  rolePermission.fetchRoles()
+    roleStore.fetchRoles()
+    permissionStore.fetchPermissions()
 })
 </script>

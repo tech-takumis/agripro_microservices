@@ -142,7 +142,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ role.authorities ? role.authorities.length : 0 }} permissions
+                   {{ role.permissions ? role.permissions.length : 0 }} permissions
                   </span>
                 </td>
                 <td class="px-6 py-4">
@@ -218,10 +218,12 @@ import {
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import RoleModal from '@/components/modals/RoleModal.vue'
-import { useRolePermissionStore } from '@/stores/rolePermission'
+import { useRoleStore } from '@/stores/role'
+import { usePermissionStore } from '@/stores/permission'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
 
-const rolePermissionStore = useRolePermissionStore()
+const roleStore = useRoleStore()
+const permissionStore = usePermissionStore()
 const adminNavigation = ADMIN_NAVIGATION
 
 // Reactive state
@@ -231,11 +233,20 @@ const selectedRole = ref(null)
 const isEditingRole = ref(false)
 
 // Computed properties
-const roles = computed(() => rolePermissionStore.allRoles)
-const authorities = computed(() => rolePermissionStore.availableAuthorities)
-const groupedAuthorities = computed(() => rolePermissionStore.groupedAuthorities)
-const loading = computed(() => rolePermissionStore.loading)
-const error = computed(() => rolePermissionStore.error)
+const roles = computed(() => roleStore.allRoles)
+const authorities = computed(() => permissionStore.allPermissions)
+const groupedAuthorities = computed(() => {
+  // Group permissions by category (you can customize this logic)
+  const grouped = {}
+  authorities.value.forEach(permission => {
+    const category = permission.name.split('_')[0] || 'OTHER'
+    if (!grouped[category]) grouped[category] = []
+    grouped[category].push(permission)
+  })
+  return grouped
+})
+const loading = computed(() => roleStore.loading || permissionStore.loading)
+const error = computed(() => roleStore.error || permissionStore.error)
 
 const filteredRoles = computed(() => {
   if (!searchQuery.value) return roles.value
@@ -246,7 +257,10 @@ const filteredRoles = computed(() => {
 
 // Methods
 const refreshData = async () => {
-  await rolePermissionStore.initialize()
+  await Promise.all([
+    roleStore.fetchRoles(),
+    permissionStore.fetchPermissions()
+  ])
 }
 
 const openRoleModal = (role = null) => {
@@ -275,9 +289,9 @@ const saveRole = async (roleData) => {
   let result
   
   if (isEditingRole.value) {
-    result = await rolePermissionStore.updateRole(selectedRole.value.id, roleData)
+    result = await roleStore.updateRole(selectedRole.value.id, roleData)
   } else {
-    result = await rolePermissionStore.createRole(roleData)
+    result = await roleStore.createRole(roleData)
   }
   
   if (result.success) {
@@ -293,7 +307,7 @@ const deleteRole = async () => {
   if (!selectedRole.value) return
   
   if (confirm(`Are you sure you want to delete the role "${selectedRole.value.name}"? This action cannot be undone.`)) {
-    const result = await rolePermissionStore.deleteRole(selectedRole.value.id)
+      const result = await roleStore.deleteRole(selectedRole.value.id)
     
     if (result.success) {
       closeRoleModal()
@@ -306,7 +320,7 @@ const deleteRole = async () => {
 
 const confirmDeleteRole = (role) => {
   if (confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
-    rolePermissionStore.deleteRole(role.id).then(result => {
+      roleStore.deleteRole(role.id).then(result => {
       if (result.success) {
         alert('Role deleted successfully!')
       } else {
@@ -332,6 +346,7 @@ const formatDate = (dateString) => {
 
 // Initialize data on mount
 onMounted(() => {
-  rolePermissionStore.initialize()
+    roleStore.fetchRoles()
+    permissionStore.fetchPermissions()
 })
 </script>
