@@ -65,7 +65,6 @@ router.beforeEach(async (to, from, next) => {
 
     const requiresAuth = to.matched.some(route => route.meta.guard === 'auth');
     const requiresGuest = to.matched.some(route => route.meta.guard === 'guest');
-    const requiredRoles = to.meta.roles || [];
 
     // Initialize store if not already done
     if (!store.isInitialized) {
@@ -98,6 +97,8 @@ router.beforeEach(async (to, from, next) => {
                 await store.getData();
             } catch (error) {
                 console.error('Authentication failed:', error);
+                // Clear any stale data and redirect to login
+                store.$reset();
                 return next({ name: 'login', query: { redirect: to.fullPath } });
             }
         }

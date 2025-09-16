@@ -104,29 +104,34 @@ export const useAuthStore = defineStore('auth', {
             if (this.isInitialized) return;
 
             try {
-                // Initialize role and permission stores
-                const roleStore = useRoleStore();
-                const permissionStore = usePermissionStore();
-
-                // Fetch roles and permissions in parallel
-                await Promise.all([
-                    roleStore.fetchRoles(),
-                    permissionStore.fetchPermissions()
-                ]);
-
-                this.isInitialized = true;
-                console.log('User store initialized with roles and permissions');
-
-                // Try to fetch user data if already authenticated
+                // Try to fetch user data first to check if authenticated
                 try {
                     await this.fetchUserData();
+                    
+                    // Only fetch roles and permissions if user is authenticated
+                    if (this.isAuthenticate) {
+                        const roleStore = useRoleStore();
+                        const permissionStore = usePermissionStore();
+
+                        // Fetch roles and permissions in parallel
+                        await Promise.all([
+                            roleStore.fetchRoles(),
+                            permissionStore.fetchPermissions()
+                        ]);
+                        
+                        console.log('User store initialized with roles and permissions');
+                    }
+                    
+                    this.isInitialized = true;
                     return { success: true, user: this.userData };
                 } catch (error) {
                     // Not authenticated, but store is still initialized
+                    this.isInitialized = true;
                     return { success: true, user: null };
                 }
             } catch (error) {
                 console.error('Failed to initialize user store:', error);
+                this.isInitialized = true; // Mark as initialized even on error to prevent loops
                 return { success: false, error: error.message };
             }
         },
@@ -158,18 +163,20 @@ export const useAuthStore = defineStore('auth', {
         // Get redirect path based on user's highest priority role
         getRedirectPath() {
             const roles = this.userData?.roles || [];
-            if (roles.length === 0) return { name: 'login' };
+            if (!roles || roles.length === 0) return { name: 'login' };
 
             // Define role-based redirect paths
             const roleRoutes = {
                 'ADMIN': { name: 'admin-dashboard' },
                 'Municipal Agriculturists': { name: 'municipal-agriculturist-dashboard' },
+                'Agricultural Extension Workers': { name: 'extension-worker-dashboard' },
             };
 
             // Get the highest priority role (first one in the array by default)
             const primaryRole = roles[0];
+            console.log('Primary role for redirect:', primaryRole, 'Available routes:', Object.keys(roleRoutes));
             
-            // Return the corresponding route or fallback to a default
+            return roleRoutes[primaryRole] || { name: 'login' };
         },
 
         // Login user
@@ -197,8 +204,15 @@ export const useAuthStore = defineStore('auth', {
                     const userResponse = await axios.get('/api/v1/auth/me');
 
                     if (userResponse.status === 200) {
+                        this.userData = userResponse.data;
+                        const redirectPath = this.getRedirectPath();
+                        console.log('Login successful, redirect path:', redirectPath); // Debug log
 
-
+                        return {
+                            success: true,
+                            data: userResponse.data,
+                            redirectPath: redirectPath
+                        };
                     }
                 }
             } catch (error) {
@@ -252,9 +266,16 @@ export const useAuthStore = defineStore('auth', {
             try {
                 // Call the logout endpoint to clear the server-side session
                 await axios.post('/api/v1/auth/logout');
-                this.router.push({ name: 'login' });
             } catch (error) {
                 console.error('Logout error:', error);
+            } finally {
+                // Always clear the user data regardless of logout API success
+                this.userData = {};
+                this.error = null;
+                this.loading = false;
+                
+                // Use window.location to redirect to avoid router issues
+                window.location.href = '/';
             }
         },
 
@@ -355,10 +376,10 @@ export const useAuthStore = defineStore('auth', {
 
         // Reset store state
         $reset() {
-            this.user = null;
+            this.userData = {};
             this.loading = false;
             this.error = null;
-            this.isAuthenticated = false;
+            this.isInitialized = false;
         }
     }
 

@@ -24,6 +24,7 @@ export const ADMIN_NAVIGATION = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
+        to: { name: 'admin-dashboard' },
         exact: true
     },
     {
@@ -32,10 +33,12 @@ export const ADMIN_NAVIGATION = [
         children: [
             {
                 title: 'All Users',
+                to: { name: 'admin-users' },
                 permission: 'CAN_VIEW_USER'
             },
             {
                 title: 'Roles & Permissions',
+                to: { name: 'admin-roles-permissions' },
                 permission: 'CAN_MANAGE_ROLES'
             }
         ]
@@ -82,6 +85,7 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
+        to: { name: 'municipal-agriculturist-dashboard' },
         exact: true
     },
     {
