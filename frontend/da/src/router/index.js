@@ -65,11 +65,20 @@ router.beforeEach(async (to, from, next) => {
 
     const requiresAuth = to.matched.some(route => route.meta.guard === 'auth');
     const requiresGuest = to.matched.some(route => route.meta.guard === 'guest');
+    const requiredRoles = to.meta.roles || [];
 
-    // Handle guest routes (login, register, etc.) - no need to initialize store
+    // Initialize store if not already done
+    if (!store.isInitialized) {
+        try {
+            await store.initialize();
+        } catch (error) {
+            console.error('Failed to initialize store:', error);
+        }
+    }
+
+    // Handle guest routes (login, register, etc.)
     if (requiresGuest) {
-        // Only check authentication if store is already initialized
-        if (store.isInitialized && store.isAuthenticate) {
+        if (store.isAuthenticate) {
             console.log('Already authenticated, redirecting to dashboard');
             const redirectPath = store.getRedirectPath();
             // Prevent redirect loop by checking if we're already going to the target
@@ -78,15 +87,6 @@ router.beforeEach(async (to, from, next) => {
             }
         }
         return next();
-    }
-
-    // Initialize store only when needed (for authenticated routes)
-    if (requiresAuth && !store.isInitialized) {
-        try {
-            await store.initialize();
-        } catch (error) {
-            console.error('Failed to initialize store:', error);
-        }
     }
 
     // Handle protected routes

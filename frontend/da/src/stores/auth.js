@@ -123,12 +123,10 @@ export const useAuthStore = defineStore('auth', {
                     return { success: true, user: this.userData };
                 } catch (error) {
                     // Not authenticated, but store is still initialized
-
                     return { success: true, user: null };
                 }
             } catch (error) {
                 console.error('Failed to initialize user store:', error);
-
                 return { success: false, error: error.message };
             }
         },
@@ -146,7 +144,6 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
                 this.userData = {};
-
                 throw error;
             } finally {
                 this.loading = false;
@@ -167,19 +164,12 @@ export const useAuthStore = defineStore('auth', {
             const roleRoutes = {
                 'ADMIN': { name: 'admin-dashboard' },
                 'Municipal Agriculturists': { name: 'municipal-agriculturist-dashboard' },
-                'Agricultural Extension Workers': { name: 'extension-worker-dashboard' }
             };
 
             // Get the highest priority role (first one in the array by default)
             const primaryRole = roles[0];
             
-            console.log('User roles:', roles);
-            console.log('Primary role:', primaryRole);
-            console.log('Available routes:', Object.keys(roleRoutes));
-            console.log('Redirect path:', roleRoutes[primaryRole]);
-
             // Return the corresponding route or fallback to a default
-            return roleRoutes[primaryRole] || { name: 'login' };
         },
 
         // Login user
@@ -207,19 +197,8 @@ export const useAuthStore = defineStore('auth', {
                     const userResponse = await axios.get('/api/v1/auth/me');
 
                     if (userResponse.status === 200) {
-                        this.userData = userResponse.data;
 
-                        console.log('Login successful, user data:', this.userData);
 
-                        // Get the appropriate redirect path based on user role
-                        const redirectPath = this.getRedirectPath();
-                        console.log('Redirecting to:', redirectPath);
-
-                        // Redirect directly from the store
-                        this.router.push(redirectPath);
-
-                        // Return success
-                        return { success: true, user: this.userData };
                     }
                 }
             } catch (error) {
@@ -236,7 +215,6 @@ export const useAuthStore = defineStore('auth', {
                 if (setErrors) {
                     setErrors.value = [errorMessage];
                 }
-
 
                 return {
                     success: false,
@@ -274,22 +252,9 @@ export const useAuthStore = defineStore('auth', {
             try {
                 // Call the logout endpoint to clear the server-side session
                 await axios.post('/api/v1/auth/logout');
-                
-                // Clear the authentication state
-                this.userData = {};
-                this.error = null;
-                this.isInitialized = false;
-                
-                // Redirect to login page using router
                 this.router.push({ name: 'login' });
             } catch (error) {
                 console.error('Logout error:', error);
-                // Even if logout fails, clear the local auth state and redirect
-                this.userData = {};
-                this.error = null;
-                this.isInitialized = false;
-
-                this.router.push({ name: 'login' });
             }
         },
 
