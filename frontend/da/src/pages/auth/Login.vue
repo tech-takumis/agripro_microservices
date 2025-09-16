@@ -219,6 +219,7 @@ const submitLogin = async () => {
   } finally {
     if (processing.value) processing.value = false;
   }
+
 }
 
 // Check for reset status from query params
