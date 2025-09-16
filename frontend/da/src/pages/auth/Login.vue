@@ -209,10 +209,10 @@ const submitLogin = async () => {
   try {
     const result = await authStore.login(form, setErrors, processing);
 
-    if (result?.success) {
-      // Redirect to admin dashboard on successful login
-      router.push('/admin/dashboard');
-    }
+      if (result?.success) {
+          // Redirect is now handled automatically by the auth store based on user role
+          console.log('Login successful, redirect handled by auth store');
+      }
   } catch (error) {
     console.error('Login error:', error);
     setErrors.value = [error.message || 'Login failed. Please try again.'];

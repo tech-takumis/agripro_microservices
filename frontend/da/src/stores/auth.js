@@ -9,11 +9,6 @@ export const useAuthStore = defineStore('auth', {
         loading: false,
         error: null,
         isInitialized: false,
-        // Initialize axios to send credentials with all requests
-        _initialized: (() => {
-            axios.defaults.withCredentials = true;
-            return true;
-        })()
     }),
 
     getters: {
@@ -128,36 +123,15 @@ export const useAuthStore = defineStore('auth', {
                     return { success: true, user: this.userData };
                 } catch (error) {
                     // Not authenticated, but store is still initialized
-                    this.clearAuth();
+
                     return { success: true, user: null };
                 }
             } catch (error) {
                 console.error('Failed to initialize user store:', error);
-                this.clearAuth();
+
                 return { success: false, error: error.message };
             }
         },
-
-        // Set authentication state
-        setAuthState(authenticated) {
-            // This is now handled by isAuthenticate getter based on userData
-            if (!authenticated) {
-                this.userData = {};
-            }
-            // Ensure axios sends credentials with every request
-            axios.defaults.withCredentials = true;
-        },
-
-        // Clear authentication
-        clearAuth() {
-            this.userData = {};
-            this.error = null;
-            // Clear any stored tokens or credentials
-            document.cookie = 'jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('user');
-        },
-
         // Fetch current user data
         async fetchUserData() {
             this.loading = true;
@@ -172,7 +146,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
                 this.userData = {};
-                this.clearAuth();
+
                 throw error;
             } finally {
                 this.loading = false;
@@ -193,15 +167,19 @@ export const useAuthStore = defineStore('auth', {
             const roleRoutes = {
                 'ADMIN': { name: 'admin-dashboard' },
                 'Municipal Agriculturists': { name: 'municipal-agriculturist-dashboard' },
-                'Agricultural Extension Workers': { name: 'aew-dashboard' }
+                'Agricultural Extension Workers': { name: 'extension-worker-dashboard' }
             };
 
             // Get the highest priority role (first one in the array by default)
-            // You can implement custom priority logic here if needed
             const primaryRole = roles[0];
+            
+            console.log('User roles:', roles);
+            console.log('Primary role:', primaryRole);
+            console.log('Available routes:', Object.keys(roleRoutes));
+            console.log('Redirect path:', roleRoutes[primaryRole]);
 
             // Return the corresponding route or fallback to a default
-            return roleRoutes[primaryRole] || { name: 'dashboard' };
+            return roleRoutes[primaryRole] || { name: 'login' };
         },
 
         // Login user
@@ -225,27 +203,23 @@ export const useAuthStore = defineStore('auth', {
                 );
 
                 if (loginResponse.status === 200) {
-                    // Import stores here to avoid circular dependencies
-                    const roleStore = useRoleStore();
-                    const permissionStore = usePermissionStore();
-
-                    // Fetch roles and permissions in parallel
-                    await Promise.all([
-                        roleStore.fetchRoles(),
-                        permissionStore.fetchPermissions()
-                    ]);
-
                     // Fetch the authenticated user
                     const userResponse = await axios.get('/api/v1/auth/me');
 
                     if (userResponse.status === 200) {
-                        this.user = userResponse.data;
-                        this.isAuthenticated = true;
+                        this.userData = userResponse.data;
 
-                        console.log('Login successful, user data:', this.user);
+                        console.log('Login successful, user data:', this.userData);
 
-                        // Return success and let the component handle the redirect
-                        return { success: true, user: this.user };
+                        // Get the appropriate redirect path based on user role
+                        const redirectPath = this.getRedirectPath();
+                        console.log('Redirecting to:', redirectPath);
+
+                        // Redirect directly from the store
+                        this.router.push(redirectPath);
+
+                        // Return success
+                        return { success: true, user: this.userData };
                     }
                 }
             } catch (error) {
@@ -263,7 +237,7 @@ export const useAuthStore = defineStore('auth', {
                     setErrors.value = [errorMessage];
                 }
 
-                this.clearAuth();
+
                 return {
                     success: false,
                     error: errorMessage,
@@ -286,12 +260,6 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await axios.post('/api/v1/auth/register', userData);
 
-                // If registration includes auto-login
-                if (response.data.token) {
-                    this.setToken(response.data.token);
-                    await this.fetchUserData();
-                }
-
                 return { success: true, data: response.data };
             } catch (error) {
                 this.error = error.response?.data?.message || 'Registration failed. Please try again.';
@@ -306,12 +274,22 @@ export const useAuthStore = defineStore('auth', {
             try {
                 // Call the logout endpoint to clear the server-side session
                 await axios.post('/api/v1/auth/logout');
+                
+                // Clear the authentication state
+                this.userData = {};
+                this.error = null;
+                this.isInitialized = false;
+                
+                // Redirect to login page using router
                 this.router.push({ name: 'login' });
             } catch (error) {
                 console.error('Logout error:', error);
-                // Even if logout fails, clear the local auth state
-            } finally {
-                this.clearAuth();
+                // Even if logout fails, clear the local auth state and redirect
+                this.userData = {};
+                this.error = null;
+                this.isInitialized = false;
+
+                this.router.push({ name: 'login' });
             }
         },
 
