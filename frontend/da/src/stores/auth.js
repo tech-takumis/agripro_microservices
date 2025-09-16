@@ -208,11 +208,8 @@ export const useAuthStore = defineStore('auth', {
                         const redirectPath = this.getRedirectPath();
                         console.log('Login successful, redirect path:', redirectPath); // Debug log
 
-                        return {
-                            success: true,
-                            data: userResponse.data,
-                            redirectPath: redirectPath
-                        };
+                        this.router.push(redirectPath);
+                        
                     }
                 }
             } catch (error) {
@@ -274,8 +271,8 @@ export const useAuthStore = defineStore('auth', {
                 this.error = null;
                 this.loading = false;
                 
-                // Use window.location to redirect to avoid router issues
-                window.location.href = '/';
+                // Use the router instance to navigate to login
+                this.router.push({ name: 'login' });
             }
         },
 

@@ -207,22 +207,7 @@ const submitLogin = async () => {
   setErrors.value = [];
   
   try {
-    const result = await authStore.login(form, setErrors, processing);
-
-    if (result?.success) {
-      console.log('Login successful:', result.data);
-      
-      // Redirect to appropriate dashboard based on user role
-      if (result.redirectPath) {
-        console.log('Redirecting to:', result.redirectPath);
-        router.push(result.redirectPath);
-      } else {
-        // Fallback redirect based on user role
-        const redirectPath = authStore.getRedirectPath();
-        console.log('Using fallback redirect:', redirectPath);
-        router.push(redirectPath);
-      }
-    }
+     await authStore.login(form, setErrors, processing);
   } catch (error) {
     console.error('Login error:', error);
     setErrors.value = [error.message || 'Login failed. Please try again.'];
