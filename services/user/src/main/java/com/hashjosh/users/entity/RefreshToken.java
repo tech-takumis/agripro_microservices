@@ -22,21 +22,22 @@ import java.time.Instant;
 public class RefreshToken {
 
     @Id
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", name = "token")
     private String token;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "user_ref")
     private String userRef;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "client_ip")
     private String clientIp;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT",name = "user_agent")
     private String userAgent;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "expiry")
     private Instant expiry;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 }

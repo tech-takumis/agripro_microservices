@@ -15,7 +15,6 @@ import java.util.UUID;
 public class UserServiceClient {
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UserServiceClient(RestClient.Builder builder) {
         this.restClient = builder

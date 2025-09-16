@@ -64,10 +64,8 @@ public class UserMapper {
 
     public UserResponse toUserResponse(User user) {
 
-
         // Get roles and permissions for user
         Set<RoleResponse> roles = new HashSet<>();
-
 
         user.getRoles().forEach(role -> {
             // Get the permissions for the role

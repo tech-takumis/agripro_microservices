@@ -1,7 +1,7 @@
-package com.hashjosh.insurance.clients;
+package com.hashjosh.rsbsa.clients;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.insurance.exceptions.InsuranceException;
+import com.hashjosh.rsbsa.exception.RsbsaException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,12 +31,12 @@ public class UserServiceClient {
                     if (res.getStatusCode().is2xxSuccessful()) {
                         return res.bodyTo(UserResponse.class);
                     } else if (res.getStatusCode() == HttpStatus.NOT_FOUND) {
-                        throw new InsuranceException(
+                        throw new RsbsaException(
                             "User id "+userId+" not found!",
                                 HttpStatus.NOT_FOUND.value()
                         );
                     }else{
-                       throw  new InsuranceException(
+                       throw  new RsbsaException(
                                "Failed to get user id " + userId + "status code: "+ res.getStatusCode(),
                                HttpStatus.BAD_REQUEST.value()
                        );

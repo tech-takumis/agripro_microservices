@@ -82,7 +82,7 @@ public class VerificationService {
             ApplicationDto applicationDto = new ApplicationDto(
                 result.getId(),
                     application.applicationTypeId(),
-                    user.getUserId(),
+                    UUID.fromString(user.getUserId()),
                     result.getStatus().name(),
                     result.getVersion()
             );

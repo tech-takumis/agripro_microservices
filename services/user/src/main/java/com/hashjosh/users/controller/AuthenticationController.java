@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ import java.time.Duration;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationController {
 
     private final UserService userService;
@@ -104,6 +106,8 @@ public class AuthenticationController {
             @RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken,
             HttpServletResponse response) {
 
+        log.info("Refresh and Access token received from logout route: access token: {} refresh token: {}",authorization,refreshToken);
+
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().body("Missing or invalid access token");
         }
@@ -120,13 +124,13 @@ public class AuthenticationController {
         // 🧹 Tenant-specific behavior
         if ("pcic".equalsIgnoreCase(tenantId) || "agriculture".equalsIgnoreCase(tenantId)) {
             // Expire cookies by setting Max-Age=0
-            Cookie emptyAccessCookie = new Cookie("access_token", null);
+            Cookie emptyAccessCookie = new Cookie("ACCESS_TOKEN", null);
             emptyAccessCookie.setPath("/");
             emptyAccessCookie.setHttpOnly(true);
             emptyAccessCookie.setMaxAge(0);
             response.addCookie(emptyAccessCookie);
 
-            Cookie emptyRefreshCookie = new Cookie("refresh_token", null);
+            Cookie emptyRefreshCookie = new Cookie("REFRESH_TOKEN", null);
             emptyRefreshCookie.setPath("/");
             emptyRefreshCookie.setHttpOnly(true);
             emptyRefreshCookie.setMaxAge(0);

@@ -21,27 +21,29 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true,name = "username")
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "password")
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "first_name")
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "last_name")
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true,name = "email")
     private String email;
 
+    @Column(nullable = true, name = "phone_number")
     private String phoneNumber;
 
+    @Column(nullable = true, name = "address")
     private String address;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false,name = "tenant_type")
     private TenantType tenantType; // PCIC. FARMER, PCIC
 
     @ManyToMany(fetch = FetchType.EAGER)

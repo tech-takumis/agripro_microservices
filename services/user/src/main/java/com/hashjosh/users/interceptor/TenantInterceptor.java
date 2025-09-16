@@ -5,8 +5,7 @@ import com.hashjosh.jwtshareable.service.TenantContext;
 import com.hashjosh.users.properties.TenantProperties;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,8 +15,8 @@ import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class TenantInterceptor implements HandlerInterceptor {
-    private static final Logger log = LoggerFactory.getLogger(TenantInterceptor.class);
     private final TenantProperties tenantProperties;
     private final JwtService jwtService;
 
@@ -27,10 +26,11 @@ public class TenantInterceptor implements HandlerInterceptor {
         String tenantId = extractTenant(request);
         if (tenantId != null && tenantProperties.getTenants().containsKey(tenantId)) {
             TenantContext.setTenantId(tenantId);
-            log.debug("Resolved tenant from request: {}", tenantId);
+            log.info("Resolved tenant from request: {}", tenantId);
         } else {
-            TenantContext.setTenantId(tenantProperties.getDefaultTenant());
-            log.debug("Falling back to default tenant: {}", tenantProperties.getDefaultTenant());
+            String defaultTenant = tenantProperties.getDefaultTenant();
+            TenantContext.setTenantId(defaultTenant);
+            log.info("Falling back to default tenant: {}", defaultTenant);
         }
         return true;
     }
@@ -39,6 +39,7 @@ public class TenantInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         TenantContext.clear();
+        log.debug("Cleared tenant context after request");
     }
 
     private String extractTenant(HttpServletRequest request) {
@@ -64,7 +65,7 @@ public class TenantInterceptor implements HandlerInterceptor {
             return tenant;
         }
 
-        // Fallback to domain (optional, remove if not needed)
+        // Fallback to domain
         String domain = request.getServerName();
         if (domain.contains(".")) {
             tenant = domain.substring(0, domain.indexOf('.'));
@@ -72,25 +73,30 @@ public class TenantInterceptor implements HandlerInterceptor {
             return tenant;
         }
 
+        log.debug("No tenantId extracted from request");
         return null;
     }
 
     private String extractJwt(HttpServletRequest request) {
-        // Check Authorization header (Bearer token)
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            log.debug("Extracted JWT from Authorization header");
             return authHeader.substring(7);
         }
 
-        // Check ACCESS_TOKEN cookie (for pcic and agriculture)
         if (request.getCookies() != null) {
-            return Arrays.stream(request.getCookies())
+            String jwt = Arrays.stream(request.getCookies())
                     .filter(cookie -> "ACCESS_TOKEN".equals(cookie.getName()))
                     .map(jakarta.servlet.http.Cookie::getValue)
                     .findFirst()
                     .orElse(null);
+            if (jwt != null) {
+                log.debug("Extracted JWT from ACCESS_TOKEN cookie");
+                return jwt;
+            }
         }
 
+        log.debug("No JWT found in request");
         return null;
     }
 }
