@@ -169,15 +169,15 @@
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { computed, ref } from 'vue'
 import { 
   User, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle 
 } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
-const store = useUserStore()
+const authStore = useAuthStore()
 
 const form = ref({
   username: '',
@@ -200,12 +200,26 @@ const hasFieldError = (field) => {
   )
 }
 
-const submitLogin = () => {
+const router = useRouter();
+
+const submitLogin = async () => {
   // Clear previous errors
-  setErrors.value = []
+  setErrors.value = [];
   
-  // Call store login method with the same signature as your existing store
-  store.login(form, setErrors, processing)
+  try {
+    const result = await authStore.login(form, setErrors, processing);
+
+    if (result?.success) {
+      // Redirect to admin dashboard on successful login
+      router.push('/admin/dashboard');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    setErrors.value = [error.message || 'Login failed. Please try again.'];
+  } finally {
+    if (processing.value) processing.value = false;
+  }
+
 }
 
 // Check for reset status from query params
