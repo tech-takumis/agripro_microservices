@@ -19,7 +19,7 @@ public class UserServiceClient {
 
     public UserServiceClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://document-service/api/v1/users")
+                .baseUrl("http://user-service/api/v1/users")
                 .build();
     }
 

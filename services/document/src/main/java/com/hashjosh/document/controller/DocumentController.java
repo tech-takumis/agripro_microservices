@@ -1,5 +1,6 @@
 package com.hashjosh.document.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.document.dto.DocumentRequest;
 import com.hashjosh.document.dto.DocumentResponse;
 import com.hashjosh.document.service.DocumentService;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -30,14 +32,19 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ResponseStatus(HttpStatus.ACCEPTED)
-//    @PreAuthorize("hasAnyRole('ADMIN', 'FARMER')")
-    public ResponseEntity<DocumentResponse> uploadDocumentAsync(@ModelAttribute DocumentRequest request)
-            throws ServerException, InsufficientDataException, ErrorResponseException,
-            IOException, NoSuchAlgorithmException, InvalidKeyException,
-            InvalidResponseException, XmlParserException, InternalException {
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<DocumentResponse> uploadDocument(
+            @RequestPart("referenceId") String referenceId,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("documentType") String documentType,
+            @RequestPart(value = "metaData", required = false) String metaData
+    ) throws Exception {
+        UUID referenceUuid = UUID.fromString(referenceId);
+        DocumentRequest request = new DocumentRequest(referenceUuid, file,documentType,
+                metaData != null ? new ObjectMapper().readTree(metaData) : null);
+
         DocumentResponse document = documentService.upload(request);
-        return ResponseEntity.accepted().body(document);
+        return ResponseEntity.status(HttpStatus.CREATED).body(document);
     }
     @GetMapping("/{documentId}")
 //    @PreAuthorize("isAuthenticated()")

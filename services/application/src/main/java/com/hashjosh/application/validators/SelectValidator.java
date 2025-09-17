@@ -14,31 +14,66 @@ public class SelectValidator implements ValidatorStrategy {
     @Override
     public List<ValidationErrors> validate(ApplicationField field, JsonNode value) {
         List<ValidationErrors> errors = new ArrayList<>();
+        
+        // First check if the value is textual
         if (!value.isTextual()) {
-           errors.add(new ValidationErrors(
-                   field.getKey(),
-                   "Field must be a text value (SELECT)"
-           ));
-        }
-
-        JsonNode allowedChoices = field.getChoices().get(field.getFieldName());
-
-        if (allowedChoices == null || !allowedChoices.isArray()) {
             errors.add(new ValidationErrors(
-                    field.getFieldName(),
-                    "Field must have a valid set of choices (SELECT)"
+                    field.getKey(),
+                    "Field must be a text value (SELECT)"
             ));
+            return errors; // Return early if not text
         }
 
-        String submitted = value.asText();
-        boolean isValid = StreamSupport.stream(allowedChoices.spliterator(), false)
-                .anyMatch(choice -> choice.asText().equalsIgnoreCase(submitted));
+        // Get the choices JsonNode
+        JsonNode choices = field.getChoices();
+        if (choices == null) {
+            errors.add(new ValidationErrors(
+                    field.getKey(),
+                    "No choices defined for field: " + field.getKey()
+            ));
+            return errors; // Return early if no choices
+        }
 
-        if (!isValid) {
-           errors.add(new ValidationErrors(
-                   field.getFieldName(),
-                   "Invalid value '" + submitted + "' for field '" + field.getFieldName() + "'. Allowed: " + allowedChoices
-           ));
+        // Debug log the choices structure
+        System.out.println("Choices for field " + field.getKey() + ": " + choices);
+
+        // Check if choices is an array directly
+        if (choices.isArray()) {
+            return validateAgainstChoices(field, value.asText(), choices, errors);
+        }
+        
+        // If not an array, try to get the array by field key
+        JsonNode allowedChoices = choices.get(field.getKey());
+        if (allowedChoices != null && allowedChoices.isArray()) {
+            return validateAgainstChoices(field, value.asText(), allowedChoices, errors);
+        }
+
+        // If we get here, the choices structure is not as expected
+        errors.add(new ValidationErrors(
+                field.getKey(),
+                "Invalid choices format for field: " + field.getKey() + ". Expected an array or an object with field key."
+        ));
+        return errors;
+    }
+
+    private List<ValidationErrors> validateAgainstChoices(ApplicationField field, String submittedValue, 
+                                                         JsonNode allowedChoices, List<ValidationErrors> errors) {
+        try {
+            boolean isValid = StreamSupport.stream(allowedChoices.spliterator(), false)
+                    .anyMatch(choice -> choice.asText().equalsIgnoreCase(submittedValue));
+
+            if (!isValid) {
+                errors.add(new ValidationErrors(
+                        field.getKey(),
+                        "Invalid value '" + submittedValue + "' for field '" + field.getFieldName() + 
+                        "'. Allowed values: " + allowedChoices
+                ));
+            }
+        } catch (Exception e) {
+            errors.add(new ValidationErrors(
+                    field.getKey(),
+                    "Error validating field " + field.getKey() + ": " + e.getMessage()
+            ));
         }
         return errors;
     }

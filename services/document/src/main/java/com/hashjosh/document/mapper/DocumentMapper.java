@@ -3,6 +3,7 @@ package com.hashjosh.document.mapper;
 import com.hashjosh.document.config.CustomUserDetails;
 import com.hashjosh.document.dto.DocumentRequest;
 import com.hashjosh.document.dto.DocumentResponse;
+import com.hashjosh.document.enums.DocumentType;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class DocumentMapper {
                     .fileName(request.file().getOriginalFilename())
                     .fileType(request.file().getContentType())
                     .referenceId(request.referenceId())
+                    .documentType(DocumentType.valueOf(request.documentType().toUpperCase()))
                     .uploadedBy(UUID.fromString(userDetails.getUserId()))
                     .objectKey(objectKey)
                     .metaData(request.metaData())
