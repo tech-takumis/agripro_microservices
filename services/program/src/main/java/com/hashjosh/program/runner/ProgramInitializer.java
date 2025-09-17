@@ -27,38 +27,22 @@ public class ProgramInitializer {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ProgramRepository programRepository;
-    private final ScheduleRepository scheduleRepository;
 
     @Bean
-    CommandLineRunner seedData() {
+    CommandLineRunner seedPrograms() {
         return args -> {
 
             initializePrograms();
-            // --- Seed Schedules ---
-            if (scheduleRepository.count() == 0) {
-                List<Schedule> schedules = new ArrayList<>();
-                for (int i = 1; i <= 10; i++) {
-                    ObjectNode meta = objectMapper.createObjectNode();
-                    meta.put("farmerName", "Farmer " + i);
-                    meta.put("location", "Field " + i);
-                    meta.put("purpose", "Inspection " + i);
 
-                    Schedule schedule = new Schedule();
-                    schedule.setType(i % 2 == 0 ? ScheduleType.VISIT : ScheduleType.MEETING);
-                    schedule.setScheduleDate(LocalDateTime.now().plusDays(i));
-                    schedule.setPriority(i % 2 == 0 ? SchedulePriority.HIGH : SchedulePriority.MEDIUM);
-                    schedule.setMetaData(meta);
-
-                    schedules.add(schedule);
-                }
-                scheduleRepository.saveAll(schedules);
-                System.out.println("✅ Inserted " + schedules.size() + " schedules.");
-            }
         };
     }
 
+    private boolean isProgramNotNull() {
+        return programRepository.count() > 0;
+    }
+
     private void initializePrograms() {
-        if (programRepository.count() == 0) {
+        if (!isProgramNotNull()) {
             List<Program> programs = new ArrayList<>();
             for (int i = 1; i <= 10; i++) {
                 ObjectNode extra = objectMapper.createObjectNode();

@@ -8,7 +8,7 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-    url: jdbc:postgresql://localhost:5432/agripro_document
+    url: jdbc:postgresql://localhost:5432/document
     username: agripro
     password: agripro
     driver-class-name: org.postgresql.Driver
@@ -31,6 +31,12 @@ spring:
       properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon"
         spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract,verificationContract:com.hashjosh.kafkacommon.verification.VerificationContract
+
+minio:
+  url: http://localhost:9000
+  accessKey: minio
+  secretKey: minio123
+  bucket: documents
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

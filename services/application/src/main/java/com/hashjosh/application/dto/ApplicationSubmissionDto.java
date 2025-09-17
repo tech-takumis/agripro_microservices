@@ -1,34 +1,34 @@
 package com.hashjosh.application.dto;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-public record ApplicationSubmissionDto(
-        JsonNode fieldValues,
-        Map<String, MultipartFile> files
-) {
-        // Constructor to handle String input for fieldValues
-        public ApplicationSubmissionDto(String fieldValues, Map<String, MultipartFile> files) {
-                this(convertToJsonNode(fieldValues), files);
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ApplicationSubmissionDto {
+        private UUID applicationTypeId;
+        private Map<String, Object> fieldValues = new HashMap<>();
+        private List<UUID> documentIds; // For tracking document references
+
+        @JsonAnyGetter
+        public Map<String, Object> getFieldValues() {
+                return fieldValues;
         }
 
-        private static JsonNode convertToJsonNode(String fieldValues) {
-                if (fieldValues == null || fieldValues.trim().isEmpty()) {
-                        throw new IllegalArgumentException("Field values cannot be null or empty");
-                }
-                try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode node = mapper.readTree(fieldValues);
-                        if (!node.isObject()) {
-                                throw new IllegalArgumentException("Field values must be a valid JSON object");
-                        }
-                        return node;
-                } catch (Exception e) {
-                        throw new IllegalArgumentException("Invalid JSON format for fieldValues: " + e.getMessage(), e);
-                }
+        @JsonAnySetter
+        public void setFieldValue(String key, Object value) {
+                this.fieldValues.put(key, value);
         }
 }

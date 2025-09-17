@@ -1,7 +1,11 @@
 spring:
   application:
     name: document-service
-  config:
-    import: optional:configserver:http://localhost:8888
   profiles:
     active: local
+
+minio:
+  url: http://minio:9000
+  accessKey: minio
+  secretKey: minio123
+  bucket: documents

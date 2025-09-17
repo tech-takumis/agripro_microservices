@@ -1,11 +1,15 @@
-package com.hashjosh.workflow.model;
+package com.hashjosh.program.entity;
 
-import com.hashjosh.workflow.enums.ScheduleType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.hashjosh.program.enums.SchedulePriority;
+import com.hashjosh.program.enums.ScheduleType;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,6 +20,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @ToString
 @Table(name = "schedules")
+@AllArgsConstructor
+@Builder
 public class Schedule {
 
     @Id
@@ -32,5 +38,15 @@ public class Schedule {
     @Column(name = "priority", nullable = false)
     private SchedulePriority priority;
 
+    @Column(name = "meta_data", nullable = false, columnDefinition = "jsonb")
+    @Type(JsonBinaryType.class)
+    private JsonNode metaData;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
 }

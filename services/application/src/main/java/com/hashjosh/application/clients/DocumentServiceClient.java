@@ -73,4 +73,32 @@ public class DocumentServiceClient {
             throw new FileUploadException("Invalid response format from document service: " + rawResponse.getBody(),500,"asda");
         }
     }
+
+    public DocumentResponse getDocument(String token, UUID documentId) {
+        try {
+            return restClient.get()
+                    .uri("/info/{documentId}", documentId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            (request, response) -> {
+                                throw new FileUploadException(
+                                        "Failed to fetch document. Status: " + response.getStatusCode() +
+                                                " Body: " + response.getBody(),
+                                        response.getStatusCode().value(),
+                                        "/api/v1/documents/" + documentId + "/info"
+                                );
+                            }
+                    )
+                    .body(DocumentResponse.class);
+        } catch (Exception ex) {
+            log.error("Error fetching document with id: " + documentId, ex);
+            throw new FileUploadException(
+                    "Error fetching document: " + ex.getMessage(),
+                    500,
+                    "/api/v1/documents/" + documentId + "/info"
+            );
+        }
+    }
 }

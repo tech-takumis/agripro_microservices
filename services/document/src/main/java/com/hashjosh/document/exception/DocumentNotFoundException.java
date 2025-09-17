@@ -14,11 +14,10 @@ public class DocumentNotFoundException extends RuntimeException {
     private int statusCode;
     private String path;
 
-    public DocumentNotFoundException(String message, int statusCode, String path) {
+    public DocumentNotFoundException(String message, int statusCode) {
         super(message);
         this.message = message;
         this.statusCode = statusCode;
-        this.path = path;
     }
 
     public ExceptionResponse getException(){

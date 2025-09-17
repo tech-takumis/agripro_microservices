@@ -9,5 +9,6 @@ public enum  FieldType {
     MULTI_SELECT,
     FILE,
     SIGNATURE,
-    LOCATION
+    LOCATION,
+    JSON
 }

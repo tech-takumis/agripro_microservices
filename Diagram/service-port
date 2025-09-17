@@ -4,6 +4,5 @@ user ->        8030
 verification -> 98040
 workflow ->    8050
 rsbsa ->       8060
-role ->        8070
 discovery-server -> 8761
 gateway-service -> 9000

@@ -1,7 +1,9 @@
 package com.hashjosh.application.mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.dto.ApplicationResponseDto;
+import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.enums.ApplicationStatus;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
@@ -49,5 +51,18 @@ public class ApplicationMapper {
                 application.getVersion()
         );
 
+    }
+
+    public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, String userId) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode dynamicFieldsNode = objectMapper.valueToTree(submission.getFieldValues());
+
+        return Application.builder()
+                .applicationType(type)
+                .userId(UUID.fromString(userId))
+                .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
+                .status(ApplicationStatus.SUBMITTED)
+                .submittedAt(LocalDateTime.now())
+                .build();
     }
 }
