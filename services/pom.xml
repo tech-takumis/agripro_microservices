@@ -23,6 +23,7 @@
         <module>verification</module>
         <module>workflow</module>
         <module>rsbsa</module>
+        <module>program</module>
     </modules>
 
     <properties>

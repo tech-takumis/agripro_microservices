@@ -1,13 +1,9 @@
 package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.DocumentServiceClient;
-import com.hashjosh.application.configs.CustomUserDetails;
-import com.hashjosh.application.dto.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.DocumentResponse;
-import com.hashjosh.application.dto.ValidationErrors;
+import com.hashjosh.application.dto.*;
 import com.hashjosh.application.enums.ApplicationStatus;
 import com.hashjosh.application.exceptions.ApplicationNotFoundException;
 import com.hashjosh.application.exceptions.InvalidStatusException;
@@ -18,20 +14,18 @@ import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationSection;
 import com.hashjosh.application.model.ApplicationType;
 import com.hashjosh.application.repository.ApplicationRepository;
+import com.hashjosh.application.repository.ApplicationTypeRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
-import com.hashjosh.application.validators.FileValidator;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
 import com.hashjosh.kafkacommon.application.ApplicationDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -48,107 +42,96 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeService applicationTypeService;
+    private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
     private static final Logger logger = LoggerFactory.getLogger(ApplicationService.class);
     private final ApplicationProducer applicationProducer;
     private final DocumentServiceClient documentServiceClient;
 
-    @Transactional
-    public List<ValidationErrors> submitApplication(ApplicationSubmissionDto submission,
-                                                    UUID applicationTypeId, HttpServletRequest request
-                                                    ) throws FileUploadException {
-        // Validate input
-        if (submission == null || submission.fieldValues() == null) {
-            return List.of(new ValidationErrors("fieldValues", "Field values cannot be null"));
+    public ApplicationSubmissionResponse processSubmission(
+            ApplicationSubmissionDto submission,
+            String userId) {
+
+        // 1. Validate application type exists
+        ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Application type not found: " + submission.getApplicationTypeId()));
+
+        // 2. Get all fields for this application type
+        List<ApplicationField> fields = applicationType.getSections().stream()
+                .flatMap(section -> section.getFields().stream())
+                .collect(Collectors.toList());
+
+        // 3. Validate fields
+        List<ValidationError> validationErrors = validateSubmission(submission, fields);
+
+        if (!validationErrors.isEmpty()) {
+            return ApplicationSubmissionResponse.builder()
+                    .success(false)
+                    .message("Validation failed")
+                    .errors(validationErrors)
+                    .build();
         }
 
-        JsonNode fieldValues = submission.fieldValues();
-        if (!fieldValues.isObject()) {
-            return List.of(new ValidationErrors("fieldValues", "Field values must be a JSON object"));
-        }
+        // 4. Process and save the application
+        Application application = applicationMapper.toEntity(submission,applicationType, userId);
+        Application savedApplication = applicationRepository.save(application);
 
-        // Convert JsonNode to ObjectNode
-        ObjectNode mutableFields;
-        try {
-            mutableFields = (ObjectNode) fieldValues; // Direct cast since fieldValues is already a JsonNode
-        } catch (ClassCastException e) {
-            return List.of(new ValidationErrors("fieldValues", "Field values must be a valid JSON object"));
-        }
-
-        ApplicationType applicationType = applicationTypeService.getApplicationTypeById(applicationTypeId);
-
-        CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String userId = customUserDetails.getUserId();
-
-        List<ValidationErrors> allErrors = validateAndProcessFields(applicationType,
-                mutableFields, submission,applicationTypeId, userId ,request);
-
-        if (!allErrors.isEmpty()) {
-            return allErrors;
-        }
-
-        // No need to convert back to JsonNode since mutableFields is already a JsonNode
-       Application application = applicationRepository.saveAndFlush(applicationMapper.toApplication(applicationType, mutableFields, userId));
-        logger.info("Application submitted successfully::: {}", application.getId());
-       ApplicationDto applicationDto = applicationMapper.toApplicationDto(application);
-
-
-        // Send event application submit to application event topic
-        applicationProducer.submitApplication(
-                new ApplicationContract(
-                        UUID.randomUUID(),
-                        "application-submitted",
-                        1,
-                        application.getId(),
-                        LocalDateTime.now(),
-                        applicationDto
-                )
-        );
-
-        return List.of();
+        return ApplicationSubmissionResponse.builder()
+                .success(true)
+                .message("Application submitted successfully")
+                .applicationId(savedApplication.getId())
+                .build();
     }
 
+    private List<ValidationError> validateSubmission(
+            ApplicationSubmissionDto submission,
+            List<ApplicationField> fields) {
 
+        List<ValidationError> errors = new ArrayList<>();
 
+        // 1. Check required fields
+        fields.stream()
+                .filter(ApplicationField::getRequired)
+                .filter(field -> !submission.getFieldValues().containsKey(field.getKey()))
+                .forEach(field -> errors.add(new ValidationError(
+                        field.getKey(),
+                        String.format("Field '%s' is required", field.getFieldName())
+                )));
 
-    public List<ValidationErrors> validateAndProcessFields(ApplicationType applicationType,
-                                                           ObjectNode mutableFields,
-                                                           ApplicationSubmissionDto submission,
-                                                           UUID applicationId,
-                                                           String userId,
-                                                           HttpServletRequest request
+        // 2. Validate field types and constraints
+        submission.getFieldValues().forEach((key, value) -> {
+            fields.stream()
+                    .filter(field -> field.getKey().equals(key))
+                    .findFirst()
+                    .ifPresent(field -> {
+                        try {
+                            // Get the appropriate validator for the field type
+                            ValidatorStrategy validator = fieldValidatorFactory.getStrategy(field.getFieldType().name());
+                            // Convert value to JsonNode and validate the field value
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            JsonNode valueNode = objectMapper.valueToTree(value);
+                            List<ValidationErrors> fieldErrors = validator.validate(field, valueNode);
+                            if (fieldErrors != null && !fieldErrors.isEmpty()) {
+                                // Since ValidationErrors is being used as a single error, we'll treat it as such
+                                // and create a ValidationError with the same field and message
+                                fieldErrors.forEach(validationError -> 
+                                    errors.add(new ValidationError(
+                                        field.getKey(),  // Using the field key as the field name
+                                        validationError.toString()  // Convert the error to string as the message
+                                    ))
+                                );
+                            }
+                        } catch (IllegalArgumentException e) {
+                            errors.add(new ValidationError(
+                                field.getKey(),
+                                String.format("Unsupported field type: %s", field.getFieldType())
+                            ));
+                        }
+                    });
+        });
 
-    ) throws FileUploadException {
-
-        List<ValidationErrors> allErrors = new ArrayList<>();
-        for (ApplicationSection section: applicationType.getSections()) {
-            for(ApplicationField field: section.getFields()) {
-                String key = field.getKey();
-                String fieldName = field.getFieldName();
-                String fieldType = field.getFieldType().name();
-                JsonNode submittedValue = mutableFields.get(key);
-
-                if(field.getRequired() && submittedValue == null) {
-                    allErrors.add(new ValidationErrors(key,"Field " + fieldName + " is required"));
-                    continue;
-                }
-                if(submittedValue != null && !submittedValue.isMissingNode()) {
-                    ValidatorStrategy validator =  fieldValidatorFactory.getStrategy(fieldType);
-
-                    List<ValidationErrors> fieldErrors = validator.validate(field, submittedValue);
-                    allErrors.addAll(fieldErrors);
-
-                    if (fieldErrors.isEmpty() && validator instanceof FileValidator fileValidator) {
-                        String savePath = fileValidator.saveFile(submittedValue,
-                                submission.files(), applicationId, userId, request);
-                        mutableFields.put(key, savePath);
-                    }
-
-                }
-
-            }
-        }
-        return allErrors;
+        return errors;
     }
 
 
@@ -205,12 +188,4 @@ public class ApplicationService {
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 
-    public String testFileUpload(MultipartFile file,HttpServletRequest request) throws IOException {
-        String token = request.getHeader("Authorization").substring(7);
-        UUID applicationId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-
-        DocumentResponse document = documentServiceClient.uploadDocument(token,applicationId,userId,file);
-        return "File uploaded successfully";
-    }
 }

@@ -25,7 +25,8 @@ public class FieldValidatorFactory {
             SelectValidator selectValidator,
             SignatureValidator signatureValidator,
             TextValidator textValidator,
-            MultiSelectValidator multiSelectValidator
+            MultiSelectValidator multiSelectValidator,
+            JsonValidator jsonValidator
     ) {
         strategies.put(FieldType.BOOLEAN.name(), booleanValidator);
         strategies.put(FieldType.DATE.name(), dateValidator);
@@ -36,6 +37,7 @@ public class FieldValidatorFactory {
         strategies.put(FieldType.SIGNATURE.name(), signatureValidator);
         strategies.put(FieldType.TEXT.name(), textValidator);
         strategies.put(FieldType.MULTI_SELECT.name(), multiSelectValidator);
+        strategies.put(FieldType.JSON.name(), jsonValidator);
     }
 
     public ValidatorStrategy getStrategy(String fieldType){

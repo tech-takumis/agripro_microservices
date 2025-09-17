@@ -1,4 +1,9 @@
 package com.hashjosh.program.enums;
 
-public class ProgramStatus {
+public enum ProgramStatus {
+    ACTIVE,
+    INACTIVE,
+    PENDING,
+    COMPLETED,
+    CANCELLED,
 }

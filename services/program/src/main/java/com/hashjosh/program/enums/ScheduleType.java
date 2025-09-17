@@ -1,4 +1,4 @@
-package com.hashjosh.workflow.enums;
+package com.hashjosh.program.enums;
 
 public enum ScheduleType {
     VISIT,

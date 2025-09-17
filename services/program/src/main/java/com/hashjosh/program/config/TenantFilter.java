@@ -1,4 +1,4 @@
-package com.hashjosh.application.configs;
+package com.hashjosh.program.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.jwtshareable.service.TenantContext;
