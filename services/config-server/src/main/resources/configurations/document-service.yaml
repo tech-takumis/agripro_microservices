@@ -2,8 +2,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 100MB
+      max-file-size: 200MB
+      max-request-size: 200MB
   datasource:
     hikari:
       maximum-pool-size: 10
@@ -16,7 +16,7 @@ spring:
     database: postgresql
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     generate-ddl: true
     properties:
       hibernate:

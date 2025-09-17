@@ -3,9 +3,3 @@ spring:
     name: document-service
   profiles:
     active: local
-
-minio:
-  url: http://minio:9000
-  accessKey: minio
-  secretKey: minio123
-  bucket: documents
