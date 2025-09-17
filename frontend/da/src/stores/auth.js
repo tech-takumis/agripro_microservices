@@ -206,10 +206,7 @@ export const useAuthStore = defineStore('auth', {
                     if (userResponse.status === 200) {
                         this.userData = userResponse.data;
                         const redirectPath = this.getRedirectPath();
-                        console.log('Login successful, redirect path:', redirectPath); // Debug log
-
                         this.router.push(redirectPath);
-                        
                     }
                 }
             } catch (error) {
