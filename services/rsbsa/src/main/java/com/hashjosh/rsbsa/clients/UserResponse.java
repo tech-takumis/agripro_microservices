@@ -1,4 +1,4 @@
-package com.hashjosh.insurance.clients;
+package com.hashjosh.rsbsa.clients;
 
 import lombok.Builder;
 import lombok.Data;

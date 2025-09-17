@@ -42,7 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String accessToken = extractAccessToken(request);
             String refreshToken = extractRefreshToken(request);
             String clientIp = request.getRemoteAddr();
+            String path = request.getRequestURI();
             String userAgent = request.getHeader("User-Agent");
+
+            log.info("Refresh and access token received from {} the user " +
+                    "jwt authentication filter access token: {} refresh token{}"
+                    ,path,accessToken,refreshToken);
 
             if (accessToken != null) {
                 if (!jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
@@ -112,7 +117,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             });
         });
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, roles);
+        Authentication auth = new UsernamePasswordAuthenticationToken(customUser,
+                null, roles);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

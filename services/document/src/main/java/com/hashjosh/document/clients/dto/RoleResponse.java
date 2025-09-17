@@ -1,5 +1,6 @@
-package com.hashjosh.document.config;
+package com.hashjosh.document.clients.dto;
 
+import com.hashjosh.document.config.PermissionResponse;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;

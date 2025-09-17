@@ -10,4 +10,5 @@ public enum ApplicationStatus {
     REJECTED_BY_DA,
     POLICY_ISSUED,
     CLAIM_APPROVED,
+    REJECTED
 }

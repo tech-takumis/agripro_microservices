@@ -1,5 +1,5 @@
 multitenancy:
-  defaultTenant: pcic
+  defaultTenant: agriculture
   tenants:
     farmer:
       url: jdbc:postgresql://localhost:5432/farmer

@@ -207,19 +207,13 @@ const submitLogin = async () => {
   setErrors.value = [];
   
   try {
-    const result = await authStore.login(form, setErrors, processing);
-
-    if (result?.success) {
-      // Redirect to admin dashboard on successful login
-      router.push('/admin/dashboard');
-    }
+     await authStore.login(form, setErrors, processing);
   } catch (error) {
     console.error('Login error:', error);
     setErrors.value = [error.message || 'Login failed. Please try again.'];
   } finally {
     if (processing.value) processing.value = false;
   }
-
 }
 
 // Check for reset status from query params

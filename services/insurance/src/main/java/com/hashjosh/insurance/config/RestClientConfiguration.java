@@ -1,4 +1,4 @@
-package com.hashjosh.application.configs;
+package com.hashjosh.insurance.config;
 
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;

@@ -128,13 +128,6 @@ public Date getExpirationDateFromToken(String token) {
 }
 
 /**
- * Extracts issued date from token
- */
-public Date getIssuedAtDateFromToken(String token) {
-    return getAllClaims(token).getIssuedAt();
-}
-
-/**
  * Calculate remaining validity time in milliseconds
  */
 public long getRemainingTimeInMillis(String token) {

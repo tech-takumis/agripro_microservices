@@ -19,6 +19,7 @@ public enum VerificationStatus {
     VERIFIED,
     PENDING,
     CANCELLED,
+    REJECTED,
 
     CANCELLED_BY_USER;
 }

@@ -1,6 +1,8 @@
 package com.hashjosh.verification.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.verification.clients.UserResponse;
+import com.hashjosh.verification.clients.UserServiceClient;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,24 +20,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final UserServiceClient userServiceClient;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        logger.info(String.format("%s %s %s", method, path, authHeader));
 
         String token = authHeader.substring(7);
 
@@ -68,29 +64,34 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(token);
         String username = jwtService.getUsernameFromToken(token);
         String userId = claims.get("userId", String.class);
-        String email = claims.get("email", String.class);
-        String role = claims.get("role", String.class);
-        List<String> permissions = claims.get("permissions", List.class);
+        String tenantId = claims.get("tenantId", String.class);
 
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(role));
+        UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
 
-        if(!permissions.isEmpty()) {
-            permissions.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission)));
-        }
+        Set<SimpleGrantedAuthority> roles = new HashSet<>();
+
+        user.getRoles().forEach(role -> {
+            roles.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
+            role.getPermissions().forEach(
+                    permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
+            );
+
+        });
 
         CustomUserDetails userDetails = new CustomUserDetails(
+                token,
                 userId,
+                tenantId,
                 username,
-                email,
-                authorities
+                user.getEmail(),
+                roles
         );
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        authorities
+                        roles
                 );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

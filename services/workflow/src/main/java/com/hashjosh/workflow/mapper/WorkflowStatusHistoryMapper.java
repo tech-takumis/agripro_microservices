@@ -1,6 +1,5 @@
 package com.hashjosh.workflow.mapper;
 
-import com.hashjosh.workflow.dto.ApplicationResponseDto;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;
 import com.hashjosh.workflow.dto.UserResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;

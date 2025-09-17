@@ -1,4 +1,4 @@
-package com.hashjosh.document.config;
+package com.hashjosh.document.clients.dto;
 
 import lombok.Builder;
 import lombok.Data;
