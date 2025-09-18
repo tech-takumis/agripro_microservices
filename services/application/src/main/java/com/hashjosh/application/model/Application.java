@@ -13,6 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -44,6 +45,10 @@ public class Application implements Serializable {
     @JsonIgnore
     @JsonProperty("batchId")
     private ApplicationBatch batch;
+
+    @Column(name = "document_id", nullable = true)
+    @JsonProperty("documentId")
+    private List<UUID> documentId;
 
     @Type(JsonBinaryType.class)
     @Column(name = "dynamic_fields", columnDefinition = "jsonb", nullable = false)

@@ -60,6 +60,7 @@ public class ApplicationMapper {
         return Application.builder()
                 .applicationType(type)
                 .userId(UUID.fromString(userId))
+                .documentId(submission.getDocumentIds())
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
                 .status(ApplicationStatus.SUBMITTED)
                 .submittedAt(LocalDateTime.now())

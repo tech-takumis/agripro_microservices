@@ -15,36 +15,69 @@ const scheduleStore = useScheduleStore()
 
 // Computed properties from stores
 const stats = computed(() => {
-  const programs = programStore.allPrograms
-  const schedules = scheduleStore.allSchedules
+  const programs = programStore.allPrograms || []
+  const schedules = scheduleStore.allSchedules || []
+  
+  // Calculate total budget from active programs
+  const totalBudget = programs
+    .filter(p => p.status === 'ACTIVE')
+    .reduce((sum, program) => {
+      const budget = program.extraFields?.budget 
+        ? parseFloat(program.extraFields.budget.replace(/[^0-9.]/g, '')) / 1000000 // Convert to millions
+        : 0
+      return sum + budget
+    }, 0)
+  
+  // Calculate utilized budget based on completion percentage
+  const utilizedBudget = programs
+    .filter(p => p.status === 'ACTIVE')
+    .reduce((sum, program) => {
+      const budget = program.extraFields?.budget 
+        ? parseFloat(program.extraFields.budget.replace(/[^0-9.]/g, '')) * (program.completion / 100) / 1000000
+        : 0
+      return sum + budget
+    }, 0)
   
   return {
-    farmersAssisted: schedules.filter(s => s.type === 'VISIT').length * 5, // Estimate farmers per visit
+    farmersAssisted: programs.reduce((sum, p) => {
+      const farmers = parseInt(p.extraFields?.target_farmers?.replace(/[^0-9]/g, '') || '0')
+      return sum + (p.status === 'ACTIVE' ? farmers : 0)
+    }, 0),
     fieldVisits: schedules.filter(s => s.type === 'VISIT').length,
-    trainingSessions: programs.filter(p => p.type === 'TRAINING').length,
-    programBudget: 320, // This could come from a separate budget store
-    budgetUtilized: Math.round(programStore.programsStats.averageCompletion * 3.2) // Estimate based on completion
+    trainingSessions: programs.filter(p => p.type === 'TRAINING' && p.status === 'ACTIVE').length,
+    programBudget: Math.round(totalBudget * 100) / 100, // Round to 2 decimal places
+    budgetUtilized: Math.round(utilizedBudget * 100) / 100 // Round to 2 decimal places
   }
 })
 
 const scheduledVisits = computed(() => {
-  return scheduleStore.upcomingSchedules.slice(0, 5).map(schedule => ({
+  return (scheduleStore.upcomingSchedules || []).slice(0, 5).map(schedule => ({
     id: schedule.id,
-    farmerName: schedule.metaData?.farmerName || 'Unknown Farmer',
-    location: schedule.metaData?.location || 'Unknown Location',
-    date: new Date(schedule.scheduleDate).toLocaleDateString(),
-    purpose: schedule.metaData?.purpose || 'General Visit',
-    priority: schedule.priority
+    farmerName: schedule.metaData?.farmer_name || 'Farmer',
+    location: schedule.metaData?.location || 'Location not specified',
+    date: new Date(schedule.scheduleDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    purpose: schedule.metaData?.purpose || 'No specific purpose provided',
+    priority: schedule.priority,
+    type: schedule.type
   }))
 })
 
 const extensionPrograms = computed(() => {
-  return programStore.activePrograms.slice(0, 3).map(program => ({
+  return (programStore.activePrograms || []).slice(0, 3).map(program => ({
     id: program.id,
     name: program.name,
-    participants: Math.floor(Math.random() * 200) + 50, // Mock participants for now
+    type: program.type,
+    participants: program.extraFields?.target_farmers || 'N/A',
     status: program.status,
-    completion: program.completion
+    completion: program.completion,
+    location: program.extraFields?.location || 'Multiple locations',
+    duration: program.extraFields?.duration || program.extraFields?.implementation_period || 'Ongoing'
   }))
 })
 
@@ -76,6 +109,28 @@ onMounted(async () => {
     console.error('Failed to load dashboard data:', error)
   }
 })
+
+// Filter top 5 scheduled visits with priority "High" or "Medium"
+const topPriorityVisits = computed(() => {
+  return (scheduleStore.upcomingSchedules || [])
+    .filter(schedule => schedule.priority === 'HIGH' || schedule.priority === 'MEDIUM')
+    .slice(0, 5)
+    .map(schedule => ({
+      id: schedule.id,
+      farmerName: schedule.metaData?.farmer_name || 'Farmer',
+      location: schedule.metaData?.location || 'Location not specified',
+      date: new Date(schedule.scheduleDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      purpose: schedule.metaData?.purpose || 'No specific purpose provided',
+      priority: schedule.priority,
+      type: schedule.type
+    }));
+});
 </script>
 
 <template>
@@ -175,104 +230,108 @@ onMounted(async () => {
                     </div>
 
                     <div class="space-y-3">
-                        <div v-for="visit in scheduledVisits" :key="visit.id"
-                            class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div>
-                                    <h4 class="font-medium text-gray-900">{{ visit.farmerName }}</h4>
-                                    <p class="text-sm text-gray-600">{{ visit.location }}</p>
-                                </div>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                    :class="getVisitPriorityClass(visit.priority)">
-                                    {{ visit.priority }}
-                                </span>
+                        <!-- Display filtered visits -->
+                        <div v-for="visit in topPriorityVisits" :key="visit.id" class="border border-gray-200 rounded-lg p-4">
+                          <div class="flex items-center justify-between mb-2">
+                            <div>
+                              <h4 class="font-medium text-gray-900">{{ visit.farmerName }}</h4>
+                              <p class="text-sm text-gray-600">{{ visit.location }}</p>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p class="text-gray-600">Date</p>
-                                    <p class="font-semibold">{{ visit.date }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600">Purpose</p>
-                                    <p class="font-semibold">{{ visit.purpose }}</p>
-                                </div>
+                            <span
+                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                              :class="getVisitPriorityClass(visit.priority)"
+                            >
+                              {{ visit.priority }}
+                            </span>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p class="text-gray-600">Date</p>
+                              <p class="font-semibold">{{ visit.date }}</p>
                             </div>
-                            <div class="mt-2 flex space-x-2">
-                                <button class="btn btn-primary btn-sm">
-                                    Start Visit
-                                </button>
-                                <button class="btn btn-secondary btn-sm">
-                                    Reschedule
-                                </button>
+                            <div>
+                              <p class="text-gray-600">Purpose</p>
+                              <p class="font-semibold">{{ visit.purpose }}</p>
                             </div>
+                          </div>
+                          <div class="mt-2 flex space-x-2">
+                            <BaseButton variant="primary" size="small">
+                              Start Visit
+                            </BaseButton>
+                            <BaseButton variant="secondary" size="small">
+                              Reschedule
+                            </BaseButton>
+                          </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="card">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Extension Programs</h3>
-                    <div class="space-y-4">
-                        <div v-for="program in extensionPrograms" :key="program.id"
-                            class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-medium text-gray-900">{{ program.name }}</h4>
-                                <PermissionGuard :permissions="['CAN_MANAGE_ROLES']">
-                                    <button class="btn btn-secondary btn-sm">
-                                        Manage
-                                    </button>
-                                </PermissionGuard>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p class="text-gray-600">Participants</p>
-                                    <p class="font-semibold">{{ program.participants }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600">Status</p>
-                                    <p class="font-semibold">{{ program.status }}</p>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-primary-600 h-2 rounded-full"
-                                        :style="{ width: program.completion + '%' }">
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-500 mt-1">{{ program.completion }}% Complete</p>
-                            </div>
+                        <!-- Browse More Button -->
+                        <div class="mt-4 text-center">
+                          <BaseButton variant="outline" size="medium" @click="() => $router.push('/schedules')">
+                            Browse More
+                          </BaseButton>
                         </div>
+                      </div>
                     </div>
 
-                    <PermissionGuard :permissions="['CAN_MANAGE_FINANCE']">
+                    <!-- Extension Programs Section -->
+                    <div class="card">
+                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Extension Programs</h3>
+                      <div class="space-y-4">
+                        <div v-for="program in extensionPrograms" :key="program.id" class="border border-gray-200 rounded-lg p-4">
+                          <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-gray-900">{{ program.name }}</h4>
+                            <PermissionGuard :permissions="['CAN_MANAGE_ROLES']">
+                              <BaseButton variant="secondary" size="small">
+                                Manage
+                              </BaseButton>
+                            </PermissionGuard>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p class="text-gray-600">Participants</p>
+                              <p class="font-semibold">{{ program.participants }}</p>
+                            </div>
+                            <div>
+                              <p class="text-gray-600">Status</p>
+                              <p class="font-semibold">{{ program.status }}</p>
+                            </div>
+                          </div>
+                          <div class="mt-2">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                              <div class="bg-primary-600 h-2 rounded-full" :style="{ width: program.completion + '%' }"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">{{ program.completion }}% Complete</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <PermissionGuard :permissions="['CAN_MANAGE_FINANCE']">
                         <div class="mt-4 pt-4 border-t border-gray-200">
-                            <h4 class="font-medium text-gray-900 mb-2">Financial Overview</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Budget</span>
-                                    <span class="font-semibold">₱{{ stats.programBudget.toLocaleString() }}K</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Utilized</span>
-                                    <span class="font-semibold">₱{{ stats.budgetUtilized.toLocaleString() }}K</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Remaining</span>
-                                    <span class="font-semibold text-success-600">₱{{ (stats.programBudget -
-                                        stats.budgetUtilized).toLocaleString() }}K</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Utilization Rate</span>
-                                    <span class="font-semibold">{{ Math.round((stats.budgetUtilized /
-                                        stats.programBudget) *
-                                        100) }}%</span>
-                                </div>
+                          <h4 class="font-medium text-gray-900 mb-2">Financial Overview</h4>
+                          <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                              <span class="text-gray-600">Total Budget</span>
+                              <span class="font-semibold">₱{{ stats.programBudget.toLocaleString() }}K</span>
                             </div>
+                            <div class="flex justify-between">
+                              <span class="text-gray-600">Utilized</span>
+                              <span class="font-semibold">₱{{ stats.budgetUtilized.toLocaleString() }}K</span>
+                            </div>
+                            <div class="flex justify-between">
+                              <span class="text-gray-600">Remaining</span>
+                              <span class="font-semibold text-success-600">₱{{ (stats.programBudget - stats.budgetUtilized).toLocaleString() }}K</span>
+                            </div>
+                            <div class="flex justify-between">
+                              <span class="text-gray-600">Utilization Rate</span>
+                              <span class="font-semibold">{{ Math.round((stats.budgetUtilized / stats.programBudget) * 100) }}%</span>
+                            </div>
+                          </div>
                         </div>
-                    </PermissionGuard>
+                      </PermissionGuard>
+                    </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
-</template>
+              </AuthenticatedLayout>
+            </template>
 
-<style scoped></style>
+            <style scoped></style>

@@ -8,8 +8,11 @@ import com.hashjosh.application.enums.FieldType;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationSection;
 import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.repository.ApplicationRepository;
+import com.hashjosh.application.repository.ApplicationTypeRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +21,27 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ApplicationTypeInitializer implements CommandLineRunner {
 
     private final EntityManager entityManager;
-
+    private final ApplicationTypeRepository applicationTypeRepository;
     private final ObjectMapper objectMapper;
 
+
+    public boolean isApplicationNotNull(){
+        return applicationTypeRepository.count() > 0;
+    }
     @Override
     @Transactional
     public void run(String... args) {
+
+        if(isApplicationNotNull()){
+            log.info("Application Type already exists initialization skipped!");
+            return;
+        }
         // Application Type 1: Crop Insurance Application
         ApplicationType cropInsurance = ApplicationType.builder()
                 .name("Crop Insurance Application")

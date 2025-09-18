@@ -1,25 +1,25 @@
 package com.hashjosh.verification.enums;
 
 public enum VerificationStatus {
-    APPROVED_BY_ADJUSTER,
-    PROCESSING_BY_ADJUSTER,
-    VERIFIED_BY_ADJUSTER,
-    REJECTED_BY_ADJUSTER,
-    CANCELLED_BY_ADJUSTER,
+    // Municipal Agriculturist statuses
+    APPROVED_BY_MA,
+    PROCESSING_BY_MA,
+    VERIFIED_BY_MA,
+    REJECTED_BY_MA,
+    CANCELLED_BY_MA,
 
-    // Underwriter status
-    APPROVED_BY_UNDERWRITER,
-    PROCESSING_BY_UNDERWRITER,
-    VERIFIED_BY_UNDERWRITER,
-    REJECTED_BY_UNDERWRITER,
-    CANCELLED_BY_UNDERWRITER,
+    // Agricultural Extension Worker statuses
+    APPROVED_BY_AEW,
+    PROCESSING_BY_AEW,
+    VERIFIED_BY_AEW,
+    REJECTED_BY_AEW,
+    CANCELLED_BY_AEW,
 
-
+    // General statuses
     APPROVED,
     VERIFIED,
     PENDING,
     CANCELLED,
     REJECTED,
-
     CANCELLED_BY_USER;
 }

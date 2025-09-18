@@ -1,5 +1,8 @@
 package com.hashjosh.kafkacommon.verification;
 
+
+import com.hashjosh.kafkacommon.enums.VerificationStatus;
+
 import java.util.UUID;
 
 public record VerificationDto(
@@ -7,16 +10,10 @@ public record VerificationDto(
         UUID applicationId,
         UUID userId,
         VerificationStatus status,
-        boolean approvedByAdjuster,
-        boolean verifiedByUnderwriter,
         String inspectionType,
         String rejectionReason,
         String report,
         Long version
 ) {
-
-    public enum VerificationStatus{
-        APPROVED,
-        REJECTED,
-    }
+    // Status is now imported from the shared enum in the verification service
 }

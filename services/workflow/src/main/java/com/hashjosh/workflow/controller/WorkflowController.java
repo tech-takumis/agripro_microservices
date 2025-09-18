@@ -29,7 +29,7 @@ public class WorkflowController {
             HttpServletRequest request
     ){
         return new ResponseEntity<>(workflowService.updateWorkflowStatus(
-                applicationId,status, request), HttpStatus.CREATED);
+                applicationId,status), HttpStatus.CREATED);
     }
 
     // This get all application in the workflow
@@ -38,7 +38,7 @@ public class WorkflowController {
             @PathVariable UUID applicationId,
             HttpServletRequest request
     ){
-        return new ResponseEntity<>(workflowService.findWorkflowByApplicationId(applicationId, request),HttpStatus.FOUND);
+        return new ResponseEntity<>(workflowService.findWorkflowByApplicationId(applicationId),HttpStatus.FOUND);
     }
 
 
@@ -46,7 +46,7 @@ public class WorkflowController {
     public ResponseEntity<List<WorkflowResponseDto>> getWorkflows(
             HttpServletRequest request
     ){
-        return new ResponseEntity<>(workflowService.findAllWorkflow(request), HttpStatus.OK);
+        return new ResponseEntity<>(workflowService.findAllWorkflow(), HttpStatus.OK);
     }
 
 
