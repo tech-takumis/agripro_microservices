@@ -6,6 +6,7 @@ import com.hashjosh.document.dto.DocumentResponse;
 import com.hashjosh.document.exception.DocumentNotFoundException;
 import com.hashjosh.document.mapper.DocumentMapper;
 import com.hashjosh.document.model.Document;
+import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.properties.MinioProperties;
 import com.hashjosh.document.repository.DocumentRepository;
 import io.minio.*;
@@ -41,13 +42,17 @@ public class DocumentService {
     private final DocumentMapper documentMapper;
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final FileValidationService fileValidationService;
 
     @Transactional
     public DocumentResponse upload(DocumentRequest request)
             throws IOException, ServerException, InsufficientDataException,
             ErrorResponseException, NoSuchAlgorithmException,
             InvalidKeyException, InvalidResponseException,
-            XmlParserException, InternalException {
+            XmlParserException, InternalException, FileValidationException {
+        
+        // Validate the file before processing
+        fileValidationService.validateFile(request.file());
         
         // Generate a unique object key
         String originalFilename = request.file().getOriginalFilename();

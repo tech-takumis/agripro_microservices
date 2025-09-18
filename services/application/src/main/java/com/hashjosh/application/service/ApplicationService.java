@@ -47,7 +47,25 @@ public class ApplicationService {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationService.class);
     private final ApplicationProducer applicationProducer;
     private final DocumentServiceClient documentServiceClient;
-    
+
+    /**
+     * Gets the current user's authentication token
+     * @return The JWT token of the current user
+     */
+    private String getCurrentUserToken() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+                return ((CustomUserDetails) authentication.getPrincipal()).getToken();
+            }
+            logger.warn("Could not extract JWT token from authentication context - CustomUserDetails not found");
+            return "";
+        } catch (Exception e) {
+            logger.error("Error getting current user token", e);
+            return "";
+        }
+    }
+
     /**
      * Validates that all document IDs in the list exist in the document service
      * @param documentIds List of document IDs to validate
@@ -78,24 +96,7 @@ public class ApplicationService {
         
         return errors;
     }
-    
-    /**
-     * Gets the current user's authentication token
-     * @return The JWT token of the current user
-     */
-    private String getCurrentUserToken() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-                return ((CustomUserDetails) authentication.getPrincipal()).getToken();
-            }
-            logger.warn("Could not extract JWT token from authentication context - CustomUserDetails not found");
-            return "";
-        } catch (Exception e) {
-            logger.error("Error getting current user token", e);
-            return "";
-        }
-    }
+
 
     public ApplicationSubmissionResponse processSubmission(
             ApplicationSubmissionDto submission,

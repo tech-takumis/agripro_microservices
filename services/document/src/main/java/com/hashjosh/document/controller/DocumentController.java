@@ -3,10 +3,11 @@ package com.hashjosh.document.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.document.dto.DocumentRequest;
 import com.hashjosh.document.dto.DocumentResponse;
+import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
 import io.minio.errors.*;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,19 +33,36 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Upload a document")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DocumentResponse> uploadDocument(
             @RequestPart("referenceId") String referenceId,
             @RequestPart("file") MultipartFile file,
             @RequestPart("documentType") String documentType,
             @RequestPart(value = "metaData", required = false) String metaData
-    ) throws Exception {
-        UUID referenceUuid = UUID.fromString(referenceId);
-        DocumentRequest request = new DocumentRequest(referenceUuid, file,documentType,
-                metaData != null ? new ObjectMapper().readTree(metaData) : null);
+    ) {
+        try {
+            UUID referenceUuid = UUID.fromString(referenceId);
+            DocumentRequest request = new DocumentRequest(referenceUuid, file, documentType,
+                    metaData != null ? new ObjectMapper().readTree(metaData) : null);
 
-        DocumentResponse document = documentService.upload(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(document);
+            DocumentResponse document = documentService.upload(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(document);
+        } catch (FileValidationException e) {
+            return ResponseEntity.badRequest()
+                    .body(DocumentResponse.builder()
+                            .fileName(file.getOriginalFilename())
+                            .fileType(file.getContentType())
+                            .fileSize(file.getSize())
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(DocumentResponse.builder()
+                            .fileName(file != null ? file.getOriginalFilename() : "unknown")
+                            .fileType(file != null ? file.getContentType() : "unknown")
+                            .fileSize(file != null ? file.getSize() : 0)
+                            .build());
+        }
     }
     @GetMapping("/{documentId}")
 //    @PreAuthorize("isAuthenticated()")

@@ -38,6 +38,16 @@ minio:
   secretKey: minio123
   bucket: documents
 
+app:
+  file:
+    max-file-size: 5242880  # 5MB in bytes
+    allowed-file-types:
+      - application/pdf
+      - image/jpeg
+      - image/png
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours

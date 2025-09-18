@@ -65,9 +65,7 @@ public class FileValidator implements ValidatorStrategy {
                 // Get the current authentication token from security context
                 String token = getCurrentToken();
                 DocumentResponse document = documentServiceClient.getDocument(token, documentId);
-                
-                // Additional validation if needed (e.g., file type, size, etc.)
-                // if (!isValidFileType(document.getFileType())) { ... }
+
                 
             } catch (HttpClientErrorException.NotFound e) {
                 errors.add(new ValidationErrors(
