@@ -1,19 +1,24 @@
 package com.hashjosh.kafkacommon.application;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
 import java.util.UUID;
 
-@Getter
-@Setter
-@Builder
 @Data
+@Builder
+@NoArgsConstructor // Required for Jackson deserialization
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApplicationPayload {
+
+    @JsonProperty("applicationTypeId")
     UUID applicationTypeId;
+    @JsonProperty("userId")
     UUID userId;
+    @JsonProperty("status")
     String status;
+    @JsonProperty("version")
     Long version;
 }
