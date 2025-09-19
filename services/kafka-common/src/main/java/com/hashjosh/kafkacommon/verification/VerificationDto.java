@@ -1,7 +1,5 @@
 package com.hashjosh.kafkacommon.verification;
-
-
-import com.hashjosh.kafkacommon.enums.VerificationStatus;
+import com.hashjosh.constant.ApplicationStatus;
 
 import java.util.UUID;
 
@@ -9,7 +7,7 @@ public record VerificationDto(
         UUID verificationId,
         UUID applicationId,
         UUID userId,
-        VerificationStatus status,
+        ApplicationStatus status,
         String inspectionType,
         String rejectionReason,
         String report,

@@ -1,5 +1,6 @@
 package com.hashjosh.workflow.service;
 
+import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.workflow.clients.ApplicationClient;
 import com.hashjosh.workflow.clients.ApplicationTypeClient;
 import com.hashjosh.workflow.clients.UserResponse;
@@ -8,7 +9,6 @@ import com.hashjosh.workflow.config.CustomUserDetails;
 import com.hashjosh.workflow.dto.ApplicationResponseDto;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;
-import com.hashjosh.workflow.enums.ApplicationStatus;
 import com.hashjosh.workflow.mapper.WorkflowStatusHistoryMapper;
 import com.hashjosh.workflow.model.WorkflowStatusHistory;
 import com.hashjosh.workflow.repository.WorkflowStatusRepository;

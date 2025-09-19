@@ -1,10 +1,6 @@
 package com.hashjosh.workflow.kafka;
 
 import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.verification.VerificationContract;
-import com.hashjosh.workflow.enums.ApplicationStatus;
-import com.hashjosh.workflow.model.WorkflowStatusHistory;
-import com.hashjosh.workflow.repository.WorkflowStatusRepository;
 import com.hashjosh.workflow.utils.KafkaUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +25,14 @@ public class ApplicationConsumer {
         try {
             log.info("Consume application submission event: {}", applicationContract);
 
-           switch (applicationContract.eventType()){
-                case "application-submitted" -> kafkaUtils.handleSubmitted(applicationContract);
-                case "application-verified" -> kafkaUtils.handleVerified(applicationContract);
-                case "application-rejected" -> kafkaUtils.handleRejected(applicationContract);
-                default -> log.debug("Ignoring unknown event type {}", applicationContract.eventType());
+            switch (applicationContract.getEventType()) {
+                case "application-submitted", "application-approved-by-municipal-agriculturist",
+                     "application-rejected", "application-rejected-by-municipal-agriculturist",
+                     "application-under-review", "application-cancelled-by-municipal-agriculturist",
+                     "application-claim-approved"->
+                    kafkaUtils.handleApplicationEvent(applicationContract);
+                default -> 
+                    log.debug("Ignoring unknown event type {}", applicationContract.getEventType());
             }
 
         } catch (Exception e) {

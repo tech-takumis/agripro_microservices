@@ -77,12 +77,4 @@ public class ApplicationController {
         return  new ResponseEntity<>(applicationService.findAll(),HttpStatus.OK);
     }
 
-    @PutMapping("/{application-id}")
-    public ResponseEntity<ApplicationResponseDto> verifiedApplicationStatus(
-            @PathVariable("application-id") UUID applicationId,
-            @RequestParam String status
-    ){
-        return new ResponseEntity<>(applicationService.verifiedApplicationStatus(applicationId,status),HttpStatus.CREATED);
-    }
-
 }

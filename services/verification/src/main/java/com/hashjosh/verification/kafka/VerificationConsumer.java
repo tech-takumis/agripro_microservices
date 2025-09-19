@@ -1,5 +1,6 @@
 package com.hashjosh.verification.kafka;
 
+import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
 import com.hashjosh.verification.mapper.VerificationMapper;
 import com.hashjosh.verification.model.VerificationResult;
@@ -22,10 +23,10 @@ public class VerificationConsumer {
         try {
             log.info("Consume application submission event: {}", applicationContract);
 
-            if (applicationContract.eventType().equals("application-submitted")) {
+            if (applicationContract.getEventType().equals(EventType.APPLICATION_SUBMITTED.name())) {
                 handleSubmitted(applicationContract);
             } else {
-                log.debug("Ignoring unknown event type {}", applicationContract.eventType());
+                log.debug("Ignoring unknown event type {}", applicationContract.getEventType());
             }
 
         } catch (Exception e) {
