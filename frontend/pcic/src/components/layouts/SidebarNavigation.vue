@@ -1,15 +1,15 @@
 <template>
-  <div class="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r border-gray-200">
+  <div class="flex flex-col flex-grow pt-5 overflow-y-auto bg-green-900 text-white">
     <!-- Logo -->
     <div class="flex items-center flex-shrink-0 px-4">
       <img 
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pcic.jpg-ymdsA0RBXJ1O58Wx4oDrmGSD8rRBY0.jpeg" 
+        src="@/assets/pcic-logo.png" 
         alt="PCIC Logo" 
-        class="h-10 w-auto"
+        class="h-10 w-auto rounded"
       />
       <div class="ml-3">
-        <h1 class="text-lg font-semibold text-gray-900">PCIC</h1>
-        <p class="text-xs text-gray-500">{{ roleTitle }}</p>
+        <h1 class="text-lg font-bold text-white">PCIC</h1>
+        <p class="text-xs text-green-200">{{ roleTitle }}</p>
       </div>
     </div>
 
@@ -22,15 +22,15 @@
           :to="item.href"
           :class="[
             isActive(item.href) 
-              ? 'bg-green-100 text-green-900 border-r-2 border-green-500' 
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-            'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
+              ? 'bg-green-600 text-white font-semibold border-r-4 border-green-300' 
+              : 'text-green-100 hover:bg-green-700 hover:text-white',
+            'group flex items-center px-3 py-2 text-sm rounded-md transition-all'
           ]"
         >
           <component 
             :is="item.icon" 
             :class="[
-              isActive(item.href) ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500',
+              isActive(item.href) ? 'text-white' : 'text-green-200 group-hover:text-white',
               'mr-3 h-5 w-5'
             ]" 
           />
@@ -42,42 +42,48 @@
           <button
             @click="toggleGroup(item.name)"
             :class="[
-              'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-              'group w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md transition-colors'
+              'text-green-100 hover:bg-green-700 hover:text-white',
+              'group w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all'
             ]"
           >
             <div class="flex items-center">
               <component 
                 :is="item.icon" 
-                class="text-gray-400 group-hover:text-gray-500 mr-3 h-5 w-5" 
+                class="text-green-200 group-hover:text-white mr-3 h-5 w-5" 
               />
               {{ item.name }}
             </div>
             <ChevronDown 
               :class="[
-                expandedGroups.includes(item.name) ? 'rotate-180' : '',
+                expandedGroups.includes(item.name) ? 'rotate-180 text-white' : 'text-green-200',
                 'h-4 w-4 transition-transform'
               ]"
             />
           </button>
           
-          <!-- Submenu -->
-          <div 
+          <!-- Submenu with Tree Lines -->
+          <div
             v-show="expandedGroups.includes(item.name)"
-            class="mt-1 space-y-1"
+            class="mt-1 pl-6 border-l border-green-600"
           >
             <router-link
               v-for="child in item.children"
               :key="child.name"
               :to="child.href"
-              :class="[
-                isActive(child.href)
-                  ? 'bg-green-50 text-green-700 border-r-2 border-green-500'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                'group flex items-center pl-11 pr-2 py-2 text-sm font-medium rounded-md transition-colors'
-              ]"
+              class="group relative flex items-center pl-6 pr-3 py-2 text-sm rounded-md transition-all"
+              :class="isActive(child.href)
+                ? 'bg-green-700 text-white'
+                : 'text-green-100 hover:bg-green-600 hover:text-white'"
             >
-              {{ child.name }}
+              <span
+                :class="[
+                  'absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t',
+                  isActive(child.href) ? 'border-green-400' : 'border-green-700 group-hover:border-green-500'
+                ]"
+              ></span>
+
+              <span class="inline-block w-2 h-2 mr-2 rounded-full bg-transparent"></span>
+              <span class="truncate">{{ child.name }}</span>
             </router-link>
           </div>
         </div>
@@ -85,7 +91,7 @@
     </nav>
 
     <!-- User Profile Section -->
-    <div class="flex-shrink-0 border-t border-gray-200 p-4">
+    <div class="flex-shrink-0 border-t border-green-700 p-4">
       <div class="flex items-center">
         <div class="flex-shrink-0">
           <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
@@ -95,16 +101,16 @@
           </div>
         </div>
         <div class="ml-3 flex-1">
-          <p class="text-sm font-medium text-gray-900 truncate">
+          <p class="text-sm font-medium text-white truncate">
             {{ userFullName }}
           </p>
-          <p class="text-xs text-gray-500 truncate">
+          <p class="text-xs text-green-200 truncate">
             {{ userEmail }}
           </p>
         </div>
         <button
           @click="$emit('logout')"
-          class="ml-2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          class="ml-2 p-1 rounded-md text-green-200 hover:text-white hover:bg-green-600 transition-colors"
           title="Logout"
         >
           <LogOut class="h-4 w-4" />
@@ -113,6 +119,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'

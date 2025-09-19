@@ -6,17 +6,5 @@ spring:
   profiles:
     default: default
     active: local
-  datasource:
-    url: jdbc:postgresql://localhost:5432/agripro_users
-    username: agripro
-    password: agripro
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    database: postgresql
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    generate-ddl: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 
