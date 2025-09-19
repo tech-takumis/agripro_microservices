@@ -1,6 +1,6 @@
 package com.hashjosh.workflow.mapper;
 
-import com.hashjosh.workflow.dto.ApplicationResponseDto;
+import com.hashjosh.workflow.clients.UserResponse;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;
 import com.hashjosh.workflow.dto.UserResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class WorkflowStatusHistoryMapper {
     public WorkflowResponseDto toWorkflowResponse(WorkflowStatusHistory savedWorkflow,
-                                                  UserResponseDto user,
+                                                  UserResponse user,
                                                   ApplicationTypeResponseDto applicationType
                                                   ) {
         return new WorkflowResponseDto(
@@ -20,7 +20,7 @@ public class WorkflowStatusHistoryMapper {
                 savedWorkflow.getStatus().name(),
                 savedWorkflow.getComments() != null ? savedWorkflow.getComments() : "No comment available",
                 savedWorkflow.getUpdatedBy(),
-                user.firstName() + " "+user.lastName(),
+                user.getFirstName() + " "+user.getLastName(),
                 savedWorkflow.getUpdatedAt(),
                 savedWorkflow.getVersion()
         );

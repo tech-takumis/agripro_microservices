@@ -24,8 +24,6 @@
     </p>
   </div>
 </div>
-
-
     <!-- Right: Search + Actions -->
     <div class="flex items-center gap-4">
 

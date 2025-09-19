@@ -5,6 +5,7 @@ import com.hashjosh.users.config.CustomUserDetails;
 import com.hashjosh.users.dto.AuthenticatedResponse;
 import com.hashjosh.users.dto.LoginRequest;
 import com.hashjosh.users.dto.LoginResponse;
+import com.hashjosh.users.dto.UserResponse;
 import com.hashjosh.users.entity.Role;
 import com.hashjosh.users.entity.TenantType;
 import com.hashjosh.users.entity.User;
@@ -23,10 +24,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,24 +52,16 @@ public class UserService {
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         User user = userDetails.getUser();
 
-        Set<String> roles = new HashSet<>();
-        Set<String> permissions = new HashSet<>();
-
-        user.getRoles().forEach(role -> {
-            role.getPermissions().forEach(permission -> {
-                permissions.add(permission.getName());
-            });
-
-            roles.add(role.getName());
-        });
+        // Jwt claims for user
+        Map<String,Object> claims = Map.of(
+                "userId", user.getId(),
+                "tenantId", tenantId
+        );
 
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
-                user.getId(),
                 user.getUsername(),
-                tenantId,
-                Map.of("roles",roles, "permissions",permissions,
-                        "email", user.getEmail()),
+                claims,
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
@@ -116,5 +107,21 @@ public class UserService {
         u.getRoles().forEach(role -> role.getPermissions().size());
 
         return userMapper.toAuthenticatedResponse(u);
+    }
+
+    public UserResponse getUserById(UUID userId) {
+        User user =  userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(
+                        "User id "+userId+ " not found!",
+                        HttpStatus.NOT_FOUND.value()
+                ));
+
+        return userMapper.toUserResponse(user);
+    }
+
+    public List<UserResponse> findAll() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toUserResponse)
+                .collect(Collectors.toList());
     }
 }

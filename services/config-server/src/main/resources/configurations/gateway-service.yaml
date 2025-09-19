@@ -40,10 +40,11 @@ spring:
               predicates:
                 - Path=/api/v1/workflow/**
 
-            - id: role-service
-              uri: lb://role-service
+            - id: program-service
+              uri: lb://program-service
               predicates:
-                - Path=/api/v1/roles/**,/api/v1/authorities/**
+                - Path=/api/v1/programs/**,/api/v1/schedules/**
+
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

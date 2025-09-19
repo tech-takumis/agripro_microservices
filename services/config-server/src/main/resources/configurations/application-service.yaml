@@ -13,7 +13,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     generate-ddl: true
     database: postgresql
@@ -61,7 +61,8 @@ management:
     health:
       show-details: always
 
-
 server:
   port: 8010
+
+
 

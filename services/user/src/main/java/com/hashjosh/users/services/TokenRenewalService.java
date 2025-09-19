@@ -24,9 +24,7 @@ public class TokenRenewalService {
 
         // 2️⃣ Generate new tokens
         String newAccessToken = jwtService.generateAccessToken(
-                userId,
                 username,
-                tenantId,
                 claims,
                 jwtService.getAccessTokenExpiry(rememberMe)
         );

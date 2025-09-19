@@ -2,19 +2,21 @@ package com.hashjosh.application.validators;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hashjosh.application.clients.DocumentServiceClient;
+import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.DocumentResponse;
 import com.hashjosh.application.dto.ValidationErrors;
+import com.hashjosh.application.exceptions.FileUploadException;
 import com.hashjosh.application.model.ApplicationField;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -27,55 +29,73 @@ public class FileValidator implements ValidatorStrategy {
     @Override
     public List<ValidationErrors> validate(ApplicationField field, JsonNode value) {
         List<ValidationErrors> errors = new ArrayList<>();
-        if (value == null || !value.isTextual()) {
-            errors.add(new ValidationErrors(
+        
+        if (value == null || value.isNull()) {
+            if (field.getRequired()) {
+                errors.add(new ValidationErrors(
                     field.getKey(),
-                    "Field must reference a file (use format file:<fieldKey>)"
+                    String.format("Field '%s' is required", field.getFieldName())
+                ));
+            }
+            return errors;
+        }
+
+        if (!value.isTextual()) {
+            errors.add(new ValidationErrors(
+                field.getKey(),
+                String.format("Field '%s' must be a text value referencing a document ID", field.getFieldName())
+            ));
+            return errors;
+        }
+
+        String documentIdStr = value.asText().trim();
+        if (documentIdStr.isEmpty()) {
+            if (field.getRequired()) {
+                errors.add(new ValidationErrors(
+                    field.getKey(),
+                    String.format("Field '%s' cannot be empty", field.getFieldName())
+                ));
+            }
+            return errors;
+        }
+
+        try {
+            UUID documentId = UUID.fromString(documentIdStr);
+            try {
+                // Get the current authentication token from security context
+                String token = getCurrentToken();
+                DocumentResponse document = documentServiceClient.getDocument(token, documentId);
+
+                
+            } catch (HttpClientErrorException.NotFound e) {
+                errors.add(new ValidationErrors(
+                    field.getKey(),
+                    String.format("Document with ID '%s' not found", documentIdStr)
+                ));
+            } catch (FileUploadException e) {
+                log.error("Error validating document with ID: " + documentIdStr, e);
+                errors.add(new ValidationErrors(
+                    field.getKey(),
+                    String.format("Error validating document: %s", e.getMessage())
+                ));
+            }
+        } catch (IllegalArgumentException e) {
+            errors.add(new ValidationErrors(
+                field.getKey(),
+                String.format("'%s' is not a valid document ID format", documentIdStr)
             ));
         }
+
         return errors;
     }
-
-    public String saveFile(JsonNode submittedValue,
-                           Map<String, MultipartFile> files,
-                           UUID applicationId,
-                           String uploadedBy,
-                           HttpServletRequest request) throws FileUploadException {
-
-        if (submittedValue == null || submittedValue.isNull() || !submittedValue.isTextual()) {
-            throw new FileUploadException("Submitted value must be string");
-        }
-
-        String token = request.getHeader("Authorization").substring(7);
-
-        // Expect value like "file:crop_damage"
-        String ref = submittedValue.asText().trim();
-        if (!ref.startsWith("file:")) {
-            throw new FileUploadException("Invalid file reference: " + ref);
-        }
-
-        String fieldKey = ref.substring(5); // crop_damage
-
-        MultipartFile targetFile = files.get(fieldKey);
-        if (targetFile == null) {
-            throw new FileUploadException("No uploaded file provided for field " + fieldKey);
-        }
-
-
-        // Convert String to UUID;
-        UUID uuidUploadedBy = UUID.fromString(uploadedBy);
-        try {
-            DocumentResponse response = documentServiceClient.uploadDocument(
-                    token,
-                    applicationId,
-                    uuidUploadedBy,
-                    targetFile
-            );
-            log.info("Uploaded file {} as object {}", targetFile.getOriginalFilename(), response.objectKey());
-            return response.objectKey();
-        } catch (Exception ex) {
-            throw new FileUploadException("Could not upload file for field " + fieldKey, ex);
-        }
+    
+    private String getCurrentToken() {
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .map(Authentication::getPrincipal)
+                .filter(principal -> principal instanceof CustomUserDetails)
+                .map(CustomUserDetails.class::cast)
+                .map(CustomUserDetails::getToken)
+                .orElseThrow(() -> new SecurityException("No authentication token found in security context"));
     }
 }
 

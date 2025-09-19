@@ -16,24 +16,18 @@ import org.springframework.web.cors.CorsConfiguration;
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return  http
-                .cors(cors ->cors.configurationSource(
-                        request -> {
-                            var config = new CorsConfiguration();
-                            config.setAllowCredentials(true);
-                            config.addAllowedOrigin("*");
-                            config.addAllowedHeader("*");
-                            config.addAllowedMethod("*");
-                            return config;
-                        }
-                ))
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

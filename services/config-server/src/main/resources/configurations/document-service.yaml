@@ -2,8 +2,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 100MB
+      max-file-size: 200MB
+      max-request-size: 200MB
   datasource:
     hikari:
       maximum-pool-size: 10
@@ -16,7 +16,7 @@ spring:
     database: postgresql
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     generate-ddl: true
     properties:
       hibernate:
@@ -31,6 +31,22 @@ spring:
       properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon"
         spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract,verificationContract:com.hashjosh.kafkacommon.verification.VerificationContract
+
+minio:
+  url: http://localhost:9000
+  accessKey: minio
+  secretKey: minio123
+  bucket: documents
+
+app:
+  file:
+    max-file-size: 5242880  # 5MB in bytes
+    allowed-file-types:
+      - application/pdf
+      - image/jpeg
+      - image/png
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

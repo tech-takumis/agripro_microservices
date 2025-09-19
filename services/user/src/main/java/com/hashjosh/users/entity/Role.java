@@ -27,7 +27,7 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String slug;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permission",
             joinColumns = @JoinColumn(name = "role_id"),

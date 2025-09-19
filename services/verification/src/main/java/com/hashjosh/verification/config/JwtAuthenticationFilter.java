@@ -1,26 +1,25 @@
 package com.hashjosh.verification.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.verification.clients.UserResponse;
+import com.hashjosh.verification.clients.UserServiceClient;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -28,15 +27,11 @@ import java.util.UUID;
 public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final UserServiceClient userServiceClient;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        logger.info(String.format("%s %s %s", method, path, authHeader));
 
         String token = authHeader.substring(7);
 
@@ -69,33 +64,46 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(token);
         String username = jwtService.getUsernameFromToken(token);
         String userId = claims.get("userId", String.class);
-        UUID uuid = UUID.fromString(userId);
-        String role = claims.get("role", String.class);
-        List<String> permissions = claims.get("permissions", List.class);
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(role));
+        String tenantId = claims.get("tenantId", String.class);
 
-        if(!permissions.isEmpty()) {
-            permissions.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission)));
-        }
+        UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
+
+        Set<SimpleGrantedAuthority> roles = new HashSet<>();
+
+        user.getRoles().forEach(role -> {
+            roles.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
+            role.getPermissions().forEach(
+                    permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
+            );
+
+        });
 
         CustomUserDetails userDetails = new CustomUserDetails(
-                uuid,
+                token,
+                userId,
+                tenantId,
                 username,
-                authorities
+                user.getEmail(),
+                roles
         );
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        authorities
+                        roles
                 );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
 
-        filterChain.doFilter(request, response);
+        try{
+            filterChain.doFilter(request, response);
+        }finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 }

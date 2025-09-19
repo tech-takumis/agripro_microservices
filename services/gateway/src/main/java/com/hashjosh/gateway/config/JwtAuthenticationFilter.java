@@ -39,6 +39,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             // Mutate request headers for downstream services
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .header("X-Tenant-ID", tenantId)
                     .headers(headers -> {
                         if (refreshToken != null) {
                             headers.set("X-Refresh-Token", refreshToken);

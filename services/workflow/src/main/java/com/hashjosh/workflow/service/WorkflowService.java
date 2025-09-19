@@ -2,23 +2,22 @@ package com.hashjosh.workflow.service;
 
 import com.hashjosh.workflow.clients.ApplicationClient;
 import com.hashjosh.workflow.clients.ApplicationTypeClient;
-import com.hashjosh.workflow.clients.UserClient;
+import com.hashjosh.workflow.clients.UserResponse;
+import com.hashjosh.workflow.clients.UserServiceClient;
+import com.hashjosh.workflow.config.CustomUserDetails;
 import com.hashjosh.workflow.dto.ApplicationResponseDto;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;
-import com.hashjosh.workflow.dto.UserResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;
 import com.hashjosh.workflow.enums.ApplicationStatus;
-import com.hashjosh.workflow.exceptions.ApplicationNotFoundException;
-import com.hashjosh.workflow.exceptions.UserNotFoundException;
 import com.hashjosh.workflow.mapper.WorkflowStatusHistoryMapper;
 import com.hashjosh.workflow.model.WorkflowStatusHistory;
 import com.hashjosh.workflow.repository.WorkflowStatusRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -32,62 +31,85 @@ public class WorkflowService {
 
     private final WorkflowStatusRepository workflowStatusRepository;
     private final WorkflowStatusHistoryMapper historyMapper;
-    private final UserClient userClient;
+    private final UserServiceClient userServiceClient;
     private final ApplicationClient applicationClient;
     private final ApplicationTypeClient applicationTypeClient;
 
     public WorkflowResponseDto updateWorkflowStatus(
             UUID applicationId,
-            String status, HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
+            String status) {
+        
+        // Get authentication from security context
+        CustomUserDetails userDetails = getCurrentUser();
+        String token = userDetails.getToken();
+        
+        ApplicationResponseDto application = applicationClient.getApplicationById(
+            token, 
+            applicationId, 
+            null // No need for request object since we have the token
+        );
 
-        log.info("Update workflow status function token:: : " + token);
-        String finalToken = stripBearer(token);
-
-        ApplicationResponseDto application = applicationClient.getApplicationById(finalToken,applicationId, request);
+        // Validate and map the status
+        ApplicationStatus applicationStatus;
+        try {
+            applicationStatus = ApplicationStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invalid status: " + status + ". Valid statuses are: " + 
+                String.join(", ", getValidStatuses())
+            );
+        }
 
         WorkflowStatusHistory history = new WorkflowStatusHistory(
                 application.applicationTypeId(),
-                ApplicationStatus.valueOf(status.toUpperCase()),
+                applicationStatus,
                 application.userId(),
                 application.version()
         );
 
-        UserResponseDto user = userClient.findUserById(finalToken,history.getUpdatedBy(), request);
+        // Get user and application type using the token from security context
+        UserResponse user = userServiceClient.getUserById(history.getUpdatedBy(), token);
         WorkflowStatusHistory savedWorkflow = workflowStatusRepository.save(history);
 
-        ApplicationTypeResponseDto applicationType = applicationTypeClient.findApplicationTypeById(finalToken,application.applicationTypeId(), request);
+        ApplicationTypeResponseDto applicationType = applicationTypeClient.findApplicationTypeById(
+            token,
+            application.applicationTypeId(), 
+            null // No need for request object
+        );
 
         return historyMapper.toWorkflowResponse(savedWorkflow, user, applicationType);
     }
 
-    public List<WorkflowResponseDto> findWorkflowByApplicationId(UUID applicationId, HttpServletRequest request) {
-
-        List<WorkflowStatusHistory> savedHistory =  workflowStatusRepository.findByApplicationId(applicationId);
-
-        return getWorkflows(savedHistory, request);
+    public List<WorkflowResponseDto> findWorkflowByApplicationId(UUID applicationId) {
+        List<WorkflowStatusHistory> savedHistory = workflowStatusRepository.findByApplicationId(applicationId);
+        return getWorkflows(savedHistory);
     }
 
-    public List<WorkflowResponseDto> findAllWorkflow(
-            HttpServletRequest request
-    ) {
-        List<WorkflowStatusHistory> savedHistory =  workflowStatusRepository.findAll();
-
-        return getWorkflows(savedHistory,request);
+    public List<WorkflowResponseDto> findAllWorkflow() {
+        List<WorkflowStatusHistory> savedHistory = workflowStatusRepository.findAll();
+        return getWorkflows(savedHistory);
     }
 
-    public List<WorkflowResponseDto> getWorkflows(List<WorkflowStatusHistory> histories, HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        log.info("Get workflows function token:: : " + token);
-
-        String finalToken = stripBearer(token);
+    public List<WorkflowResponseDto> getWorkflows(List<WorkflowStatusHistory> histories) {
+        // Get token from security context
+        CustomUserDetails userDetails = getCurrentUser();
+        String token = userDetails.getToken();
 
         List<WorkflowResponseDto> workflowResponseDtos = new ArrayList<>();
         for (WorkflowStatusHistory history : histories) {
             try {
-                UserResponseDto user = userClient.findUserById(finalToken, history.getUpdatedBy(), request);
-                ApplicationResponseDto application = applicationClient.getApplicationById(finalToken, history.getApplicationId(), request);
-                ApplicationTypeResponseDto applicationType = applicationTypeClient.findApplicationTypeById(finalToken, application.applicationTypeId(), request);
+                UserResponse user = userServiceClient.getUserById(history.getUpdatedBy(), token);
+                ApplicationResponseDto application = applicationClient.getApplicationById(
+                    token, 
+                    history.getApplicationId(), 
+                    null
+                );
+                ApplicationTypeResponseDto applicationType = applicationTypeClient.findApplicationTypeById(
+                    token, 
+                    application.applicationTypeId(), 
+                    null
+                );
                 workflowResponseDtos.add(historyMapper.toWorkflowResponse(history, user, applicationType));
 
             } catch (RuntimeException e) {
@@ -101,9 +123,24 @@ public class WorkflowService {
         return workflowResponseDtos;
     }
 
-
-    public static String stripBearer(String header) {
-        if (header == null) return null;
-        return header.startsWith("Bearer ") ? header.substring(7) : header;
+    private CustomUserDetails getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, 
+                "No authenticated user found in security context"
+            );
+        }
+        
+        return (CustomUserDetails) authentication.getPrincipal();
+    }
+    
+    private List<String> getValidStatuses() {
+        List<String> statuses = new ArrayList<>();
+        for (ApplicationStatus status : ApplicationStatus.values()) {
+            statuses.add(status.name());
+        }
+        return statuses;
     }
 }

@@ -209,7 +209,7 @@ export const useUserStore = defineStore("users", {
           withCredentials: true,
         })
 
-        if (response.status == 200 || response.status == 204) {
+        if (response.status === 200) {
           this.userData = response.data
 
           console.log("Login successful, user data:", this.userData)

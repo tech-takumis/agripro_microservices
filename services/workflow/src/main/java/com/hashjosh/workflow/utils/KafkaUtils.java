@@ -39,22 +39,25 @@ public class KafkaUtils {
         WorkflowStatusHistory history = workflowStatusRepository.save(savedWorkflow);
 
         log.info("✅ Rejected workflow history for application id {} status:: {}", history.getApplicationId(), history.getStatus());
-
     }
 
 
     public void handleVerified(ApplicationContract contract) {
-
         WorkflowStatusHistory savedWorkflow = workflowStatusRepository
                 .findByEventId(contract.eventId())
-                        .orElseThrow(() -> new WorkflowHistoryNotFoundException(
-                            "Workflow status history not found for event id " + contract.eventId(),
-                                HttpStatus.NOT_FOUND.value(),
-                                "kafka handle verified function event"
-                        ));
+                .orElseThrow(() -> new WorkflowHistoryNotFoundException(
+                    "Workflow status history not found for event id " + contract.eventId(),
+                    HttpStatus.NOT_FOUND.value(),
+                    "kafka handle verified function event"
+                ));
 
-        savedWorkflow.setStatus(ApplicationStatus.valueOf(contract.payload().status()));
+        // Map contract status to ApplicationStatus
+        String contractStatus = contract.payload().status();
+        ApplicationStatus newStatus = mapContractStatusToApplicationStatus(contractStatus);
+        
+        savedWorkflow.setStatus(newStatus);
         savedWorkflow.setUpdatedBy(contract.payload().userId());
+        
         Long contractVersion = contract.payload().version();
         if (savedWorkflow.getVersion() != null && savedWorkflow.getVersion().equals(contractVersion)) {
             savedWorkflow.setVersion(contractVersion);
@@ -62,10 +65,33 @@ public class KafkaUtils {
             // If versions differ, let Hibernate handle the increment
             log.warn("Version mismatch detected for eventId {}, using current version {}", contract.eventId(), savedWorkflow.getVersion());
         }
+        
         WorkflowStatusHistory history = workflowStatusRepository.save(savedWorkflow);
-
-        log.info("✅ Verified workflow history for application id {} status:: {}", history.getApplicationId(), history.getStatus());
-
+        log.info("✅ Updated workflow history for application id {} with status:: {}", history.getApplicationId(), history.getStatus());
+    }
+    
+    private ApplicationStatus mapContractStatusToApplicationStatus(String contractStatus) {
+        if (contractStatus == null) {
+            return ApplicationStatus.PENDING;
+        }
+        
+        try {
+            // Map specific statuses to the new simplified ones
+            return switch (contractStatus) {
+                case "SUBMITTED" -> ApplicationStatus.PENDING;
+                case "UNDER_REVIEW" -> ApplicationStatus.UNDER_REVIEW;
+                case "APPROVED" -> ApplicationStatus.APPROVED;
+                case "VERIFIED" -> ApplicationStatus.VERIFIED;
+                case "POLICY_ISSUED" -> ApplicationStatus.POLICY_ISSUED;
+                case "CLAIM_APPROVED" -> ApplicationStatus.CLAIM_APPROVED;
+                case "REJECTED" -> ApplicationStatus.REJECTED;
+                case "CANCELLED" -> ApplicationStatus.CANCELLED;
+                default -> ApplicationStatus.PENDING; // Default to PENDING for unknown statuses
+            };
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown contract status: {}. Defaulting to PENDING", contractStatus);
+            return ApplicationStatus.PENDING;
+        }
     }
 
     // Done implementation of application submitted event
@@ -85,7 +111,7 @@ public class KafkaUtils {
 
         workflowHistory.setEventId(contract.eventId());
         workflowHistory.setApplicationId(contract.applicationId());
-        workflowHistory.setStatus(ApplicationStatus.SUBMITTED);
+        workflowHistory.setStatus(ApplicationStatus.PENDING);
         workflowHistory.setUpdatedBy(contract.payload().userId());
         workflowHistory.setVersion(contract.payload().version());
 

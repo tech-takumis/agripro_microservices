@@ -2,8 +2,6 @@ package com.hashjosh.verification.service;
 
 import com.hashjosh.kafkacommon.application.ApplicationContract;
 import com.hashjosh.kafkacommon.application.ApplicationDto;
-import com.hashjosh.kafkacommon.verification.VerificationContract;
-import com.hashjosh.kafkacommon.verification.VerificationDto;
 import com.hashjosh.verification.clients.ApplicationClient;
 import com.hashjosh.verification.config.CustomUserDetails;
 import com.hashjosh.verification.dto.ApplicationResponseDto;
@@ -82,7 +80,7 @@ public class VerificationService {
             ApplicationDto applicationDto = new ApplicationDto(
                 result.getId(),
                     application.applicationTypeId(),
-                    user.getUserId(),
+                    UUID.fromString(user.getUserId()),
                     result.getStatus().name(),
                     result.getVersion()
             );
@@ -102,32 +100,41 @@ public class VerificationService {
         return verificationMapper.toVerificationResponse(updatedVerification);
     }
 
-    public List<VerificationResponse> findAllVerifiedByAdjusterApplication(boolean isApproved) {
-        return verificationResultRepository.findByApprovedByAdjuster(isApproved)
+    // Get verifications by status
+    public List<VerificationResponse> findByStatus(VerificationStatus status) {
+        return verificationResultRepository.findByStatus(status)
                 .stream()
                 .map(verificationMapper::toVerificationResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<VerificationResponse> findAllApprovedByUnderwriter(boolean isVerified) {
-        return verificationResultRepository.findByVerifiedByUnderwriter(isVerified)
+    // Get verifications by multiple statuses
+    public List<VerificationResponse> findByStatuses(List<VerificationStatus> statuses) {
+        return verificationResultRepository.findByStatusIn(statuses)
                 .stream()
                 .map(verificationMapper::toVerificationResponse)
                 .collect(Collectors.toList());
     }
 
+    // Get all verifications
     public List<VerificationResponse> findAllVerification() {
-            return verificationResultRepository.findAll()
-                    .stream()
-                    .map(verificationMapper::toVerificationResponse)
-                    .collect(Collectors.toList());
-    }
-
-    public List<VerificationResponse> findAllVerifiedByAdjusterAndUnderwriter(Boolean isVerifiedByAdjuster, Boolean isApprovedByUnderwriter) {
-        return verificationResultRepository.findAllByApprovedByAdjusterAndVerifiedByUnderwriter(isVerifiedByAdjuster,isApprovedByUnderwriter)
+        return verificationResultRepository.findAll()
                 .stream()
                 .map(verificationMapper::toVerificationResponse)
                 .collect(Collectors.toList());
+    }
 
+    // Get verifications by inspection type and statuses
+    public List<VerificationResponse> findByInspectionTypeAndStatuses(String inspectionType, List<VerificationStatus> statuses) {
+        return verificationResultRepository.findByStatusInAndInspectionType(statuses, inspectionType)
+                .stream()
+                .map(verificationMapper::toVerificationResponse)
+                .collect(Collectors.toList());
+    }
+    
+    // Get verifications by application ID
+    public Optional<VerificationResponse> findByApplicationId(UUID applicationId) {
+        return verificationResultRepository.findByApplicationId(applicationId)
+                .map(verificationMapper::toVerificationResponse);
     }
 }

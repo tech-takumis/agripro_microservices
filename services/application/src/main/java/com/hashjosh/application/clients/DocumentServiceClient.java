@@ -30,47 +30,46 @@ public class DocumentServiceClient {
                 .build();
     }
 
-    public DocumentResponse uploadDocument(String token,
-                                           UUID applicationId,
-                                           UUID uploadedBy,
-                                           MultipartFile file) throws IOException {
 
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-
-        builder.part("applicationId", applicationId.toString());
-        builder.part("uploadedBy", uploadedBy.toString());
-        builder.part("file", new MultipartFileResource(file))
-                .filename(Objects.requireNonNull(file.getOriginalFilename()))
-                .contentType(MediaType.parseMediaType(
-                        Objects.requireNonNullElse(file.getContentType(), MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                ));
-        // 1️⃣ Retrieve raw string instead of directly mapping
-        ResponseEntity<String> rawResponse = restClient.post()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(builder.build())
-                .retrieve()
-                .toEntity(String.class);
-
-        // 2️⃣ Log raw response for debugging
-        log.info("Document service response: status={} body={}",
-                rawResponse.getStatusCode(), rawResponse.getBody());
-
-        // 3️⃣ Handle non-2xx explicitly
-        if (!rawResponse.getStatusCode().is2xxSuccessful()) {
+    public DocumentResponse getDocument(String token, UUID documentId) {
+        try {
+            return restClient.get()
+                    .uri("/info/{documentId}", documentId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            (request, response) -> {
+                                throw new FileUploadException(
+                                        "Failed to fetch document. Status: " + response.getStatusCode() +
+                                                " Body: " + response.getBody(),
+                                        response.getStatusCode().value(),
+                                        "/api/v1/documents/" + documentId + "/info"
+                                );
+                            }
+                    )
+                    .body(DocumentResponse.class);
+        } catch (Exception ex) {
+            log.error("Error fetching document with id: " + documentId, ex);
             throw new FileUploadException(
-                    "Failed to upload document. Status: " + rawResponse.getStatusCode() +
-                            " Body: " + rawResponse.getBody(),
-                    rawResponse.getStatusCode().value(),
-                    "/api/v1/documents"
+                    "Error fetching document: " + ex.getMessage(),
+                    500,
+                    "/api/v1/documents/" + documentId + "/info"
             );
         }
+    }
 
-        // 4️⃣ Attempt JSON deserialization
+    public boolean documentExists(String token, UUID documentId) {
         try {
-            return objectMapper.readValue(rawResponse.getBody(), DocumentResponse.class);
-        } catch (Exception ex) {
-            throw new FileUploadException("Invalid response format from document service: " + rawResponse.getBody(),500,"asda");
+            restClient.head()
+                    .uri("/{documentId}", documentId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .toBodilessEntity();
+            return true;
+        } catch (Exception e) {
+            log.debug("Document not found: {}", documentId);
+            return false;
         }
     }
 }
