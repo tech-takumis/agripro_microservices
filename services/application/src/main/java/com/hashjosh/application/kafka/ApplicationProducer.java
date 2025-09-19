@@ -17,7 +17,7 @@ public class ApplicationProducer {
     private final KafkaTemplate<String, ApplicationContract> kafkaTemplate;
 
     public void submitApplication(ApplicationContract applicationContract) {
-        log.info("submitting application::: {}", applicationContract.payload());
+        log.info("submitting application::: {}", applicationContract.getPayload());
 
         Message<ApplicationContract> message = MessageBuilder
                 .withPayload(applicationContract)

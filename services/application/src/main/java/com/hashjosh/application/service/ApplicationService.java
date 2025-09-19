@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.*;
-import com.hashjosh.application.enums.ApplicationStatus;
 import com.hashjosh.application.exceptions.ApplicationNotFoundException;
-import com.hashjosh.application.exceptions.InvalidStatusException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.Application;
@@ -17,8 +15,9 @@ import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
+import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.application.ApplicationDto;
+import com.hashjosh.kafkacommon.application.ApplicationPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -135,9 +134,12 @@ public class ApplicationService {
                     .build();
         }
 
+
         // 4. Process and save the application
         Application application = applicationMapper.toEntity(submission,applicationType, userId);
         Application savedApplication = applicationRepository.save(application);
+
+        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED);
 
         return ApplicationSubmissionResponse.builder()
                 .success(true)
@@ -208,46 +210,31 @@ public class ApplicationService {
     }
 
 
-
-    public ApplicationResponseDto verifiedApplicationStatus(UUID applicationId, String status) {
-
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application not found!",
-                        HttpStatus.NOT_FOUND.value(),
-                        "/api/v1/applications/" + applicationId
-                ));
-
-        ApplicationStatus newStatus;
-        try{
-            newStatus = ApplicationStatus.valueOf(status);
-        }catch (IllegalArgumentException e){
-            throw new InvalidStatusException(
-                    "Invalid status: " + status + ". Allowed values: VERIFIED, REJECTED",
-                    HttpStatus.FORBIDDEN.value(),
-                    "/api/v1/applications/"+applicationId+"/status"
-            );
-        }
-        application.setStatus(newStatus);
-
-        ApplicationDto applicationDto = applicationMapper.toApplicationDto(application);
-
-        applicationProducer.submitApplication(
-                new ApplicationContract(
-                        UUID.randomUUID(),
-                       "application-verified",
-                        1,
-                        application.getId(),
-                        LocalDateTime.now(),
-                        applicationDto
-                )
-        );
-        return applicationMapper.toApplicationResponseDto(application);
-    }
-
     public List<ApplicationResponseDto> findAll() {
         return applicationRepository.findAll()
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
+
+
+    public void publishApplicationStatus(Application application, EventType eventType) {
+
+        applicationProducer.submitApplication(
+                ApplicationContract.builder()
+                        .eventId(UUID.randomUUID())
+                        .eventType(eventType.name())
+                        .occurredAt(LocalDateTime.now())
+                        .applicationId(application.getId())
+                        .payload(
+                                ApplicationPayload.builder()
+                                        .applicationTypeId(application.getApplicationType().getId())
+                                        .userId(application.getUserId())
+                                        .status(application.getStatus().name())
+                                        .version(application.getVersion())
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
 
 }

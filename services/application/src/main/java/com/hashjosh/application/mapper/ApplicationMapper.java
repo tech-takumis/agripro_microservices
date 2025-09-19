@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.enums.ApplicationStatus;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.kafkacommon.application.ApplicationDto;
+import com.hashjosh.kafkacommon.application.ApplicationPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -64,6 +65,14 @@ public class ApplicationMapper {
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
                 .status(ApplicationStatus.SUBMITTED)
                 .submittedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public ApplicationPayload toDto(Application savedApplication) {
+        return ApplicationPayload.builder()
+                .applicationTypeId(savedApplication.getId())
+                .userId(savedApplication.getUserId())
+                .version(savedApplication.getVersion())
                 .build();
     }
 }

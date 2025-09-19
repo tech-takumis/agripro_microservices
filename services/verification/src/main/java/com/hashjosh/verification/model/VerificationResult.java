@@ -1,6 +1,6 @@
 package com.hashjosh.verification.model;
 
-import com.hashjosh.verification.enums.VerificationStatus;
+import com.hashjosh.constant.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,7 +30,7 @@ public class VerificationResult {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 50)
-    private VerificationStatus status; 
+    private ApplicationStatus status;
 
     @Column(name = "inspection_type", length = 50)
     private String inspectionType; // e.g., FIELD_VISIT, REMOTE

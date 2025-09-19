@@ -1,8 +1,8 @@
 package com.hashjosh.verification.controller;
 
+import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.verification.dto.VerificationRequest;
 import com.hashjosh.verification.dto.VerificationResponse;
-import com.hashjosh.verification.enums.VerificationStatus;
 import com.hashjosh.verification.service.VerificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -38,10 +38,10 @@ public class VerificationController {
             @RequestParam(name = "status", required = false) List<String> statusParams,
             @RequestParam(name = "inspectionType", required = false) String inspectionType
     ) {
-        List<VerificationStatus> statuses = statusParams != null ?
+        List<ApplicationStatus> statuses = statusParams != null ?
                 statusParams.stream()
                         .map(String::toUpperCase)
-                        .map(VerificationStatus::valueOf)
+                        .map(ApplicationStatus::valueOf)
                         .collect(Collectors.toList()) :
                 Collections.emptyList();
 
@@ -64,7 +64,7 @@ public class VerificationController {
     public ResponseEntity<List<VerificationResponse>> getVerificationsByStatus(
             @PathVariable String status
     ) {
-        VerificationStatus verificationStatus = VerificationStatus.valueOf(status.toUpperCase());
+        ApplicationStatus verificationStatus = ApplicationStatus.valueOf(status.toUpperCase());
         List<VerificationResponse> verificationList = verificationService.findByStatus(verificationStatus);
         return ResponseEntity.ok(verificationList);
     }
