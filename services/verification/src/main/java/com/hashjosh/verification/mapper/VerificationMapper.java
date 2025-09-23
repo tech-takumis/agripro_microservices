@@ -2,6 +2,7 @@ package com.hashjosh.verification.mapper;
 
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import com.hashjosh.verification.dto.VerificationRequest;
 import com.hashjosh.verification.dto.VerificationResponse;
 import com.hashjosh.verification.model.VerificationResult;
@@ -11,21 +12,20 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class VerificationMapper {
-    public VerificationResult toVerificationResult(ApplicationContract contract) {
-        String status = contract.getPayload().getStatus();
-        ApplicationStatus verificationStatus = "SUBMITTED".equals(status) ?
-                ApplicationStatus.UNDER_REVIEW_BY_AEW : ApplicationStatus.valueOf(status);
+    public VerificationResult toVerificationResult(ApplicationSubmissionContract contract) {
 
-        return VerificationResult.builder()
-                .eventId(contract.getEventId())
-                .applicationId(contract.getApplicationId())
-                .status(verificationStatus)
-                .inspectionType(null)
-                .rejectionReason(null)
-                .report(null)
-                .version(contract.getPayload().getVersion())
-                .build();
-    }
+    // Validate and map the status to ApplicationStatus
+    return VerificationResult.builder()
+            .eventId(contract.getEventId())
+            .applicationId(contract.getApplicationId())
+            .uploadedBy(contract.getUploadedBy())
+            .status(contract.getStatus())
+            .inspectionType(null)
+            .rejectionReason(null)
+            .report(null)
+            .version(contract.getVersion())
+            .build();
+}
 
     /**
      *

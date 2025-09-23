@@ -4,6 +4,7 @@ import com.hashjosh.application.exceptions.ApplicationNotFoundException;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.constant.ApplicationStatus;
+import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +27,25 @@ public class ApplicationConsumer {
 
         try{
             switch (contract.getEventType()){
-                case "application_approved_by_municipal_agriculturist",
-                     "application_rejected_by_municipal_agriculturist",
-                     "application_canceled_by_municipal_agriculturist",
-                     "pcic_reject_application",
-                     "pcic_review_application",
-                     "pcic_policy_issued",
-                     "pcic_claim_approved"
-                        -> handleApplicationChangeStatus(contract);
+                case  // Verification events
+                     APPLICATION_APPROVED_BY_MA,
+                     APPLICATION_REJECTED_BY_MA,
+                     APPLICATION_APPROVED_BY_AEW,
+                     APPLICATION_REJECTED_BY_AEW,
+
+                     // Underwriter events
+                     UNDER_REVIEW_BY_UNDERWRITER,
+                     APPLICATION_APPROVED_BY_UNDERWRITER,
+                     APPLICATION_REJECTED_BY_UNDERWRITER,
+
+                     // Adjuster events
+                     UNDER_REVIEW_BY_ADJUSTER,
+                     APPLICATION_APPROVED_BY_ADJUSTER,
+                     APPLICATION_REJECTED_BY_ADJUSTER,
+
+                     // Insurance service events
+                     POLICY_ISSUED,
+                     CLAIM_APPROVED -> handleApplicationChangeStatus(contract);
                 default -> log.error("Invalid event type: {}", contract);
             }
         }catch (Exception e){
@@ -46,10 +58,10 @@ public class ApplicationConsumer {
 
         Application application = findApplicationById(contract.getApplicationId());
 
-        application.setStatus(ApplicationStatus.valueOf(contract.getPayload().getStatus()));
+        application.setStatus(contract.getStatus());
         applicationRepository.save(application);
 
-        log.info("Application {}: {}",contract.getPayload().getStatus(), application);
+        log.info("Application {}: {}",contract.getStatus(), application);
     }
 
     private Application findApplicationById(UUID applicationId) {

@@ -7,10 +7,6 @@ public enum EventType {
 
     // General application events
     APPLICATION_SUBMITTED,
-    APPLICATION_APPROVED,
-    APPLICATION_REJECTED,
-    APPLICATION_VERIFIED,
-    APPLICATION_CANCELLED,
     APPLICATION_CANCELLED_BY_USER,
 
     // Verification events

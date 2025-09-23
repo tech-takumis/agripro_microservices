@@ -1,7 +1,6 @@
 package com.hashjosh.verification.kafka;
 
-import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.verification.VerificationContract;
+import com.hashjosh.kafkacommon.application.ApplicationVerificationContract;
 import com.hashjosh.verification.controller.VerificationController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +17,11 @@ public class VerificationProducer {
     private final KafkaTemplate<String, VerificationController> kafkaTemplate;
 
 
-    public void submitVerifiedApplication(ApplicationContract contract) {
-        log.info("Sending verification confirmation:: {}", contract);
+    public void submitVerifiedApplication(ApplicationVerificationContract applicationVerificationContract) {
+        log.info("Sending verification confirmation:: {}", applicationVerificationContract);
 
-        Message<ApplicationContract> message =
-                MessageBuilder.withPayload(contract)
+        Message<ApplicationVerificationContract> message =
+                MessageBuilder.withPayload(applicationVerificationContract)
                         .setHeader(KafkaHeaders.TOPIC,"application-events")
                         .build();
 

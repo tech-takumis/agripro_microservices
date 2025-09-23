@@ -28,6 +28,9 @@ public class VerificationResult {
     @Column(name = "application_id", nullable = false)
     private UUID applicationId; // FK to Application
 
+    @Column(name = "uploaded_by", nullable = false)
+    private UUID uploadedBy;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 50)
     private ApplicationStatus status;

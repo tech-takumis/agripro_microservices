@@ -7,8 +7,6 @@ import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
 import com.hashjosh.constant.ApplicationStatus;
-import com.hashjosh.kafkacommon.application.ApplicationDto;
-import com.hashjosh.kafkacommon.application.ApplicationPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,26 +17,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApplicationMapper {
 
-    public Application toApplication(ApplicationType applicationType, JsonNode values, String userId) {
-        return Application.builder()
-                .applicationType(applicationType)
-                .userId(UUID.fromString(userId))
-                .dynamicFields(values)
-                .status(ApplicationStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
-                .build();
-    }
-
-    public ApplicationDto toApplicationDto(Application application) {
-        return new ApplicationDto(
-                application.getId(),
-                application.getApplicationType().getId(),
-                application.getUserId(),
-                application.getStatus().name(),
-                application.getVersion()
-
-        );
-    }
 
     public ApplicationResponseDto toApplicationResponseDto(Application application) {
         return new ApplicationResponseDto(
@@ -65,14 +43,6 @@ public class ApplicationMapper {
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
                 .status(ApplicationStatus.SUBMITTED)
                 .submittedAt(LocalDateTime.now())
-                .build();
-    }
-
-    public ApplicationPayload toDto(Application savedApplication) {
-        return ApplicationPayload.builder()
-                .applicationTypeId(savedApplication.getId())
-                .userId(savedApplication.getUserId())
-                .version(savedApplication.getVersion())
                 .build();
     }
 }

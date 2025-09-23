@@ -2,6 +2,7 @@ package com.hashjosh.verification.kafka;
 
 import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import com.hashjosh.verification.mapper.VerificationMapper;
 import com.hashjosh.verification.model.VerificationResult;
 import com.hashjosh.verification.repository.VerificationResultRepository;
@@ -19,25 +20,25 @@ public class VerificationConsumer {
     private final VerificationResultRepository verificationResultRepository;
 
     @KafkaListener(topics = "application-events")
-    public void consumeSubmittedApplication(ApplicationContract applicationContract) {
+    public void consumeSubmittedApplication(ApplicationSubmissionContract applicationSubmissionContract) {
         try {
-            log.info("Consume application submission event: {}", applicationContract);
+            log.info("Consume application submission event: {}", applicationSubmissionContract);
 
-            if (applicationContract.getEventType().equals(EventType.APPLICATION_SUBMITTED.name())) {
-                handleSubmitted(applicationContract);
+            if (EventType.APPLICATION_SUBMITTED == applicationSubmissionContract.getEventType()) {
+                handleSubmitted(applicationSubmissionContract);
             } else {
-                log.debug("Ignoring unknown event type {}", applicationContract.getEventType());
+                log.debug("Ignoring unknown event type {}", applicationSubmissionContract.getEventType());
             }
 
         } catch (Exception e) {
-            log.error("❌ Failed to process application event: {}", applicationContract, e);
+            log.error("❌ Failed to process application event: {}", applicationSubmissionContract, e);
             throw e; // ✅ Let Spring Kafka handle retry + DLT
         }
     }
 
-    private void handleSubmitted(ApplicationContract applicationContract) {
+    private void handleSubmitted(ApplicationSubmissionContract applicationSubmissionContract) {
 
-        VerificationResult result = verificationMapper.toVerificationResult(applicationContract);
+        VerificationResult result = verificationMapper.toVerificationResult(applicationSubmissionContract);
 
         verificationResultRepository.save(result);
     }
