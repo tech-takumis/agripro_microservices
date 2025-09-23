@@ -1,5 +1,6 @@
 package com.hashjosh.users.interceptors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.jwtshareable.service.TenantContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
+import java.util.Base64;
 
 @Slf4j
 @Component
@@ -84,17 +86,27 @@ private boolean isPublicEndpoint(HttpServletRequest request) {
         return null;
     }
 
-    private String extractTenantIdFromJwt(String jwt) {
-        // Add your JWT decoding and tenant ID extraction logic here.
-        // Example for parsing (if using base64 and claims):
-        try {
-            // Decode JWT and extract tenant ID
-            String decodedPayload = new String(java.util.Base64.getDecoder().decode(jwt.split("\\.")[1]));
-            // Extract tenant_id field from decoded payload
-            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(decodedPayload).get("tenant_id").asText();
-        } catch (Exception e) {
-            log.error("Failed to extract tenant ID from JWT", e);
-            throw new IllegalStateException("Invalid JWT");
+private String extractTenantIdFromJwt(String jwt) {
+    try {
+        // Decode JWT and extract tenant ID
+        String decodedPayload = new String(Base64.getDecoder().decode(jwt.split("\\.")[1]));
+        com.fasterxml.jackson.databind.JsonNode payloadNode = new ObjectMapper().readTree(decodedPayload);
+
+        // Look for both camel case and snake case versions of "tenantId"
+        com.fasterxml.jackson.databind.JsonNode tenantIdNode = payloadNode.get("tenantId"); // camel case
+        if (tenantIdNode == null) {
+            tenantIdNode = payloadNode.get("tenant_id"); // snake case, fallback (optional)
         }
+
+        if (tenantIdNode == null) {
+            log.error("JWT does not contain tenantId or tenant_id field");
+            throw new IllegalStateException("Invalid JWT: tenant ID not found");
+        }
+
+        return tenantIdNode.asText();
+    } catch (Exception e) {
+        log.error("Failed to extract tenant ID from JWT", e);
+        throw new IllegalStateException("Invalid JWT", e);
     }
+}
 }

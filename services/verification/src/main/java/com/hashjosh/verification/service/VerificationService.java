@@ -1,8 +1,9 @@
 package com.hashjosh.verification.service;
 
 import com.hashjosh.constant.ApplicationStatus;
+import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.application.ApplicationPayload;
+import com.hashjosh.kafkacommon.application.ApplicationVerificationContract;
 import com.hashjosh.verification.clients.ApplicationClient;
 import com.hashjosh.verification.config.CustomUserDetails;
 import com.hashjosh.verification.dto.ApplicationResponseDto;
@@ -66,22 +67,15 @@ public class VerificationService {
         if (dto.status().equals(ApplicationStatus.APPROVED_BY_MA.name()) ||
             dto.status().equals(ApplicationStatus.REJECTED_BY_MA.name())) {
 
-            // Fetch application details as needed for the event
-            ApplicationResponseDto application = applicationClient.getApplicationById(userToken, result.getApplicationId(), request);
-
-            ApplicationPayload payload = ApplicationPayload.builder()
-                    .applicationTypeId(application.applicationTypeId())
-                    .userId(application.userId())
-                    .status(result.getStatus().name())
-                    .version(result.getVersion())
-                    .build();
-
-            ApplicationContract contract = ApplicationContract.builder()
+            ApplicationVerificationContract contract = ApplicationVerificationContract.builder()
                     .eventId(result.getEventId())
-                    .eventType(kafkaUtils.getEventType(dto.status()))
+                    .eventType(getEventType(dto.status()))
+                    .schemaVersion(1)
+                    .uploadedBy(result.getUploadedBy())
+                    .eventType(EventType.fromString(dto.status()))
                     .applicationId(result.getApplicationId())
-                    .occurredAt(LocalDateTime.now())
-                    .payload(payload)
+                    .status(result.getStatus())
+                    .version(result.getVersion())
                     .build();
 
             // Publish the event
@@ -90,6 +84,10 @@ public class VerificationService {
 
         // Return verification response
         return verificationMapper.toVerificationResponse(updatedVerification);
+    }
+
+    private EventType getEventType(String status) {
+        return null;
     }
 
 

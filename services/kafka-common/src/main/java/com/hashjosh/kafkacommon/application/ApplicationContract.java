@@ -2,41 +2,42 @@ package com.hashjosh.kafkacommon.application;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.hashjosh.constant.ApplicationStatus;
+import com.hashjosh.constant.EventType;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor // Add this to support serialization
+@AllArgsConstructor
 @Data
 public class ApplicationContract {
 
     private UUID eventId;
 
     @JsonProperty("eventType")
-    private String eventType;
+    private EventType eventType;
 
+    @JsonProperty("schemaVersion")
+    private int schemaVersion;
+
+    @JsonProperty("status")
+    private ApplicationStatus status;
+
+    @JsonProperty("applicationId")
     private UUID applicationId;
+
+    @JsonProperty("uploadedBy")
+    private UUID uploadedBy;
 
     @JsonProperty("occurredAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime occurredAt;
 
-    private ApplicationPayload payload;
-
-    // Builder annotation should be retained if used elsewhere.
-    @Builder
-    public ApplicationContract(UUID eventId, String eventType, UUID applicationId, LocalDateTime occurredAt, ApplicationPayload payload) {
-        this.eventId = eventId;
-        this.eventType = eventType;
-        this.applicationId = applicationId;
-        this.occurredAt = occurredAt;
-        this.payload = payload;
-    }
+    @JsonProperty("version")
+    private Long version;
 }

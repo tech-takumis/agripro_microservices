@@ -22,7 +22,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract
+        spring.json.type.mapping: applicationInsuranceContract:com.hashjosh.kafkacommon.application.ApplicationInsuranceContract
         spring.json.add.type.headers: true
     consumer:
       group-id: application-service
@@ -31,7 +31,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon"
-        spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract,verificationContract:com.hashjosh.kafkacommon.verification.VerificationContract
+        spring.json.type.mapping: applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract
 
 
 

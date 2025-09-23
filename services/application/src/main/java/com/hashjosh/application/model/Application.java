@@ -41,7 +41,7 @@ public class Application implements Serializable {
     private UUID userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id", nullable = true) // Nullable to allow standalone applications
+    @JoinColumn(name = "batch_id", nullable = true)
     @JsonIgnore
     @JsonProperty("batchId")
     private ApplicationBatch batch;

@@ -14,4 +14,6 @@ public interface WorkflowStatusRepository extends JpaRepository<WorkflowStatusHi
     WorkflowStatusHistory findByApplicationIdAndUpdatedBy(UUID applicationId, UUID updatedBy);
 
     Optional<WorkflowStatusHistory> findByEventId(UUID eventId);
+
+    boolean existsByApplicationId(UUID applicationId);
 }
