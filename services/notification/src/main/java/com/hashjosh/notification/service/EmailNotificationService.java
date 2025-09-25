@@ -7,6 +7,7 @@ import com.hashjosh.notification.clients.UserResponse;
 import com.hashjosh.notification.clients.UserServiceClient;
 import com.hashjosh.notification.dto.EmailNotificationPayload;
 import com.hashjosh.notification.entity.Notification;
+import com.hashjosh.notification.properties.EmailProperties;
 import com.hashjosh.notification.repository.NotificationRepository;
 import com.hashjosh.notification.utils.NotificationUtils;
 import jakarta.mail.MessagingException;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.UnsupportedEncodingException;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -31,6 +33,7 @@ public class EmailNotificationService {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
     private final ObjectMapper objectMapper;
+    private final EmailProperties emailProperties;
 
     public void sendEmailNotification(ApplicationSubmissionContract applicationSubmissionContract) {
         try {
@@ -94,13 +97,14 @@ public class EmailNotificationService {
             helper.setSubject(subject);
             helper.setText(content, isHtml);
 
-            // Uncomment and configure if you need to set a from address
-            // helper.setFrom("noreply@yourdomain.com");
+             helper.setFrom(emailProperties.from(), emailProperties.senderName());
 
             mailSender.send(message);
         } catch (MessagingException e) {
             log.error("❌ Error sending email to {}: {}", to, e.getMessage());
             throw new RuntimeException("Failed to send email", e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 

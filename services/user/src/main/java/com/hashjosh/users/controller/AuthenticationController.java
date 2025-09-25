@@ -2,16 +2,12 @@ package com.hashjosh.users.controller;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.users.config.CustomUserDetails;
-import com.hashjosh.users.dto.AuthenticatedResponse;
-import com.hashjosh.users.dto.LoginRequest;
-import com.hashjosh.users.dto.LoginResponse;
-import com.hashjosh.users.dto.UserRegistrationRequest;
-import com.hashjosh.users.entity.TenantType;
+import com.hashjosh.users.dto.*;
+import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.entity.User;
 import com.hashjosh.users.exception.TenantIdException;
 import com.hashjosh.users.services.RefreshTokenService;
 import com.hashjosh.users.services.UserService;
-import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,11 +33,8 @@ public class AuthenticationController {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
-    @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody UserRegistrationRequest request, HttpServletRequest httpRequest) {
-
-        // Get tenant header and validate
-        String tenantHeader = httpRequest.getHeader("X-Tenant-ID");
+    private TenantType getTenantHeader(HttpServletRequest request){
+        String tenantHeader = request.getHeader("X-Tenant-ID");
         if (tenantHeader == null || tenantHeader.isBlank()) {
             throw new TenantIdException(
                     "Missing X-Tenant-ID header",
@@ -59,11 +52,37 @@ public class AuthenticationController {
             );
         }
 
-        // Wrap request and pass to service
-        UserRegistrationRequestWrapper wrapper =
-                new UserRegistrationRequestWrapper(tenantType, request);
+        return tenantType;
+    }
 
-        return ResponseEntity.ok(userService.registerUser(wrapper));
+    @PostMapping("/staff/register")
+    public ResponseEntity<String> registerStaff(@RequestBody UserRegistrationRequest request, HttpServletRequest httpRequest) {
+
+        // Get tenant header and validate
+        TenantType tenantType = getTenantHeader(httpRequest);
+        request.setTenantId(tenantType);
+        userService.registerStaff(request);
+        return ResponseEntity.ok("Staff registration successful, wait for admin approval");
+    }
+
+
+    @PostMapping("/farmer/registration")
+    public ResponseEntity<String> registerFarmer(
+            @RequestBody FarmerRegistrationRequest farmer,
+            HttpServletRequest request
+    ){
+
+        // Get the tenant Id from the header
+        TenantType tenantType = getTenantHeader(request);
+
+        if(tenantType != TenantType.FARMER){
+            return ResponseEntity.badRequest().body("Invalid tenant id");
+        }
+
+        farmer.setTenantId(tenantType);
+        userService.registerFarmer(farmer);
+
+        return ResponseEntity.ok("Farmer registration successful, wait for admin approval");
     }
 
     @PostMapping("/login")

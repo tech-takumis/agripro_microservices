@@ -29,9 +29,9 @@ public class RsbsaController {
         return new ResponseEntity<>(rsbsaService.findAll(),HttpStatus.FOUND);
     }
 
-    @GetMapping("/{rsba-id}")
+    @GetMapping("/{rsbsa-id}")
     public ResponseEntity<RsbsaResponseDto> findById(
-            @PathVariable UUID rsbaId,
+            @PathVariable("rsbsa-id") UUID rsbaId,
             HttpServletRequest request
             ){
         return new ResponseEntity<>(rsbsaService.findById(rsbaId,request),HttpStatus.OK);

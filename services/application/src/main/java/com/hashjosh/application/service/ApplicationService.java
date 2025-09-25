@@ -17,7 +17,6 @@ import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.constant.EventType;
-import com.hashjosh.kafkacommon.application.ApplicationContract;
 import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

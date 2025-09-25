@@ -1,4 +1,4 @@
-package com.hashjosh.users.entity;
+package com.hashjosh.kafkacommon.user;
 
 public enum TenantType {
     FARMER,
