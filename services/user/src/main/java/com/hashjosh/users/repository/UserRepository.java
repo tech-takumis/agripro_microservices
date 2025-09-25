@@ -1,6 +1,6 @@
 package com.hashjosh.users.repository;
 
-import com.hashjosh.users.entity.TenantType;
+import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,5 +19,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
     Optional<User> findByIdWithRolesAndPermissions(@Param("id") UUID id);
 
+    boolean existsByUsername(String username);
 }
 

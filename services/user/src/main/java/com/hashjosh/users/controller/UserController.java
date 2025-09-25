@@ -1,12 +1,11 @@
 package com.hashjosh.users.controller;
 
 import com.hashjosh.users.dto.UserResponse;
-import com.hashjosh.users.entity.TenantType;
+import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.entity.User;
 import com.hashjosh.users.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

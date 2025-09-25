@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RsbsaService {
     private final RsbsaRepository repository;
-//    private final UserRepository userRepository;
     private final RsbsaMapper mapper;
 
 

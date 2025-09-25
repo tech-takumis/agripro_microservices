@@ -1,5 +1,6 @@
 package com.hashjosh.users.entity;
 
+import com.hashjosh.kafkacommon.user.TenantType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -45,6 +45,11 @@ spring:
               predicates:
                 - Path=/api/v1/programs/**,/api/v1/schedules/**
 
+            - id: rsbsa-service
+              uri: lb://rsbsa-service
+              predicates:
+                - Path=/api/v1/rsbsa/**
+
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
