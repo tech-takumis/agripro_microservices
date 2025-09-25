@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../data/models/application_data.dart';
-import '../data/services/api_service.dart';
+import '../../data/models/application_data.dart';
+import '../../data/services/api_service.dart';
 
 class ApplicationController extends GetxController {
   final _applications = <ApplicationContent>[].obs;

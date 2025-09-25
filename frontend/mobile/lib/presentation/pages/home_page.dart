@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
-import '../../controllers/auth_controller.dart';
+import '../controllers/auth_controller.dart';
 import 'application_page.dart';
 
 class HomePage extends StatefulWidget {
