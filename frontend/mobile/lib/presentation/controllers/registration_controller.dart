@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import '../data/models/registration_request.dart';
-import '../data/models/registration_response.dart';
-import '../data/services/api_service.dart';
+import '../../data/models/registration_request.dart';
+import '../../data/models/registration_response.dart';
+import '../../data/services/api_service.dart';
 
 class RegistrationController extends GetxController {
   final _isLoading = false.obs;
@@ -14,14 +14,47 @@ class RegistrationController extends GetxController {
   String get successMessage => _successMessage.value;
   RegistrationResponse? get registrationResult => _registrationResult.value;
 
-  Future<void> register(String referenceNumber) async {
+  Future<void> register(
+      String referenceNumber,
+      String firstName,
+      String lastName,
+      String? middleName,
+      String email,
+      String phoneNumber,
+      String city,
+      String state,
+      String country,
+      String zipCode,
+      String farmAddress,
+      String tenureStatus,
+      String farmSize,
+      String farmType,
+      String primaryCrop
+      ) async {
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
       _successMessage.value = '';
       _registrationResult.value = null;
 
-      final request = RegistrationRequest(referenceNumber: referenceNumber);
+      final request = RegistrationRequest(
+          referenceNumber: referenceNumber,
+          firstName: firstName,
+          lastName: lastName,
+          middleName: middleName,
+          email: email,
+          phoneNumber: phoneNumber,
+          city: city,
+          state: state,
+          country: country,
+          zipCode: zipCode,
+          farmAddress: farmAddress,
+          tenureStatus: tenureStatus,
+          farmSize: farmSize,
+          farmType: farmType,
+          primaryCrop: primaryCrop
+      );
+
       final response = await ApiService.to.register(request);
 
       _registrationResult.value = response;

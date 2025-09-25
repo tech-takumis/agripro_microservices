@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart'; // Import for AlertDialog
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import '../data/models/login_request.dart';
-import '../data/services/api_service.dart';
-import '../data/services/storage_service.dart';
-import '../data/services/location_service.dart'; // Import LocationService
+import '../../data/models/login_request.dart';
+import '../../data/services/api_service.dart';
+import '../../data/services/storage_service.dart';
+import '../../data/services/location_service.dart'; // Import LocationService
 
 class AuthController extends GetxController {
   final _isLoading = false.obs;

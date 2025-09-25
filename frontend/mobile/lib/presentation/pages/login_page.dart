@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/auth_controller.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import '../controllers/auth_controller.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/custom_button.dart';
 import '../widgets/credentials_modal.dart';
 import '../../data/services/storage_service.dart';
 

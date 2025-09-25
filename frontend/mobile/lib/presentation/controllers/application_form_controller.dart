@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart'; // Import geolocator
 import 'package:rflutter_alert/rflutter_alert.dart';
-import '../data/models/application_data.dart';
-import '../data/services/api_service.dart';
-import '../data/services/location_service.dart'; // Import LocationService
+import '../../data/models/application_data.dart';
+import '../../data/services/api_service.dart';
+import '../../data/services/location_service.dart'; // Import LocationService
 
 class ApplicationFormController extends GetxController {
   final ApplicationContent application;

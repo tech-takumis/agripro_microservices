@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/application_controller.dart';
+import '../controllers/application_controller.dart';
 import 'application_form_page.dart'; // Import the form page
 
 class ApplicationPage extends StatelessWidget {
