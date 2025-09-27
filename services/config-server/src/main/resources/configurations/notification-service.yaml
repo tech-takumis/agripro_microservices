@@ -32,7 +32,7 @@ notification:
     host: smtp.gmail.com
     port: 587
     username: pracullosjohnpaul@gmail.com
-    password: ${MAIL_PASSWORD} # Use environment variable for security
+    password: ${MAIL_PASSWORD}
     from: pracullosjohnpaul@gmail.com
     sender-name: AgriPro Notifications
     smtp:
