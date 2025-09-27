@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -56,19 +57,29 @@ public class AuthenticationController {
     }
 
     @PostMapping("/staff/register")
-    public ResponseEntity<String> registerStaff(@RequestBody UserRegistrationRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<RegistrationResponse.StaffRegistrationResponse> registerStaff(
+            @RequestBody RegistrationRequest.StaffRegistrationRequest request, HttpServletRequest httpRequest) {
 
         // Get tenant header and validate
         TenantType tenantType = getTenantHeader(httpRequest);
         request.setTenantId(tenantType);
-        userService.registerStaff(request);
-        return ResponseEntity.ok("Staff registration successful, wait for admin approval");
+        User user = userService.registerStaff(request);
+        return ResponseEntity.ok(
+                RegistrationResponse.StaffRegistrationResponse.builder()
+                        .username(user.getUsername())
+                        .message("Staff Registered Successfully")
+                        .success(true)
+                        .error(null)
+                        .status(HttpStatus.CREATED.value())
+                        .timestamp(LocalDateTime.now())
+                        .build()
+        );
     }
 
 
     @PostMapping("/farmer/registration")
-    public ResponseEntity<String> registerFarmer(
-            @RequestBody FarmerRegistrationRequest farmer,
+    public ResponseEntity<RegistrationResponse.FarmerRegistrationResponse> registerFarmer(
+            @RequestBody RegistrationRequest.FarmerRegistrationRequest farmer,
             HttpServletRequest request
     ){
 
@@ -76,13 +87,30 @@ public class AuthenticationController {
         TenantType tenantType = getTenantHeader(request);
 
         if(tenantType != TenantType.FARMER){
-            return ResponseEntity.badRequest().body("Invalid tenant id");
+            return ResponseEntity.badRequest().body(
+                    RegistrationResponse.FarmerRegistrationResponse.builder()
+                            .username(null)
+                            .message("Only farmers can register")
+                            .error("Error non farmers can't register")
+                            .success(false)
+                            .status(HttpStatus.BAD_REQUEST.value())
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
         }
 
         farmer.setTenantId(tenantType);
-        userService.registerFarmer(farmer);
+        User user = userService.registerFarmer(farmer);
 
-        return ResponseEntity.ok("Farmer registration successful, wait for admin approval");
+        return ResponseEntity.ok(
+                RegistrationResponse.FarmerRegistrationResponse.builder()
+                        .username(user.getUsername())
+                        .message("Farmer Registered Successfully")
+                        .error(null)
+                        .success(true)
+                        .status(HttpStatus.CREATED.value())
+                        .timestamp(LocalDateTime.now())
+                        .build());
     }
 
     @PostMapping("/login")

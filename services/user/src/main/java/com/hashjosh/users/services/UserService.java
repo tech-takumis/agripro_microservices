@@ -78,7 +78,7 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(UserRegistrationRequest request) {
+    public User registerUser(RegistrationRequest.StaffRegistrationRequest request) {
 
         Set<Role> roles = new HashSet<>();
         request.getRolesId().forEach(roleId -> {
@@ -94,20 +94,32 @@ public class UserService {
     }
 
     @Transactional
-    public void registerStaff(UserRegistrationRequest request) {
+    public User registerStaff(RegistrationRequest.StaffRegistrationRequest request) {
         // Check if
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
-        User user = registerUser(request);
+        Set<Role> roles = new HashSet<>();
+        request.getRolesId().forEach(roleId -> {
+            Role role = repository.findById(roleId)
+                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
+            roles.add(role);
+        });
+
+        User user = userMapper.toEntity(request, roles);
+        user.setRoles(roles);
+
+        User registeredUser = userRepository.save(user);
         // Publish the staff registration to user event topic  for notification
         publishUserRegistrationTopic(user);
+
+        return registeredUser;
 
     }
 
     @Transactional
-    public void registerFarmer(FarmerRegistrationRequest farmerRequest) {
+    public User registerFarmer(RegistrationRequest.FarmerRegistrationRequest farmerRequest) {
         // 1. Validate if email already exists
         if (userRepository.existsByEmail(farmerRequest.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
@@ -115,16 +127,21 @@ public class UserService {
 
         RsbsaResponseDto rsbsaInfo = rsbsaServiceClient.getRsbsa(farmerRequest.getRsbsaNumber());
 
-        UserRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest);
+        RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest);
 
-        Role farmerRole = roleRepository.findByName("FARMER")
-                .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value()));
+        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName("FARMER")
+                .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value())));
 
-        userRequest.setRolesId(Set.of(farmerRole.getId()));
+        userRequest.setRolesId(farmerRoles.stream().map(Role::getId).collect(Collectors.toSet()));
 
-        User registeredUser = registerUser(userRequest);
+        User user = userMapper.toEntity(userRequest, farmerRoles);
+        user.setRoles(farmerRoles);
+
+        User registeredUser = userRepository.save(user);
 
         publishUserRegistrationTopic(registeredUser);
+
+        return registeredUser;
     }
 
     private void publishUserRegistrationTopic(User registeredUser) {
@@ -133,12 +150,6 @@ public class UserService {
         userRegistration.userRegistration(contract);
     }
 
-
-    public List<User> getUsersByType(TenantType tenantType) {
-        return userRepository.findByTenantType(tenantType);
-    }
-
-
     @Transactional(readOnly = true)
     public AuthenticatedResponse getAuthenticatedUser(User user) {
 
@@ -146,22 +157,6 @@ public class UserService {
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
         return userMapper.toAuthenticatedResponse(u);
-    }
-
-    public UserResponse getUserById(UUID userId) {
-        User user =  userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(
-                        "User id "+userId+ " not found!",
-                        HttpStatus.NOT_FOUND.value()
-                ));
-
-        return userMapper.toUserResponse(user);
-    }
-
-    public List<UserResponse> findAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toUserResponse)
-                .collect(Collectors.toList());
     }
 
 }

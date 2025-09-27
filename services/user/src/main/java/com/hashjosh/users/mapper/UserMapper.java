@@ -2,14 +2,12 @@ package com.hashjosh.users.mapper;
 
 import com.hashjosh.kafkacommon.user.UserRegistrationContract;
 import com.hashjosh.users.dto.AuthenticatedResponse;
-import com.hashjosh.users.dto.FarmerRegistrationRequest;
-import com.hashjosh.users.dto.UserRegistrationRequest;
+import com.hashjosh.users.dto.RegistrationRequest;
 import com.hashjosh.users.dto.UserResponse;
 import com.hashjosh.users.dto.permission.PermissionResponse;
 import com.hashjosh.users.dto.role.RoleResponse;
 import com.hashjosh.users.entity.Role;
 import com.hashjosh.users.entity.User;
-import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,7 +46,8 @@ public class UserMapper {
         );
     }
 
-    public User toEntity(UserRegistrationRequest request, Set<Role> roles) {
+    public User toEntity(
+            RegistrationRequest.StaffRegistrationRequest request, Set<Role> roles) {
         return User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -90,7 +89,8 @@ public class UserMapper {
                 .build();
     }
 
-    public UserRegistrationRequest toUserRequestEntity(FarmerRegistrationRequest farmerRequest) {
+    public RegistrationRequest.StaffRegistrationRequest toUserRequestEntity(
+            RegistrationRequest.FarmerRegistrationRequest farmerRequest) {
         String username = generateUsername(farmerRequest.getFirstName(), farmerRequest.getLastName());
         String generatedPassword = generateRandomPassword();
         String address = String.format("%s, %s, %s, %s",
@@ -99,7 +99,7 @@ public class UserMapper {
                 farmerRequest.getZipCode(),
                 farmerRequest.getCountry());
 
-        return UserRegistrationRequest.builder()
+        return RegistrationRequest.StaffRegistrationRequest.builder()
                 .tenantId(farmerRequest.getTenantId())
                 .firstName(farmerRequest.getFirstName())
                 .lastName(farmerRequest.getLastName())

@@ -109,6 +109,4 @@ public class UserRegistrationService {
             log.error("❌ Failed to save failed notification for user: {}", contract.getEmail(), e);
         }
     }
-
-
 }

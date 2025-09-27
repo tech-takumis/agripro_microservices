@@ -1,7 +1,6 @@
 package com.hashjosh.users.kafka;
 
 import com.hashjosh.kafkacommon.user.UserRegistrationContract;
-import com.hashjosh.users.dto.UserRegistrationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UserRegistrationProducer {
 
-    private final KafkaTemplate<String, UserRegistrationRequest> kafkaTemplate;
+    private final KafkaTemplate<String, UserRegistrationContract> kafkaTemplate;
 
     public void userRegistration(UserRegistrationContract userRegistrationContract){
         log.info("User registration payload: {}", userRegistrationContract);
