@@ -95,7 +95,7 @@ public class UserService {
             roles.add(role);
         });
 
-        User user = userMapper.toEntity(request, roles);
+        User user = userMapper.toStaffEntity(request, roles);
         user.setRoles(roles);
 
         User registeredUser = userRepository.save(user);
@@ -125,20 +125,28 @@ public class UserService {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
+        if(userRepository.existsByUsername(farmerRequest.getRsbsaNumber())){
+            throw new UserException("Rsbsa number already have an associated account, please contact the customer if not yours", HttpStatus.BAD_REQUEST.value());
+        }
+
         // Validate RSBSA Number if it exist!
         RsbsaResponseDto rsbsaInfo = rsbsaServiceClient.getRsbsa(farmerRequest.getRsbsaNumber());
 
-        String username = generateUsername(farmerRequest.getFirstName(), farmerRequest.getLastName());
         String generatedPassword = generateRandomPassword();
-
-        RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest,username,generatedPassword);
+        // NOTE: Refactor this in the future make a username formatter function, becuase I know the real rsbsa number is 18 character
+        // and usename must be 4-6 character only.
+        String username = farmerRequest.getRsbsaNumber();
 
         Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName(TenantType.FARMER.name().toUpperCase())
                 .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value())));
 
-        userRequest.setRolesId(farmerRoles.stream().map(Role::getId).collect(Collectors.toSet()));
+        RegistrationRequest.FarmerRegistrationRequestWrapper farmerRequestWrapper = new RegistrationRequest.FarmerRegistrationRequestWrapper(
+                username,
+                generatedPassword,
+                farmerRequest
+        );
 
-        User user = userMapper.toEntity(userRequest, farmerRoles);
+        User user = userMapper.toFarmerEntity(farmerRequestWrapper);
         user.setRoles(farmerRoles);
 
         User registeredUser = userRepository.save(user);
@@ -146,7 +154,7 @@ public class UserService {
         RegistrationRequest.FarmerCredendials credendials = new RegistrationRequest.FarmerCredendials(
                 registeredUser.getId(),
                 farmerRequest.getRsbsaNumber(),
-                username,
+                farmerRequest.getRsbsaNumber(),
                 generatedPassword,
                 registeredUser.getFirstName(),
                 registeredUser.getLastName(),
@@ -180,12 +188,6 @@ public class UserService {
 
         return userMapper.toAuthenticatedResponse(u);
     }
-
-    private String generateUsername(String firstName, String lastName) {
-        return (firstName.charAt(0) + lastName).toLowerCase()
-                .replaceAll("[^a-z0-9]", "");
-    }
-
     private String generateRandomPassword() {
         return UUID.randomUUID().toString().substring(0, 8);
     }

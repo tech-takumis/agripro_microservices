@@ -27,7 +27,7 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
   void initState() {
     super.initState();
     _controller = Get.put(MultiStepRegistrationController());
-    _pageController = PageController();
+    _pageController = PageController(keepPage: true);
   }
 
   @override
@@ -37,14 +37,6 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
     super.dispose();
   }
 
-  void _onStepChanged(int step) {
-    _controller.goToStep(step);
-    _pageController.animateToPage(
-      step - 1,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
 
   void _nextStep() {
     // Validate current step before proceeding
@@ -173,7 +165,7 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: RegistrationStepOne(
                       formKey: _controller.step1FormKey,
-                      referenceNumberController: _controller.referenceNumberController,
+                      rsbsaNumberController: _controller.rsbsaNumber,
                       firstNameController: _controller.firstNameController,
                       lastNameController: _controller.lastNameController,
                       middleNameController: _controller.middleNameController,
@@ -198,7 +190,7 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
                     child: RegistrationStepThree(
                       key: _step3Key,
                       formKey: _controller.step3FormKey,
-                      farmAddressController: _controller.farmAddressController,
+                      farmLocationController: _controller.farmLocationController,
                       farmSizeController: _controller.farmSizeController,
                       primaryCropController: _controller.primaryCropController,
                     ),

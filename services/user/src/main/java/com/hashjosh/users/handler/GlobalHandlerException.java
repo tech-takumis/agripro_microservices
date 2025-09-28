@@ -1,6 +1,7 @@
 package com.hashjosh.users.handler;
 
 import com.hashjosh.users.exception.ExceptionResponse;
+import com.hashjosh.users.exception.RsbsaException;
 import com.hashjosh.users.exception.TenantIdException;
 import com.hashjosh.users.exception.UserException;
 import lombok.RequiredArgsConstructor;
@@ -28,5 +29,10 @@ public class GlobalHandlerException {
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<String> handleUsernameNotFound(UsernameNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(RsbsaException.class)
+    public ResponseEntity<ExceptionResponse> handleRsbsaException(RsbsaException ex){
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getExceptionResponse());
     }
 }

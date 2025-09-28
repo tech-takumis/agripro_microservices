@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/presentation/widgets/common/custom_text_field.dart';
-import 'package:mobile/presentation/controllers/registration_controller.dart';
 
 /// First step of registration: Basic Information
 class RegistrationStepOne extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController referenceNumberController;
+  final TextEditingController rsbsaNumberController;
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController middleNameController;
@@ -16,7 +15,7 @@ class RegistrationStepOne extends StatelessWidget {
   const RegistrationStepOne({
     super.key,
     required this.formKey,
-    required this.referenceNumberController,
+    required this.rsbsaNumberController,
     required this.firstNameController,
     required this.lastNameController,
     required this.middleNameController,
@@ -89,7 +88,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // RSBSA Reference Number
           CustomTextField(
-            controller: referenceNumberController,
+            controller: rsbsaNumberController,
             label: 'RSBSA Reference Number *',
             prefixIcon: Icons.badge_outlined,
             keyboardType: TextInputType.text,

@@ -23,6 +23,7 @@ public class RegistrationRequest {
         private String  email;
         private String  phoneNumber;
 
+
         // Address
         private String city;
         private String state;
@@ -36,6 +37,19 @@ public class RegistrationRequest {
         private String farmType;
         private String primaryCrop;
     }
+
+    @Getter
+    @Setter
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class FarmerRegistrationRequestWrapper {
+        private String username;
+        private String password;
+        private FarmerRegistrationRequest farmerRegistrationRequest;
+    }
+
+
     @Getter
     @Setter
     @Data
@@ -88,5 +102,6 @@ public class RegistrationRequest {
         private String email;
         private String phoneNumber;
         private String address;
+
     }
 }
