@@ -36,6 +36,25 @@ public class RegistrationRequest {
         private String farmType;
         private String primaryCrop;
     }
+    @Getter
+    @Setter
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class FarmerCredendials {
+        // Basic farmer information::
+        private UUID userId;
+        private String rsbsaNumber;
+        private String username;
+        private String password;
+        private String firstName;
+        private String lastName;
+        private String middleName;
+        private String  email;
+        private String  phoneNumber;
+
+    }
+
 
     @Getter
     @Setter
@@ -52,5 +71,22 @@ public class RegistrationRequest {
         private String phoneNumber;
         private String address;
         private Set<UUID> rolesId;
+    }
+
+    @Getter
+    @Setter
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class StaffCredentials {
+        private TenantType tenantId;
+        private UUID userId;
+        private String username;
+        private String password;
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String phoneNumber;
+        private String address;
     }
 }

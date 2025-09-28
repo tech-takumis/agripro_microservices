@@ -25,31 +25,32 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon"
-        spring.json.type.mapping: applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,userRegistrationContract:com.hashjosh.kafkacommon.user.UserRegistrationContract
-
-notification:
-  email:
+        spring.json.type.mapping: >
+          applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
+          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
+          farmerRegistrationContract:com.hashjosh.kafkacommon.user.FarmerRegistrationContract,
+          staffRegistrationContract:com.hashjosh.kafkacommon.user.StaffRegistrationContract
+  mail:
     host: smtp.gmail.com
     port: 587
     username: pracullosjohnpaul@gmail.com
     password: vggv yxhs abhp ynrm
-    from: pracullosjohnpaul@gmail.com
-    sender-name: AgriPro Notifications
-    smtp:
-      auth: true
-      starttls-enable: true
-      starttls-required: true
-      connection-timeout: 5000
-      timeout: 5000
-      write-timeout: 5000
-
-
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
     encoding: UTF-8
+
+notification:
+    from: pracullosjohnpaul@gmail.com
+    sender-name: AgriPro Notifications
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
