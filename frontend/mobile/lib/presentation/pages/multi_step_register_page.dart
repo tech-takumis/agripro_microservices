@@ -47,6 +47,24 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
   }
 
   void _nextStep() {
+    // Validate current step before proceeding
+    final currentStep = _controller.currentStep;
+    final isValid = () {
+      if (currentStep == 1) {
+        return _controller.step1FormKey.currentState?.validate() ?? false;
+      } else if (currentStep == 2) {
+        return _controller.step2FormKey.currentState?.validate() ?? false;
+      } else if (currentStep == 3) {
+        return _controller.step3FormKey.currentState?.validate() ?? false;
+      }
+      return false;
+    }();
+
+    if (!isValid) {
+      // Do not proceed if the form is invalid
+      return;
+    }
+
     // Update data from current step before moving
     if (_controller.currentStep == 2) {
       final step2State = _step2Key.currentState;
@@ -105,10 +123,10 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
         title: const Text('Create Account'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
-        ),
+        leading: Obx(() => IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _controller.currentStep > 1 ? _previousStep : () => Get.back(),
+            )),
       ),
       body: SafeArea(
         child: Column(
@@ -118,12 +136,12 @@ class _MultiStepRegisterPageState extends State<MultiStepRegisterPage> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.person_add_outlined,
-                    size: 60,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(height: 16),
+                  // Icon(
+                  //   Icons.person_add_outlined,
+                  //   size: 60,
+                  //   color: Theme.of(context).primaryColor,
+                  // ),
+                  // const SizedBox(height: 16),
                   Text(
                     'Create Your Account',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(

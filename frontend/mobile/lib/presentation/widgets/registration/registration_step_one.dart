@@ -93,30 +93,30 @@ class RegistrationStepOne extends StatelessWidget {
             label: 'RSBSA Reference Number *',
             prefixIcon: Icons.badge_outlined,
             keyboardType: TextInputType.text,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[\d-]')),
-              LengthLimitingTextInputFormatter(15),
-            ],
-            onChanged: (value) {
-              if (value.length >= 3 &&
-                  !value.contains('-') &&
-                  value.length <= 6) {
-                final formatted = RegistrationController.formatRsbsaId(value);
-                if (formatted != value) {
-                  referenceNumberController.value = TextEditingValue(
-                    text: formatted,
-                    selection: TextSelection.collapsed(offset: formatted.length),
-                  );
-                }
-              }
-            },
+            // inputFormatters: [
+            //   // FilteringTextInputFormatter.allow(RegExp(r'[\d-]')),
+            //   // LengthLimitingTextInputFormatter(15),
+            // ],
+            // onChanged: (value) {
+            //   if (value.length >= 3 &&
+            //       !value.contains('-') &&
+            //       value.length <= 6) {
+            //     final formatted = RegistrationController.formatRsbsaId(value);
+            //     if (formatted != value) {
+            //       referenceNumberController.value = TextEditingValue(
+            //         text: formatted,
+            //         selection: TextSelection.collapsed(offset: formatted.length),
+            //       );
+            //     }
+            //   }
+            // },
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your RSBSA Reference Number';
               }
-              if (!RegistrationController.isValidRsbsaId(value)) {
-                return 'Please enter a valid RSBSA Reference Number';
-              }
+              // if (!RegistrationController.isValidRsbsaId(value)) {
+              //   return 'Please enter a valid RSBSA Reference Number';
+              // }
               return null;
             },
           ),

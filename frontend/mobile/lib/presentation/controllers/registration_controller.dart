@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import '../../data/models/registration_request.dart';
-import '../../data/models/registration_response.dart';
-import '../../data/services/api_service.dart';
+import 'package:mobile/data/models/registration_request.dart';
+import 'package:mobile/data/models/registration_response.dart';
+import 'package:mobile/data/services/api_service.dart';
 
 class RegistrationController extends GetxController {
   final _isLoading = false.obs;
