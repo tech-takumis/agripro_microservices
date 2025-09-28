@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.constant.EventType;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,6 +13,8 @@ import java.util.UUID;
 @Setter
 @Getter
 @Data
+@NoArgsConstructor  // Add this annotation
+@AllArgsConstructor // Add this annotation
 public class ApplicationInsuranceContract {
     @JsonProperty("eventId")
     private UUID eventId;

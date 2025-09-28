@@ -1,5 +1,6 @@
 package com.hashjosh.users.dto;
 
+import com.hashjosh.kafkacommon.user.TenantType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,8 +9,6 @@ public class RegistrationResponse {
     @Getter
     @Setter
     @Builder
-    @RequiredArgsConstructor
-    @AllArgsConstructor
     @Data
     public static class FarmerRegistrationResponse {
         private final String message;
@@ -23,10 +22,9 @@ public class RegistrationResponse {
     @Getter
     @Setter
     @Builder
-    @RequiredArgsConstructor
-    @AllArgsConstructor
     @Data
     public static class StaffRegistrationResponse {
+
         private final String message;
         private final String username;
         private final String error;

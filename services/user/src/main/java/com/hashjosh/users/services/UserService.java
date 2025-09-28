@@ -125,11 +125,12 @@ public class UserService {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
+        // Validate RSBSA Number if it exist!
         RsbsaResponseDto rsbsaInfo = rsbsaServiceClient.getRsbsa(farmerRequest.getRsbsaNumber());
 
         RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest);
 
-        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName("FARMER")
+        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName(TenantType.FARMER.name().toLowerCase())
                 .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value())));
 
         userRequest.setRolesId(farmerRoles.stream().map(Role::getId).collect(Collectors.toSet()));

@@ -29,7 +29,7 @@ public class RsbsaController {
         return new ResponseEntity<>(rsbsaService.findAll(),HttpStatus.FOUND);
     }
 
-    @GetMapping("/{rsbsa-id}")
+    @GetMapping("/public/{rsbsa-id}")
     public ResponseEntity<RsbsaResponseDto> findById(
             @PathVariable("rsbsa-id") UUID rsbaId,
             HttpServletRequest request

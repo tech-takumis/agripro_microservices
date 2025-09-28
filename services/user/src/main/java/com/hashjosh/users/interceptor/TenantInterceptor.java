@@ -58,7 +58,8 @@ private boolean isPublicEndpoint(HttpServletRequest request) {
 
     // Normalize paths to avoid mismatch issues
     return requestPath.equals("/api/v1/auth/login") ||
-           requestPath.equals("/api/v1/auth/register") ||
+           requestPath.equals("/api/v1/auth/farmer/registration") ||
+            requestPath.equals("/api/v1/auth/staff/registration") ||
            requestPath.startsWith("/public") || // Include any paths under /public
            requestPath.equals("/health");
 }

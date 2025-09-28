@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NoArgsConstructor;  // Add this annotation
+import lombok.AllArgsConstructor; // Add this annotation
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,6 +18,8 @@ import java.util.UUID;
 @Data
 @Getter
 @Setter
+@NoArgsConstructor  // Add this annotation
+@AllArgsConstructor // Add this annotation
 public class ApplicationSubmissionContract {
     @JsonProperty("eventId")
     private UUID eventId;

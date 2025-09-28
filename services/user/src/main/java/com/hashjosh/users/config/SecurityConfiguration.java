@@ -32,7 +32,9 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable) // ✅ Enable CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/register","/api/v1/auth/login", "/actuator/**").permitAll()
+                        .requestMatchers("/api/v1/auth/farmer/registration",
+                                "/api/v1/auth/staff/registration",
+                                "/api/v1/auth/login", "/actuator/**","/api/v1/auth/me").permitAll()
                         .requestMatchers("/api/v1/auth/me","/api/v1/auth/logout").authenticated()
                         .anyRequest().authenticated()
                 )
