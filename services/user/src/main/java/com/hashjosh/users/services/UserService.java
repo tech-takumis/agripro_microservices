@@ -1,32 +1,37 @@
 package com.hashjosh.users.services;
 
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
+import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
+import com.hashjosh.kafkacommon.user.TenantType;
+import com.hashjosh.users.clients.RsbsaResponseDto;
+import com.hashjosh.users.clients.RsbsaServiceClient;
 import com.hashjosh.users.config.CustomUserDetails;
 import com.hashjosh.users.dto.AuthenticatedResponse;
 import com.hashjosh.users.dto.LoginRequest;
 import com.hashjosh.users.dto.LoginResponse;
-import com.hashjosh.users.dto.UserResponse;
+import com.hashjosh.users.dto.RegistrationRequest;
 import com.hashjosh.users.entity.Role;
-import com.hashjosh.users.entity.TenantType;
 import com.hashjosh.users.entity.User;
 import com.hashjosh.users.exception.UserException;
+import com.hashjosh.users.kafka.UserRegistrationProducer;
 import com.hashjosh.users.mapper.UserMapper;
 import com.hashjosh.users.repository.RoleRepository;
 import com.hashjosh.users.repository.UserRepository;
-import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -36,6 +41,9 @@ public class UserService {
     private final UserServiceRefreshTokenStore refreshTokenStore;
     private final UserMapper userMapper;
     private final RoleRepository repository;
+    private final RsbsaServiceClient rsbsaServiceClient;
+    private final RoleRepository roleRepository;
+    private final UserRegistrationProducer userRegistration;
 
     @PostConstruct
     public void init() {
@@ -74,28 +82,95 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(UserRegistrationRequestWrapper wrapper) {
-        if (userRepository.existsByEmail(wrapper.request().getEmail())) {
+    public User registerStaff(RegistrationRequest.StaffRegistrationRequest request) {
+        // Check if
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
         Set<Role> roles = new HashSet<>();
-
-        wrapper.request().getRolesId().forEach(roleId -> {
-            Role role = repository.findById(roleId).orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
+        request.getRolesId().forEach(roleId -> {
+            Role role = repository.findById(roleId)
+                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
             roles.add(role);
         });
 
-        User user = userMapper.toEntity(wrapper, roles);
+        User user = userMapper.toEntity(request, roles);
         user.setRoles(roles);
 
-        return userRepository.save(user);
+        User registeredUser = userRepository.save(user);
+        // Publish the staff registration to user event topic  for notification
+        RegistrationRequest.StaffCredentials credentials = new RegistrationRequest.StaffCredentials(
+                user.getTenantType(),
+                user.getId(),
+                user.getUsername(),
+                request.getPassword(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getAddress()
+        );
+
+        publishStaffRegistrationTopic(credentials);
+
+        return registeredUser;
+
     }
 
-    public List<User> getUsersByType(TenantType tenantType) {
-        return userRepository.findByTenantType(tenantType);
+    @Transactional
+    public User registerFarmer(RegistrationRequest.FarmerRegistrationRequest farmerRequest) {
+        // 1. Validate if email already exists
+        if (userRepository.existsByEmail(farmerRequest.getEmail())) {
+            throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Validate RSBSA Number if it exist!
+        RsbsaResponseDto rsbsaInfo = rsbsaServiceClient.getRsbsa(farmerRequest.getRsbsaNumber());
+
+        String username = generateUsername(farmerRequest.getFirstName(), farmerRequest.getLastName());
+        String generatedPassword = generateRandomPassword();
+
+        RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest,username,generatedPassword);
+
+        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName(TenantType.FARMER.name().toUpperCase())
+                .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value())));
+
+        userRequest.setRolesId(farmerRoles.stream().map(Role::getId).collect(Collectors.toSet()));
+
+        User user = userMapper.toEntity(userRequest, farmerRoles);
+        user.setRoles(farmerRoles);
+
+        User registeredUser = userRepository.save(user);
+
+        RegistrationRequest.FarmerCredendials credendials = new RegistrationRequest.FarmerCredendials(
+                registeredUser.getId(),
+                farmerRequest.getRsbsaNumber(),
+                username,
+                generatedPassword,
+                registeredUser.getFirstName(),
+                registeredUser.getLastName(),
+                farmerRequest.getMiddleName(),
+                registeredUser.getEmail(),
+                registeredUser.getPhoneNumber()
+        );
+
+        publishFarmerRegistrationTopic(credendials);
+
+        return registeredUser;
     }
 
+    private void publishFarmerRegistrationTopic(RegistrationRequest.FarmerCredendials credendials) {
+        FarmerRegistrationContract contract = userMapper.toFarmerRegistrationContract(credendials);
+
+        userRegistration.farmerRegistrationEvent(contract);
+    }
+
+    private void publishStaffRegistrationTopic(RegistrationRequest.StaffCredentials credentials) {
+        StaffRegistrationContract contract = userMapper.toStaffRegistrationContract(credentials);
+
+        userRegistration.staffRegistrationEvent(contract);
+    }
 
     @Transactional(readOnly = true)
     public AuthenticatedResponse getAuthenticatedUser(User user) {
@@ -103,25 +178,16 @@ public class UserService {
         User u = userRepository.findByIdWithRolesAndPermissions(user.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
-        // Force initialization of lazy collections
-        u.getRoles().forEach(role -> role.getPermissions().size());
-
         return userMapper.toAuthenticatedResponse(u);
     }
 
-    public UserResponse getUserById(UUID userId) {
-        User user =  userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(
-                        "User id "+userId+ " not found!",
-                        HttpStatus.NOT_FOUND.value()
-                ));
-
-        return userMapper.toUserResponse(user);
+    private String generateUsername(String firstName, String lastName) {
+        return (firstName.charAt(0) + lastName).toLowerCase()
+                .replaceAll("[^a-z0-9]", "");
     }
 
-    public List<UserResponse> findAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toUserResponse)
-                .collect(Collectors.toList());
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().substring(0, 8);
     }
+
 }

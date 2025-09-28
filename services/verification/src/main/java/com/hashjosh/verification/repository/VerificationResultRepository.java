@@ -1,6 +1,6 @@
 package com.hashjosh.verification.repository;
 
-import com.hashjosh.verification.enums.VerificationStatus;
+import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.verification.model.VerificationResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,12 +12,12 @@ public interface VerificationResultRepository extends JpaRepository<Verification
 
     Optional<VerificationResult> findByApplicationId(UUID applicationId);
     
-    List<VerificationResult> findByStatus(VerificationStatus status);
+    List<VerificationResult> findByStatus(ApplicationStatus status);
     
-    List<VerificationResult> findByStatusIn(List<VerificationStatus> statuses);
+    List<VerificationResult> findByStatusIn(List<ApplicationStatus> statuses);
     
     List<VerificationResult> findByStatusInAndInspectionType(
-        List<VerificationStatus> statuses, 
+        List<ApplicationStatus> statuses,
         String inspectionType
     );
     

@@ -25,85 +25,94 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter  extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserServiceClient userServiceClient;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
+        try {
+            String authHeader = request.getHeader("Authorization");
+            
+            // Check if header exists and has correct format
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        String token = authHeader.substring(7);
-
-        if(token.trim().isEmpty()){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    """
-                            "message": "Unauthorized - Invalid or null token"
-                            """
-            );
-            response.getWriter().flush();
-            return;
-        }
-
-        if (!jwtService.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    """
-                    {
-                      "message": "Unauthorized: invalid or expired token"
-                    }
-                    """
-            );
-            response.getWriter().flush();
-            return; // stop filter chain
-        }
-
-        Claims claims = jwtService.getAllClaims(token);
-        String username = jwtService.getUsernameFromToken(token);
-        String userId = claims.get("userId", String.class);
-        String tenantId = claims.get("tenantId", String.class);
-
-        UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
-
-        Set<SimpleGrantedAuthority> roles = new HashSet<>();
-
-        user.getRoles().forEach(role -> {
-            roles.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
-            role.getPermissions().forEach(
-                    permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
-            );
-
-        });
-
-        CustomUserDetails userDetails = new CustomUserDetails(
-                token,
-                userId,
-                tenantId,
-                username,
-                user.getEmail(),
-                roles
-        );
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        roles
+            String token = authHeader.substring(7);
+            
+            // Check if token is empty
+            if (token.trim().isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        """
+                        {
+                          "message": "Unauthorized: empty token"
+                        }
+                        """
                 );
+                response.getWriter().flush();
+                return;
+            }
 
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // Validate token
+            if (!jwtService.validateToken(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        """
+                        {
+                          "message": "Unauthorized: invalid or expired token"
+                        }
+                        """
+                );
+                response.getWriter().flush();
+                return;
+            }
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
+            // Process valid token
+            Claims claims = jwtService.getAllClaims(token);
+            String username = jwtService.getUsernameFromToken(token);
+            String userId = claims.get("userId", String.class);
+            String tenantId = claims.get("tenantId", String.class);
 
-        try{
+            UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
+
+            Set<SimpleGrantedAuthority> roles = new HashSet<>();
+            user.getRoles().forEach(role -> {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+                role.getPermissions().forEach(
+                        permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
+                );
+            });
+
+            CustomUserDetails userDetails = new CustomUserDetails(
+                    token,
+                    userId,
+                    tenantId,
+                    username,
+                    user.getEmail(),
+                    roles
+            );
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            roles
+                    );
+
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+
             filterChain.doFilter(request, response);
-        }finally {
+        } finally {
             SecurityContextHolder.clearContext();
         }
     }

@@ -29,11 +29,11 @@ public class RsbsaController {
         return new ResponseEntity<>(rsbsaService.findAll(),HttpStatus.FOUND);
     }
 
-    @GetMapping("/{rsba-id}")
-    public ResponseEntity<RsbsaResponseDto> findById(
-            @PathVariable UUID rsbaId,
+    @GetMapping("/public/{rsbsa-id}")
+    public ResponseEntity<RsbsaResponseDto> findByRsbsaId(
+            @PathVariable("rsbsa-id") String rsbaId,
             HttpServletRequest request
             ){
-        return new ResponseEntity<>(rsbsaService.findById(rsbaId,request),HttpStatus.OK);
+        return new ResponseEntity<>(rsbsaService.findByRsbsaId(rsbaId,request),HttpStatus.OK);
     };
 }

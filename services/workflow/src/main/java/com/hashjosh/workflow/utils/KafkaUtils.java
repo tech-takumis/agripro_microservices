@@ -1,10 +1,10 @@
 package com.hashjosh.workflow.utils;
 
+import com.hashjosh.constant.ApplicationStatus;
+import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.verification.VerificationContract;
-import com.hashjosh.workflow.enums.ApplicationStatus;
-import com.hashjosh.workflow.exceptions.WorkflowHistoryAlreadyExist;
-import com.hashjosh.workflow.exceptions.WorkflowHistoryNotFoundException;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
+import com.hashjosh.workflow.exceptions.WorkflowException;
 import com.hashjosh.workflow.model.WorkflowStatusHistory;
 import com.hashjosh.workflow.repository.WorkflowStatusRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,115 +22,92 @@ public class KafkaUtils {
 
     private final WorkflowStatusRepository workflowStatusRepository;
 
-
-    public void handleRejected(ApplicationContract contract) {
+    /**
+     * Handle general application events (non-creation).
+     *
+     * @param contract the application contract coming from Kafka
+     */
+    public void handleApplicationEvent(ApplicationSubmissionContract contract) {
         WorkflowStatusHistory savedWorkflow = workflowStatusRepository
-                .findByEventId(contract.eventId())
-                .orElseThrow(() -> new WorkflowHistoryNotFoundException(
-                        "Workflow status history not found for event id " + contract.eventId(),
-                        HttpStatus.NOT_FOUND.value(),
-                        "kafka handle verified function event"
+                .findByEventId(contract.getEventId())
+                .orElseThrow(() -> new WorkflowException(
+                        "Workflow status history not found for event ID " + contract.getEventId(),
+                        HttpStatus.NOT_FOUND.value()
                 ));
 
-        savedWorkflow.setStatus(ApplicationStatus.REJECTED);
-        savedWorkflow.setUpdatedBy(contract.payload().userId());
-        savedWorkflow.setVersion(savedWorkflow.getVersion());
-
-        WorkflowStatusHistory history = workflowStatusRepository.save(savedWorkflow);
-
-        log.info("✅ Rejected workflow history for application id {} status:: {}", history.getApplicationId(), history.getStatus());
-    }
-
-
-    public void handleVerified(ApplicationContract contract) {
-        WorkflowStatusHistory savedWorkflow = workflowStatusRepository
-                .findByEventId(contract.eventId())
-                .orElseThrow(() -> new WorkflowHistoryNotFoundException(
-                    "Workflow status history not found for event id " + contract.eventId(),
-                    HttpStatus.NOT_FOUND.value(),
-                    "kafka handle verified function event"
-                ));
-
-        // Map contract status to ApplicationStatus
-        String contractStatus = contract.payload().status();
-        ApplicationStatus newStatus = mapContractStatusToApplicationStatus(contractStatus);
-        
-        savedWorkflow.setStatus(newStatus);
-        savedWorkflow.setUpdatedBy(contract.payload().userId());
-        
-        Long contractVersion = contract.payload().version();
-        if (savedWorkflow.getVersion() != null && savedWorkflow.getVersion().equals(contractVersion)) {
-            savedWorkflow.setVersion(contractVersion);
-        } else {
-            // If versions differ, let Hibernate handle the increment
-            log.warn("Version mismatch detected for eventId {}, using current version {}", contract.eventId(), savedWorkflow.getVersion());
-        }
-        
-        WorkflowStatusHistory history = workflowStatusRepository.save(savedWorkflow);
-        log.info("✅ Updated workflow history for application id {} with status:: {}", history.getApplicationId(), history.getStatus());
-    }
-    
-    private ApplicationStatus mapContractStatusToApplicationStatus(String contractStatus) {
-        if (contractStatus == null) {
-            return ApplicationStatus.PENDING;
-        }
-        
         try {
-            // Map specific statuses to the new simplified ones
-            return switch (contractStatus) {
-                case "SUBMITTED" -> ApplicationStatus.PENDING;
-                case "UNDER_REVIEW" -> ApplicationStatus.UNDER_REVIEW;
-                case "APPROVED" -> ApplicationStatus.APPROVED;
-                case "VERIFIED" -> ApplicationStatus.VERIFIED;
-                case "POLICY_ISSUED" -> ApplicationStatus.POLICY_ISSUED;
-                case "CLAIM_APPROVED" -> ApplicationStatus.CLAIM_APPROVED;
-                case "REJECTED" -> ApplicationStatus.REJECTED;
-                case "CANCELLED" -> ApplicationStatus.CANCELLED;
-                default -> ApplicationStatus.PENDING; // Default to PENDING for unknown statuses
-            };
+            EventType eventType = contract.getEventType();
+
+            switch (eventType) {
+                case
+                    // Verification events
+                     APPLICATION_APPROVED_BY_MA,
+                     APPLICATION_REJECTED_BY_MA,
+                     APPLICATION_APPROVED_BY_AEW,
+                     APPLICATION_REJECTED_BY_AEW,
+
+                     // Underwriter events
+                     UNDER_REVIEW_BY_UNDERWRITER,
+                     APPLICATION_APPROVED_BY_UNDERWRITER,
+                     APPLICATION_REJECTED_BY_UNDERWRITER,
+
+                     // Adjuster events
+                     UNDER_REVIEW_BY_ADJUSTER,
+                     APPLICATION_APPROVED_BY_ADJUSTER,
+                     APPLICATION_REJECTED_BY_ADJUSTER,
+
+                     // Insurance service events
+                     POLICY_ISSUED,
+                     CLAIM_APPROVED -> {
+                    ApplicationStatus contractStatus = contract.getStatus();
+
+                    savedWorkflow.setStatus(contractStatus);
+                    savedWorkflow.setUpdatedBy(contract.getUploadedBy());
+                    savedWorkflow.setUpdatedAt(LocalDateTime.now());
+
+                    workflowStatusRepository.save(savedWorkflow);
+
+                    log.info("✅ Updated workflow for application ID {} to status {}", 
+                        savedWorkflow.getApplicationId(), savedWorkflow.getStatus());
+                }
+                default -> log.warn("Unsupported event type: {}", contract.getEventType());
+            }
         } catch (IllegalArgumentException e) {
-            log.warn("Unknown contract status: {}. Defaulting to PENDING", contractStatus);
-            return ApplicationStatus.PENDING;
+            log.error("❌ Invalid event type: {}", contract.getEventType(), e);
         }
     }
 
-    // Done implementation of application submitted event
-    public void handleSubmitted(ApplicationContract contract) {
-        var workflowHistory = new WorkflowStatusHistory();
+    /**
+     * Create a workflow for the `APPLICATION_SUBMITTED` event type.
+     *
+     * @param contract the application contract containing the event data
+     */
+    public void createWorkflowForApplicationSubmission(ApplicationSubmissionContract contract) {
+        try {
+            // Check if a workflow already exists for this application
+            boolean workflowExists = workflowStatusRepository.existsByApplicationId(contract.getApplicationId());
+            if (workflowExists) {
+                log.warn("Workflow already exists for application ID: {}", contract.getApplicationId());
+                return;
+            }
 
-        Optional<WorkflowStatusHistory> optionalWorkflow = workflowStatusRepository
-                .findByEventId(contract.eventId());
+            WorkflowStatusHistory newWorkflow = WorkflowStatusHistory.builder()
+                    .eventId(contract.getEventId())
+                    .applicationId(contract.getApplicationId())
+                    .status(ApplicationStatus.SUBMITTED) // Default status for a new workflow
+                    .updatedBy(contract.getUploadedBy())
+                    .updatedAt(LocalDateTime.now())
+                    .version(contract.getVersion() != null ? contract.getVersion() : 0L)
+                    .build();
 
-        if(optionalWorkflow.isPresent()) {
-            log.info("Event already exist for event id {}", contract.eventId());
-            throw new WorkflowHistoryAlreadyExist(
-                "Workflow event Id "+ contract.eventId() + " already exist!",
-                    HttpStatus.BAD_REQUEST.value()
-            );
+            workflowStatusRepository.saveAndFlush(newWorkflow);
+
+            log.info("✅ Created new workflow for application ID {} with status SUBMITTED", 
+                    newWorkflow.getApplicationId());
+        } catch (Exception e) {
+            log.error("❌ Failed to create workflow for application ID {}: {}", 
+                    contract.getApplicationId(), e.getMessage(), e);
+            throw new WorkflowException("Failed to create workflow for application ID " + contract.getApplicationId(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
-
-        workflowHistory.setEventId(contract.eventId());
-        workflowHistory.setApplicationId(contract.applicationId());
-        workflowHistory.setStatus(ApplicationStatus.PENDING);
-        workflowHistory.setUpdatedBy(contract.payload().userId());
-        workflowHistory.setVersion(contract.payload().version());
-
-        WorkflowStatusHistory history = workflowStatusRepository.save(workflowHistory);
-
-        log.info("✅ Application submitted workflow history for application id {} status:: {}",  history.getApplicationId(), history.getStatus());
-
-    }
-
-    // TODO: Not implemented yet
-    public void handleUpdate(VerificationContract contract) {
-        log.info("Application update workflow history not implemented yet!");
-        return;
-    }
-
-
-    // TODO: Not implemented yet
-    public void handleDeleted(ApplicationContract contract) {
-        log.info("Application deleted workflow history not implemented yet!");
-          return;
     }
 }

@@ -1,9 +1,7 @@
 package com.hashjosh.workflow.controller;
 
-import com.hashjosh.workflow.dto.ApplicationResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;
 import com.hashjosh.workflow.service.WorkflowService;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -29,7 +29,10 @@ public class GatewaySecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Enable CORS
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/v1/auth/login", "/api/v1/auth/register").permitAll()
+                        .pathMatchers("/api/v1/auth/login",
+                                "/api/v1/auth/farmer/registration",
+                                "/api/v1/auth/staff/registration",
+                                "/api/v1/rsbsa/public/**").permitAll()
                         .pathMatchers("/api/v1/auth/me", "/api/v1/auth/logout").authenticated()
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated()

@@ -33,6 +33,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.shared-library</groupId>
+			<artifactId>constant</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.shared-library</groupId>
 			<artifactId>jwtshareable</artifactId>
 			<version>1.0.0</version>
 		</dependency>

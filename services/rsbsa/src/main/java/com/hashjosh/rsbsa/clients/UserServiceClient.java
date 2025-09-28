@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.UnknownHostException;
 import java.util.UUID;
 
 @Service
@@ -15,11 +16,10 @@ import java.util.UUID;
 public class UserServiceClient {
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UserServiceClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://insurance-service/api/v1/users")
+                .baseUrl("http://user-service/api/v1/users")
                 .build();
     }
 
@@ -32,14 +32,14 @@ public class UserServiceClient {
                         return res.bodyTo(UserResponse.class);
                     } else if (res.getStatusCode() == HttpStatus.NOT_FOUND) {
                         throw new RsbsaException(
-                            "User id "+userId+" not found!",
+                                "User id "+userId+" not found!",
                                 HttpStatus.NOT_FOUND.value()
                         );
                     }else{
-                       throw  new RsbsaException(
-                               "Failed to get user id " + userId + "status code: "+ res.getStatusCode(),
-                               HttpStatus.BAD_REQUEST.value()
-                       );
+                        throw  new RsbsaException(
+                                "Failed to get user id " + userId + "status code: "+ res.getStatusCode(),
+                                HttpStatus.BAD_REQUEST.value()
+                        );
                     }
                 });
 

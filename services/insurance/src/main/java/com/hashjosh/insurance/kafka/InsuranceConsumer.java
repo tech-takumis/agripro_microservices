@@ -1,10 +1,12 @@
 package com.hashjosh.insurance.kafka;
 
 
+import com.hashjosh.constant.EventType;
 import com.hashjosh.insurance.enums.ClaimStatus;
 import com.hashjosh.insurance.model.Claim;
 import com.hashjosh.insurance.repository.ClaimRepository;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,16 +20,16 @@ public class InsuranceConsumer {
     private final ClaimRepository claimRepository;
 
     @KafkaListener(topics = "application-events")
-    public void consumeApplicationEvent(ApplicationContract contract) {
-        log.info("Application event received: {}", contract);
+    public void consumeApplicationEvent(ApplicationSubmissionContract applicationSubmissionContract) {
+        log.info("Application event received: {}", applicationSubmissionContract);
 
-        if("application-verified".equals(contract.eventType())){
-            handleVerifiedApplication(contract);
+        if(EventType.APPLICATION_SUBMITTED.equals(applicationSubmissionContract.getEventType())){
+            handleVerifiedApplication(applicationSubmissionContract);
         }
     }
 
     // TODO: Need to  implement the claim amount in verification service do not hard code the amount here
-    private void handleVerifiedApplication(ApplicationContract contract) {
+    private void handleVerifiedApplication(ApplicationSubmissionContract applicationSubmissionContract) {
         Claim claim = new Claim();
 
         claim.setApplicationId(claim.getApplicationId());

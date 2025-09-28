@@ -2,16 +2,12 @@ package com.hashjosh.users.controller;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.users.config.CustomUserDetails;
-import com.hashjosh.users.dto.AuthenticatedResponse;
-import com.hashjosh.users.dto.LoginRequest;
-import com.hashjosh.users.dto.LoginResponse;
-import com.hashjosh.users.dto.UserRegistrationRequest;
-import com.hashjosh.users.entity.TenantType;
+import com.hashjosh.users.dto.*;
+import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.entity.User;
 import com.hashjosh.users.exception.TenantIdException;
 import com.hashjosh.users.services.RefreshTokenService;
 import com.hashjosh.users.services.UserService;
-import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -37,33 +35,82 @@ public class AuthenticationController {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
-    @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody UserRegistrationRequest request, HttpServletRequest httpRequest) {
+    private TenantType getTenantHeader(HttpServletRequest request) {
+    String tenantHeader = request.getHeader("X-Tenant-ID");
+    if (tenantHeader == null || tenantHeader.isBlank()) {
+        throw new TenantIdException(
+                "Missing X-Tenant-ID header",
+                HttpStatus.NOT_FOUND.value()
+        );
+    }
+
+    try {
+        // Convert to uppercase to match enum values
+        return TenantType.valueOf(tenantHeader.toUpperCase());
+    } catch (IllegalArgumentException ex) {
+        throw new TenantIdException(
+                "Invalid tenant id. Allowed values are: " + 
+                Arrays.toString(TenantType.values()),
+                HttpStatus.BAD_REQUEST.value()
+        );
+    }
+}
+
+    @PostMapping("/staff/registration")
+    public ResponseEntity<RegistrationResponse.StaffRegistrationResponse> registerStaff(
+            @RequestBody RegistrationRequest.StaffRegistrationRequest request, HttpServletRequest httpRequest) {
 
         // Get tenant header and validate
-        String tenantHeader = httpRequest.getHeader("X-Tenant-ID");
-        if (tenantHeader == null || tenantHeader.isBlank()) {
-            throw new TenantIdException(
-                    "Missing X-Tenant-ID header",
-                    HttpStatus.NOT_FOUND.value()
+        TenantType tenantType = getTenantHeader(httpRequest);
+        request.setTenantId(tenantType);
+        User user = userService.registerStaff(request);
+        return ResponseEntity.ok(
+                RegistrationResponse.StaffRegistrationResponse.builder()
+                        .username(user.getUsername())
+                        .message("Staff Registered Successfully")
+                        .success(true)
+                        .error(null)
+                        .status(HttpStatus.CREATED.value())
+                        .timestamp(LocalDateTime.now())
+                        .build()
+        );
+    }
+
+
+    @PostMapping("/farmer/registration")
+    public ResponseEntity<RegistrationResponse.FarmerRegistrationResponse> registerFarmer(
+            @RequestBody RegistrationRequest.FarmerRegistrationRequest farmer,
+            HttpServletRequest request
+    ){
+
+        // Get the tenant Id from the header
+        TenantType tenantType = getTenantHeader(request);
+
+        if(tenantType != TenantType.FARMER){
+            return ResponseEntity.badRequest().body(
+                    RegistrationResponse.FarmerRegistrationResponse.builder()
+                            .username(null)
+                            .message("Only farmers can register")
+                            .error("Error non farmers can't register")
+                            .success(false)
+                            .status(HttpStatus.BAD_REQUEST.value())
+                            .timestamp(LocalDateTime.now())
+                            .build()
             );
         }
 
-        TenantType tenantType;
-        try {
-            tenantType = TenantType.valueOf(tenantHeader.trim().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new TenantIdException(
-                    "Invalid tenant id",
-                    HttpStatus.BAD_REQUEST.value()
-            );
-        }
+        farmer.setTenantId(tenantType);
+        User user = userService.registerFarmer(farmer);
 
-        // Wrap request and pass to service
-        UserRegistrationRequestWrapper wrapper =
-                new UserRegistrationRequestWrapper(tenantType, request);
-
-        return ResponseEntity.ok(userService.registerUser(wrapper));
+        return ResponseEntity.ok(
+                RegistrationResponse.FarmerRegistrationResponse.builder()
+                        .username(user.getUsername())
+                        .message("Farmer Registered Successfully")
+                        .error(null)
+                        .success(true)
+                        .status(HttpStatus.CREATED.value())
+                        .timestamp(LocalDateTime.now())
+                        .build());
     }
 
     @PostMapping("/login")

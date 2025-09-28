@@ -29,23 +29,22 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
-    enable: false # Disable Spring Boot’s default Flyway auto-run
+    enable: false
   liquibase:
     change-log: classpath:db/changelog/changelog-master.yaml
-    # Optional if you manage multiple tenants manually:
     contexts: dev
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: pracullosjohnpaul@gmail.com
-    password: vdhs xjtv fkqw eamc
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+  kafka:
+    bootstrap-servers: localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: >
+          farmerRegistrationContract:com.hashjosh.kafkacommon.user.FarmerRegistrationContract,
+          staffRegistrationContract:com.hashjosh.kafkacommon.user.StaffRegistrationContract
+        spring.json.add.type.headers: true
+
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

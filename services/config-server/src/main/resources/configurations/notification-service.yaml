@@ -1,0 +1,72 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+    url: jdbc:postgresql://localhost:5432/notification
+    username: agripro
+    password: agripro
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: true
+    database: postgresql
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.hashjosh.kafkacommon"
+        spring.json.type.mapping: >
+          applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
+          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
+          farmerRegistrationContract:com.hashjosh.kafkacommon.user.FarmerRegistrationContract,
+          staffRegistrationContract:com.hashjosh.kafkacommon.user.StaffRegistrationContract
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pracullosjohnpaul@gmail.com
+    password: vggv yxhs abhp ynrm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+
+notification:
+    from: pracullosjohnpaul@gmail.com
+    sender-name: AgriPro Notifications
+
+token:
+  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+  accessTokenExpirationMs: 14400000                # 4 hours
+  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
+  refreshTokenExpirationMs: 86400000               # 1 day
+  refreshTokenExpirationRememberMeMs: 345600000
+
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+server:
+  port: 8090
+

@@ -1,20 +1,19 @@
 package com.hashjosh.users.mapper;
 
+import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
+import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
 import com.hashjosh.users.dto.AuthenticatedResponse;
+import com.hashjosh.users.dto.RegistrationRequest;
 import com.hashjosh.users.dto.UserResponse;
 import com.hashjosh.users.dto.permission.PermissionResponse;
 import com.hashjosh.users.dto.role.RoleResponse;
 import com.hashjosh.users.entity.Role;
 import com.hashjosh.users.entity.User;
-import com.hashjosh.users.wrapper.UserRegistrationRequestWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -48,16 +47,17 @@ public class UserMapper {
         );
     }
 
-    public User toEntity(UserRegistrationRequestWrapper wrapper, Set<Role> roles) {
+    public User toEntity(
+            RegistrationRequest.StaffRegistrationRequest request, Set<Role> roles) {
         return User.builder()
-                .username(wrapper.request().getUsername())
-                .password(passwordEncoder.encode(wrapper.request().getPassword()))
-                .firstName(wrapper.request().getFirstName())
-                .lastName(wrapper.request().getLastName())
-                .email(wrapper.request().getEmail())
-                .phoneNumber(wrapper.request().getPhoneNumber())
-                .address(wrapper.request().getAddress())
-                .tenantType(wrapper.tenantType())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .address(request.getAddress())
+                .tenantType(request.getTenantId())
                 .roles(roles)
                 .build();
     }
@@ -87,6 +87,56 @@ public class UserMapper {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .roles(roles)
+                .build();
+    }
+
+    public RegistrationRequest.StaffRegistrationRequest toUserRequestEntity(
+            RegistrationRequest.FarmerRegistrationRequest farmerRequest,
+            String username, String generatedPassword) {
+        String address = String.format("%s, %s, %s, %s",
+                farmerRequest.getCity(),
+                farmerRequest.getState(),
+                farmerRequest.getZipCode(),
+                farmerRequest.getCountry());
+
+        return RegistrationRequest.StaffRegistrationRequest.builder()
+                .tenantId(farmerRequest.getTenantId())
+                .firstName(farmerRequest.getFirstName())
+                .lastName(farmerRequest.getLastName())
+                .email(farmerRequest.getEmail())
+                .phoneNumber(farmerRequest.getPhoneNumber())
+                .password(passwordEncoder.encode(generatedPassword))
+                .username(username)
+                .address(address)
+                .build();
+    }
+
+
+
+    public FarmerRegistrationContract toFarmerRegistrationContract(RegistrationRequest.FarmerCredendials credendials) {
+        return FarmerRegistrationContract.builder()
+                .userId(credendials.getUserId())
+                .rsbsaId(credendials.getRsbsaNumber())
+                .username(credendials.getUsername())
+                .password(credendials.getPassword())
+                .firstName(credendials.getFirstName())
+                .lastName(credendials.getLastName())
+                .middleName(credendials.getMiddleName())
+                .email(credendials.getEmail())
+                .phoneNumber(credendials.getPhoneNumber())
+                .build();
+
+    }
+
+    public StaffRegistrationContract toStaffRegistrationContract(RegistrationRequest.StaffCredentials credentials) {
+        return StaffRegistrationContract.builder()
+                .userId(credentials.getUserId())
+                .username(credentials.getUsername())
+                .password(credentials.getPassword())
+                .firstName(credentials.getFirstName())
+                .lastName(credentials.getLastName())
+                .email(credentials.getEmail())
+                .phoneNumber(credentials.getPhoneNumber())
                 .build();
     }
 }

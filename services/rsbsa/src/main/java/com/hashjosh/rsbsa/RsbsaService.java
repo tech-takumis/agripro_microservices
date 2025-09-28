@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RsbsaService {
     private final RsbsaRepository repository;
-//    private final UserRepository userRepository;
     private final RsbsaMapper mapper;
 
 
@@ -34,11 +33,11 @@ public class RsbsaService {
                 .collect(Collectors.toList());
     }
 
-    public RsbsaResponseDto findById(
-            UUID rsbaId,
+    public RsbsaResponseDto findByRsbsaId(
+            String rsbaId,
             HttpServletRequest request
             ) {
-        Optional<Rsbsa> rsbsaOptional = repository.findById(rsbaId);
+        Optional<Rsbsa> rsbsaOptional = repository.findByRsbsaIdEqualsIgnoreCase(rsbaId);
 
         if(rsbsaOptional.isEmpty()){
             throw new RsbsaNotFoundException(

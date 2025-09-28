@@ -3,21 +3,21 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
-import 'package:image_picker/image_picker.dart'; // Import XFile
-import '../models/auth_response.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mobile/data/models/auth_response.dart';
 import 'package:http_parser/http_parser.dart';
-import '../models/login_request.dart';
-import '../models/registration_request.dart';
-import '../models/registration_response.dart';
-import '../models/application_data.dart';
-import '../models/application_submission_response.dart'; // Import new model
-import 'storage_service.dart'; // Import StorageService
+import 'package:mobile/data/models/login_request.dart';
+import 'package:mobile/data/models/registration_request.dart';
+import 'package:mobile/data/models/registration_response.dart';
+import 'package:mobile/data/models/application_data.dart';
+import 'package:mobile/data/models/application_submission_response.dart';
+import 'storage_service.dart';
 
 class ApiService extends getx.GetxService {
   late Dio _dio;
 
   // Since you're using adb reverse, localhost should work
-  static const String baseUrl = 'http://localhost:5173/api/v1';
+  static const String baseUrl = 'http://localhost:9001/api/v1';
 
   static ApiService get to => getx.Get.find();
 
@@ -35,9 +35,9 @@ class ApiService extends getx.GetxService {
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
         headers: {
-          // REMOVE this line:
-          // 'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': 'FARMER',
         },
       ),
     );
@@ -99,7 +99,7 @@ class ApiService extends getx.GetxService {
       } else if (e.type == DioExceptionType.connectionError) {
         return AuthResponse(
           message:
-              'Cannot connect to server. Please ensure your backend is running and adb reverse is set up.',
+          'Cannot connect to server. Please ensure your backend is running and adb reverse is set up.',
           success: false,
         );
       } else if (e.response?.statusCode == 401 ||
@@ -112,7 +112,7 @@ class ApiService extends getx.GetxService {
       } else {
         return AuthResponse(
           message:
-              'Server error (${e.response?.statusCode}): ${e.response?.data}',
+          'Server error (${e.response?.statusCode}): ${e.response?.data}',
           success: false,
         );
       }
@@ -130,7 +130,7 @@ class ApiService extends getx.GetxService {
       print('🚀 Attempting registration to: $baseUrl/farmers');
 
       final response = await _dio.post(
-        '/auth/register',
+        '/auth/farmer/registration',
         data: request.toJson(),
       );
 
@@ -152,7 +152,7 @@ class ApiService extends getx.GetxService {
           success: false,
           error: 'Connection Error',
           message:
-              'Cannot connect to server. Please ensure your backend is running and adb reverse is set up correctly.',
+          'Cannot connect to server. Please ensure your backend is running and adb reverse is set up correctly.',
         );
       } else if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
@@ -189,10 +189,10 @@ class ApiService extends getx.GetxService {
 
   // New method to submit application form
   Future<ApplicationSubmissionResponse> submitApplicationForm(
-    String applicationId,
-    Map<String, dynamic> fieldValues,
-    Map<String, XFile> files,
-  ) async {
+      String applicationId,
+      Map<String, dynamic> fieldValues,
+      Map<String, XFile> files,
+      ) async {
     try {
       print('🚀 Attempting to submit application form for ID: $applicationId');
 
@@ -225,8 +225,8 @@ class ApiService extends getx.GetxService {
           // Do NOT set content-type manually, let Dio handle it!
           validateStatus:
               (status) =>
-                  status != null &&
-                  (status >= 200 && status < 300 || status == 400),
+          status != null &&
+              (status >= 200 && status < 300 || status == 400),
         ),
       );
 
@@ -244,10 +244,10 @@ class ApiService extends getx.GetxService {
   }
 
   Future<ApplicationSubmissionResponse> submitApplicationFormHttp(
-    String applicationId,
-    Map<String, dynamic> fieldValues,
-    Map<String, XFile> files,
-  ) async {
+      String applicationId,
+      Map<String, dynamic> fieldValues,
+      Map<String, XFile> files,
+      ) async {
     final uri = Uri.parse(
       'http://localhost:8010/api/v1/applications/$applicationId/submit',
     );
