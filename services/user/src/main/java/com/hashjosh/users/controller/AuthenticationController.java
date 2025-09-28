@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -34,29 +35,28 @@ public class AuthenticationController {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
-    private TenantType getTenantHeader(HttpServletRequest request){
-        String tenantHeader = request.getHeader("X-Tenant-ID");
-        if (tenantHeader == null || tenantHeader.isBlank()) {
-            throw new TenantIdException(
-                    "Missing X-Tenant-ID header",
-                    HttpStatus.NOT_FOUND.value()
-            );
-        }
-
-        TenantType tenantType;
-        try {
-            tenantType = TenantType.valueOf(tenantHeader.trim().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new TenantIdException(
-                    "Invalid tenant id",
-                    HttpStatus.BAD_REQUEST.value()
-            );
-        }
-
-        return tenantType;
+    private TenantType getTenantHeader(HttpServletRequest request) {
+    String tenantHeader = request.getHeader("X-Tenant-ID");
+    if (tenantHeader == null || tenantHeader.isBlank()) {
+        throw new TenantIdException(
+                "Missing X-Tenant-ID header",
+                HttpStatus.NOT_FOUND.value()
+        );
     }
 
-    @PostMapping("/staff/register")
+    try {
+        // Convert to uppercase to match enum values
+        return TenantType.valueOf(tenantHeader.toUpperCase());
+    } catch (IllegalArgumentException ex) {
+        throw new TenantIdException(
+                "Invalid tenant id. Allowed values are: " + 
+                Arrays.toString(TenantType.values()),
+                HttpStatus.BAD_REQUEST.value()
+        );
+    }
+}
+
+    @PostMapping("/staff/registration")
     public ResponseEntity<RegistrationResponse.StaffRegistrationResponse> registerStaff(
             @RequestBody RegistrationRequest.StaffRegistrationRequest request, HttpServletRequest httpRequest) {
 

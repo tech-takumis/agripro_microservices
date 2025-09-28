@@ -130,7 +130,7 @@ class ApiService extends getx.GetxService {
       print('🚀 Attempting registration to: $baseUrl/farmers');
 
       final response = await _dio.post(
-        '/auth/register',
+        '/auth/farmer/registration',
         data: request.toJson(),
       );
 

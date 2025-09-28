@@ -34,7 +34,6 @@ public class RsbsaServiceClient {
                                 "Failed to get rsbsa id " + rsbsaId + "status code: "+ res.getStatusCode(),
                                 HttpStatus.BAD_REQUEST.value()
                         );
-                    }
-                });
+                    }});
     }
 }
