@@ -47,7 +47,7 @@ public class UserMapper {
         );
     }
 
-    public User toEntity(
+    public User toStaffEntity(
             RegistrationRequest.StaffRegistrationRequest request, Set<Role> roles) {
         return User.builder()
                 .username(request.getUsername())
@@ -137,6 +137,24 @@ public class UserMapper {
                 .lastName(credentials.getLastName())
                 .email(credentials.getEmail())
                 .phoneNumber(credentials.getPhoneNumber())
+                .build();
+    }
+
+    public User toFarmerEntity(RegistrationRequest.FarmerRegistrationRequestWrapper farmerRequestWrapper) {
+        String address = String.format("%s, %s, %s, %s",
+                farmerRequestWrapper.getFarmerRegistrationRequest().getCity(),
+                farmerRequestWrapper.getFarmerRegistrationRequest().getState(),
+                farmerRequestWrapper.getFarmerRegistrationRequest().getZipCode(),
+                farmerRequestWrapper.getFarmerRegistrationRequest().getCountry());
+        return User.builder()
+                .username(farmerRequestWrapper.getUsername())
+                .password(passwordEncoder.encode(farmerRequestWrapper.getPassword()))
+                .firstName(farmerRequestWrapper.getFarmerRegistrationRequest().getFirstName())
+                .lastName(farmerRequestWrapper.getFarmerRegistrationRequest().getLastName())
+                .email(farmerRequestWrapper.getFarmerRegistrationRequest().getEmail())
+                .phoneNumber(farmerRequestWrapper.getFarmerRegistrationRequest().getPhoneNumber())
+                .address(address)
+                .tenantType(farmerRequestWrapper.getFarmerRegistrationRequest().getTenantId())
                 .build();
     }
 }

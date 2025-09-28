@@ -37,7 +37,7 @@ class ApiService extends getx.GetxService {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'X-Tenant-ID': 'FARMER',
+          'X-Tenant-ID': "farmer",
         },
       ),
     );
@@ -127,7 +127,7 @@ class ApiService extends getx.GetxService {
 
   Future<RegistrationResponse> register(RegistrationRequest request) async {
     try {
-      print('🚀 Attempting registration to: $baseUrl/farmers');
+      print('🚀 Attempting registration to: $baseUrl/auth/farmer/registration');
 
       final response = await _dio.post(
         '/auth/farmer/registration',
@@ -139,6 +139,12 @@ class ApiService extends getx.GetxService {
     } on DioException catch (e) {
       print('❌ Registration failed: ${e.message}');
 
+      // Normalize server payload for 400 responses:
+      // {
+      //   "message": "Email already exists",
+      //   "status": 400,
+      //   "timestamp": "2025-09-28T21:32:04.5810001"
+      // }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
@@ -152,16 +158,31 @@ class ApiService extends getx.GetxService {
           success: false,
           error: 'Connection Error',
           message:
-          'Cannot connect to server. Please ensure your backend is running and adb reverse is set up correctly.',
+              'Cannot connect to server. Please ensure your backend is running and adb reverse is set up correctly.',
         );
       } else if (e.response?.statusCode == 400) {
-        final errorData = e.response?.data;
-        return RegistrationResponse.fromJson(errorData);
+        final data = e.response?.data;
+        final String message =
+            (data is Map && data['message'] != null) ? data['message'].toString() : 'Bad Request';
+        return RegistrationResponse(
+          success: false,
+          error: 'Bad Request',
+          message: message,
+        );
       } else {
+        // Try to extract a meaningful message from any other error response
+        String fallbackMessage = 'Server error (${e.response?.statusCode})';
+        final data = e.response?.data;
+        if (data is Map && data['message'] != null) {
+          fallbackMessage = data['message'].toString();
+        } else if (data is String && data.isNotEmpty) {
+          fallbackMessage = data;
+        }
+
         return RegistrationResponse(
           success: false,
           error: 'Server Error',
-          message: 'Server error (${e.response?.statusCode})',
+          message: fallbackMessage,
         );
       }
     } catch (e) {

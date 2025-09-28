@@ -3,7 +3,7 @@ class RegistrationResponse {
   final String? username;
   final String? error;
   final String? timestamp;
-  final String? status;
+  final int? status;
   final bool success;
 
   RegistrationResponse({
@@ -22,7 +22,7 @@ class RegistrationResponse {
       error: json['error'],
       timestamp: json['timestamp'],
       status: json['status'],
-      success: json['username'] != null && json['error'] == null,
+      success: json['username'] != null && json['status'] == 201,
     );
   }
 

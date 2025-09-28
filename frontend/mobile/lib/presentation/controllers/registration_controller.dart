@@ -15,7 +15,7 @@ class RegistrationController extends GetxController {
   RegistrationResponse? get registrationResult => _registrationResult.value;
 
   Future<void> register(
-      String referenceNumber,
+      String rsbsaNumber,
       String firstName,
       String lastName,
       String? middleName,
@@ -25,7 +25,7 @@ class RegistrationController extends GetxController {
       String state,
       String country,
       String zipCode,
-      String farmAddress,
+      String farmLocation,
       String tenureStatus,
       String farmSize,
       String farmType,
@@ -38,7 +38,7 @@ class RegistrationController extends GetxController {
       _registrationResult.value = null;
 
       final request = RegistrationRequest(
-          referenceNumber: referenceNumber,
+          rsbsaNumber: rsbsaNumber,
           firstName: firstName,
           lastName: lastName,
           middleName: middleName,
@@ -48,7 +48,7 @@ class RegistrationController extends GetxController {
           state: state,
           country: country,
           zipCode: zipCode,
-          farmAddress: farmAddress,
+          farmLocation: farmLocation,
           tenureStatus: tenureStatus,
           farmSize: farmSize,
           farmType: farmType,
@@ -77,11 +77,11 @@ class RegistrationController extends GetxController {
     _registrationResult.value = null;
   }
 
-  static bool isValidRsbsaId(String referenceNumber) {
-    if (referenceNumber.isEmpty) return false;
-    final cleanId = referenceNumber.replaceAll(RegExp(r'[\s-]'), '');
+  static bool isValidRsbsaId(String rsbsaNumber) {
+    if (rsbsaNumber.isEmpty) return false;
+    final cleanId = rsbsaNumber.replaceAll(RegExp(r'[\s-]'), '');
     final rsbsaPattern = RegExp(r'^[\d-]+$');
-    return rsbsaPattern.hasMatch(referenceNumber) && cleanId.length >= 6;
+    return rsbsaPattern.hasMatch(rsbsaNumber) && cleanId.length >= 6;
   }
 
   static String formatRsbsaId(String input) {

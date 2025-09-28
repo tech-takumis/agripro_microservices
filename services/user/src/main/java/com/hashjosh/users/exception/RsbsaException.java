@@ -14,4 +14,12 @@ public class RsbsaException extends RuntimeException {
         this.message = message;
         this.statusCode = statusCode;
     }
+
+    public ExceptionResponse getExceptionResponse(){
+        return new ExceptionResponse(
+                this.message,
+                this.statusCode,
+                this.timstamp
+        );
+    }
 }

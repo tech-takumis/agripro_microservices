@@ -21,7 +21,7 @@ class RegistrationStepTwo extends StatefulWidget {
   State<RegistrationStepTwo> createState() => RegistrationStepTwoState();
 }
 
-class RegistrationStepTwoState extends State<RegistrationStepTwo> {
+class RegistrationStepTwoState extends State<RegistrationStepTwo> with AutomaticKeepAliveClientMixin {
   final PSGCService _psgcService = Get.find<PSGCService>();
 
   // Geographic data
@@ -124,6 +124,7 @@ class RegistrationStepTwoState extends State<RegistrationStepTwo> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Important for AutomaticKeepAliveClientMixin
     return Form(
       key: widget.formKey,
       child: Column(
@@ -243,4 +244,7 @@ class RegistrationStepTwoState extends State<RegistrationStepTwo> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
