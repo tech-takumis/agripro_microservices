@@ -1,6 +1,7 @@
 package com.hashjosh.users.mapper;
 
-import com.hashjosh.kafkacommon.user.UserRegistrationContract;
+import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
+import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
 import com.hashjosh.users.dto.AuthenticatedResponse;
 import com.hashjosh.users.dto.RegistrationRequest;
 import com.hashjosh.users.dto.UserResponse;
@@ -90,9 +91,8 @@ public class UserMapper {
     }
 
     public RegistrationRequest.StaffRegistrationRequest toUserRequestEntity(
-            RegistrationRequest.FarmerRegistrationRequest farmerRequest) {
-        String username = generateUsername(farmerRequest.getFirstName(), farmerRequest.getLastName());
-        String generatedPassword = generateRandomPassword();
+            RegistrationRequest.FarmerRegistrationRequest farmerRequest,
+            String username, String generatedPassword) {
         String address = String.format("%s, %s, %s, %s",
                 farmerRequest.getCity(),
                 farmerRequest.getState(),
@@ -111,24 +111,32 @@ public class UserMapper {
                 .build();
     }
 
-    private String generateUsername(String firstName, String lastName) {
-        return (firstName.charAt(0) + lastName).toLowerCase()
-                .replaceAll("[^a-z0-9]", "");
+
+
+    public FarmerRegistrationContract toFarmerRegistrationContract(RegistrationRequest.FarmerCredendials credendials) {
+        return FarmerRegistrationContract.builder()
+                .userId(credendials.getUserId())
+                .rsbsaId(credendials.getRsbsaNumber())
+                .username(credendials.getUsername())
+                .password(credendials.getPassword())
+                .firstName(credendials.getFirstName())
+                .lastName(credendials.getLastName())
+                .middleName(credendials.getMiddleName())
+                .email(credendials.getEmail())
+                .phoneNumber(credendials.getPhoneNumber())
+                .build();
+
     }
 
-    private String generateRandomPassword() {
-        return UUID.randomUUID().toString().substring(0, 8);
-    }
-
-    public UserRegistrationContract toUserRegistrationContract(User registeredUser) {
-        return UserRegistrationContract.builder()
-                .password(registeredUser.getPassword())
-                .username(registeredUser.getUsername())
-                .firstName(registeredUser.getFirstName())
-                .lastName(registeredUser.getLastName())
-                .email(registeredUser.getEmail())
-                .userId(registeredUser.getId())
-                .phoneNumber(registeredUser.getPhoneNumber())
+    public StaffRegistrationContract toStaffRegistrationContract(RegistrationRequest.StaffCredentials credentials) {
+        return StaffRegistrationContract.builder()
+                .userId(credentials.getUserId())
+                .username(credentials.getUsername())
+                .password(credentials.getPassword())
+                .firstName(credentials.getFirstName())
+                .lastName(credentials.getLastName())
+                .email(credentials.getEmail())
+                .phoneNumber(credentials.getPhoneNumber())
                 .build();
     }
 }

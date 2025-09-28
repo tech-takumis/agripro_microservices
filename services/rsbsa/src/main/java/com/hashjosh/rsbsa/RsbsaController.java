@@ -30,10 +30,10 @@ public class RsbsaController {
     }
 
     @GetMapping("/public/{rsbsa-id}")
-    public ResponseEntity<RsbsaResponseDto> findById(
-            @PathVariable("rsbsa-id") UUID rsbaId,
+    public ResponseEntity<RsbsaResponseDto> findByRsbsaId(
+            @PathVariable("rsbsa-id") String rsbaId,
             HttpServletRequest request
             ){
-        return new ResponseEntity<>(rsbsaService.findById(rsbaId,request),HttpStatus.OK);
+        return new ResponseEntity<>(rsbsaService.findByRsbsaId(rsbaId,request),HttpStatus.OK);
     };
 }

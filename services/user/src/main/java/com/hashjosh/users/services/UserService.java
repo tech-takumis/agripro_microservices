@@ -1,13 +1,17 @@
 package com.hashjosh.users.services;
 
 import com.hashjosh.jwtshareable.service.JwtService;
-import com.hashjosh.kafkacommon.user.UserRegistrationContract;
+import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
+import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
+import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.clients.RsbsaResponseDto;
 import com.hashjosh.users.clients.RsbsaServiceClient;
 import com.hashjosh.users.config.CustomUserDetails;
-import com.hashjosh.users.dto.*;
+import com.hashjosh.users.dto.AuthenticatedResponse;
+import com.hashjosh.users.dto.LoginRequest;
+import com.hashjosh.users.dto.LoginResponse;
+import com.hashjosh.users.dto.RegistrationRequest;
 import com.hashjosh.users.entity.Role;
-import com.hashjosh.kafkacommon.user.TenantType;
 import com.hashjosh.users.entity.User;
 import com.hashjosh.users.exception.UserException;
 import com.hashjosh.users.kafka.UserRegistrationProducer;
@@ -78,22 +82,6 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(RegistrationRequest.StaffRegistrationRequest request) {
-
-        Set<Role> roles = new HashSet<>();
-        request.getRolesId().forEach(roleId -> {
-            Role role = repository.findById(roleId)
-                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
-            roles.add(role);
-        });
-
-        User user = userMapper.toEntity(request, roles);
-        user.setRoles(roles);
-
-        return userRepository.save(user);
-    }
-
-    @Transactional
     public User registerStaff(RegistrationRequest.StaffRegistrationRequest request) {
         // Check if
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -112,7 +100,19 @@ public class UserService {
 
         User registeredUser = userRepository.save(user);
         // Publish the staff registration to user event topic  for notification
-        publishUserRegistrationTopic(user);
+        RegistrationRequest.StaffCredentials credentials = new RegistrationRequest.StaffCredentials(
+                user.getTenantType(),
+                user.getId(),
+                user.getUsername(),
+                request.getPassword(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getAddress()
+        );
+
+        publishStaffRegistrationTopic(credentials);
 
         return registeredUser;
 
@@ -128,9 +128,12 @@ public class UserService {
         // Validate RSBSA Number if it exist!
         RsbsaResponseDto rsbsaInfo = rsbsaServiceClient.getRsbsa(farmerRequest.getRsbsaNumber());
 
-        RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest);
+        String username = generateUsername(farmerRequest.getFirstName(), farmerRequest.getLastName());
+        String generatedPassword = generateRandomPassword();
 
-        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName(TenantType.FARMER.name().toLowerCase())
+        RegistrationRequest.StaffRegistrationRequest userRequest = userMapper.toUserRequestEntity(farmerRequest,username,generatedPassword);
+
+        Set<Role> farmerRoles = Collections.singleton(roleRepository.findByName(TenantType.FARMER.name().toUpperCase())
                 .orElseThrow(() -> new UserException("Farmer role not found", HttpStatus.NOT_FOUND.value())));
 
         userRequest.setRolesId(farmerRoles.stream().map(Role::getId).collect(Collectors.toSet()));
@@ -140,15 +143,33 @@ public class UserService {
 
         User registeredUser = userRepository.save(user);
 
-        publishUserRegistrationTopic(registeredUser);
+        RegistrationRequest.FarmerCredendials credendials = new RegistrationRequest.FarmerCredendials(
+                registeredUser.getId(),
+                farmerRequest.getRsbsaNumber(),
+                username,
+                generatedPassword,
+                registeredUser.getFirstName(),
+                registeredUser.getLastName(),
+                farmerRequest.getMiddleName(),
+                registeredUser.getEmail(),
+                registeredUser.getPhoneNumber()
+        );
+
+        publishFarmerRegistrationTopic(credendials);
 
         return registeredUser;
     }
 
-    private void publishUserRegistrationTopic(User registeredUser) {
-        UserRegistrationContract contract = userMapper.toUserRegistrationContract(registeredUser);
+    private void publishFarmerRegistrationTopic(RegistrationRequest.FarmerCredendials credendials) {
+        FarmerRegistrationContract contract = userMapper.toFarmerRegistrationContract(credendials);
 
-        userRegistration.userRegistration(contract);
+        userRegistration.farmerRegistrationEvent(contract);
+    }
+
+    private void publishStaffRegistrationTopic(RegistrationRequest.StaffCredentials credentials) {
+        StaffRegistrationContract contract = userMapper.toStaffRegistrationContract(credentials);
+
+        userRegistration.staffRegistrationEvent(contract);
     }
 
     @Transactional(readOnly = true)
@@ -158,6 +179,15 @@ public class UserService {
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
         return userMapper.toAuthenticatedResponse(u);
+    }
+
+    private String generateUsername(String firstName, String lastName) {
+        return (firstName.charAt(0) + lastName).toLowerCase()
+                .replaceAll("[^a-z0-9]", "");
+    }
+
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().substring(0, 8);
     }
 
 }

@@ -9,9 +9,18 @@ import org.springframework.kafka.config.TopicBuilder;
 public class UserTopicConfiguration {
 
     @Bean
-    public NewTopic userTopic(){
+    public NewTopic staffTopic(){
         return TopicBuilder
-                .name("user-event")
+                .name("staff-event")
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic farmerTopic(){
+        return TopicBuilder
+                .name("farmer-event")
                 .partitions(1)
                 .replicas(1)
                 .build();
