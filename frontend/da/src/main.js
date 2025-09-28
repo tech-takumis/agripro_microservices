@@ -3,10 +3,6 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './index.css'
-<<<<<<< HEAD:frontend/department_of_agriculture/src/main.js
-import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'
-=======
->>>>>>> origin/master:frontend/da/src/main.js
 
 const app = createApp(App)
 const pinia = createPinia()
