@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: agriculture
+  profiles:
+    active: local
