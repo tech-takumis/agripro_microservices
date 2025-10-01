@@ -1,14 +1,10 @@
 package com.hashjosh.workflow.clients;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.workflow.dto.UserResponseDto;
-import com.hashjosh.workflow.exceptions.UserNotFoundException;
 import com.hashjosh.workflow.exceptions.WorkflowException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 

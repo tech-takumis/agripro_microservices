@@ -35,8 +35,7 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest farmer,
-            HttpServletRequest request
+            @RequestBody RegistrationRequest farmer
     ){
 
         User user = authService.register(farmer);

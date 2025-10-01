@@ -2,6 +2,7 @@ package com.hashjosh.pcic;
 
 import com.hashjosh.jwtshareable.properties.JwtProperties;
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.jwtshareable.utils.SlugUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +14,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 @EnableDiscoveryClient
 @EnableConfigurationProperties({JwtProperties.class})
 @EnableKafka
-@Import({JwtService.class})
+@Import({JwtService.class, SlugUtil.class})
 public class PcicApplication {
 
 	public static void main(String[] args) {

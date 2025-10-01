@@ -14,9 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,31 +33,33 @@ public class AuthService {
     private final FarmerProducer farmerProducer;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-
+    @Transactional
     public User register(RegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
-        Set<Role> roles = new HashSet<>();
-        request.getRolesId().forEach(roleId -> {
-            Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
-            roles.add(role);
-        });
+        if (userRepository.existsByUsername(request.getRsbsaId())) {
+            throw new UserException("RSBSA ID already exists", HttpStatus.BAD_REQUEST.value());
+        }
 
-        User user = userMapper.toUserEntity(request, roles);
-        user.setRoles(roles);
+        Set<Role> roles = Collections.singleton(roleRepository.findByName("FARMER")
+                .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value())));
 
+
+        // Create and save UserProfile first
+        User user = userMapper.toUserEntity(request,roles);
+
+        // Save user (will cascade save the profile)
         User registeredUser = userRepository.save(user);
 
-        publishUserRegistrationEvent(request,user);
+        publishUserRegistrationEvent(request, registeredUser);
 
         return registeredUser;
     }
 
     private void publishUserRegistrationEvent(RegistrationRequest request, User savedUser) {
-        FarmerRegistrationContract agricultureRegistrationContract =
+        FarmerRegistrationContract farmerRegistrationContract =
                 FarmerRegistrationContract.builder()
                         .userId(savedUser.getId())
                         .username(savedUser.getUsername())
@@ -64,9 +68,10 @@ public class AuthService {
                         .lastName(savedUser.getLastName())
                         .email(savedUser.getEmail())
                         .phoneNumber(savedUser.getPhoneNumber())
+                        .rsbsaId(request.getRsbsaId())
                         .build();
 
-        farmerProducer.publishFarmerRegistrationEvent(agricultureRegistrationContract);
+        farmerProducer.publishFarmerRegistrationEvent(farmerRegistrationContract);
     }
 
     public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {

@@ -55,4 +55,4 @@ management:
       show-details: always
 
 server:
-  port: 9020
+  port: 9030

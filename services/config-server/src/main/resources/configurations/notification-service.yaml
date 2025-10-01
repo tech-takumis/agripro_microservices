@@ -28,8 +28,9 @@ spring:
         spring.json.type.mapping: >
           applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
           applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
-          farmerRegistrationContract:com.hashjosh.kafkacommon.user.FarmerRegistrationContract,
-          staffRegistrationContract:com.hashjosh.kafkacommon.user.StaffRegistrationContract
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract
+  
+
   mail:
     host: smtp.gmail.com
     port: 587

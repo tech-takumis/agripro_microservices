@@ -27,7 +27,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable) // ✅ Enable CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/agriculture/registration",
+                        .requestMatchers("/api/v1/agriculture/auth/registration",
                                 "/api/v1/agriculture/auth/login", "/actuator/**").permitAll()
                         .requestMatchers("/api/v1/agriculture/auth/me","/api/v1/agriculture/auth/logout").authenticated()
                         .anyRequest().authenticated()

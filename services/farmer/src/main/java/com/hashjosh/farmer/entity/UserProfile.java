@@ -5,13 +5,21 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "user_profile")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserProfile {
 
     @Id
@@ -21,28 +29,31 @@ public class UserProfile {
     // Government IDs often used: RSBSA (registry), SSS/Pag-IBIG optional, TIN optional
     @Column(unique = true, nullable = false, name = "rsbsa_id")
     private String rsbsaId;        // e.g., RSBSA number used in many DA records
-    @Column(unique = true, nullable = true, name = "national_id")
+    @Column(unique = true, name = "national_id")
     private String nationalId;     // e.g., PhilID, SSs, TIN (optional)
 
     // Basic personal info
     @Column(name = "date_of_birth")
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
     @Column(name = "gender")
     private String gender;
     @Column(name = "civil_status")
     private String civilStatus;
 
-    // Contact / address
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    @Column(name = "email")
-    private String email;
-    @Type(JsonType.class)
-    @Column(columnDefinition = "json")
-    private Address address;       // embed Address object (see below)
+    @Column(name = "house_no")
+    private String houseNo;
+    @Column(name = "street")
+    private String street;
+    @Column(name = "barangay")
+    private String barangay;
+    @Column(name = "municipality")
+    private String municipality;
+    @Column(name = "province")
+    private String province;
+    @Column(name = "region")
+    private String region;
 
     // Farming specifics
-
     @Column(name = "farmer_type")
     private String farmerType;     // e.g., "smallholder", "commercial", "tenant", "owner-operator"
     @Column(name = "primary_occupation")
@@ -53,14 +64,6 @@ public class UserProfile {
     // Tenure and land ownership
     @Column(name = "land_tenure")
     private String landTenure;     // e.g., "owner", "tenant", "sharecropper", "informal"
-    @Column(name = "barangay")
-    private String barangay;       // locality unit used in DA records
-    @Column(name = "municipality")
-    private String municipality;
-    @Column(name = "province")
-    private String province;
-    @Column(name = "region")
-    private String region;
 
     // PCIC / Insurance related
     @Column(name = "pcic_enrolled")
@@ -87,6 +90,18 @@ public class UserProfile {
 
 
     @OneToOne(mappedBy = "userProfile")
+    @ToString.Exclude
     private User user;
 
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

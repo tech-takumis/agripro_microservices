@@ -2,6 +2,7 @@ package com.example.agriculture;
 
 import com.hashjosh.jwtshareable.properties.JwtProperties;
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.jwtshareable.utils.SlugUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Import;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableConfigurationProperties({JwtProperties.class})
-@Import({JwtService.class})
+@Import({JwtService.class, SlugUtil.class})
 public class AgricultureApplication {
 
     public static void main(String[] args) {

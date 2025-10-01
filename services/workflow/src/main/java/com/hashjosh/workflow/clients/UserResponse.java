@@ -1,6 +1,5 @@
 package com.hashjosh.workflow.clients;
 
-import com.hashjosh.verification.clients.RoleResponse;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;

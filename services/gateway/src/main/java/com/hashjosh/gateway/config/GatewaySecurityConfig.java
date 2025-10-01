@@ -31,14 +31,14 @@ public class GatewaySecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
                                 // Farmer
-                                "/api/v1/auth/farmer/login",
-                                "/api/v1/auth/farmer/registration",
+                                "/api/v1/farmer/auth/login",
+                                "/api/v1/farmer/auth/registration",
                                 // Agriculture
-                                "/api/v1/auth/agriculture/login",
-                                "/api/v1/auth/agriculture/registration",
+                                "/api/v1/agriculture/auth/login",
+                                "/api/v1/agriculture/auth/registration",
                                 // Pcic
-                                "/api/v1/auth/pcic/login",
-                                "/api/v1/auth/pcic/registration",
+                                "/api/v1/pcic/auth/login",
+                                "/api/v1/pcic/auth/registration",
                                 // Public endpoit
                                 "/api/v1/rsbsa/public/**").permitAll()
                         .pathMatchers(

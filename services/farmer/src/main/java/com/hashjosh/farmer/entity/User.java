@@ -39,10 +39,6 @@ public class User {
     @Column(nullable = true, name = "phone_number")
     private String phoneNumber;
 
-    @Column(nullable = true, name = "address")
-    private String address;
-
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
@@ -51,7 +47,7 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToOne
-    @JoinColumn(name = "profile_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "profile_id")
     private UserProfile userProfile;
 }

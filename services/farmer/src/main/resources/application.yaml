@@ -1,5 +1,5 @@
 spring:
-  application:
-    name: farmer-service
   profiles:
     active: local
+  application:
+    name: farmer-service
