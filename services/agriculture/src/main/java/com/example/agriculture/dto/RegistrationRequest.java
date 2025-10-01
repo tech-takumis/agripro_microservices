@@ -11,6 +11,7 @@ import java.util.UUID;
 @Setter
 @Builder
 public class RegistrationRequest {
+    // User
     private String username;
     private String firstName;
     private String lastName;
@@ -19,4 +20,18 @@ public class RegistrationRequest {
     private String phoneNumber;
     private String address;
     private Set<UUID> rolesId;
+
+    // Profile
+    private String headquartersAddress;
+    private String publicAffairsEmail;
+
+    // Address
+    private String street;
+    private String barangay;
+    private String city;
+    private String province;
+    private String region;
+    private String country;
+    private String postalCode;
+
 }

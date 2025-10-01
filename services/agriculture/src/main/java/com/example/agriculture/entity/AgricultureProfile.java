@@ -1,7 +1,11 @@
 package com.example.agriculture.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +14,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_profile")
 @Data
-public class UserProfile {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class AgricultureProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,6 +37,23 @@ public class UserProfile {
     private String headquartersAddress; // Elliptical Road, Diliman, Quezon City (HQ)
     @Column(name = "website")
     private String website; // https://www.da.gov.ph
+
+
+    // Address
+    @Column(name = "street")
+    private String street;
+    @Column(name = "barangay")
+    private String barangay;
+    @Column(name = "city")
+    private String city;
+    @Column(name = "province")
+    private String province;
+    @Column(name = "region")
+    private String region;
+    @Column(name = "country")
+    private String country;
+    @Column(name = "postal_code")
+    private String postalCode;
 
     // Organizational structure highlights (useful if you model sub-agencies)
     @ElementCollection
@@ -60,7 +84,8 @@ public class UserProfile {
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
-    @OneToOne(mappedBy = "userProfile")
-    private User user;
+    @OneToOne(mappedBy = "agricultureProfile",cascade = CascadeType.PERSIST)
+    @JsonIgnore
+    private Agriculture agriculture;
 
 }

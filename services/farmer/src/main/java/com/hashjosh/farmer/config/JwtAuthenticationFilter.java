@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.config;
 
-import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.entity.Farmer;
 import com.hashjosh.farmer.service.TokenRenewalService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -88,10 +88,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         CustomUserDetails customUser =
                 (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
-        User user = customUser.getUser();
+        Farmer farmer = customUser.getFarmer();
         List<SimpleGrantedAuthority> roles = new ArrayList<>();
 
-        user.getRoles().forEach(role -> {
+        farmer.getRoles().forEach(role -> {
             roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
             role.getPermissions().forEach(permission -> {
                 roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));

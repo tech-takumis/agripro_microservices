@@ -1,6 +1,6 @@
 package com.hashjosh.pcic.repository;
 
-import com.hashjosh.pcic.entity.User;
+import com.hashjosh.pcic.entity.Pcic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,10 +8,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<Pcic, UUID> {
     boolean existsByEmail(String email);
-    Optional<User> findByUsername(String username);
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
-    Optional<User> findByIdWithRolesAndPermissions(@Param("id") UUID id);
+    Optional<Pcic> findByUsername(String username);
+    @Query("SELECT u FROM Pcic u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
+    Optional<Pcic> findByIdWithRolesAndPermissions(@Param("id") UUID id);
     boolean existsByUsername(String username);
 }

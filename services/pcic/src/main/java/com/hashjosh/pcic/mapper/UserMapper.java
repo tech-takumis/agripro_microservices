@@ -16,9 +16,9 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public User toUserEntity(
+    public Pcic toUserEntity(
             RegistrationRequest request, Set<Role> roles) {
-        return User.builder()
+        return Pcic.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
@@ -30,25 +30,25 @@ public class UserMapper {
                 .build();
     }
 
-    public AuthenticatedResponse toAuthenticatedResponse(User user) {
+    public AuthenticatedResponse toAuthenticatedResponse(Pcic pcic) {
         Set<String> roles = new HashSet<>();
         Set<String> permissions = new HashSet<>();
 
         // roles and permissions are now initialized
-        user.getRoles().forEach(role -> {
+        pcic.getRoles().forEach(role -> {
             roles.add(role.getName());
             role.getPermissions().forEach(permission -> permissions.add(permission.getName()));
         });
 
 
         return new AuthenticatedResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getPhoneNumber(),
-                user.getAddress(),
+                pcic.getId(),
+                pcic.getUsername(),
+                pcic.getFirstName(),
+                pcic.getLastName(),
+                pcic.getEmail(),
+                pcic.getPhoneNumber(),
+                pcic.getAddress(),
                 roles,
                 permissions
         );

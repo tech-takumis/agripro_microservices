@@ -10,7 +10,6 @@ public record AuthenticatedResponse(
          String lastName,
          String email,
          String phoneNumber,
-         String address,
          Set<String> roles,
          Set<String> permission
 ) {

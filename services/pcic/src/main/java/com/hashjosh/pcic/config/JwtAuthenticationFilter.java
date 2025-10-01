@@ -2,7 +2,7 @@ package com.hashjosh.pcic.config;
 
 
 import com.hashjosh.jwtshareable.service.JwtService;
-import com.hashjosh.pcic.entity.User;
+import com.hashjosh.pcic.entity.Pcic;
 import com.hashjosh.pcic.service.TokenRenewalService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -89,10 +89,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         CustomUserDetails customUser =
                 (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
-        User user = customUser.getUser();
+        Pcic pcic = customUser.getPcic();
         List<SimpleGrantedAuthority> roles = new ArrayList<>();
 
-        user.getRoles().forEach(role -> {
+        pcic.getRoles().forEach(role -> {
             roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
             role.getPermissions().forEach(permission -> {
                 roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));

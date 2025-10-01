@@ -5,13 +5,14 @@ import com.example.agriculture.dto.AuthenticatedResponse;
 import com.example.agriculture.dto.LoginRequest;
 import com.example.agriculture.dto.LoginResponse;
 import com.example.agriculture.dto.RegistrationRequest;
+import com.example.agriculture.entity.Agriculture;
+import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
-import com.example.agriculture.entity.User;
 import com.example.agriculture.exception.UserException;
 import com.example.agriculture.kafka.AgricultureProducer;
 import com.example.agriculture.mapper.UserMapper;
 import com.example.agriculture.repository.RoleRepository;
-import com.example.agriculture.repository.UserRepository;
+import com.example.agriculture.repository.AgricultureRepository;
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
 import lombok.RequiredArgsConstructor;
@@ -25,20 +26,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final AgricultureRepository agricultureRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final AgricultureProducer agricultureProducer;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public User register(RegistrationRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+    @Transactional
+    public Agriculture register(RegistrationRequest request) {
+        if (agricultureRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
@@ -49,54 +52,69 @@ public class AuthService {
             roles.add(role);
         });
 
-        User user = userMapper.toUserEntity(request, roles);
-        user.setRoles(roles);
+        Agriculture agriculture = userMapper.toUserEntity(request, roles);
+        Agriculture registeredAgriculture = agricultureRepository.save(agriculture);
 
-        User registeredUser = userRepository.save(user);
+        publishUserRegistrationEvent(request, agriculture);
 
-        publishUserRegistrationEvent(request,user);
-
-        return registeredUser;
+        return registeredAgriculture;
     }
 
-    private void publishUserRegistrationEvent(RegistrationRequest request, User savedUser) {
+    private void publishUserRegistrationEvent(RegistrationRequest request, Agriculture savedAgriculture) {
         AgricultureRegistrationContract agricultureRegistrationContract =
                 AgricultureRegistrationContract.builder()
-                        .userId(savedUser.getId())
-                        .username(savedUser.getUsername())
+                        .userId(savedAgriculture.getId())
+                        .username(savedAgriculture.getUsername())
                         .password(request.getPassword())
-                        .firstName(savedUser.getFirstName())
-                        .lastName(savedUser.getLastName())
-                        .email(savedUser.getEmail())
-                        .phoneNumber(savedUser.getPhoneNumber())
+                        .firstName(savedAgriculture.getFirstName())
+                        .lastName(savedAgriculture.getLastName())
+                        .email(savedAgriculture.getEmail())
+                        .phoneNumber(savedAgriculture.getPhoneNumber())
                         .build();
 
         agricultureProducer.publishAgricultureRegistrationEvent(agricultureRegistrationContract);
     }
 
-    public LoginResponse login(LoginRequest request,String clientIp, String userAgent) {
+    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
         // ✅ authenticate user
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+        Agriculture agriculture = userDetails.getAgriculture();
+
+        // Extract permissions first
+        Set<String> permissions = agriculture.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        // Convert roles to string names
+        Set<String> roleNames = agriculture.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
 
         // Jwt claims for user
-        Map<String,Object> claims = Map.of(
-                "userId", user.getId()
+        Map<String, Object> claims = Map.of(
+                "userId", agriculture.getId(),
+                "firstname", agriculture.getFirstName(),
+                "lastname", agriculture.getLastName(),
+                "email", agriculture.getEmail(),
+                "phoneNumber", agriculture.getPhoneNumber(),
+                "roles", roleNames,
+                "permissions", permissions
         );
 
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
-                user.getUsername(),
+                agriculture.getUsername(),
                 claims,
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
         String refreshToken = jwtService.generateRefreshToken(
-                user.getUsername(), clientIp, userAgent,
+                agriculture.getUsername(), clientIp, userAgent,
                 jwtService.getRefreshTokenExpiry(request.isRememberMe())
         );
 
@@ -104,11 +122,11 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(User request) {
+    public AuthenticatedResponse getAuthenticatedUser(Agriculture request) {
 
-        User user = userRepository.findByIdWithRolesAndPermissions(request.getId())
+        Agriculture agriculture = agricultureRepository.findByIdWithRolesAndPermissions(request.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
-        return userMapper.toAuthenticatedResponse(user);
+        return userMapper.toAuthenticatedResponse(agriculture);
     }
 }

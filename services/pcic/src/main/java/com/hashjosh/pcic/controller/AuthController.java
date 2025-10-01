@@ -39,11 +39,11 @@ public class AuthController {
             HttpServletRequest request
     ){
 
-        User user = authService.register(farmer);
+        Pcic pcic = authService.register(farmer);
 
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
-                        .username(user.getUsername())
+                        .username(pcic.getUsername())
                         .message("User Registered Successfully")
                         .error(null)
                         .success(true)
@@ -120,12 +120,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        User user = customUserDetails.getUser();
-        if (user == null) {
+        Pcic pcic = customUserDetails.getPcic();
+        if (pcic == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(user);
+        AuthenticatedResponse response = authService.getAuthenticatedUser(pcic);
         return ResponseEntity.ok(response);
     }
 

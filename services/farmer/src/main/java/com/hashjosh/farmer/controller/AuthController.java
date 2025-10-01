@@ -3,14 +3,13 @@ package com.hashjosh.farmer.controller;
 
 import com.hashjosh.farmer.config.CustomUserDetails;
 import com.hashjosh.farmer.dto.*;
-import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.entity.Farmer;
 import com.hashjosh.farmer.service.AuthService;
 import com.hashjosh.farmer.service.RefreshTokenService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @RestController
@@ -38,7 +36,7 @@ public class AuthController {
             @RequestBody RegistrationRequest farmer
     ){
 
-        User user = authService.register(farmer);
+        Farmer user = authService.register(farmer);
 
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
@@ -54,8 +52,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody @Valid LoginRequest request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
+            HttpServletRequest httpRequest) {
 
 
         String clientIp = httpRequest.getRemoteAddr();
@@ -63,23 +60,14 @@ public class AuthController {
 
         LoginResponse tokens = authService.login(request, clientIp, userAgent);
 
-            Cookie accessCookie = buildCookie("ACCESS_TOKEN", tokens.getAccessToken(),
-                    (int) (jwtExpirySeconds(tokens.getAccessToken())));
-            Cookie refreshCookie = buildCookie("REFRESH_TOKEN", tokens.getRefreshToken(),
-                    (int) Duration.ofDays(1).toSeconds());
-
-            httpResponse.addCookie(accessCookie);
-            httpResponse.addCookie(refreshCookie);
-
-            return ResponseEntity.ok("Login successful");
+        return ResponseEntity.ok(tokens);
     }
 
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
-            @RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken,
-            HttpServletResponse response) {
+            @RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken) {
 
         log.info("Refresh and Access token received from logout route: access token: {} refresh token: {}",authorization,refreshToken);
 
@@ -87,22 +75,12 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Missing or invalid access token");
         }
 
-        // 🔑 Extract access token & tenantId
-        String accessToken = authorization.substring(7);
-
         // ❌ Delete refresh token from DB (always do this)
         if (refreshToken != null && !refreshToken.isEmpty()) {
             refreshTokenService.deleteByToken(refreshToken);
         }
 
-        Cookie accessCookie = buildCookie("ACCESS_TOKEN", null,0);
-        Cookie refreshCookie = buildCookie("REFRESH_TOKEN", null,0);
-
-        response.addCookie(accessCookie);
-        response.addCookie(refreshCookie);
-
-            // For farmers: only remove refresh token from DB
-            return ResponseEntity.ok("Logged out: refresh token removed");
+        return ResponseEntity.ok("Logged out successfully");
     }
 
 
@@ -119,12 +97,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        User user = customUserDetails.getUser();
-        if (user == null) {
+        Farmer farmer = customUserDetails.getFarmer();
+        if (farmer == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(user);
+        AuthenticatedResponse response = authService.getAuthenticatedUser(farmer);
         return ResponseEntity.ok(response);
     }
 

@@ -3,8 +3,6 @@ package com.hashjosh.notification.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
-import com.hashjosh.notification.clients.UserResponse;
-import com.hashjosh.notification.clients.UserServiceClient;
 import com.hashjosh.notification.dto.EmailNotificationPayload;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.properties.EmailProperties;

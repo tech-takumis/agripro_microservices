@@ -1,5 +1,6 @@
-package com.hashjosh.farmer.entity;
+package com.example.agriculture.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Agriculture {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -47,7 +48,8 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "profile_id")
-    private UserProfile userProfile;
+    @OneToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "profile_id", nullable = false)
+    @JsonIgnore
+    private AgricultureProfile agricultureProfile;
 }

@@ -1,6 +1,6 @@
 package com.example.agriculture.config;
 
-import com.example.agriculture.entity.User;
+import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.service.TokenRenewalService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -88,10 +88,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         CustomUserDetails customUser =
                 (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
-        User user = customUser.getUser();
+        Agriculture agriculture = customUser.getAgriculture();
         List<SimpleGrantedAuthority> roles = new ArrayList<>();
 
-        user.getRoles().forEach(role -> {
+        agriculture.getRoles().forEach(role -> {
             roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
             role.getPermissions().forEach(permission -> {
                 roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));

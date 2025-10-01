@@ -2,7 +2,7 @@ package com.example.agriculture.controller;
 
 import com.example.agriculture.config.CustomUserDetails;
 import com.example.agriculture.dto.*;
-import com.example.agriculture.entity.User;
+import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.service.AuthService;
 import com.example.agriculture.service.RefreshTokenService;
 import com.hashjosh.jwtshareable.service.JwtService;
@@ -34,15 +34,14 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest farmer,
-            HttpServletRequest request
+            @RequestBody RegistrationRequest farmer
     ){
 
-        User user = authService.register(farmer);
+        Agriculture agriculture = authService.register(farmer);
 
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
-                        .username(user.getUsername())
+                        .username(agriculture.getUsername())
                         .message("User Registered Successfully")
                         .error(null)
                         .success(true)
@@ -119,12 +118,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        User user = customUserDetails.getUser();
-        if (user == null) {
+        Agriculture agriculture = customUserDetails.getAgriculture();
+        if (agriculture == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(user);
+        AuthenticatedResponse response = authService.getAuthenticatedUser(agriculture);
         return ResponseEntity.ok(response);
     }
 

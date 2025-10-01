@@ -1,5 +1,6 @@
-package com.example.agriculture.entity;
+package com.hashjosh.pcic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Pcic {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -53,5 +54,6 @@ public class User {
 
     @OneToOne
     @JoinColumn(name = "profile_id", nullable = false)
-    private UserProfile userProfile;
+    @JsonIgnore
+    private PcicProfile pcicProfile;
 }

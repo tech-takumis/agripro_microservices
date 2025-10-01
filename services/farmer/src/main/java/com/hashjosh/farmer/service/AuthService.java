@@ -14,14 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     @Transactional
-    public User register(RegistrationRequest request) {
+    public Farmer register(RegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
@@ -48,26 +47,26 @@ public class AuthService {
 
 
         // Create and save UserProfile first
-        User user = userMapper.toUserEntity(request,roles);
+        Farmer farmer = userMapper.toUserEntity(request,roles);
 
         // Save user (will cascade save the profile)
-        User registeredUser = userRepository.save(user);
+        Farmer registeredFarmer = userRepository.save(farmer);
 
-        publishUserRegistrationEvent(request, registeredUser);
+        publishUserRegistrationEvent(request, registeredFarmer);
 
-        return registeredUser;
+        return registeredFarmer;
     }
 
-    private void publishUserRegistrationEvent(RegistrationRequest request, User savedUser) {
+    private void publishUserRegistrationEvent(RegistrationRequest request, Farmer savedFarmer) {
         FarmerRegistrationContract farmerRegistrationContract =
                 FarmerRegistrationContract.builder()
-                        .userId(savedUser.getId())
-                        .username(savedUser.getUsername())
+                        .userId(savedFarmer.getId())
+                        .username(savedFarmer.getUsername())
                         .password(request.getPassword())
-                        .firstName(savedUser.getFirstName())
-                        .lastName(savedUser.getLastName())
-                        .email(savedUser.getEmail())
-                        .phoneNumber(savedUser.getPhoneNumber())
+                        .firstName(savedFarmer.getFirstName())
+                        .lastName(savedFarmer.getLastName())
+                        .email(savedFarmer.getEmail())
+                        .phoneNumber(savedFarmer.getPhoneNumber())
                         .rsbsaId(request.getRsbsaId())
                         .build();
 
@@ -81,22 +80,39 @@ public class AuthService {
         );
 
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+        Farmer farmer = userDetails.getFarmer();
+
+        // Extract permissions first
+        Set<String> permissions = farmer.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        // Convert roles to string names
+        Set<String> roleNames = farmer.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
 
         // Jwt claims for user
-        Map<String,Object> claims = Map.of(
-                "userId", user.getId()
+        Map<String, Object> claims = Map.of(
+                "userId", farmer.getId(),
+                "firstname", farmer.getFirstName(),
+                "lastname", farmer.getLastName(),
+                "email", farmer.getEmail(),
+                "phoneNumber", farmer.getPhoneNumber(),
+                "roles", roleNames,
+                "permissions", permissions
         );
 
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
-                user.getUsername(),
+                farmer.getUsername(),
                 claims,
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
         String refreshToken = jwtService.generateRefreshToken(
-                user.getUsername(), clientIp, userAgent,
+                farmer.getUsername(), clientIp, userAgent,
                 jwtService.getRefreshTokenExpiry(request.isRememberMe())
         );
 
@@ -104,11 +120,11 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(User request) {
+    public AuthenticatedResponse getAuthenticatedUser(Farmer request) {
 
-        User user = userRepository.findByIdWithRolesAndPermissions(request.getId())
+        Farmer farmer = userRepository.findByIdWithRolesAndPermissions(request.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
-        return userMapper.toAuthenticatedResponse(user);
+        return userMapper.toAuthenticatedResponse(farmer);
     }
 }

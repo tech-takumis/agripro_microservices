@@ -2,9 +2,7 @@ package com.hashjosh.application.controller;
 
 import com.hashjosh.application.dto.ApplicationTypeRequestDto;
 import com.hashjosh.application.dto.ApplicationTypeResponseDto;
-import com.hashjosh.application.dto.SuccessResponse;
 import com.hashjosh.application.service.ApplicationTypeService;
-import com.hashjosh.application.utils.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,31 +17,20 @@ import java.util.UUID;
 public class ApplicationTypeController {
 
     private final ApplicationTypeService applicationTypeService;
-    private final ResponseUtils responseUtils;
 
     @PostMapping()
-    public ResponseEntity<SuccessResponse> create(
+    public ResponseEntity<ApplicationTypeResponseDto> create(
             @RequestBody ApplicationTypeRequestDto dto
     ){
         ApplicationTypeResponseDto responseDto = applicationTypeService.create(dto);
-        SuccessResponse successResponse = responseUtils.getSuccessResponse(
-                HttpStatus.CREATED.value(),
-                "Application created successfully",
-                responseDto
-                );
 
-        return new ResponseEntity<>(successResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
     @GetMapping()
-    public ResponseEntity<SuccessResponse> getAll(){
+    public ResponseEntity<List<ApplicationTypeResponseDto>> getAll(){
         List<ApplicationTypeResponseDto> allApplicationType = applicationTypeService.findAll();
-        SuccessResponse successResponse = responseUtils.getSuccessResponse(
-                HttpStatus.OK.value(),
-                "These are all the application type",
-                allApplicationType
-        );
-        return new ResponseEntity<>(successResponse,HttpStatus.OK);
+        return new ResponseEntity<>(allApplicationType,HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

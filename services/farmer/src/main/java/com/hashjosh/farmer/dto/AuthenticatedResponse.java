@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.dto;
 
-import com.hashjosh.farmer.entity.UserProfile;
+import com.hashjosh.farmer.entity.FarmerProfile;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,5 +20,5 @@ public class AuthenticatedResponse {
     private String phoneNumber;
     private Set<String> roles;
     private Set<String> permissions;
-    private UserProfile profile;
+    private FarmerProfile profile;
 }

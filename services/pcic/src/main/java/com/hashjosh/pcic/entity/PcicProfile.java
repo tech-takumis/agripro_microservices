@@ -1,5 +1,6 @@
 package com.hashjosh.pcic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,7 +10,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_profile")
 @Data
-public class UserProfile {
+public class PcicProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -41,7 +42,8 @@ public class UserProfile {
     // Audit fields
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    @OneToOne(mappedBy = "userProfile")
-    private User user;
+    @OneToOne(mappedBy = "pcicProfile")
+    @JsonIgnore
+    private Pcic pcic;
 
 }

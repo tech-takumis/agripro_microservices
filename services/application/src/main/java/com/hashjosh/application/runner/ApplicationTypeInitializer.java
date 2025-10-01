@@ -170,8 +170,8 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
 
         // Fields for Certification
         List<ApplicationField> certificationFields = new ArrayList<>();
-        certificationFields.add(createField("farmer_signature", "Farmer Signature/Thumb Mark", FieldType.TEXT, true, null, certificationSection));
-        certificationFields.add(createField("technologist_signature", "Supervising Agricultural Technologist Signature", FieldType.TEXT, true, null, certificationSection));
+        certificationFields.add(createField("farmer_signature", "Farmer Signature/Thumb Mark", FieldType.SIGNATURE, true, null, certificationSection));
+        certificationFields.add(createField("technologist_signature", "Supervising Agricultural Technologist Signature", FieldType.SIGNATURE, true, null, certificationSection));
         certificationFields.add(createField("certification_date", "Certification Date", FieldType.DATE, true, null, certificationSection));
         certificationSection.setFields(certificationFields);
 

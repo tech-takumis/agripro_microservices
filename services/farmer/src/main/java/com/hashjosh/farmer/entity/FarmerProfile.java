@@ -1,13 +1,11 @@
 package com.hashjosh.farmer.entity;
 
-import com.vladmihalcea.hibernate.type.json.JsonType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -20,7 +18,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfile {
+public class FarmerProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -89,9 +87,10 @@ public class UserProfile {
     private LocalDateTime updatedAt;
 
 
-    @OneToOne(mappedBy = "userProfile")
+    @OneToOne(mappedBy = "farmerProfile")
     @ToString.Exclude
-    private User user;
+    @JsonIgnore
+    private Farmer farmer;
 
 
     @PrePersist

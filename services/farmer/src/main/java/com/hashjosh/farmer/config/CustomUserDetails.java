@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.config;
 
-import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.entity.Farmer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,14 +15,14 @@ import java.util.List;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private final Farmer farmer;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> rolesAndPermission = new ArrayList<>();
 
-        user.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
-        user.getRoles().forEach(
+        farmer.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
+        farmer.getRoles().forEach(
                 role -> role.getPermissions()
                         .forEach(permission ->
                                 rolesAndPermission.add(new SimpleGrantedAuthority(permission.getName()))
@@ -33,12 +33,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return farmer.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return farmer.getUsername();
     }
 
     @Override

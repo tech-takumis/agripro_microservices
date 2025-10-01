@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public User register(RegistrationRequest request) {
+    public Pcic register(RegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
@@ -45,26 +46,26 @@ public class AuthService {
             roles.add(role);
         });
 
-        User user = userMapper.toUserEntity(request, roles);
-        user.setRoles(roles);
+        Pcic pcic = userMapper.toUserEntity(request, roles);
+        pcic.setRoles(roles);
 
-        User registeredUser = userRepository.save(user);
+        Pcic registeredPcic = userRepository.save(pcic);
 
-        publishUserRegistrationEvent(request,user);
+        publishUserRegistrationEvent(request, pcic);
 
-        return registeredUser;
+        return registeredPcic;
     }
 
-    private void publishUserRegistrationEvent(RegistrationRequest request, User savedUser) {
+    private void publishUserRegistrationEvent(RegistrationRequest request, Pcic savedPcic) {
         AgricultureRegistrationContract agricultureRegistrationContract =
                 AgricultureRegistrationContract.builder()
-                        .userId(savedUser.getId())
-                        .username(savedUser.getUsername())
+                        .userId(savedPcic.getId())
+                        .username(savedPcic.getUsername())
                         .password(request.getPassword())
-                        .firstName(savedUser.getFirstName())
-                        .lastName(savedUser.getLastName())
-                        .email(savedUser.getEmail())
-                        .phoneNumber(savedUser.getPhoneNumber())
+                        .firstName(savedPcic.getFirstName())
+                        .lastName(savedPcic.getLastName())
+                        .email(savedPcic.getEmail())
+                        .phoneNumber(savedPcic.getPhoneNumber())
                         .build();
 
         pcicProducer.publishPcicRegistrationEvent(agricultureRegistrationContract);
@@ -77,22 +78,39 @@ public class AuthService {
         );
 
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+        Pcic pcic = userDetails.getPcic();
+
+        // Extract permissions first
+        Set<String> permissions = pcic.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        // Convert roles to string names
+        Set<String> roleNames = pcic.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
 
         // Jwt claims for user
-        Map<String,Object> claims = Map.of(
-                "userId", user.getId()
+        Map<String, Object> claims = Map.of(
+                "userId", pcic.getId(),
+                "firstname", pcic.getFirstName(),
+                "lastname", pcic.getLastName(),
+                "email", pcic.getEmail(),
+                "phoneNumber", pcic.getPhoneNumber(),
+                "roles", roleNames,
+                "permissions", permissions
         );
 
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
-                user.getUsername(),
+                pcic.getUsername(),
                 claims,
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
         String refreshToken = jwtService.generateRefreshToken(
-                user.getUsername(), clientIp, userAgent,
+                pcic.getUsername(), clientIp, userAgent,
                 jwtService.getRefreshTokenExpiry(request.isRememberMe())
         );
 
@@ -100,11 +118,11 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(User request) {
+    public AuthenticatedResponse getAuthenticatedUser(Pcic request) {
 
-        User user = userRepository.findByIdWithRolesAndPermissions(request.getId())
+        Pcic pcic = userRepository.findByIdWithRolesAndPermissions(request.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
-        return userMapper.toAuthenticatedResponse(user);
+        return userMapper.toAuthenticatedResponse(pcic);
     }
 }

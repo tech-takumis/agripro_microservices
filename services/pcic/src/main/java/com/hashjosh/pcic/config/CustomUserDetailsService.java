@@ -1,6 +1,6 @@
 package com.hashjosh.pcic.config;
 
-import com.hashjosh.pcic.entity.User;
+import com.hashjosh.pcic.entity.Pcic;
 import com.hashjosh.pcic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,9 +15,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        Pcic pcic = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new CustomUserDetails(user);
+        return new CustomUserDetails(pcic);
     }
 }

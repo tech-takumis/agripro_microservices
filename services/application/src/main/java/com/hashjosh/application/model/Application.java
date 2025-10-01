@@ -40,11 +40,6 @@ public class Application implements Serializable {
     @JsonProperty("userId")
     private UUID userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id", nullable = true)
-    @JsonIgnore
-    @JsonProperty("batchId")
-    private ApplicationBatch batch;
 
     @Column(name = "document_id", nullable = true)
     @JsonProperty("documentId")

@@ -1,7 +1,7 @@
 package com.example.agriculture.config;
 
-import com.example.agriculture.entity.User;
-import com.example.agriculture.repository.UserRepository;
+import com.example.agriculture.entity.Agriculture;
+import com.example.agriculture.repository.AgricultureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final AgricultureRepository agricultureRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        Agriculture agriculture = agricultureRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new CustomUserDetails(user);
+        return new CustomUserDetails(agriculture);
     }
 }

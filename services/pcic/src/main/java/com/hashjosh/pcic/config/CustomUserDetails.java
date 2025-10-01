@@ -1,6 +1,6 @@
 package com.hashjosh.pcic.config;
 
-import com.hashjosh.pcic.entity.User;
+import com.hashjosh.pcic.entity.Pcic;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,14 +15,14 @@ import java.util.List;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private final Pcic pcic;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> rolesAndPermission = new ArrayList<>();
 
-        user.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
-        user.getRoles().forEach(
+        pcic.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
+        pcic.getRoles().forEach(
                 role -> role.getPermissions()
                         .forEach(permission ->
                                 rolesAndPermission.add(new SimpleGrantedAuthority(permission.getName()))
@@ -33,12 +33,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return pcic.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return pcic.getUsername();
     }
 
     @Override

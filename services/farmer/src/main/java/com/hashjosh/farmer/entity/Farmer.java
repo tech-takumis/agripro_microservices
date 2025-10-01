@@ -1,5 +1,6 @@
-package com.hashjosh.pcic.entity;
+package com.hashjosh.farmer.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Farmer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -39,10 +40,6 @@ public class User {
     @Column(nullable = true, name = "phone_number")
     private String phoneNumber;
 
-    @Column(nullable = true, name = "address")
-    private String address;
-
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
@@ -51,7 +48,8 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToOne
-    @JoinColumn(name = "profile_id", nullable = false)
-    private UserProfile userProfile;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "profile_id")
+    @JsonIgnore
+    private FarmerProfile farmerProfile;
 }

@@ -20,7 +20,7 @@ import java.util.UUID;
 public class ApplicationSubmissionDto {
         private UUID applicationTypeId;
         private Map<String, Object> fieldValues = new HashMap<>();
-        private List<UUID> documentIds; // For tracking document references
+        private List<UUID> documentIds;
 
         @JsonAnyGetter
         public Map<String, Object> getFieldValues() {

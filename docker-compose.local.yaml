@@ -20,7 +20,7 @@ services:
       retries: 5
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: confluentinc/cp-zookeeper:7.7.0
     container_name: zookeeper
     ports:
       - "2181:2181"
@@ -31,7 +31,7 @@ services:
       - agripro_network
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.7.0
     container_name: kafka
     hostname: kafka
     depends_on:
