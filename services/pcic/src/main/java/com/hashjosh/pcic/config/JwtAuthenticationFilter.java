@@ -1,8 +1,9 @@
-package com.example.agriculture.config;
+package com.hashjosh.pcic.config;
 
-import com.example.agriculture.entity.User;
-import com.example.agriculture.service.TokenRenewalService;
+
 import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.pcic.entity.User;
+import com.hashjosh.pcic.service.TokenRenewalService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,8 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain filterChain)
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
         try {

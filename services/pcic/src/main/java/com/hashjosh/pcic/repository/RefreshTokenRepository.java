@@ -1,6 +1,6 @@
-package com.example.agriculture.repository;
+package com.hashjosh.pcic.repository;
 
-import com.example.agriculture.entity.RefreshToken;
+import com.hashjosh.pcic.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

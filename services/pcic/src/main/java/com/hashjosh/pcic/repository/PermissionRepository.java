@@ -1,6 +1,6 @@
-package com.example.agriculture.repository;
+package com.hashjosh.pcic.repository;
 
-import com.example.agriculture.entity.Permission;
+import com.hashjosh.pcic.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.hashjosh.notification.kafka;
 
-import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
+import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
 import com.hashjosh.notification.service.UserRegistrationService;
 import lombok.RequiredArgsConstructor;

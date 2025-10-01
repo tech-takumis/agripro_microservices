@@ -1,4 +1,4 @@
-package com.example.agriculture.config;
+package com.hashjosh.farmer.config;
 
 import com.example.agriculture.entity.User;
 import com.example.agriculture.service.TokenRenewalService;

@@ -1,4 +1,4 @@
-package com.example.agriculture.entity;
+package com.hashjosh.pcic.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

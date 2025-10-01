@@ -1,0 +1,114 @@
+package com.hashjosh.farmer.service;
+
+import com.hashjosh.farmer.config.CustomUserDetails;
+import com.hashjosh.farmer.dto.AuthenticatedResponse;
+import com.hashjosh.farmer.dto.LoginRequest;
+import com.hashjosh.farmer.dto.LoginResponse;
+import com.hashjosh.farmer.dto.RegistrationRequest;
+import com.hashjosh.farmer.entity.Role;
+import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.exception.UserException;
+import com.hashjosh.farmer.kafka.AgricultureProducer;
+import com.hashjosh.farmer.mapper.UserMapper;
+import com.hashjosh.farmer.repository.RoleRepository;
+import com.hashjosh.farmer.repository.UserRepository;
+import com.hashjosh.jwtshareable.service.JwtService;
+import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final UserMapper userMapper;
+    private final AgricultureProducer agricultureProducer;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public User register(RegistrationRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
+        }
+
+        Set<Role> roles = new HashSet<>();
+        request.getRolesId().forEach(roleId -> {
+            Role role = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
+            roles.add(role);
+        });
+
+        User user = userMapper.toUserEntity(request, roles);
+        user.setRoles(roles);
+
+        User registeredUser = userRepository.save(user);
+
+        publishUserRegistrationEvent(request,user);
+
+        return registeredUser;
+    }
+
+    private void publishUserRegistrationEvent(RegistrationRequest request, User savedUser) {
+        FarmerRegistrationContract agricultureRegistrationContract =
+                FarmerRegistrationContract.builder()
+                        .userId(savedUser.getId())
+                        .username(savedUser.getUsername())
+                        .password(request.getPassword())
+                        .firstName(savedUser.getFirstName())
+                        .lastName(savedUser.getLastName())
+                        .email(savedUser.getEmail())
+                        .phoneNumber(savedUser.getPhoneNumber())
+                        .build();
+
+        agricultureProducer.publishFarmerRegistrationEvent(agricultureRegistrationContract);
+    }
+
+    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
+        // ✅ authenticate user
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = userDetails.getUser();
+
+        // Jwt claims for user
+        Map<String,Object> claims = Map.of(
+                "userId", user.getId()
+        );
+
+        // ✅ generate tokens (do NOT call login or authenticate again)
+        String accessToken = jwtService.generateAccessToken(
+                user.getUsername(),
+                claims,
+                jwtService.getAccessTokenExpiry(request.isRememberMe())
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(
+                user.getUsername(), clientIp, userAgent,
+                jwtService.getRefreshTokenExpiry(request.isRememberMe())
+        );
+
+        return new LoginResponse(accessToken, refreshToken);
+    }
+
+    @Transactional(readOnly = true)
+    public AuthenticatedResponse getAuthenticatedUser(User request) {
+
+        User user = userRepository.findByIdWithRolesAndPermissions(request.getId())
+                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
+
+        return userMapper.toAuthenticatedResponse(user);
+    }
+}
