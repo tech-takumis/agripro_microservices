@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.service;
 
-import com.example.agriculture.repository.RefreshTokenRepository;
+import com.hashjosh.farmer.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

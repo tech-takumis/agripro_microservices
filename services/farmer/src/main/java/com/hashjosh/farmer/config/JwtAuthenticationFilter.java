@@ -1,7 +1,7 @@
 package com.hashjosh.farmer.config;
 
-import com.example.agriculture.entity.User;
-import com.example.agriculture.service.TokenRenewalService;
+import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.service.TokenRenewalService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

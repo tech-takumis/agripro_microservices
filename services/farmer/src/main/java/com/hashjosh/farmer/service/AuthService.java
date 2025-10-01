@@ -1,17 +1,12 @@
 package com.hashjosh.farmer.service;
 
 import com.hashjosh.farmer.config.CustomUserDetails;
-import com.hashjosh.farmer.dto.AuthenticatedResponse;
-import com.hashjosh.farmer.dto.LoginRequest;
-import com.hashjosh.farmer.dto.LoginResponse;
-import com.hashjosh.farmer.dto.RegistrationRequest;
-import com.hashjosh.farmer.entity.Role;
-import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.dto.*;
+import com.hashjosh.farmer.entity.*;
 import com.hashjosh.farmer.exception.UserException;
-import com.hashjosh.farmer.kafka.AgricultureProducer;
+import com.hashjosh.farmer.kafka.FarmerProducer;
 import com.hashjosh.farmer.mapper.UserMapper;
-import com.hashjosh.farmer.repository.RoleRepository;
-import com.hashjosh.farmer.repository.UserRepository;
+import com.hashjosh.farmer.repository.*;
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +28,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final AgricultureProducer agricultureProducer;
+    private final FarmerProducer farmerProducer;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
@@ -71,7 +66,7 @@ public class AuthService {
                         .phoneNumber(savedUser.getPhoneNumber())
                         .build();
 
-        agricultureProducer.publishFarmerRegistrationEvent(agricultureRegistrationContract);
+        farmerProducer.publishFarmerRegistrationEvent(agricultureRegistrationContract);
     }
 
     public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {

@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class AgricultureProducer {
+public class FarmerProducer {
 
     private final KafkaTemplate<String, FarmerRegistrationContract> template;
 
     public void publishFarmerRegistrationEvent(FarmerRegistrationContract agricultureRegistrationContract){
         Message<FarmerRegistrationContract> contract = MessageBuilder
                 .withPayload(agricultureRegistrationContract)
-                .setHeader(KafkaHeaders.TOPIC, "agriculture-event")
+                .setHeader(KafkaHeaders.TOPIC, "farmer-event")
                 .build();
 
         template.send(contract);

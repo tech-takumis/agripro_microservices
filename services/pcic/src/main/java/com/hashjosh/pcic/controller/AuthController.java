@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/agriculture/auth")
+@RequestMapping("/api/v1/pcic/auth")
 @Slf4j
 public class AuthController {
 

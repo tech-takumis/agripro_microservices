@@ -1,8 +1,8 @@
 package com.hashjosh.farmer.config;
 
-import com.example.agriculture.config.CustomUserDetails;
-import com.example.agriculture.entity.User;
-import com.example.agriculture.repository.UserRepository;
+
+import com.hashjosh.farmer.entity.User;
+import com.hashjosh.farmer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

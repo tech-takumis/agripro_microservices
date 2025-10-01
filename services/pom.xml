@@ -10,7 +10,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>user</module>
+        <module>farmer</module>
+        <module>agriculture</module>
+        <module>pcic</module>
         <module>constant</module>
         <module>notification</module>
         <module>application</module>
