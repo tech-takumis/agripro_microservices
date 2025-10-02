@@ -1,6 +1,6 @@
 package com.hashjosh.application.kafka;
 
-import com.hashjosh.kafkacommon.application.ApplicationContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -14,16 +14,18 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ApplicationProducer {
 
-    private final KafkaTemplate<String, ApplicationContract> kafkaTemplate;
+    private final KafkaTemplate<String, ApplicationSubmissionContract> kafkaTemplate;
 
-    public void submitApplication(ApplicationContract applicationContract) {
-        log.info("submitting application::: {}", applicationContract.payload());
+    public void submitApplication(ApplicationSubmissionContract applicationSubmissionContract) {
+        log.info("submitting application::: {}", applicationSubmissionContract);
 
-        Message<ApplicationContract> message = MessageBuilder
-                .withPayload(applicationContract)
-                .setHeader(KafkaHeaders.TOPIC, "application-events")
-                .build();
-
-        kafkaTemplate.send(message);
+        kafkaTemplate.send("application-events",applicationSubmissionContract )
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("Message sent successfully to topic {} with offset {}", result.getRecordMetadata().topic(), result.getRecordMetadata().offset());
+                    } else {
+                        log.error("Failed to send message: {}", ex.getMessage());
+                    }
+                });
     }
 }

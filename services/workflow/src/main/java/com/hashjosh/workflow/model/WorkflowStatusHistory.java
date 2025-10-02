@@ -1,6 +1,6 @@
 package com.hashjosh.workflow.model;
 
-import com.hashjosh.workflow.enums.ApplicationStatus;
+import com.hashjosh.constant.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

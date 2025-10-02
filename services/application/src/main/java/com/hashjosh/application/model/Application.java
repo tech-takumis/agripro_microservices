@@ -3,7 +3,7 @@ package com.hashjosh.application.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.application.enums.ApplicationStatus;
+import com.hashjosh.constant.ApplicationStatus;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,11 +40,6 @@ public class Application implements Serializable {
     @JsonProperty("userId")
     private UUID userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id", nullable = true) // Nullable to allow standalone applications
-    @JsonIgnore
-    @JsonProperty("batchId")
-    private ApplicationBatch batch;
 
     @Column(name = "document_id", nullable = true)
     @JsonProperty("documentId")

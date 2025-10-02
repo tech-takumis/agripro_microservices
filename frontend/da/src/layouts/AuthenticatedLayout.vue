@@ -5,9 +5,9 @@
       <SidebarNavigation
         :navigation="navigation"
         :role-title="roleTitle"
-        :user-full-name="authStore.userFullName"
-        :user-email="authStore.userEmail"
-        :user-initials="userInitials"
+        :agriculture-full-name="authStore.userFullName"
+        :agriculture-email="authStore.userEmail"
+        :agriculture-initials="userInitials"
         @logout="handleLogout"
       />
     </div>
@@ -28,9 +28,9 @@
         <SidebarNavigation
           :navigation="navigation"
           :role-title="roleTitle"
-          :user-full-name="authStore.userFullName"
-          :user-email="authStore.userEmail"
-          :user-initials="userInitials"
+          :agriculture-full-name="authStore.userFullName"
+          :agriculture-email="authStore.userEmail"
+          :agriculture-initials="userInitials"
           @logout="handleLogout"
         />
       </div>

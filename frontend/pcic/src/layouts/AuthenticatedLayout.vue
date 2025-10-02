@@ -5,9 +5,9 @@
       <SidebarNavigation
         :navigation="navigation"
         :role-title="roleTitle"
-        :user-full-name="store.userFullName"
-        :user-email="store.userEmail"
-        :user-initials="userInitials"
+        :agriculture-full-name="store.userFullName"
+        :agriculture-email="store.userEmail"
+        :agriculture-initials="userInitials"
         @logout="handleLogout"
       />
     </div>
@@ -28,9 +28,9 @@
         <SidebarNavigation
           :navigation="navigation"
           :role-title="roleTitle"
-          :user-full-name="store.userFullName"
-          :user-email="store.userEmail"
-          :user-initials="userInitials"
+          :agriculture-full-name="store.userFullName"
+          :agriculture-email="store.userEmail"
+          :agriculture-initials="userInitials"
           @logout="handleLogout"
         />
       </div>
@@ -78,7 +78,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Menu, X } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 import SidebarNavigation from '@/components/layouts/SidebarNavigation.vue' // Import the new component
 
 const store = useUserStore()

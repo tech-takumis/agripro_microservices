@@ -84,7 +84,7 @@
           <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
               <h2 class="text-lg font-semibold text-gray-900">Application Sections</h2>
-              <p class="text-sm text-gray-500">Organize fields into logical sections for better user experience.</p>
+              <p class="text-sm text-gray-500">Organize fields into logical sections for better agriculture experience.</p>
             </div>
             <button
               type="button"

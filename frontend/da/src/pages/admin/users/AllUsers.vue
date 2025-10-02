@@ -129,22 +129,22 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50">
+              <tr v-for="agriculture in filteredUsers" :key="agriculture.id" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
                       <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
                         <span class="text-sm font-medium text-purple-600">
-                          {{ getUserInitials(user) }}
+                          {{ getUserInitials(agriculture) }}
                         </span>
                       </div>
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">
-                        {{ getUserFullName(user) }}
+                        {{ getUserFullName(agriculture) }}
                       </div>
                       <div class="text-sm text-gray-500">
-                        @{{ user.username }}
+                        @{{ agriculture.username }}
                       </div>
                     </div>
                   </div>
@@ -153,11 +153,11 @@
                   <div class="text-sm text-gray-900">
                     <div class="flex items-center mb-1">
                       <Mail class="h-4 w-4 text-gray-400 mr-2" />
-                      {{ user.email || 'No email' }}
+                      {{ agriculture.email || 'No email' }}
                     </div>
                     <div class="flex items-center">
                       <Phone class="h-4 w-4 text-gray-400 mr-2" />
-                      {{ user.phoneNumber || 'No phone' }}
+                      {{ agriculture.phoneNumber || 'No phone' }}
                     </div>
                   </div>
                 </td>
@@ -165,20 +165,20 @@
                   <div class="text-sm text-gray-900 max-w-xs">
                     <div class="flex items-start">
                       <MapPin class="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                      <span class="break-words">{{ user.address || 'No address provided' }}</span>
+                      <span class="break-words">{{ agriculture.address || 'No address provided' }}</span>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex flex-wrap gap-1">
                     <span
-                      v-for="role in user.roles || []"
+                      v-for="role in agriculture.roles || []"
                       :key="role.id"
                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
                     >
                       {{ role.name }}
                     </span>
-                    <span v-if="!user.roles || user.roles.length === 0" class="text-sm text-gray-500">
+                    <span v-if="!agriculture.roles || agriculture.roles.length === 0" class="text-sm text-gray-500">
                       No roles assigned
                     </span>
                   </div>
@@ -186,21 +186,21 @@
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div class="flex items-center space-x-2">
                     <button
-                      @click="viewUser(user)"
+                      @click="viewUser(agriculture)"
                       class="text-purple-600 hover:text-purple-900 transition-colors"
                       title="View User"
                     >
                       <Eye class="h-4 w-4" />
                     </button>
                     <button
-                      @click="editUser(user)"
+                      @click="editUser(agriculture)"
                       class="text-blue-600 hover:text-blue-900 transition-colors"
                       title="Edit User"
                     >
                       <Edit class="h-4 w-4" />
                     </button>
                     <button
-                      @click="deleteUser(user)"
+                      @click="deleteUser(agriculture)"
                       class="text-red-600 hover:text-red-900 transition-colors"
                       title="Delete User"
                     >
@@ -266,7 +266,7 @@ import {
     Mail, Phone, MapPin, Eye, Edit, Trash2
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
 
 const router = useRouter()
@@ -284,11 +284,11 @@ const filteredUsers = computed(() => {
     // Filter by search term
     if (searchTerm.value) {
         const search = searchTerm.value.toLowerCase()
-        users = users.filter(user => {
-            const fullName = getUserFullName(user).toLowerCase()
-            const email = (user.email || '').toLowerCase()
-            const phone = (user.phoneNumber || '').toLowerCase()
-            const username = (user.username || '').toLowerCase()
+        users = users.filter(agriculture => {
+            const fullName = getUserFullName(agriculture).toLowerCase()
+            const email = (agriculture.email || '').toLowerCase()
+            const phone = (agriculture.phoneNumber || '').toLowerCase()
+            const username = (agriculture.username || '').toLowerCase()
 
             return fullName.includes(search) ||
                 email.includes(search) ||
@@ -299,8 +299,8 @@ const filteredUsers = computed(() => {
 
     // Filter by role
     if (selectedRole.value) {
-        users = users.filter(user =>
-            user.roles && user.roles.some(role => role.name === selectedRole.value)
+        users = users.filter(agriculture =>
+            agriculture.roles && agriculture.roles.some(role => role.name === selectedRole.value)
         )
     }
 
@@ -308,15 +308,15 @@ const filteredUsers = computed(() => {
 })
 
 // Helper functions
-const getUserFullName = (user) => {
-    if (user.firstName && user.lastName) {
-        return `${user.firstName} ${user.lastName}`
+const getUserFullName = (agriculture) => {
+    if (agriculture.firstName && agriculture.lastName) {
+        return `${agriculture.firstName} ${agriculture.lastName}`
     }
-    return user.username || 'Unknown User'
+    return agriculture.username || 'Unknown User'
 }
 
-const getUserInitials = (user) => {
-    const fullName = getUserFullName(user)
+const getUserInitials = (agriculture) => {
+    const fullName = getUserFullName(agriculture)
     if (fullName === 'Unknown User') return 'U'
 
     return fullName
@@ -358,30 +358,30 @@ const changePage = async (page) => {
 }
 
 // User management functions
-const viewUser = (user) => {
-    // Navigate to user detail page or open modal
-    router.push(`/admin/users/${user.id}`)
+const viewUser = (agriculture) => {
+    // Navigate to agriculture detail page or open modal
+    router.push(`/admin/users/${agriculture.id}`)
 }
 
-const editUser = (user) => {
-    // Navigate to user edit page or open modal
-    router.push(`/admin/users/${user.id}/edit`)
+const editUser = (agriculture) => {
+    // Navigate to agriculture edit page or open modal
+    router.push(`/admin/users/${agriculture.id}/edit`)
 }
 
-const deleteUser = async (user) => {
-    if (confirm(`Are you sure you want to delete user "${getUserFullName(user)}"? This action cannot be undone.`)) {
+const deleteUser = async (agriculture) => {
+    if (confirm(`Are you sure you want to delete agriculture "${getUserFullName(agriculture)}"? This action cannot be undone.`)) {
         try {
-            const result = await userStore.deleteUser(user.id)
+            const result = await userStore.deleteUser(agriculture.id)
             if (result.success) {
                 alert('User deleted successfully!')
                 // Refresh the users list
                 await refreshUsers()
             } else {
-                alert(`Failed to delete user: ${result.error}`)
+                alert(`Failed to delete agriculture: ${result.error}`)
             }
         } catch (error) {
-            console.error('Error deleting user:', error)
-            alert('An error occurred while deleting the user.')
+            console.error('Error deleting agriculture:', error)
+            alert('An error occurred while deleting the agriculture.')
         }
     }
 }

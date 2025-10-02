@@ -17,13 +17,13 @@ spring:
   kafka:
     bootstrap-servers: localhost:29092
     consumer:
-      group-id: workflowEventService
+      group-id: workflow-service
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.hashjosh.kafkacommon"
-        spring.json.type.mapping: applicationContract:com.hashjosh.kafkacommon.application.ApplicationContract,verificationContract:com.hashjosh.kafkacommon.verification.VerificationContract
+        spring.json.trusted.packages: "com.hashjosh.kafkacommon.*"
+        spring.json.use.type.headers: false
 
 management:
   endpoints:

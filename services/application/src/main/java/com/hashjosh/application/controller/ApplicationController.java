@@ -45,7 +45,7 @@ public class ApplicationController {
             // Process the submission
             ApplicationSubmissionResponse response = applicationService.processSubmission(
                     submission,
-                    userDetails.getUserId()
+                    userDetails
             );
 
             // Return appropriate response
@@ -77,12 +77,10 @@ public class ApplicationController {
         return  new ResponseEntity<>(applicationService.findAll(),HttpStatus.OK);
     }
 
-    @PutMapping("/{application-id}")
-    public ResponseEntity<ApplicationResponseDto> verifiedApplicationStatus(
-            @PathVariable("application-id") UUID applicationId,
-            @RequestParam String status
-    ){
-        return new ResponseEntity<>(applicationService.verifiedApplicationStatus(applicationId,status),HttpStatus.CREATED);
+    @GetMapping("/type/{application_type_id}")
+    public ResponseEntity<List<ApplicationResponseDto>> findApplicationByType(
+            @PathVariable("application_type_id") UUID applicationTypeId
+     ){
+        return new ResponseEntity<>(applicationService.findApplicationbyType(applicationTypeId), HttpStatus.OK);
     }
-
 }

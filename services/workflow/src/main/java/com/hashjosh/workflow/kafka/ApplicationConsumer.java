@@ -1,10 +1,7 @@
 package com.hashjosh.workflow.kafka;
 
-import com.hashjosh.kafkacommon.application.ApplicationContract;
-import com.hashjosh.kafkacommon.verification.VerificationContract;
-import com.hashjosh.workflow.enums.ApplicationStatus;
-import com.hashjosh.workflow.model.WorkflowStatusHistory;
-import com.hashjosh.workflow.repository.WorkflowStatusRepository;
+import com.hashjosh.constant.EventType;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import com.hashjosh.workflow.utils.KafkaUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -16,32 +13,61 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class ApplicationConsumer {
+
     private final KafkaUtils kafkaUtils;
 
-    @PostConstruct
-    public void check() {
-        log.info("✅ Kafka consumer config loaded, groupId=workflow-service");
-    }
-
-
     @KafkaListener(topics = "application-events")
-    public void consumeSubmittedApplication(ApplicationContract applicationContract) {
+    public void consumeApplicationEvent(ApplicationSubmissionContract applicationSubmissionContract) {
         try {
-            log.info("Consume application submission event: {}", applicationContract);
+            log.info("Consume application event: {}", applicationSubmissionContract);
 
-           switch (applicationContract.eventType()){
-                case "application-submitted" -> kafkaUtils.handleSubmitted(applicationContract);
-                case "application-verified" -> kafkaUtils.handleVerified(applicationContract);
-                case "application-rejected" -> kafkaUtils.handleRejected(applicationContract);
-                default -> log.debug("Ignoring unknown event type {}", applicationContract.eventType());
+            // Parse the event type from the contract
+            EventType eventType = applicationSubmissionContract.getEventType();
+
+            // Handle application submission workflow creation separately
+            if (eventType == EventType.APPLICATION_SUBMITTED) {
+                kafkaUtils.createWorkflowForApplicationSubmission(applicationSubmissionContract);
+            } else if (isSupportedEvent(eventType)) {
+                kafkaUtils.handleApplicationEvent(applicationSubmissionContract);
+            } else {
+                log.debug("Unsupported event type received: {}", applicationSubmissionContract.getEventType());
             }
-
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid event type received: {}", applicationSubmissionContract.getEventType(), e);
         } catch (Exception e) {
-            log.error("❌ Failed to process application event: {}", applicationContract, e);
+            log.error("❌ Failed to process application event: {}", applicationSubmissionContract, e);
             throw e; // ✅ Let Spring Kafka handle retry + DLT
         }
     }
 
+    /**
+     * Determines whether an event type is supported by the workflow service.
+     *
+     * @param eventType the event type to check
+     * @return true if supported, false otherwise
+     */
+    private boolean isSupportedEvent(EventType eventType) {
+        return switch (eventType) {
+            case // Verification events
+                    APPLICATION_APPROVED_BY_MA,
+                    APPLICATION_REJECTED_BY_MA,
+                    APPLICATION_APPROVED_BY_AEW,
+                    APPLICATION_REJECTED_BY_AEW,
 
+                    // Underwriter events
+                    UNDER_REVIEW_BY_UNDERWRITER,
+                    APPLICATION_APPROVED_BY_UNDERWRITER,
+                    APPLICATION_REJECTED_BY_UNDERWRITER,
 
+                    // Adjuster events
+                    UNDER_REVIEW_BY_ADJUSTER,
+                    APPLICATION_APPROVED_BY_ADJUSTER,
+                    APPLICATION_REJECTED_BY_ADJUSTER,
+
+                    // Insurance service events
+                    POLICY_ISSUED,
+                    CLAIM_APPROVED -> true;
+            default -> false;
+        };
+    }
 }

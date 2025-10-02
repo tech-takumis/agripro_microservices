@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../controllers/application_form_controller.dart';
+import '../controllers/application_form_controller.dart';
 import '../../data/models/application_data.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/custom_button.dart';
 
 class ApplicationFormPage extends StatelessWidget {
   final ApplicationContent application;

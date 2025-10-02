@@ -1,6 +1,5 @@
 package com.hashjosh.gateway.config;
 
-import com.hashjosh.gateway.service.TenantContext;
 import com.hashjosh.jwtshareable.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpCookie;
@@ -12,7 +11,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
 import java.util.List;
 
@@ -30,7 +28,6 @@ public class JwtAuthenticationFilter implements WebFilter {
 
         if (accessToken != null && jwtService.validateToken(accessToken)) {
             String username = jwtService.getUsernameFromToken(accessToken);
-            String tenantId = extractTenantFromToken(accessToken);
 
             // Authentication object
             UsernamePasswordAuthenticationToken authentication =
@@ -39,7 +36,6 @@ public class JwtAuthenticationFilter implements WebFilter {
             // Mutate request headers for downstream services
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .header("X-Tenant-ID", tenantId)
                     .headers(headers -> {
                         if (refreshToken != null) {
                             headers.set("X-Refresh-Token", refreshToken);
@@ -48,13 +44,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build())
-                    .contextWrite(context -> {
-                        Context securityContext = ReactiveSecurityContextHolder.withAuthentication(authentication);
-                        if (tenantId != null) {
-                            securityContext = TenantContext.setTenant(securityContext, tenantId);
-                        }
-                        return securityContext;
-                    });
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
         }
 
         // No valid token → proceed without authentication
@@ -95,9 +85,5 @@ public class JwtAuthenticationFilter implements WebFilter {
         }
 
         return null;
-    }
-
-    private String extractTenantFromToken(String token) {
-        return jwtService.getAllClaims(token).get("tenantId", String.class);
     }
 }

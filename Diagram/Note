@@ -1,0 +1,22 @@
+Jwt Claim payload to all tenant:
+   * firstname
+   * lastname
+   * email
+   * phone number
+   * roles
+   * permission
+
+
+   Code:
+    Map<String,Object> claims = Map.of(
+                    "userId", farmer.getId(),
+                    "firstname", farmer.getFirstName(),
+                    "lastname", farmer.getLastName(),
+                    "email", farmer.getEmail(),
+                    "phoneNumber", farmer.getPhoneNumber(),
+                    "roles", farmer.getRoles(),
+                    "permissions", farmer.getRoles().stream().map(
+                            role -> role.getPermissions().stream().map(Permission::getName)
+                    ).toList()
+
+            );
