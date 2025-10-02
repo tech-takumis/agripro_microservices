@@ -2,7 +2,7 @@ package com.hashjosh.farmer.config;
 
 
 import com.hashjosh.farmer.entity.Farmer;
-import com.hashjosh.farmer.repository.UserRepository;
+import com.hashjosh.farmer.repository.FarmerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final FarmerRepository farmerRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Farmer farmer = userRepository.findByUsername(username)
+        Farmer farmer = farmerRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new CustomUserDetails(farmer);
