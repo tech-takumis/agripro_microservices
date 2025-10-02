@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EmailNotificationService {
+public class ApplicationNotificationService {
 
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;
