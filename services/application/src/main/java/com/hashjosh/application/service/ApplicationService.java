@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -134,7 +135,7 @@ public class ApplicationService {
         Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
         Application savedApplication = applicationRepository.save(application);
 
-        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED, userDetails.getToken());
+        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED, userDetails);
 
         return ApplicationSubmissionResponse.builder()
                 .success(true)
@@ -211,7 +212,7 @@ public class ApplicationService {
     }
 
 
-    public void publishApplicationStatus(Application application, EventType eventType, String token) {
+    public void publishApplicationStatus(Application application, EventType eventType, CustomUserDetails user) {
 
         applicationProducer.submitApplication(
                 ApplicationSubmissionContract.builder()
@@ -219,7 +220,8 @@ public class ApplicationService {
                         .schemaVersion(1)
                         .status(ApplicationStatus.SUBMITTED)
                         .version(application.getVersion())
-                        .token(token)
+                        .token(user.getToken())
+                        .gmail(user.getEmail())
                         .eventType(eventType)
                         .uploadedBy(application.getUserId())
                         .applicationId(application.getId())

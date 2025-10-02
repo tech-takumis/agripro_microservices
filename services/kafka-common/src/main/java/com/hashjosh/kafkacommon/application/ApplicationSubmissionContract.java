@@ -18,8 +18,8 @@ import java.util.UUID;
 @Data
 @Getter
 @Setter
-@NoArgsConstructor  // Add this annotation
-@AllArgsConstructor // Add this annotation
+@NoArgsConstructor
+@AllArgsConstructor
 public class ApplicationSubmissionContract {
     @JsonProperty("eventId")
     private UUID eventId;
@@ -41,6 +41,9 @@ public class ApplicationSubmissionContract {
 
     @JsonProperty("uploadedBy")
     private UUID uploadedBy;
+
+    @JsonProperty("gmail")
+    private String gmail;
 
     @JsonProperty("occurredAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)

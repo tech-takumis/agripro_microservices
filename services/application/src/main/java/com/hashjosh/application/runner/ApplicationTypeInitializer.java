@@ -76,16 +76,17 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         basicInfoFields.add(createField("sex", "Sex", FieldType.SELECT, true, createChoices(new String[]{"Male", "Female"}), basicInfoSection));
         basicInfoFields.add(createField("age", "Age", FieldType.NUMBER, false, null, basicInfoSection));
         basicInfoFields.add(createField("date_of_birth", "Date of Birth", FieldType.DATE, false, null, basicInfoSection));
-        basicInfoFields.add(createField("bank_name", "Bank Name", FieldType.TEXT, false, null, basicInfoSection));
-        basicInfoFields.add(createField("bank_account_no", "Bank Account No.", FieldType.TEXT, false, null, basicInfoSection));
-        basicInfoFields.add(createField("pwd", "PWD", FieldType.TEXT, false, null, basicInfoSection));
-        basicInfoFields.add(createField("indigenous_people", "Indigenous People", FieldType.TEXT, false, null, basicInfoSection));
+//        basicInfoFields.add(createField("bank_name", "Bank Name", FieldType.TEXT, false, null, basicInfoSection));
+//        basicInfoFields.add(createField("bank_account_no", "Bank Account No.", FieldType.TEXT, false, null, basicInfoSection));
+//        basicInfoFields.add(createField("pwd", "PWD", FieldType.TEXT, false, null, basicInfoSection));
+        basicInfoFields.add(createField("indigenous_people", "Indigenous People", FieldType.BOOLEAN, false, null, basicInfoSection));
+        basicInfoFields.add(createField("tribe", "Tribe", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("civil_status", "Civil Status", FieldType.SELECT, true, createChoices(new String[]{"Single", "Married", "Widow/Widower", "Separated"}), basicInfoSection));
         basicInfoFields.add(createField("spouse_name", "Name of Spouse", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("primary_beneficiary", "Primary Beneficiary", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("secondary_beneficiary", "Secondary Beneficiary", FieldType.TEXT, false, null, basicInfoSection));
-        basicInfoFields.add(createField("assignee", "Assignee", FieldType.TEXT, false, null, basicInfoSection));
-        basicInfoFields.add(createField("assignment_reason", "Reason for Assignment", FieldType.TEXT, false, null, basicInfoSection));
+//        basicInfoFields.add(createField("assignee", "Assignee", FieldType.TEXT, false, null, basicInfoSection));
+//        basicInfoFields.add(createField("assignment_reason", "Reason for Assignment", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoSection.setFields(basicInfoFields);
 
         // Section B: The Farm
@@ -131,32 +132,32 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         coverageFields.add(createField("crop_type", "Crop", FieldType.SELECT, true, createChoices(new String[]{"Rice", "Corn"}), coverageSection));
         coverageFields.add(createField("cover_type", "Type of Cover", FieldType.SELECT, true, createChoices(new String[]{"Multi-Risk", "Natural Disaster"}), coverageSection));
         coverageFields.add(createField("amount_of_cover", "Amount of Cover", FieldType.NUMBER, true, null, coverageSection));
-        coverageFields.add(createField("premium", "Premium", FieldType.NUMBER, true, null, coverageSection));
-        coverageFields.add(createField("cltip_adss_si", "CLTIP-ADSS Sum Insured", FieldType.NUMBER, false, null, coverageSection));
-        coverageFields.add(createField("cltip_adss_premium", "CLTIP-ADSS Premium", FieldType.NUMBER, false, null, coverageSection));
+//        coverageFields.add(createField("premium", "Premium", FieldType.NUMBER, true, null, coverageSection));
+//        coverageFields.add(createField("cltip_adss_si", "CLTIP-ADSS Sum Insured", FieldType.NUMBER, false, null, coverageSection));
+//        coverageFields.add(createField("cltip_adss_premium", "CLTIP-ADSS Premium", FieldType.NUMBER, false, null, coverageSection));
         coverageSection.setFields(coverageFields);
 
         // Section D: For PCIC Use
-        ApplicationSection pcicUseSection = ApplicationSection.builder()
-                .title("For PCIC Use")
-                .applicationType(cropInsurance)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .fields(new ArrayList<>())
-                .build();
-        cropInsuranceSections.add(pcicUseSection);
+//        ApplicationSection pcicUseSection = ApplicationSection.builder()
+//                .title("For PCIC Use")
+//                .applicationType(cropInsurance)
+//                .createdAt(LocalDateTime.now())
+//                .updatedAt(LocalDateTime.now())
+//                .fields(new ArrayList<>())
+//                .build();
+//        cropInsuranceSections.add(pcicUseSection);
 
         // Fields for For PCIC Use
-        List<ApplicationField> pcicUseFields = new ArrayList<>();
-        pcicUseFields.add(createField("phase_rice", "Phase (Rice)", FieldType.SELECT, false, createChoices(new String[]{"Wet", "Dry"}), pcicUseSection));
-        pcicUseFields.add(createField("phase_corn", "Phase (Corn)", FieldType.SELECT, false, createChoices(new String[]{"A", "B"}), pcicUseSection));
-        pcicUseFields.add(createField("cic_no", "CIC No.", FieldType.TEXT, false, null, pcicUseSection));
-        pcicUseFields.add(createField("cic_date_issued", "CIC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-        pcicUseFields.add(createField("coc_no", "COC No.", FieldType.TEXT, false, null, pcicUseSection));
-        pcicUseFields.add(createField("coc_date_issued", "COC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-        pcicUseFields.add(createField("period_of_cover_from", "Period of Cover From", FieldType.DATE, false, null, pcicUseSection));
-        pcicUseFields.add(createField("period_of_cover_to", "Period of Cover To", FieldType.DATE, false, null, pcicUseSection));
-        pcicUseSection.setFields(pcicUseFields);
+//        List<ApplicationField> pcicUseFields = new ArrayList<>();
+//        pcicUseFields.add(createField("phase_rice", "Phase (Rice)", FieldType.SELECT, false, createChoices(new String[]{"Wet", "Dry"}), pcicUseSection));
+//        pcicUseFields.add(createField("phase_corn", "Phase (Corn)", FieldType.SELECT, false, createChoices(new String[]{"A", "B"}), pcicUseSection));
+//        pcicUseFields.add(createField("cic_no", "CIC No.", FieldType.TEXT, false, null, pcicUseSection));
+//        pcicUseFields.add(createField("cic_date_issued", "CIC Date Issued", FieldType.DATE, false, null, pcicUseSection));
+//        pcicUseFields.add(createField("coc_no", "COC No.", FieldType.TEXT, false, null, pcicUseSection));
+//        pcicUseFields.add(createField("coc_date_issued", "COC Date Issued", FieldType.DATE, false, null, pcicUseSection));
+//        pcicUseFields.add(createField("period_of_cover_from", "Period of Cover From", FieldType.DATE, false, null, pcicUseSection));
+//        pcicUseFields.add(createField("period_of_cover_to", "Period of Cover To", FieldType.DATE, false, null, pcicUseSection));
+//        pcicUseSection.setFields(pcicUseFields);
 
         // Section II: Certification
         ApplicationSection certificationSection = ApplicationSection.builder()
@@ -171,8 +172,8 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         // Fields for Certification
         List<ApplicationField> certificationFields = new ArrayList<>();
         certificationFields.add(createField("farmer_signature", "Farmer Signature/Thumb Mark", FieldType.SIGNATURE, true, null, certificationSection));
-        certificationFields.add(createField("technologist_signature", "Supervising Agricultural Technologist Signature", FieldType.SIGNATURE, true, null, certificationSection));
-        certificationFields.add(createField("certification_date", "Certification Date", FieldType.DATE, true, null, certificationSection));
+//        certificationFields.add(createField("technologist_signature", "Supervising Agricultural Technologist Signature", FieldType.SIGNATURE, true, null, certificationSection));
+//        certificationFields.add(createField("certification_date", "Certification Date", FieldType.DATE, true, null, certificationSection));
         certificationSection.setFields(certificationFields);
 
         cropInsurance.setSections(cropInsuranceSections);
@@ -212,7 +213,7 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         claimBasicInfoFields.add(createField("area_insured", "Area Insured (in hectares)", FieldType.NUMBER, true, null, claimBasicInfoSection));
         claimBasicInfoFields.add(createField("variety_planted", "Variety Planted", FieldType.TEXT, true, null, claimBasicInfoSection));
         claimBasicInfoFields.add(createField("date_planting", "Actual Date of Planting", FieldType.DATE, true, null, claimBasicInfoSection));
-        claimBasicInfoFields.add(createField("policy_number", "Policy Number", FieldType.TEXT, true, null, claimBasicInfoSection));
+        claimBasicInfoFields.add(createField("cic_no", "CIC Number", FieldType.TEXT, true, null, claimBasicInfoSection));
         claimBasicInfoFields.add(createField("underwriter_cooperative", "Underwriter/Cooperative", FieldType.TEXT, false, null, claimBasicInfoSection));
         claimBasicInfoSection.setFields(claimBasicInfoFields);
 
@@ -228,7 +229,7 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
 
         // Fields for Damage Indicators
         List<ApplicationField> damageIndicatorsFields = new ArrayList<>();
-        damageIndicatorsFields.add(createField("cause_of_loss", "Cause of Loss", FieldType.TEXT, true, null, damageIndicatorsSection));
+        damageIndicatorsFields.add(createField("cause_of_loss", "Cause of Loss", FieldType.FILE, true, null, damageIndicatorsSection));
         damageIndicatorsFields.add(createField("date_of_loss", "Date of Loss Occurrence", FieldType.DATE, true, null, damageIndicatorsSection));
         damageIndicatorsFields.add(createField("cultivation_stage", "Age/Stage of Cultivation at Time of Loss", FieldType.TEXT, true, null, damageIndicatorsSection));
         damageIndicatorsFields.add(createField("area_damaged", "Area Damaged", FieldType.NUMBER, true, null, damageIndicatorsSection));
@@ -251,6 +252,15 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         List<ApplicationField> locationSketchFields = new ArrayList<>();
         locationSketchFields.add(createField("lot_1_area", "Lot 1 Area (ha)", FieldType.NUMBER, false, null, locationSketchSection));
         locationSketchFields.add(createField("lot_1_boundaries", "Lot 1 Boundaries", FieldType.JSON, false, null, locationSketchSection)); // North, South, East, West
+
+        locationSketchFields.add(createField("lot_2_area", "Lot 2 Area (ha)", FieldType.NUMBER, false, null, locationSketchSection));
+        locationSketchFields.add(createField("lot_2_boundaries", "Lot 2 Boundaries", FieldType.JSON, false, null, locationSketchSection)); // North, South, East, West
+
+        locationSketchFields.add(createField("lot_3_area", "Lot 3 Area (ha)", FieldType.NUMBER, false, null, locationSketchSection));
+        locationSketchFields.add(createField("lot_3_boundaries", "Lot 3 Boundaries", FieldType.JSON, false, null, locationSketchSection)); // North, South, East, West
+
+        locationSketchFields.add(createField("lot_4_area", "Lot 4 Area (ha)", FieldType.NUMBER, false, null, locationSketchSection));
+        locationSketchFields.add(createField("lot_4_boundaries", "Lot 4 Boundaries", FieldType.JSON, false, null, locationSketchSection)); // North, South, East, West
         // Add similar fields for Lot 2, Lot 3, Lot 4 if needed
         locationSketchSection.setFields(locationSketchFields);
 

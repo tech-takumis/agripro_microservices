@@ -1,5 +1,7 @@
 package com.hashjosh.insurance.config;
 
+import com.hashjosh.insurance.clients.UserResponse;
+import com.hashjosh.insurance.clients.UserServiceClient;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor

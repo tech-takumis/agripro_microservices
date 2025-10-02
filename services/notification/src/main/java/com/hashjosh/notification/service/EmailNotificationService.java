@@ -26,7 +26,6 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class EmailNotificationService {
 
-    private final UserServiceClient userServiceClient;
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
@@ -37,13 +36,9 @@ public class EmailNotificationService {
         try {
             // Prepare email content
             String subject = "Application Submitted Successfully";
-            /** We need to get the user here since we pass the token in the contract we will  gonna use
-             * that to the the user using the uploaded by field also */
-            UserResponse user = userServiceClient.getUserById(
-                    applicationSubmissionContract.getUploadedBy(),
-                    applicationSubmissionContract.getToken()
-            );
-            String recipientEmail = user.getEmail();
+
+
+            String recipientEmail = applicationSubmissionContract.getGmail();
 
             // Create email content using Thymeleaf template
             Context context = new Context();

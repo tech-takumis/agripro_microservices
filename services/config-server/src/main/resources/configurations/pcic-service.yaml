@@ -26,9 +26,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: true
-        spring.json.type.mapping: >
-          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract
+        spring.json.add.type.headers: false
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
