@@ -7,7 +7,7 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-    url: jdbc:postgresql://localhost:5432/agriculture2
+    url: jdbc:postgresql://localhost:5432/agriculture
     username: agripro
     password: agripro
     driver-class-name: org.postgresql.Driver

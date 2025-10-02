@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserRegistrationService {
+public class FarmerRegistrationNotificationService {
 
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;

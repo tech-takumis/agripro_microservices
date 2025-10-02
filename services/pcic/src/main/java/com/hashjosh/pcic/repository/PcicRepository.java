@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<Pcic, UUID> {
+public interface PcicRepository extends JpaRepository<Pcic, UUID> {
     boolean existsByEmail(String email);
     Optional<Pcic> findByUsername(String username);
     @Query("SELECT u FROM Pcic u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
