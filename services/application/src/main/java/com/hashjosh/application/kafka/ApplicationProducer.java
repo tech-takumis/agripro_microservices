@@ -19,11 +19,13 @@ public class ApplicationProducer {
     public void submitApplication(ApplicationSubmissionContract applicationSubmissionContract) {
         log.info("submitting application::: {}", applicationSubmissionContract);
 
-        Message<ApplicationSubmissionContract> message = MessageBuilder
-                .withPayload(applicationSubmissionContract)
-                .setHeader(KafkaHeaders.TOPIC, "application-events")
-                .build();
-
-        kafkaTemplate.send(message);
+        kafkaTemplate.send("application-events",applicationSubmissionContract )
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("Message sent successfully to topic {} with offset {}", result.getRecordMetadata().topic(), result.getRecordMetadata().offset());
+                    } else {
+                        log.error("Failed to send message: {}", ex.getMessage());
+                    }
+                });
     }
 }

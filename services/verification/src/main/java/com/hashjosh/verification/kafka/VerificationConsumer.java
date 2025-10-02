@@ -19,20 +19,17 @@ public class VerificationConsumer {
     private final VerificationMapper verificationMapper;
     private final VerificationResultRepository verificationResultRepository;
 
-    @KafkaListener(topics = "application-events")
-    public void consumeSubmittedApplication(ApplicationSubmissionContract applicationSubmissionContract) {
+    @KafkaListener(topics = "application-events", groupId = "verification-service")
+    public void consumeSubmittedApplication(ApplicationSubmissionContract event) {
         try {
-            log.info("Consume application submission event: {}", applicationSubmissionContract);
-
-            if (EventType.APPLICATION_SUBMITTED == applicationSubmissionContract.getEventType()) {
-                handleSubmitted(applicationSubmissionContract);
+            if (EventType.APPLICATION_SUBMITTED == event.getEventType()) {
+                handleSubmitted(event);
             } else {
-                log.debug("Ignoring unknown event type {}", applicationSubmissionContract.getEventType());
+                log.debug("Ignoring unsupported event type: {}", event.getEventType());
             }
-
-        } catch (Exception e) {
-            log.error("❌ Failed to process application event: {}", applicationSubmissionContract, e);
-            throw e; // ✅ Let Spring Kafka handle retry + DLT
+        } catch (Exception ex) {
+            log.error("❌ Failed to process event: {}", event, ex);
+            throw ex; // ✅ Let Spring Kafka retry or send to DLT
         }
     }
 

@@ -1,8 +1,6 @@
 package com.hashjosh.workflow.mapper;
 
-import com.hashjosh.workflow.clients.UserResponse;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;
-import com.hashjosh.workflow.dto.UserResponseDto;
 import com.hashjosh.workflow.dto.WorkflowResponseDto;
 import com.hashjosh.workflow.model.WorkflowStatusHistory;
 import org.springframework.stereotype.Component;

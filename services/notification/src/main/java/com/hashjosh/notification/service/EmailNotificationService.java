@@ -3,8 +3,6 @@ package com.hashjosh.notification.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
-import com.hashjosh.notification.clients.UserResponse;
-import com.hashjosh.notification.clients.UserServiceClient;
 import com.hashjosh.notification.dto.EmailNotificationPayload;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.properties.EmailProperties;
@@ -28,7 +26,6 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class EmailNotificationService {
 
-    private final UserServiceClient userServiceClient;
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
@@ -39,13 +36,9 @@ public class EmailNotificationService {
         try {
             // Prepare email content
             String subject = "Application Submitted Successfully";
-            /** We need to get the user here since we pass the token in the contract we will  gonna use
-             * that to the the user using the uploaded by field also */
-            UserResponse user = userServiceClient.getUserById(
-                    applicationSubmissionContract.getUploadedBy(),
-                    applicationSubmissionContract.getToken()
-            );
-            String recipientEmail = user.getEmail();
+
+
+            String recipientEmail = applicationSubmissionContract.getGmail();
 
             // Create email content using Thymeleaf template
             Context context = new Context();

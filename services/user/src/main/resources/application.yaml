@@ -1,9 +1,0 @@
-spring:
-  application:
-    name: user-service
-  profiles:
-    active: local
-
-  kafka:
-
-

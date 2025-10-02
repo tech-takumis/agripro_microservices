@@ -62,7 +62,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <UnderwriterQuickActionButton
             title="Register New Staff"
-            description="Add a new user account"
+            description="Add a new agriculture account"
             :icon="UserPlus"
             variant="primary"
             @click="navigateTo('/admin/staff/register')"
@@ -76,7 +76,7 @@
           />
           <UnderwriterQuickActionButton
             title="Manage Staff"
-            description="Edit user roles & access"
+            description="Edit agriculture roles & access"
             :icon="Users"
             variant="default"
             @click="navigateTo('/admin/staff/manage')"
@@ -142,7 +142,7 @@
                   {{ log.timestamp }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ log.user }}
+                  {{ log.agriculture }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ log.action }}
@@ -168,7 +168,7 @@ import {
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import ApplicationCard from '@/components/underwriter/ApplicationCard.vue' // Reusing for stats
 import UnderwriterQuickActionButton from '@/components/underwriter/UnderwriterQuickActionButton.vue' // Reusing for quick actions
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
 
 const store = useUserStore()
@@ -186,28 +186,28 @@ const recentActivityLogs = ref([
   {
     id: 1,
     timestamp: '2024-07-18 14:30',
-    user: 'Admin User',
+    agriculture: 'Admin User',
     action: 'Created Application Type',
     details: 'Rice Crop Insurance V2'
   },
   {
     id: 2,
     timestamp: '2024-07-18 10:15',
-    user: 'Underwriter A',
+    agriculture: 'Underwriter A',
     action: 'Approved Policy',
     details: 'Policy #PCIC-2024-005'
   },
   {
     id: 3,
     timestamp: '2024-07-17 16:00',
-    user: 'Admin User',
+    agriculture: 'Admin User',
     action: 'Registered New Staff',
     details: 'John Doe (Teller)'
   },
   {
     id: 4,
     timestamp: '2024-07-17 09:00',
-    user: 'Claims Processor B',
+    agriculture: 'Claims Processor B',
     action: 'Processed Claim',
     details: 'Claim #CLM-2024-012'
   }

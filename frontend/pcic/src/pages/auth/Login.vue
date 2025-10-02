@@ -174,7 +174,7 @@ import { computed, ref } from 'vue'
 import { 
   User, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle 
 } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 
 const route = useRoute()
 const store = useUserStore()

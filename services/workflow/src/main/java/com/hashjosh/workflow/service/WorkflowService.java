@@ -3,8 +3,6 @@ package com.hashjosh.workflow.service;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.workflow.clients.ApplicationClient;
 import com.hashjosh.workflow.clients.ApplicationTypeClient;
-import com.hashjosh.workflow.clients.UserResponse;
-import com.hashjosh.workflow.clients.UserServiceClient;
 import com.hashjosh.workflow.config.CustomUserDetails;
 import com.hashjosh.workflow.dto.ApplicationResponseDto;
 import com.hashjosh.workflow.dto.ApplicationTypeResponseDto;

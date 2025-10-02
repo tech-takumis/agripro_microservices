@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
-          <p class="text-gray-600">Manage user roles and assign permissions</p>
+          <p class="text-gray-600">Manage agriculture roles and assign permissions</p>
         </div>
         <div class="flex items-center space-x-3">
           <button
