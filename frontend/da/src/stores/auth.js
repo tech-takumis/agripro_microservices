@@ -200,7 +200,7 @@ export const useAuthStore = defineStore('auth', {
 
                 if (loginResponse.status === 200) {
                     // Fetch the authenticated user
-                    const userResponse = await axios.get('/api/v1/auth/me');
+                    const userResponse = await axios.get('/api/v1/agriculture/auth/me');
 
                     if (userResponse.status === 200) {
                         this.userData = userResponse.data;
