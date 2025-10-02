@@ -1,153 +1,126 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
-    <!-- Left Column - PCIC Image (Hidden on mobile) -->
-    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-green-800 items-center justify-center p-8">
-      <div class="max-w-md text-center">
-        <img 
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pcic.jpg-ymdsA0RBXJ1O58Wx4oDrmGSD8rRBY0.jpeg" 
-          alt="Philippine Crop Insurance Corporation Logo" 
-          class="w-64 h-auto mx-auto mb-8 bg-white rounded-lg p-6 shadow-lg"
+  <div class="min-h-screen flex flex-col lg:flex-row bg-gray-50">
+    <!-- Left Column (Branding) -->
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-700 to-green-900 items-center justify-center p-10 relative overflow-hidden">
+      <!-- Background pattern -->
+      <div class="absolute inset-0 opacity-10 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/leaf.png')]"></div>
+
+      <div class="relative z-10 max-w-lg text-center text-white">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pcic.jpg-ymdsA0RBXJ1O58Wx4oDrmGSD8rRBY0.jpeg"
+          alt="PCIC Logo"
+          class="w-40 h-auto mx-auto mb-8 bg-white/90 rounded-xl p-5 shadow-xl"
         />
-        <h1 class="text-3xl font-bold text-white mb-4">
-          Philippine Crop Insurance Corporation
-        </h1>
-        <p class="text-green-100 text-lg">
-          Staff Portal - Managing crop insurance for Filipino farmers
+        <h1 class="text-4xl font-extrabold mb-4">Philippine Crop Insurance Corporation</h1>
+        <p class="text-green-100 text-lg leading-relaxed">
+          Empowering Filipino farmers with secure crop insurance and reliable support.
         </p>
       </div>
     </div>
 
-    <!-- Right Column - Login Form -->
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
-      <div class="w-full max-w-md">
-        <!-- Mobile Logo (Visible only on small screens) -->
+    <!-- Right Column (Login Form) -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 lg:p-10">
+        <!-- Mobile Branding -->
         <div class="lg:hidden text-center mb-8">
-          <img 
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pcic.jpg-ymdsA0RBXJ1O58Wx4oDrmGSD8rRBY0.jpeg" 
-            alt="PCIC Logo" 
-            class="w-32 h-auto mx-auto mb-4"
+          <img
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pcic.jpg-ymdsA0RBXJ1O58Wx4oDrmGSD8rRBY0.jpeg"
+            alt="PCIC Logo"
+            class="w-24 h-auto mx-auto mb-3"
           />
           <h2 class="text-xl font-bold text-gray-900">PCIC Staff Portal</h2>
         </div>
 
-        <!-- Desktop Header -->
-        <div class="hidden lg:block mb-8">
-          <h2 class="text-3xl font-bold text-gray-900 mb-2">Staff Login</h2>
-          <p class="text-gray-600">Access your PCIC staff dashboard</p>
+        <!-- Header -->
+        <div class="mb-8 text-center lg:text-left">
+          <h2 class="text-2xl lg:text-3xl font-bold text-gray-900">Welcome Back</h2>
+          <p class="text-gray-500">Sign in to access your staff dashboard</p>
         </div>
 
-        <!-- Status Message -->
-        <div v-if="status" class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-          <div class="flex">
-            <CheckCircle class="h-5 w-5 text-green-400" />
-            <div class="ml-3">
-              <p class="text-sm text-green-800">{{ status }}</p>
-            </div>
-          </div>
+        <!-- Status / Errors -->
+        <div v-if="status" class="mb-6 bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg p-4 flex items-start">
+          <CheckCircle class="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+          {{ status }}
         </div>
 
-        <!-- Error Messages -->
-        <div v-if="errors && errors.length > 0" class="mb-6">
-          <div class="bg-red-50 border border-red-200 rounded-md p-4">
-            <div class="flex">
-              <AlertCircle class="h-5 w-5 text-red-400" />
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">
-                  Please correct the following errors:
-                </h3>
-                <div class="mt-2 text-sm text-red-700">
-                  <ul class="list-disc pl-5 space-y-1">
-                    <li v-for="error in errors" :key="error">
-                      {{ error }}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div v-if="errors && errors.length" class="mb-6 bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg p-4">
+          <h3 class="font-medium mb-2">Please fix the following:</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li v-for="error in errors" :key="error">{{ error }}</li>
+          </ul>
         </div>
 
         <!-- Login Form -->
-        <form @submit.prevent="submitLogin" class="space-y-6">
-          <!-- Username Field -->
+        <form @submit.prevent="submitLogin" class="space-y-5">
+          <!-- Username -->
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <div class="relative">
+              <User class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 id="username"
                 v-model="form.username"
                 type="text"
-                required
-                autofocus
+                placeholder="Enter username"
                 autocomplete="username"
-                class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': hasFieldError('username') }"
-                placeholder="Enter your username"
+                required
                 :disabled="processing"
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition disabled:opacity-50"
               />
-              <User class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
           </div>
 
-          <!-- Password Field -->
+          <!-- Password -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <div class="relative">
+              <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 id="password"
                 v-model="form.password"
                 :type="showPassword ? 'text' : 'password'"
-                required
+                placeholder="Enter password"
                 autocomplete="current-password"
-                class="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-500': hasFieldError('password') }"
-                placeholder="Enter your password"
+                required
                 :disabled="processing"
+                class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition disabled:opacity-50"
               />
-              <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-1/2 transform -translate-y-1/2"
-                :disabled="processing"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <Eye v-if="!showPassword" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                <EyeOff v-else class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye v-if="!showPassword" class="h-5 w-5" />
+                <EyeOff v-else class="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          <!-- Remember Me & Forgot Password -->
+          <!-- Remember Me / Forgot -->
           <div class="flex items-center justify-between">
-            <div class="flex items-center">
+            <label class="flex items-center space-x-2 text-sm text-gray-700">
               <input
                 id="remember"
                 v-model="form.rememberMe"
                 type="checkbox"
-                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                class="rounded border-gray-300 text-green-600 focus:ring-green-500"
                 :disabled="processing"
               />
-              <label for="remember" class="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
+              <span>Remember me</span>
+            </label>
             <router-link
               to="/forgot-password"
-              class="text-sm text-green-600 hover:text-green-500 underline transition-colors"
+              class="text-sm text-green-600 hover:text-green-500 font-medium"
             >
               Forgot password?
             </router-link>
           </div>
 
-          <!-- Submit Button -->
+          <!-- Submit -->
           <button
             type="submit"
             :disabled="processing"
-            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="w-full py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-md flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Loader2 v-if="processing" class="animate-spin h-4 w-4 mr-2" />
             {{ processing ? 'Signing in...' : 'Sign In' }}
@@ -155,18 +128,15 @@
         </form>
 
         <!-- Footer -->
-        <div class="mt-8 text-center">
-          <p class="text-xs text-gray-500">
-            © 2024 Philippine Crop Insurance Corporation. All rights reserved.
-          </p>
-          <p class="text-xs text-gray-400 mt-1">
-            Staff Portal Access Only
-          </p>
+        <div class="mt-8 text-center text-xs text-gray-400">
+          <p>© 2024 Philippine Crop Insurance Corporation</p>
+          <p class="mt-1">For authorized staff only</p>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'

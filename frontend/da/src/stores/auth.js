@@ -187,13 +187,12 @@ export const useAuthStore = defineStore('auth', {
                 this.error = null;
 
                 // First login
-                const loginResponse = await axios.post('/api/v1/auth/login',
+                const loginResponse = await axios.post('/api/v1/agriculture/auth/login',
                     credentials.value,
                     {
                         headers: {
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-Tenant-ID': 'agriculture'
+                            'Accept': 'application/json'
                         },
                         withCredentials: true,
                     }
@@ -244,7 +243,7 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await axios.post('/api/v1/auth/register', userData);
+                const response = await axios.post('/api/v1/agriculture/auth/registration', userData);
 
                 return { success: true, data: response.data };
             } catch (error) {
@@ -259,7 +258,7 @@ export const useAuthStore = defineStore('auth', {
         async logout() {
             try {
                 // Call the logout endpoint to clear the server-side session
-                await axios.post('/api/v1/auth/logout');
+                await axios.post('/api/v1/agriculture/auth/logout');
             } catch (error) {
                 console.error('Logout error:', error);
             } finally {
