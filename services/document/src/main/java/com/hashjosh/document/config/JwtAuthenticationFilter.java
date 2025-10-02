@@ -1,7 +1,5 @@
 package com.hashjosh.document.config;
 
-import com.hashjosh.document.clients.dto.UserResponse;
-import com.hashjosh.document.clients.UserServiceClient;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -25,8 +23,6 @@ import java.util.*;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserServiceClient userServiceClient;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
@@ -62,26 +58,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = jwtService.getAllClaims(token);
         String username = jwtService.getUsernameFromToken(token);
         String userId = claims.get("userId", String.class);
-        String tenantId = claims.get("tenantId", String.class);
+        String firstname = claims.get("firstname", String.class);
+        String lastname = claims.get("lastname", String.class);
+        String email = claims.get("email", String.class);
+        String phone = claims.get("phone", String.class);
+        List<String> claimRoles = claims.get("roles", List.class);
+        List<String> claimPermission = claims.get("permissions", List.class);
 
-        UserResponse user = userServiceClient.getUserById(UUID.fromString(userId), token);
 
         Set<SimpleGrantedAuthority> roles = new HashSet<>();
 
-        user.getRoles().forEach(role -> {
-            roles.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
-            role.getPermissions().forEach(
-                    permission -> roles.add(new SimpleGrantedAuthority(permission.getName()))
-            );
+        if(claimRoles != null){
+            for(String role : claimRoles){
+                roles.add(new SimpleGrantedAuthority("ROLE_"+role));
+            }
+        }
 
-        });
+        if(claimPermission != null){
+            for(String permission : claimPermission){
+                roles.add(new SimpleGrantedAuthority(permission));
+            }
+        }
+
 
         CustomUserDetails userDetails = new CustomUserDetails(
                 token,
                 userId,
-                tenantId,
                 username,
-                user.getEmail(),
+                firstname,
+                lastname,
+                email,
+                phone,
                 roles
         );
 

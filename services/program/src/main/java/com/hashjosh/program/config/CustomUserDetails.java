@@ -14,8 +14,10 @@ import java.util.Set;
 public class CustomUserDetails implements UserDetails {
     private final String token;
     private final String userId;
-    private final String tenantId;
     private final String username;
+    private final String firstname;
+    private final String lastname;
+    private final String phone;
     private final String email;
     private final Set<SimpleGrantedAuthority> authorities;
 

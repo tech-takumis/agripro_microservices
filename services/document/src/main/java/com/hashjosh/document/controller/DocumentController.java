@@ -9,6 +9,7 @@ import io.minio.errors.*;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/documents")
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -36,15 +38,20 @@ public class DocumentController {
     @Operation(summary = "Upload a document")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DocumentResponse> uploadDocument(
-            @RequestPart("referenceId") String referenceId,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("documentType") String documentType,
-            @RequestPart(value = "metaData", required = false) String metaData
+            @RequestParam("referenceId") String referenceId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("documentType") String documentType,
+            @RequestParam(value = "metaData", required = false) String metaData
     ) {
         try {
             UUID referenceUuid = UUID.fromString(referenceId);
-            DocumentRequest request = new DocumentRequest(referenceUuid, file, documentType,
-                    metaData != null ? new ObjectMapper().readTree(metaData) : null);
+
+            DocumentRequest request = new DocumentRequest(
+                    referenceUuid,
+                    file,
+                    documentType,
+                    metaData != null ? new ObjectMapper().readTree(metaData) : null
+            );
 
             DocumentResponse document = documentService.upload(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(document);
@@ -56,6 +63,7 @@ public class DocumentController {
                             .fileSize(file.getSize())
                             .build());
         } catch (Exception e) {
+            log.error("Upload failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(DocumentResponse.builder()
                             .fileName(file != null ? file.getOriginalFilename() : "unknown")
@@ -64,6 +72,8 @@ public class DocumentController {
                             .build());
         }
     }
+
+
     @GetMapping("/{documentId}")
 //    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(

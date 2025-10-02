@@ -24,15 +24,14 @@ spring:
         spring.json.type.mapping: applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
         spring.json.add.type.headers: true
     consumer:
-      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      properties:
-        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.type.mapping: applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract
       group-id: verification-service
-    properties:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon.*"
+        spring.json.use.type.headers: false
+
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours

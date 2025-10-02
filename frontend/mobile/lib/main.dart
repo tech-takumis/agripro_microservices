@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'data/services/storage_service.dart';
 import 'data/services/api_service.dart';
+import 'data/services/psgc_service.dart';
 import 'presentation/controllers/auth_controller.dart';
 import 'presentation/controllers/application_controller.dart';
 import 'presentation/pages/login_page.dart';
@@ -19,6 +20,7 @@ void main() async {
   // Initialize services
   await Get.putAsync(() => StorageService().init());
   Get.put(ApiService());
+  Get.put(PSGCService());
   Get.put(AuthController());
   Get.put(ApplicationController());
 

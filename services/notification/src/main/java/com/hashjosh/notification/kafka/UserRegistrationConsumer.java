@@ -1,7 +1,6 @@
 package com.hashjosh.notification.kafka;
 
-import com.hashjosh.kafkacommon.user.FarmerRegistrationContract;
-import com.hashjosh.kafkacommon.user.StaffRegistrationContract;
+import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import com.hashjosh.notification.service.UserRegistrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,20 +14,6 @@ import org.springframework.stereotype.Component;
 public class UserRegistrationConsumer {
 
     private final UserRegistrationService userRegistrationService;
-
-    @KafkaListener(topics = "staff-event")
-    public void consumeStaffRegistrationEvent(@Payload StaffRegistrationContract staffRegistrationContract) {
-        try {
-            log.info("Processing user registration event: {}", staffRegistrationContract);
-
-            userRegistrationService.sendUserRegistrationEmailNotification(staffRegistrationContract);
-        }catch (Exception e) {
-            log.error("❌ Failed to process application event: {}", staffRegistrationContract, e);
-            // Consider adding retry logic or dead-letter queue handling here
-            throw e;
-        }
-
-    }
 
     @KafkaListener(topics = "farmer-event")
     public void consumeFarmerRegistrationEvent(@Payload FarmerRegistrationContract farmerRegistrationContract) {

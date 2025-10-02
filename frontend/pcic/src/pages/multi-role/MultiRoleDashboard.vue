@@ -85,7 +85,7 @@
                 </div>
                 <div class="ml-4">
                   <h3 class="text-lg font-medium text-gray-900">Admin Dashboard</h3>
-                  <p class="text-sm text-gray-500">System administration and user management</p>
+                  <p class="text-sm text-gray-500">System administration and agriculture management</p>
                 </div>
               </div>
             </div>
@@ -198,7 +198,7 @@ import { useRouter } from 'vue-router'
 import { 
   Settings, DollarSign, FileText, Shield, ClipboardList, Search, CheckCircle 
 } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 
 const store = useUserStore()
 const router = useRouter()

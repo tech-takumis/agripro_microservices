@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Register New Staff</h1>
-          <p class="text-gray-600">Create a new user account for PCIC staff members</p>
+          <p class="text-gray-600">Create a new agriculture account for PCIC staff members</p>
         </div>
       </div>
     </template>
@@ -193,7 +193,7 @@ import { onMounted, ref } from 'vue'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../../layouts/AuthenticatedLayout.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/agriculture'
 import { ADMIN_NAVIGATION } from '@/lib/constants'
 import { useRoleStore } from '@/stores/role'
 import { usePermissionStore } from '@/stores/permission'

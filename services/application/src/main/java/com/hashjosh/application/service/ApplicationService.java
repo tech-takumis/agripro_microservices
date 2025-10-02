@@ -8,15 +8,10 @@ import com.hashjosh.application.dto.*;
 import com.hashjosh.application.exceptions.ApplicationNotFoundException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
-import com.hashjosh.application.model.Application;
-import com.hashjosh.application.model.ApplicationField;
-import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.repository.ApplicationRepository;
-import com.hashjosh.application.repository.ApplicationTypeRepository;
-import com.hashjosh.application.validators.FieldValidatorFactory;
-import com.hashjosh.application.validators.ValidatorStrategy;
-import com.hashjosh.constant.ApplicationStatus;
-import com.hashjosh.constant.EventType;
+import com.hashjosh.application.model.*;
+import com.hashjosh.application.repository.*;
+import com.hashjosh.application.validators.*;
+import com.hashjosh.constant.*;
 import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -139,7 +135,7 @@ public class ApplicationService {
         Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
         Application savedApplication = applicationRepository.save(application);
 
-        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED, userDetails.getToken());
+        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED, userDetails);
 
         return ApplicationSubmissionResponse.builder()
                 .success(true)
@@ -216,7 +212,7 @@ public class ApplicationService {
     }
 
 
-    public void publishApplicationStatus(Application application, EventType eventType, String token) {
+    public void publishApplicationStatus(Application application, EventType eventType, CustomUserDetails user) {
 
         applicationProducer.submitApplication(
                 ApplicationSubmissionContract.builder()
@@ -224,7 +220,8 @@ public class ApplicationService {
                         .schemaVersion(1)
                         .status(ApplicationStatus.SUBMITTED)
                         .version(application.getVersion())
-                        .token(token)
+                        .token(user.getToken())
+                        .gmail(user.getEmail())
                         .eventType(eventType)
                         .uploadedBy(application.getUserId())
                         .applicationId(application.getId())

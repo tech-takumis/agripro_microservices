@@ -10,10 +10,20 @@ spring:
               enabled: true
               lower-case-service-id: true
           routes:
-            - id: user-service
-              uri: lb://user-service
+            - id: agriculture-service
+              uri: lb://agriculture-service
               predicates:
-                - Path=/api/v1/profiles/**,/api/v1/users/**,/api/v1/auth/**,/api/v1/roles/**,/api/v1/permissions/**,/api/v1/auth/farmer/**,/api/v1/auth/staff/**
+                - Path=/api/v1/agriculture/auth/**,/api/v1/agriculture/**
+
+            - id: farmer-service
+              uri: lb://farmer-service
+              predicates:
+                - Path=/api/v1/farmer/auth/**,/api/v1/farmer/**
+
+            - id: pcic-service
+              uri: lb://pcic-service
+              predicates:
+                - Path=/api/v1/pcic/auth/**,/api/v1/pcic/**
 
             - id: application-service
               uri: lb://application-service

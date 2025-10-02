@@ -6,14 +6,14 @@ import 'package:mobile/presentation/widgets/common//custom_dropdown.dart';
 /// Third step of registration: Farm Information
 class RegistrationStepThree extends StatefulWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController farmAddressController;
+  final TextEditingController farmLocationController;
   final TextEditingController farmSizeController;
   final TextEditingController primaryCropController;
 
   const RegistrationStepThree({
     super.key,
     required this.formKey,
-    required this.farmAddressController,
+    required this.farmLocationController,
     required this.farmSizeController,
     required this.primaryCropController,
   });
@@ -22,7 +22,7 @@ class RegistrationStepThree extends StatefulWidget {
   State<RegistrationStepThree> createState() => RegistrationStepThreeState();
 }
 
-class RegistrationStepThreeState extends State<RegistrationStepThree> {
+class RegistrationStepThreeState extends State<RegistrationStepThree> with AutomaticKeepAliveClientMixin {
   // Dropdown options
   final List<String> _tenureStatusOptions = [
     'Owner',
@@ -53,6 +53,7 @@ class RegistrationStepThreeState extends State<RegistrationStepThree> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Important for AutomaticKeepAliveClientMixin
     return Form(
       key: widget.formKey,
       child: Column(
@@ -77,7 +78,7 @@ class RegistrationStepThreeState extends State<RegistrationStepThree> {
 
           // Farm Address
           CustomTextField(
-            controller: widget.farmAddressController,
+            controller: widget.farmLocationController,
             label: 'Farm Address *',
             prefixIcon: Icons.agriculture_outlined,
             keyboardType: TextInputType.streetAddress,
@@ -222,4 +223,7 @@ class RegistrationStepThreeState extends State<RegistrationStepThree> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

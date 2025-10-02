@@ -23,7 +23,7 @@ class MultiStepRegistrationController extends GetxController {
   final step3FormKey = GlobalKey<FormState>();
 
   // Step 1: Basic Information Controllers
-  final referenceNumberController = TextEditingController();
+  final rsbsaNumber = TextEditingController();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final middleNameController = TextEditingController();
@@ -35,7 +35,7 @@ class MultiStepRegistrationController extends GetxController {
   // Geographic selections will be handled by the step widget
 
   // Step 3: Farm Information Controllers
-  final farmAddressController = TextEditingController();
+  final farmLocationController = TextEditingController();
   final farmSizeController = TextEditingController();
   final primaryCropController = TextEditingController();
   // Dropdown selections will be handled by the step widget
@@ -83,14 +83,14 @@ class MultiStepRegistrationController extends GetxController {
   @override
   void onClose() {
     // Dispose controllers
-    referenceNumberController.dispose();
+    rsbsaNumber.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
     middleNameController.dispose();
     emailController.dispose();
     phoneNumberController.dispose();
     zipCodeController.dispose();
-    farmAddressController.dispose();
+    farmLocationController.dispose();
     farmSizeController.dispose();
     primaryCropController.dispose();
     super.onClose();
@@ -172,7 +172,7 @@ class MultiStepRegistrationController extends GetxController {
 
       final request = RegistrationRequest(
         // Basic Information
-        referenceNumber: referenceNumberController.text.trim(),
+        rsbsaNumber: rsbsaNumber.text.trim(),
         firstName: firstNameController.text.trim(),
         lastName: lastNameController.text.trim(),
         middleName: middleNameController.text.trim().isEmpty
@@ -188,7 +188,7 @@ class MultiStepRegistrationController extends GetxController {
         zipCode: zipCodeController.text.trim(),
 
         // Farm Information
-        farmAddress: farmAddressController.text.trim(),
+        farmLocation: farmLocationController.text.trim(),
         tenureStatus: selectedTenureStatus,
         farmSize: farmSizeController.text.trim(),
         farmType: selectedFarmType,
@@ -223,14 +223,14 @@ class MultiStepRegistrationController extends GetxController {
     clearMessages();
 
     // Clear all controllers
-    referenceNumberController.clear();
+    rsbsaNumber.clear();
     firstNameController.clear();
     lastNameController.clear();
     middleNameController.clear();
     emailController.clear();
     phoneNumberController.clear();
     zipCodeController.clear();
-    farmAddressController.clear();
+    farmLocationController.clear();
     farmSizeController.clear();
     primaryCropController.clear();
 

@@ -1,6 +1,6 @@
 class RegistrationRequest {
   // Basic information
-  final String referenceNumber;
+  final String rsbsaNumber;
   final String firstName;
   final String lastName;
   final String? middleName;
@@ -14,14 +14,14 @@ class RegistrationRequest {
   final String zipCode;
 
   // Farmer farm location
-  final String farmAddress;
+  final String farmLocation;
   final String tenureStatus;
   final String farmSize;
   final String farmType;
   final String primaryCrop;
 
   RegistrationRequest({
-    required this.referenceNumber,
+    required this.rsbsaNumber,
     required this.firstName,
     required this.lastName,
     this.middleName,
@@ -31,7 +31,7 @@ class RegistrationRequest {
     required this.state,
     required this.country,
     required this.zipCode,
-    required this.farmAddress,
+    required this.farmLocation,
     required this.tenureStatus,
     required this.farmSize,
     required this.farmType,
@@ -40,7 +40,7 @@ class RegistrationRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      'referenceNumber': referenceNumber,
+      'rsbsaNumber': rsbsaNumber,
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
@@ -50,7 +50,7 @@ class RegistrationRequest {
       'state': state,
       'country': country,
       'zipCode': zipCode,
-      'farmAddress': farmAddress,
+      'farmLocation': farmLocation,
       'tenureStatus': tenureStatus,
       'farmSize': farmSize,
       'farmType': farmType,

@@ -10,7 +10,8 @@ import 'package:mobile/data/models/login_request.dart';
 import 'package:mobile/data/models/registration_request.dart';
 import 'package:mobile/data/models/registration_response.dart';
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_response.dart';
+import 'package:mobile/data/models/application_submission_response.dart' as response_model;
+import 'package:mobile/data/models/application_submission_request.dart';
 import 'storage_service.dart';
 
 class ApiService extends getx.GetxService {
@@ -37,7 +38,6 @@ class ApiService extends getx.GetxService {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'X-Tenant-ID': 'FARMER',
         },
       ),
     );
@@ -80,12 +80,22 @@ class ApiService extends getx.GetxService {
 
   Future<AuthResponse> login(LoginRequest request) async {
     try {
-      print('🚀 Attempting login to: $baseUrl/auth/login');
+      print('🚀 Attempting login to: $baseUrl/farmer/auth/login');
 
-      final response = await _dio.post('/auth/login', data: request.toJson());
+      final response = await _dio.post('/farmer/auth/login', data: request.toJson());
 
       print('✅ Login successful: ${response.statusCode}');
-      return AuthResponse.fromJson(response.data);
+      final authResponse = AuthResponse.fromJson(response.data);
+
+      // Store tokens if login is successful
+      if (authResponse.success && authResponse.accessToken != null) {
+        await StorageService.to.saveToken(authResponse.accessToken!);
+      }
+      if (authResponse.success && authResponse.refreshToken != null) {
+        await StorageService.to.saveRefreshToken(authResponse.refreshToken!);
+      }
+
+      return authResponse;
     } on DioException catch (e) {
       print('❌ Login failed: ${e.message}');
 
@@ -130,7 +140,7 @@ class ApiService extends getx.GetxService {
       print('🚀 Attempting registration to: $baseUrl/farmers');
 
       final response = await _dio.post(
-        '/auth/farmer/registration',
+        '/farmer/auth/registration',
         data: request.toJson(),
       );
 
@@ -174,13 +184,40 @@ class ApiService extends getx.GetxService {
     }
   }
 
+  // Add this method to get auth token
+  String? getAuthToken() {
+    return StorageService.to.getToken();
+  }
+
   // Method to fetch application data - updated to handle direct array response
+  Future<ApplicationContent?> fetchApplicationById(String id) async {
+    try {
+      print('🚀 Fetching application type: $id');
+      final response = await _dio.get('/application/types/$id');
+      print('✅ Application type fetched successfully: ${response.statusCode}');
+      return ApplicationContent.fromJson(response.data);
+    } on DioException catch (e) {
+      print('❌ Fetch application type failed: ${e.message}');
+      return null;
+    } catch (e) {
+      print('❌ Unexpected error: $e');
+      return null;
+    }
+  }
+
   Future<ApplicationResponse> fetchApplications() async {
     try {
       print('🚀 Fetching applications from: $baseUrl/application/types');
       final response = await _dio.get('/application/types');
       print('✅ Applications fetched successfully: ${response.statusCode}');
-      return ApplicationResponse.fromJson(response.data);
+      
+      // API returns a direct array
+      final List<dynamic> data = response.data as List<dynamic>;
+      return ApplicationResponse(
+        statusCode: response.statusCode ?? 200,
+        message: 'Success',
+        content: data.map((e) => ApplicationContent.fromJson(e)).toList(),
+      );
     } catch (e) {
       print('❌ Fetch applications failed: $e');
       throw Exception('Failed to fetch applications');
@@ -188,7 +225,7 @@ class ApiService extends getx.GetxService {
   }
 
   // New method to submit application form
-  Future<ApplicationSubmissionResponse> submitApplicationForm(
+  Future<response_model.ApplicationSubmissionResponse> submitApplicationForm(
       String applicationId,
       Map<String, dynamic> fieldValues,
       Map<String, XFile> files,
@@ -222,7 +259,6 @@ class ApiService extends getx.GetxService {
         data: formData,
         options: Options(
           headers: {'Accept': 'application/json'},
-          // Do NOT set content-type manually, let Dio handle it!
           validateStatus:
               (status) =>
           status != null &&
@@ -232,10 +268,10 @@ class ApiService extends getx.GetxService {
 
       print('✅ Response: ${response.data}');
 
-      return ApplicationSubmissionResponse.fromJson(response.data);
+      return response_model.ApplicationSubmissionResponse.fromJson(response.data);
     } on DioException catch (e) {
       print('❌ DioException: ${e.response?.data}');
-      return ApplicationSubmissionResponse(
+      return response_model.ApplicationSubmissionResponse(
         success: false,
         message: 'Submission failed',
         error: e.response?.data?.toString() ?? e.message,
@@ -243,7 +279,7 @@ class ApiService extends getx.GetxService {
     }
   }
 
-  Future<ApplicationSubmissionResponse> submitApplicationFormHttp(
+  Future<response_model.ApplicationSubmissionResponse> submitApplicationFormHttp(
       String applicationId,
       Map<String, dynamic> fieldValues,
       Map<String, XFile> files,
@@ -289,13 +325,79 @@ class ApiService extends getx.GetxService {
     print('✅ Response body: ${response.body}');
 
     if (response.statusCode == 200) {
-      return ApplicationSubmissionResponse.fromJson(jsonDecode(response.body));
+      return response_model.ApplicationSubmissionResponse.fromJson(jsonDecode(response.body));
     } else {
-      return ApplicationSubmissionResponse(
+      return response_model.ApplicationSubmissionResponse(
         success: false,
         message: 'Submission failed',
         error: response.body,
       );
     }
+  }
+
+  Future<response_model.ApplicationSubmissionResponse> submitApplication(
+      ApplicationSubmissionRequest request,
+      ) async {
+    try {
+      print('🚀 Submitting application for type: ${request.applicationTypeId}');
+      print('📋 Field values: ${request.fieldValues}');
+      print('📎 Document IDs: ${request.documentIds}');
+
+      final response = await _dio.post(
+        '/applications/submit',
+        data: request.toJson(),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      print('✅ Application submitted successfully: ${response.statusCode}');
+      return response_model.ApplicationSubmissionResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      print('❌ Application submission failed: ${e.message}');
+      print('❌ Response data: ${e.response?.data}');
+
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        return response_model.ApplicationSubmissionResponse(
+          success: false,
+          message: 'Connection timeout. Please try again.',
+        );
+      } else if (e.type == DioExceptionType.connectionError) {
+        return response_model.ApplicationSubmissionResponse(
+          success: false,
+          message: 'Cannot connect to server. Please check your connection.',
+        );
+      } else if (e.response?.statusCode == 400) {
+        final errorData = e.response?.data;
+        return response_model.ApplicationSubmissionResponse(
+          success: false,
+          message: errorData['message'] ?? 'Invalid application data',
+          error: errorData['errors'],
+        );
+      } else {
+        return response_model.ApplicationSubmissionResponse(
+          success: false,
+          message: 'Server error (${e.response?.statusCode})',
+        );
+      }
+    } catch (e) {
+      print('❌ Unexpected error: $e');
+      return response_model.ApplicationSubmissionResponse(
+        success: false,
+        message: 'An unexpected error occurred: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<void> logout() async {
+    // Remove access and refresh tokens from storage
+    await StorageService.to.removeToken();
+    await StorageService.to.removeRefreshToken();
+    // ...add any other logout logic if needed...
   }
 }
