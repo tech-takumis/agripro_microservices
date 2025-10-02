@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final FarmerRepository farmerRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final FarmerProducer farmerProducer;
@@ -34,11 +34,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     @Transactional
     public Farmer register(RegistrationRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (farmerRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
-        if (userRepository.existsByUsername(request.getRsbsaId())) {
+        if (farmerRepository.existsByUsername(request.getRsbsaId())) {
             throw new UserException("RSBSA ID already exists", HttpStatus.BAD_REQUEST.value());
         }
 
@@ -50,7 +50,7 @@ public class AuthService {
         Farmer farmer = userMapper.toUserEntity(request,roles);
 
         // Save user (will cascade save the profile)
-        Farmer registeredFarmer = userRepository.save(farmer);
+        Farmer registeredFarmer = farmerRepository.save(farmer);
 
         publishUserRegistrationEvent(request, registeredFarmer);
 
@@ -122,7 +122,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthenticatedResponse getAuthenticatedUser(Farmer request) {
 
-        Farmer farmer = userRepository.findByIdWithRolesAndPermissions(request.getId())
+        Farmer farmer = farmerRepository.findByIdWithRolesAndPermissions(request.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
         return userMapper.toAuthenticatedResponse(farmer);

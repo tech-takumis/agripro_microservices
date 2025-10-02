@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final PcicRepository pcicRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PcicProducer pcicProducer;
@@ -35,7 +35,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public Pcic register(RegistrationRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (pcicRepository.existsByEmail(request.getEmail())) {
             throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
@@ -49,7 +49,7 @@ public class AuthService {
         Pcic pcic = userMapper.toUserEntity(request, roles);
         pcic.setRoles(roles);
 
-        Pcic registeredPcic = userRepository.save(pcic);
+        Pcic registeredPcic = pcicRepository.save(pcic);
 
         publishUserRegistrationEvent(request, pcic);
 
@@ -120,7 +120,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthenticatedResponse getAuthenticatedUser(Pcic request) {
 
-        Pcic pcic = userRepository.findByIdWithRolesAndPermissions(request.getId())
+        Pcic pcic = pcicRepository.findByIdWithRolesAndPermissions(request.getId())
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
 
         return userMapper.toAuthenticatedResponse(pcic);
