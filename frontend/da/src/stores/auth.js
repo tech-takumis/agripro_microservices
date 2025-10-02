@@ -107,7 +107,7 @@ export const useAuthStore = defineStore('auth', {
                 // Try to fetch user data first to check if authenticated
                 try {
                     await this.fetchUserData();
-                    
+
                     // Only fetch roles and permissions if user is authenticated
                     if (this.isAuthenticate) {
                         const roleStore = useRoleStore();
@@ -118,10 +118,10 @@ export const useAuthStore = defineStore('auth', {
                             roleStore.fetchRoles(),
                             permissionStore.fetchPermissions()
                         ]);
-                        
+
                         console.log('User store initialized with roles and permissions');
                     }
-                    
+
                     this.isInitialized = true;
                     return { success: true, user: this.userData };
                 } catch (error) {
@@ -141,7 +141,7 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await axios.get('/api/v1/auth/me');
+                const response = await axios.get('/api/v1/agriculture/auth/me');
 
                 this.userData = response.data;
                 console.log('User data fetched:', this.userData);
@@ -175,7 +175,7 @@ export const useAuthStore = defineStore('auth', {
             // Get the highest priority role (first one in the array by default)
             const primaryRole = roles[0];
             console.log('Primary role for redirect:', primaryRole, 'Available routes:', Object.keys(roleRoutes));
-            
+
             return roleRoutes[primaryRole] || { name: 'login' };
         },
 
@@ -266,7 +266,7 @@ export const useAuthStore = defineStore('auth', {
                 this.userData = {};
                 this.error = null;
                 this.loading = false;
-                
+
                 // Use the router instance to navigate to login
                 this.router.push({ name: 'login' });
             }
