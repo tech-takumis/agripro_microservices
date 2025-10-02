@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<Farmer, UUID> {
+public interface FarmerRepository extends JpaRepository<Farmer, UUID> {
     boolean existsByEmail(String email);
     Optional<Farmer> findByUsername(String username);
     @Query("SELECT u FROM Farmer u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")

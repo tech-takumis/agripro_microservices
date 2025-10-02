@@ -1,4 +1,4 @@
 package com.example.agriculture.controller;
 
-public class UserController {
+public class AgricultureController {
 }
