@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.constant.EventType;
+import com.hashjosh.kafkacommon.ApplicationDomainEvent;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor  // Add this annotation
 @AllArgsConstructor // Add this annotation
-public class ApplicationInsuranceContract {
+public class ApplicationInsuranceContract implements ApplicationDomainEvent {
     @JsonProperty("eventId")
     private UUID eventId;
 
@@ -43,4 +44,5 @@ public class ApplicationInsuranceContract {
 
     @JsonProperty("version")
     private Long version;
+
 }

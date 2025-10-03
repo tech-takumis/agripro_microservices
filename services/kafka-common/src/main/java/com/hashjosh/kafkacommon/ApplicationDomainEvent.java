@@ -1,11 +1,13 @@
 package com.hashjosh.kafkacommon;
 
-import java.time.Instant;
+import com.hashjosh.constant.EventType;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-public interface DomainEvent {
-
+public interface ApplicationDomainEvent {
     UUID getEventId();
-    Instant getOccurredAt();
-    String getEventType();
+    UUID getApplicationId();
+    LocalDateTime getOccurredAt();
+    EventType getEventType();
 }

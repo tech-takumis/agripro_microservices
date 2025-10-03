@@ -63,24 +63,24 @@ public class VerificationService {
         VerificationResult updatedVerification = verificationMapper.updateVerification(dto, savedVerification.get());
         VerificationResult result = verificationResultRepository.save(updatedVerification);
 
-        // Define statuses for which events should be published
-        if (dto.status().equals(ApplicationStatus.APPROVED_BY_MA.name()) ||
-            dto.status().equals(ApplicationStatus.REJECTED_BY_MA.name())) {
 
-            ApplicationVerificationContract contract = ApplicationVerificationContract.builder()
-                    .eventId(result.getEventId())
-                    .eventType(getEventType(dto.status()))
-                    .schemaVersion(1)
-                    .uploadedBy(result.getUploadedBy())
-                    .eventType(EventType.fromString(dto.status()))
-                    .applicationId(result.getApplicationId())
-                    .status(result.getStatus())
-                    .version(result.getVersion())
-                    .build();
+        ApplicationStatus status = result.getStatus();
+        EventType eventType = status.toEventType();
 
-            // Publish the event
-            verificationProducer.submitVerifiedApplication(contract);
-        }
+
+        ApplicationVerificationContract contract = ApplicationVerificationContract.builder()
+                .eventId(result.getEventId())
+                .eventType(getEventType(dto.status()))
+                .schemaVersion(1)
+                .uploadedBy(result.getUploadedBy())
+                .eventType(eventType)
+                .applicationId(result.getApplicationId())
+                .status(result.getStatus())
+                .version(result.getVersion())
+                .build();
+
+        // Publish the event
+        verificationProducer.publishEvent("application-events",contract);
 
         // Return verification response
         return verificationMapper.toVerificationResponse(updatedVerification);

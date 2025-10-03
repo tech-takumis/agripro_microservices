@@ -22,6 +22,6 @@ public class FileUploadException extends RuntimeException {
 
 
     public ExceptionResponse getExceptionResponse(){
-            return new ExceptionResponse(message, statusCode, path, timestamp);
+            return new ExceptionResponse(message, statusCode,timestamp);
     }
 }

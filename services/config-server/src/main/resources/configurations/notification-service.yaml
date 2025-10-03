@@ -24,8 +24,14 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.hashjosh.kafkacommon.*"
-        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: >
+            applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
+            applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
+            farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
+            pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+            agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract
 
   mail:
     host: smtp.gmail.com

@@ -38,7 +38,7 @@ export const useRoleStore = defineStore("rolePermission", {
         this.loading = true
         this.error = null
         
-        const response = await axios.get("/api/v1/roles")
+        const response = await axios.get("/api/v1/agriculture/roles")
         this.roles = response.data
         
         console.log("Roles fetched successfully:", this.roles)
@@ -65,7 +65,7 @@ export const useRoleStore = defineStore("rolePermission", {
         
         console.log("Creating role with payload:", JSON.stringify(payload, null, 2))
         
-        const response = await axios.post("/api/v1/roles", payload)
+        const response = await axios.post("/api/v1/agriculture/roles", payload)
         
         // Add the new role to the store
         this.roles.push(response.data)
@@ -92,7 +92,7 @@ export const useRoleStore = defineStore("rolePermission", {
           permissionIds: roleData.permissionIds || []
         };
         
-        const response = await axios.put(`/api/v1roles/${roleId}`, payload);
+        const response = await axios.put(`/api/v1/agriculture/roles/${roleId}`, payload);
         
         // Update the role in the roles array
         const index = this.roles.findIndex(role => role.id === roleId);
@@ -120,7 +120,7 @@ export const useRoleStore = defineStore("rolePermission", {
       this.error = null;
       
       try {
-        await axios.delete(`/api/v1/roles/${id}`);
+        await axios.delete(`/api/v1/agriculture/roles/${id}`);
         
         const index = this.roles.findIndex(role => role.id === id);
         if (index !== -1) {

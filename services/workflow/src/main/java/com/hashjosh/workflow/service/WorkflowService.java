@@ -29,7 +29,6 @@ public class WorkflowService {
 
     private final WorkflowStatusRepository workflowStatusRepository;
     private final WorkflowStatusHistoryMapper historyMapper;
-    private final UserServiceClient userServiceClient;
     private final ApplicationClient applicationClient;
     private final ApplicationTypeClient applicationTypeClient;
 
@@ -67,7 +66,6 @@ public class WorkflowService {
         );
 
         // Get user and application type using the token from security context
-        UserResponse user = userServiceClient.getUserById(history.getUpdatedBy(), token);
         WorkflowStatusHistory savedWorkflow = workflowStatusRepository.save(history);
 
         ApplicationTypeResponseDto applicationType = applicationTypeClient.findApplicationTypeById(
@@ -76,7 +74,7 @@ public class WorkflowService {
             null // No need for request object
         );
 
-        return historyMapper.toWorkflowResponse(savedWorkflow, user, applicationType);
+        return historyMapper.toWorkflowResponse(savedWorkflow, userDetails, applicationType);
     }
 
     public List<WorkflowResponseDto> findWorkflowByApplicationId(UUID applicationId) {
@@ -97,7 +95,6 @@ public class WorkflowService {
         List<WorkflowResponseDto> workflowResponseDtos = new ArrayList<>();
         for (WorkflowStatusHistory history : histories) {
             try {
-                UserResponse user = userServiceClient.getUserById(history.getUpdatedBy(), token);
                 ApplicationResponseDto application = applicationClient.getApplicationById(
                     token, 
                     history.getApplicationId(), 
@@ -108,7 +105,7 @@ public class WorkflowService {
                     application.applicationTypeId(), 
                     null
                 );
-                workflowResponseDtos.add(historyMapper.toWorkflowResponse(history, user, applicationType));
+                workflowResponseDtos.add(historyMapper.toWorkflowResponse(history, userDetails, applicationType));
 
             } catch (RuntimeException e) {
                 log.error("Failed to process workflow history {}: {}", history.getId(), e.getMessage());
