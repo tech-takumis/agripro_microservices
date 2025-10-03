@@ -1,7 +1,10 @@
-package com.hashjosh.pcic.entity;
+package com.hashjosh.application.model;
 
-import com.hashjosh.pcic.enums.ValidationStatus;
+
+import com.hashjosh.application.enums.BatchStatus;
 import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.GenerationType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -10,34 +13,34 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "validation_records")
+@Table(name = "batches")
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ValidationRecord {
-
+public class Batch {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "submission_id", nullable = false)
-    private UUID submissionId; // Maps to Application.id
+    @Column(name = "name", length = 50, nullable = false, unique = true)
+    private String name; // e.g., "2025-2026 A"
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate; // e.g., Feb 1
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate; // e.g., April 30
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private ValidationStatus status; // PENDING, VALIDATED, INVALID
-
-    @Column(name = "comments", length = 255)
-    private String comments; // Validation notes or rejection reason
+    private BatchStatus status; // OPEN, CLOSED, VERIFIED
 
     @CreationTimestamp
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Version
