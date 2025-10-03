@@ -7,12 +7,16 @@ public enum EventType {
 
     // General application events
     APPLICATION_SUBMITTED,
-    APPLICATION_CANCELLED_BY_USER,
+    APPLICATION_APPROVED,
+    APPLICATION_VERIFIED,
+    APPLICATION_CANCELLED,
 
     // Verification events
     APPLICATION_APPROVED_BY_MA,
     APPLICATION_REJECTED_BY_MA,
+    APPLICATION_UNDER_REVIEW_BY_MA,
     APPLICATION_APPROVED_BY_AEW,
+    APPLICATION_UNDER_REVIEW_BY_AEW,
     APPLICATION_REJECTED_BY_AEW,
 
     // Underwriter events
@@ -27,17 +31,8 @@ public enum EventType {
 
     // Insurance service events
     POLICY_ISSUED,
-    CLAIM_APPROVED;
+    CLAIM_APPROVED,
+    UNKNOWN
 
-    /**
-     * Utility method to map Kafka event types to EventType.
-     * Add mappings here if new event types are introduced.
-     */
-    public static EventType fromString(String eventType) {
-        try {
-            return EventType.valueOf(eventType.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Unknown event type: " + eventType);
-        }
-    }
+
 }

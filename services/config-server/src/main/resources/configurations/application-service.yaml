@@ -26,23 +26,20 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: false
+        spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract
+
     consumer:
-      group-id: application-service
+      group-id: notification-service
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.hashjosh.kafkacommon.*"
-        spring.json.use.type.headers: false
-
-token:
-  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
-  accessTokenExpirationMs: 14400000                # 4 hours
-  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
-  refreshTokenExpirationMs: 86400000               # 1 day
-  refreshTokenExpirationRememberMeMs: 345600000
-
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: >
+            applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
 
 eureka:
   client:
@@ -50,6 +47,13 @@ eureka:
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+
+token:
+  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+  accessTokenExpirationMs: 14400000                # 4 hours
+  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
+  refreshTokenExpirationMs: 86400000               # 1 day
+  refreshTokenExpirationRememberMeMs: 345600000
 
 management:
   endpoints:

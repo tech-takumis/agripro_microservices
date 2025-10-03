@@ -145,7 +145,10 @@ export const useAuthStore = defineStore('auth', {
 
                 this.userData = response.data;
                 console.log('User data fetched:', this.userData);
-                return this.userData;
+                return {
+                    status: true,
+                    data: response.data,
+                }
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
                 this.userData = {};

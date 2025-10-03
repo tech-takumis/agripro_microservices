@@ -24,7 +24,7 @@ export const useApplicationStore = defineStore("application", {
       try {
         console.log("Creating insurance application:", JSON.stringify(applicationData, null, 2))
 
-        const response = await axios.post("/insurances", applicationData)
+        const response = await axios.post("/applications", applicationData)
 
         console.log("Application created successfully:", response.data)
         return { success: true, data: response.data }
@@ -36,7 +36,7 @@ export const useApplicationStore = defineStore("application", {
 
     async fetchApplications() {
       try {
-        const response = await axios.get("/insurances")
+        const response = await axios.get("/applications")
         this.applications = response.data
         return { success: true, data: response.data }
       } catch (error) {
@@ -47,7 +47,7 @@ export const useApplicationStore = defineStore("application", {
 
     async fetchApplicationById(id) {
       try {
-        const response = await axios.get(`/insurances/${id}`)
+        const response = await axios.get(`/applications/${id}`)
         return { success: true, data: response.data }
       } catch (error) {
         console.error("Error fetching application:", error.response?.data || error.message)
@@ -57,7 +57,7 @@ export const useApplicationStore = defineStore("application", {
 
     async updateApplication(id, applicationData) {
       try {
-        const response = await axios.put(`/insurances/${id}`, applicationData)
+        const response = await axios.put(`/applications/${id}`, applicationData)
         
         // Update the application in the store
         const index = this.applications.findIndex(app => app.id === id)
@@ -74,7 +74,7 @@ export const useApplicationStore = defineStore("application", {
 
     async deleteApplication(id) {
       try {
-        await axios.delete(`/insurances/${id}`)
+        await axios.delete(`/applications/${id}`)
         
         // Remove the application from the store
         this.applications = this.applications.filter(app => app.id !== id)

@@ -1,5 +1,6 @@
 package com.hashjosh.verification.kafka;
 
+import com.hashjosh.kafkacommon.ApplicationDomainEvent;
 import com.hashjosh.kafkacommon.application.ApplicationVerificationContract;
 import com.hashjosh.verification.controller.VerificationController;
 import lombok.RequiredArgsConstructor;
@@ -14,18 +15,22 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class VerificationProducer {
-    private final KafkaTemplate<String, VerificationController> kafkaTemplate;
+    private final KafkaTemplate<String, ApplicationDomainEvent> kafkaTemplate;
 
+    public  void publishEvent(String topic,ApplicationDomainEvent event) {
+        log.info("Sending verification confirmation:: {}", event);
 
-    public void submitVerifiedApplication(ApplicationVerificationContract applicationVerificationContract) {
-        log.info("Sending verification confirmation:: {}", applicationVerificationContract);
-
-        Message<ApplicationVerificationContract> message =
-                MessageBuilder.withPayload(applicationVerificationContract)
-                        .setHeader(KafkaHeaders.TOPIC,"application-events")
-                        .build();
-
-        kafkaTemplate.send(message);
+        kafkaTemplate.send(MessageBuilder
+                .withPayload(event)
+                .setHeader(KafkaHeaders.TOPIC, topic)
+                .build())
+                .whenComplete((recordMetadata, ex) -> {
+                    if (ex == null) {
+                        log.info("Message sent successfully to topic {} with offset {}", recordMetadata.getRecordMetadata().topic(), recordMetadata.getRecordMetadata().offset());
+                    } else {
+                        log.error("Failed to send message: {}", ex.getMessage());
+                    }
+                });
     }
 
 }

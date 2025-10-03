@@ -21,16 +21,20 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.type.mapping: applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
         spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+              applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
     consumer:
-      group-id: verification-service
+      group-id: application-service
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.hashjosh.kafkacommon.*"
-        spring.json.use.type.headers: false
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: >
+                applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract
+
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

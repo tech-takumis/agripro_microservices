@@ -19,6 +19,6 @@ public class ApplicationException extends RuntimeException {
     }
 
     public ExceptionResponse getExceptionResponse() {
-        return new ExceptionResponse(message, statusCode, null, timestamp);
+        return new ExceptionResponse(message, statusCode,  timestamp);
     }
 }

@@ -6,6 +6,7 @@ import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.constant.EventType;
 import com.hashjosh.kafkacommon.application.ApplicationContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,41 +23,11 @@ public class ApplicationConsumer {
     private final ApplicationRepository applicationRepository;
 
     @KafkaListener(topics = "application-events")
-    public void consumeApplicationEvent(ApplicationContract contract) {
+    public void consumeSubmission(ApplicationSubmissionContract contract) {
         log.info("Application event received: {}", contract);
 
-        try{
-            switch (contract.getEventType()){
-                case  // Verification events
-                     APPLICATION_APPROVED_BY_MA,
-                     APPLICATION_REJECTED_BY_MA,
-                     APPLICATION_APPROVED_BY_AEW,
-                     APPLICATION_REJECTED_BY_AEW,
-
-                     // Underwriter events
-                     UNDER_REVIEW_BY_UNDERWRITER,
-                     APPLICATION_APPROVED_BY_UNDERWRITER,
-                     APPLICATION_REJECTED_BY_UNDERWRITER,
-
-                     // Adjuster events
-                     UNDER_REVIEW_BY_ADJUSTER,
-                     APPLICATION_APPROVED_BY_ADJUSTER,
-                     APPLICATION_REJECTED_BY_ADJUSTER,
-
-                     // Insurance service events
-                     POLICY_ISSUED,
-                     CLAIM_APPROVED -> handleApplicationChangeStatus(contract);
-                default -> log.error("Invalid event type: {}", contract);
-            }
-        }catch (Exception e){
-            log.error("❌ Failed to process application event: {}", contract, e);
-            throw  e;
-        }
-    }
-
-    private void handleApplicationChangeStatus(ApplicationContract contract) {
-
-        Application application = findApplicationById(contract.getApplicationId());
+        Application application = applicationRepository.findById(contract.getApplicationId())
+                        .orElseThrow(() -> new ApplicationNotFoundException("Application not found", HttpStatus.NOT_FOUND.value()));
 
         application.setStatus(contract.getStatus());
         applicationRepository.save(application);
@@ -64,12 +35,5 @@ public class ApplicationConsumer {
         log.info("Application {}: {}",contract.getStatus(), application);
     }
 
-    private Application findApplicationById(UUID applicationId) {
-        return  applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application not found with id "+ applicationId,
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Application consume does not exist"
-                ));
-    }
+
 }
