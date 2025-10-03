@@ -1,5 +1,6 @@
 package com.hashjosh.application.kafka;
 
+import com.hashjosh.kafkacommon.ApplicationDomainEvent;
 import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +15,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ApplicationProducer {
 
-    private final KafkaTemplate<String, ApplicationSubmissionContract> kafkaTemplate;
+    private final KafkaTemplate<String, ApplicationDomainEvent> kafkaTemplate;
 
-    public void submitApplication(ApplicationSubmissionContract applicationSubmissionContract) {
-        log.info("submitting application::: {}", applicationSubmissionContract);
+    public  void publishEvent(String topic,ApplicationDomainEvent event) {
+        log.info("submitting application::: {}", event);
 
-        kafkaTemplate.send("application-events",applicationSubmissionContract )
+        kafkaTemplate.send(MessageBuilder
+                        .withPayload(event)
+                        .setHeader(KafkaHeaders.TOPIC, topic)
+                        .build())
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         log.info("Message sent successfully to topic {} with offset {}", result.getRecordMetadata().topic(), result.getRecordMetadata().offset());

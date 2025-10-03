@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -199,8 +198,7 @@ public class ApplicationService {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException(
                         "Application not found!",
-                        HttpStatus.NOT_FOUND.value(),
-                        "/api/v1/applications/" + applicationId
+                        HttpStatus.NOT_FOUND.value()
                 ));
         return applicationMapper.toApplicationResponseDto(application);
     }
@@ -214,7 +212,7 @@ public class ApplicationService {
 
     public void publishApplicationStatus(Application application, EventType eventType, CustomUserDetails user) {
 
-        applicationProducer.submitApplication(
+        applicationProducer.publishEvent("application-events",
                 ApplicationSubmissionContract.builder()
                         .eventId(UUID.randomUUID())
                         .schemaVersion(1)
@@ -236,5 +234,13 @@ public class ApplicationService {
         return applicationRepository.findByApplicationTypeId(applicationTypeId)
                 .stream().map(applicationMapper::toApplicationResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    private Application findApplicationById(UUID applicationId) {
+        return  applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(
+                        "Application not found with id "+ applicationId,
+                        HttpStatus.BAD_REQUEST.value()
+                ));
     }
 }

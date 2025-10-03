@@ -64,8 +64,7 @@ public class ApplicationTypeService {
         return applicationTypeRepository.findById(id).orElseThrow(
                 () -> new ApplicationNotFoundException(
                         "Application type does not found",
-                        HttpStatus.NOT_FOUND.value(),
-                        HttpStatus.NOT_FOUND.getReasonPhrase()
+                        HttpStatus.NOT_FOUND.value()
                 )
         );
     };
@@ -74,8 +73,7 @@ public class ApplicationTypeService {
         return applicationTypeMapper.toApplicationResponse(applicationTypeRepository.findById(id)
                 .orElseThrow(() -> new ApplicationNotFoundException(
                         "Application type does not found",
-                        HttpStatus.NOT_FOUND.value(),
-                        HttpStatus.NOT_FOUND.getReasonPhrase()
+                        HttpStatus.NOT_FOUND.value()
                 )));
     }
 }

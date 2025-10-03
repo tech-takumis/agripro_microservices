@@ -208,18 +208,6 @@ const topPriorityVisits = computed(() => {
                         </div>
                     </div>
                 </div>
-
-                <div class="card">
-                    <div class="flex items-center">
-                        <div class="p-2 bg-purple-100 rounded-lg">
-                            <DollarSign class="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Program Budget</p>
-                            <p class="text-2xl font-bold text-gray-900">₱{{ stats.programBudget.toLocaleString() }}K</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Field Operations -->

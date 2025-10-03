@@ -22,9 +22,9 @@ import java.io.UnsupportedEncodingException;
 import java.time.format.DateTimeFormatter;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class ApplicationNotificationService {
+@RequiredArgsConstructor
+public class ApplicationService {
 
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;
@@ -48,7 +48,7 @@ public class ApplicationNotificationService {
 
             String emailContent = templateEngine.process("email/application-submitted", context);
 
-            // Create email notification payload
+
             EmailNotificationPayload emailPayload = new EmailNotificationPayload(
                     subject,
                     emailContent,
@@ -90,7 +90,7 @@ public class ApplicationNotificationService {
             helper.setSubject(subject);
             helper.setText(content, isHtml);
 
-             helper.setFrom(emailProperties.from(), emailProperties.senderName());
+            helper.setFrom(emailProperties.from(), emailProperties.senderName());
 
             mailSender.send(message);
         } catch (MessagingException e) {

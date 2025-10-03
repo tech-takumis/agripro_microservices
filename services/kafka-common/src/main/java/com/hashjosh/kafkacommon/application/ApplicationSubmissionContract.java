@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hashjosh.constant.ApplicationStatus;
 import com.hashjosh.constant.EventType;
+import com.hashjosh.kafkacommon.ApplicationDomainEvent;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicationSubmissionContract {
+public class ApplicationSubmissionContract implements ApplicationDomainEvent {
     @JsonProperty("eventId")
     private UUID eventId;
 
