@@ -20,3 +20,16 @@ Jwt Claim payload to all tenant:
                     ).toList()
 
             );
+
+
+ Kafka command:
+    Reset the consumer group's offset to skip old messages:
+        ->  docker exec kafka kafka-consumer-groups --bootstrap-server localhost:29092 --reset-offsets --to-latest --topic application-events --group insurance-service --execute
+    To delete a topic:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --delete --topic application-events
+    To list all topics:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --list
+    To describe a topic:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --describe --topic
+    To consume messages from a topic:
+        -> docker exec kafka kafka-console-consumer --bootstrap-server localhost:29092 --topic application

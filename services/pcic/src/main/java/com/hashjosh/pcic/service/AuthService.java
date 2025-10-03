@@ -68,7 +68,7 @@ public class AuthService {
                         .phoneNumber(savedPcic.getPhoneNumber())
                         .build();
 
-        pcicProducer.publishPcicRegistrationEvent(agricultureRegistrationContract);
+        pcicProducer.publishEvent("pcic-events",agricultureRegistrationContract);
     }
 
     public LoginResponse login(LoginRequest request,String clientIp, String userAgent) {

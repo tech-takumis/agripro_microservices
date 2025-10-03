@@ -72,7 +72,7 @@ public class AuthService {
                         .phoneNumber(savedAgriculture.getPhoneNumber())
                         .build();
 
-        agricultureProducer.publishAgricultureRegistrationEvent(agricultureRegistrationContract);
+        agricultureProducer.publishEvent("agriculture-events",agricultureRegistrationContract);
     }
 
     public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {

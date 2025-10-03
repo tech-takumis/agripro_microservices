@@ -2,7 +2,7 @@ package com.hashjosh.notification.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import com.hashjosh.notification.dto.EmailNotificationPayload;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.properties.EmailProperties;
@@ -32,18 +32,19 @@ public class ApplicationService {
     private final ObjectMapper objectMapper;
     private final EmailProperties emailProperties;
 
-    public void sendEmailNotification(ApplicationSubmissionContract applicationSubmissionContract) {
+    public void sendEmailNotification(ApplicationSubmittedEvent event) {
         try {
             // Prepare email content
             String subject = "Application Submitted Successfully";
 
+            // We need to query the user here!
 
-            String recipientEmail = applicationSubmissionContract.getGmail();
+            String recipientEmail = event.getGmail();
 
             // Create email content using Thymeleaf template
             Context context = new Context();
-            context.setVariable("applicationId", applicationSubmissionContract.getApplicationId());
-            context.setVariable("submissionDate", applicationSubmissionContract.getOccurredAt()
+            context.setVariable("applicationId", event.getSubmissionId());
+            context.setVariable("submissionDate", event.getSubmittedAt()
                     .format(DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")));
 
             String emailContent = templateEngine.process("email/application-submitted", context);
@@ -70,13 +71,13 @@ public class ApplicationService {
             notification.setStatus("SENT");
             notificationRepository.save(notification);
 
-            log.info("✅ Email notification sent for application ID: {}", applicationSubmissionContract.getApplicationId());
+            log.info("✅ Email notification sent for application ID: {}", event.getSubmissionId());
 
         } catch (Exception e) {
             log.error("❌ Failed to send email notification for application ID: {}",
-                    applicationSubmissionContract.getApplicationId(), e);
+                    event.getSubmissionId(), e);
             // Save failed notification
-            saveFailedNotification(applicationSubmissionContract, "Failed to send email: " + e.getMessage());
+            saveFailedNotification(event, "Failed to send email: " + e.getMessage());
             throw new RuntimeException("Failed to send email notification", e);
         }
     }
@@ -101,21 +102,21 @@ public class ApplicationService {
         }
     }
 
-    private void saveFailedNotification(ApplicationSubmissionContract contract, String errorMessage) {
+    private void saveFailedNotification(ApplicationSubmittedEvent contract, String errorMessage) {
         try {
             Notification<JsonNode> failedNotification = NotificationUtils.createNotification(
-                    contract.getUploadedBy().toString(),
+                    contract.getUserId().toString(),
                     "EMAIL",
                     "Failed: Application Submission Notification",
                     objectMapper.createObjectNode()
                             .put("error", errorMessage)
-                            .put("applicationId", contract.getApplicationId().toString())
+                            .put("applicationId", contract.getSubmittedAt().toString())
             );
             failedNotification.setStatus("FAILED");
             notificationRepository.save(failedNotification);
         } catch (Exception e) {
             log.error("❌ Failed to save failed notification for application ID: {}",
-                    contract.getApplicationId(), e);
+                    contract.getSubmissionId(), e);
         }
     }
 }

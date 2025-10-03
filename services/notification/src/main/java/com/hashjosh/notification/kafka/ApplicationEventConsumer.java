@@ -1,7 +1,6 @@
 package com.hashjosh.notification.kafka;
 
-import com.hashjosh.constant.EventType;
-import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import com.hashjosh.notification.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,16 +14,14 @@ public class ApplicationEventConsumer {
 
     private final ApplicationService applicationService;
 
-    @KafkaListener(topics = "application-events", groupId = "application-submission-event")
-    public void consumeApplicationSubmissionEvent(ApplicationSubmissionContract applicationSubmissionContract) {
+    @KafkaListener(topics = "application-events")
+    public void consumeApplicationSubmissionEvent(ApplicationSubmittedEvent event) {
         try {
-            log.info("Processing application event: {}", applicationSubmissionContract);
+            log.info("Processing application event: {}", event);
 
-            if (EventType.APPLICATION_SUBMITTED == applicationSubmissionContract.getEventType()) {
-                applicationService.sendEmailNotification(applicationSubmissionContract);
-            }
+            applicationService.sendEmailNotification(event);
         } catch (Exception e) {
-            log.error("❌ Failed to process application event: {}", applicationSubmissionContract, e);
+            log.error("❌ Failed to process application event: {}", event, e);
             // Consider adding retry logic or dead-letter queue handling here
             throw e;
         }

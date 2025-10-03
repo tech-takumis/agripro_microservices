@@ -28,7 +28,20 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
+
+    consumer:
+      group-id: agriculture-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+        spring.json.type.mapping: >
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
+          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
+          applicationInsuranceContract:com.hashjosh.kafkacommon.application.ApplicationInsuranceContract
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
