@@ -28,7 +28,8 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract
+          
 
     consumer:
       group-id: farmer-service
@@ -39,7 +40,7 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
         spring.json.type.mapping: >
-          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

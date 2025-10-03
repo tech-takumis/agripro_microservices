@@ -28,7 +28,7 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent
 
     consumer:
       group-id: notification-service
@@ -39,8 +39,7 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
         spring.json.type.mapping: >
-          applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
-          applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent
 
 eureka:
   client:

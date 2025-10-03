@@ -1,6 +1,6 @@
-package com.example.agriculture.dto;
+package com.hashjosh.application.clients;
 
-import com.example.agriculture.enums.BatchStatus;
+import com.hashjosh.application.enums.BatchStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

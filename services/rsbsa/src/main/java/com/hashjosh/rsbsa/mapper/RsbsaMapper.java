@@ -1,10 +1,10 @@
-package com.hashjosh.rsbsa;
+package com.hashjosh.rsbsa.mapper;
 
 
 
+import com.hashjosh.rsbsa.entity.Rsbsa;
 import com.hashjosh.rsbsa.dto.RsbsaRequestDto;
 import com.hashjosh.rsbsa.dto.RsbsaResponseDto;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

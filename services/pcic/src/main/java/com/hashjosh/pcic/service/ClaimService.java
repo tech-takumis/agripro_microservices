@@ -36,24 +36,14 @@ public class ClaimService {
         savedClaim.setClaimAmount(claim.claimAmount());
         savedClaim.setPayoutStatus(claim.payoutStatus());
 
-        if(claim.payoutStatus() != ClaimStatus.REJECTED &&
-                claim.payoutStatus() != ClaimStatus.PENDING) {
+        Policy policy = new Policy();
 
-            savedClaim.setRejectionReason(claim.rejectionReason());
+        policy.setSubmissionId(savedClaim.getSubmissionId());
+        policy.setPolicyNumber(UUID.randomUUID().toString());
+        policy.setStatus(PolicyStatus.ACTIVE);
+        policy.setCoverageAmount(savedClaim.getClaimAmount());
 
-            Policy policy = new Policy();
-
-            policy.setApplicationId(savedClaim.getApplicationId());
-            policy.setPolicyNumber(UUID.randomUUID().toString());
-            policy.setStatus(PolicyStatus.ACTIVE);
-            policy.setCoverageAmount(savedClaim.getClaimAmount());
-
-            Policy savedPolicy = policyRepository.save(policy);
-
-            log.info("Policy created successfully for claim {} and policy number {}",claimId, savedPolicy.getPolicyNumber());
-        }else {
-            savedClaim.setRejectionReason("No Rejection Reason");
-        }
+        Policy savedPolicy = policyRepository.save(policy);
 
         claimRepository.save(savedClaim);
 

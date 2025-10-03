@@ -33,3 +33,32 @@ Jwt Claim payload to all tenant:
         -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --describe --topic
     To consume messages from a topic:
         -> docker exec kafka kafka-console-consumer --bootstrap-server localhost:29092 --topic application
+
+
+  Docker command:
+    To stop and remove all containers, networks, and volumes defined in the docker-compose file:
+        -> docker-compose down -v
+    To stop and remove all containers, networks, and volumes defined in the docker-compose file:
+        -> docker-compose up -d --build
+    To view the logs of a specific service (e.g., kafka):
+        -> docker-compose logs -f kafka
+    To list all running containers:
+        -> docker ps
+    To access the shell of a running container (e.g., kafka):
+        -> docker exec -it kafka bash
+    To remove all stopped containers, unused networks, and dangling images:
+        -> docker system prune -a
+    To start or stop a specific docker compose file service:
+        -> docker-compose start <service_name> up -d
+        -> docker-compose stop <service_name> down
+    To view the logs of a specific service (e.g., kafka):
+        -> docker-compose logs -f <service_name>
+
+    To up or down a specific docker compose file service:
+        -> docker compose up -d -f docker-compose.local.yaml
+        -> docker-compose down -f docker-compose.local.yaml
+
+
+Kafka notes:
+
+Application.id = submissionId

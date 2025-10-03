@@ -1,4 +1,4 @@
-package com.hashjosh.rsbsa.dto;
+package com.hashjosh.farmer.clients;
 
 public record RsbsaResponseDto(
         String rsbsaId,

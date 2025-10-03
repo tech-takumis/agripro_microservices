@@ -1,7 +1,7 @@
-package com.hashjosh.application.model;
+package com.example.agriculture.entity;
 
 
-import com.hashjosh.application.enums.BatchStatus;
+import com.example.agriculture.enums.BatchStatus;
 import jakarta.persistence.*;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.GenerationType;

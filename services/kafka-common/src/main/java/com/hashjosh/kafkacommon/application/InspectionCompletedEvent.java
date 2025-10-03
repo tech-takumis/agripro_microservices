@@ -8,10 +8,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Builder
+@Data
 @Getter
 @Setter
-@RequiredArgsConstructor
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InspectionCompletedEvent implements ApplicationDomainEvent {
     @JsonProperty("submissionId")
     private UUID submissionId;
@@ -31,6 +33,4 @@ public class InspectionCompletedEvent implements ApplicationDomainEvent {
     @JsonProperty("createdAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime createdAt;
-
-
 }

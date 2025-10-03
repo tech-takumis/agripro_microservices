@@ -2,6 +2,7 @@ package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.clients.BatchResponse;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.*;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,7 +99,8 @@ public class ApplicationService {
 
     public ApplicationSubmissionResponse processSubmission(
             ApplicationSubmissionDto submission,
-            CustomUserDetails userDetails) {
+            CustomUserDetails userDetails,
+            BatchResponse batch) {
 
         // 1. Validate application type exists
         ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
@@ -135,6 +138,7 @@ public class ApplicationService {
 
         // 4. Process and save the application
         Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
+        application.setBatchId(batch.getId());
         Application savedApplication = applicationRepository.save(application);
 
         publishApplicationStatus(savedApplication, userDetails);

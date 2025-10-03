@@ -3,6 +3,8 @@ package com.hashjosh.notification.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
+import com.hashjosh.notification.clients.FarmerResponse;
+import com.hashjosh.notification.clients.FarmerServiceClient;
 import com.hashjosh.notification.dto.EmailNotificationPayload;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.properties.EmailProperties;
@@ -31,6 +33,7 @@ public class ApplicationService {
     private final JavaMailSender mailSender;
     private final ObjectMapper objectMapper;
     private final EmailProperties emailProperties;
+    private final FarmerServiceClient farmerServiceClient;
 
     public void sendEmailNotification(ApplicationSubmittedEvent event) {
         try {
@@ -38,9 +41,10 @@ public class ApplicationService {
             String subject = "Application Submitted Successfully";
 
             // We need to query the user here!
+            FarmerResponse farmer = farmerServiceClient
+                    .getFarmerById(event.getUserId());
 
-            String recipientEmail = event.getGmail();
-
+            String recipientEmail = farmer.getEmail();
             // Create email content using Thymeleaf template
             Context context = new Context();
             context.setVariable("applicationId", event.getSubmissionId());

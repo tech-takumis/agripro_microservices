@@ -3,7 +3,6 @@ package com.hashjosh.notification.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
-import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.repository.NotificationRepository;
 import com.hashjosh.notification.utils.NotificationUtils;
@@ -27,6 +26,7 @@ public class AgricultureRegistrationNotificationService {
 
     private final TemplateEngine templateEngine;
     private final JavaMailSender mailSender;
+    private final EmailService emailService;
     private final NotificationRepository notificationRepository;
     public void sendAgricultureRegistrationEmailNotification(AgricultureRegistrationContract event) {
         try {
@@ -55,7 +55,7 @@ public class AgricultureRegistrationNotificationService {
             );
 
             // Send email
-            sendEmail(recipientEmail, subject, emailContent, true);
+            emailService.sendEmail(recipientEmail, subject, emailContent, true);
 
             // Update notification status to SENT
             notification.setStatus("SENT");
@@ -69,23 +69,6 @@ public class AgricultureRegistrationNotificationService {
             throw new RuntimeException("Failed to send registration email notification", e);
         }
     }
-
-    private void sendEmail(String to, String subject, String content, boolean isHtml) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(content, isHtml);
-
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            log.error("❌ Error sending email to {}: {}", to, e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
-        }
-    }
-
 
     private void saveFailedFarmerNotification(AgricultureRegistrationContract contract, String errorMessage) {
         try {

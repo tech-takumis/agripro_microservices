@@ -2,14 +2,17 @@ package com.hashjosh.kafkacommon.application;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hashjosh.kafkacommon.ApplicationDomainEvent;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Builder
+@Data
 @Getter
-@RequiredArgsConstructor
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class VerificationCompletedEvent implements ApplicationDomainEvent {
     @JsonProperty("submissionId")
     private UUID submissionId;

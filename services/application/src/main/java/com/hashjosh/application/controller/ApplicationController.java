@@ -1,6 +1,8 @@
 package com.hashjosh.application.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.clients.AgricultureServiceClient;
+import com.hashjosh.application.clients.BatchResponse;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
@@ -29,6 +31,7 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
     private final ObjectMapper objectMapper;
+    private AgricultureServiceClient agricultureServiceClient;
 
     @PostMapping("/submit")
     @PreAuthorize("isAuthenticated()")
@@ -37,6 +40,8 @@ public class ApplicationController {
             HttpServletRequest request) {
 
         try {
+            BatchResponse batch = agricultureServiceClient.getOpenBatch();
+
             // Get the current user from security context
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
                     .getAuthentication()
@@ -45,7 +50,8 @@ public class ApplicationController {
             // Process the submission
             ApplicationSubmissionResponse response = applicationService.processSubmission(
                     submission,
-                    userDetails
+                    userDetails,
+                    batch
             );
 
             // Return appropriate response

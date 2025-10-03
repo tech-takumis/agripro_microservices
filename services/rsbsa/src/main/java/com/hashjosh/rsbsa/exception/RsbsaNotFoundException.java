@@ -1,5 +1,6 @@
-package com.hashjosh.rsbsa;
+package com.hashjosh.rsbsa.exception;
 
+import com.hashjosh.rsbsa.dto.ExceptionResponse;
 import lombok.Getter;
 import lombok.Setter;
 

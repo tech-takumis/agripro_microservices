@@ -9,10 +9,9 @@ public class ClaimMapper {
     public ClaimResponse toClaimResponse(Claim savedClaim) {
         return new ClaimResponse(
             savedClaim.getId(),
-                savedClaim.getApplicationId(),
+                savedClaim.getSubmissionId(),
                 savedClaim.getClaimAmount(),
-                savedClaim.getPayoutStatus(),
-                savedClaim.getRejectionReason()
+                savedClaim.getPayoutStatus()
         );
     }
 }

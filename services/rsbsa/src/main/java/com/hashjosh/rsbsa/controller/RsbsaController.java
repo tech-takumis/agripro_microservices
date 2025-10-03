@@ -1,5 +1,6 @@
-package com.hashjosh.rsbsa;
+package com.hashjosh.rsbsa.controller;
 
+import com.hashjosh.rsbsa.service.RsbsaService;
 import com.hashjosh.rsbsa.dto.RsbsaRequestDto;
 import com.hashjosh.rsbsa.dto.RsbsaResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/rsbsa")
@@ -29,11 +29,5 @@ public class RsbsaController {
         return new ResponseEntity<>(rsbsaService.findAll(),HttpStatus.FOUND);
     }
 
-    @GetMapping("/public/{rsbsa-id}")
-    public ResponseEntity<RsbsaResponseDto> findByRsbsaId(
-            @PathVariable("rsbsa-id") String rsbaId,
-            HttpServletRequest request
-            ){
-        return new ResponseEntity<>(rsbsaService.findByRsbsaId(rsbaId,request),HttpStatus.OK);
-    };
+
 }

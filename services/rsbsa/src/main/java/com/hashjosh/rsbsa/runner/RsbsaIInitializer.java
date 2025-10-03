@@ -1,9 +1,9 @@
-package com.hashjosh.rsbsa;
+package com.hashjosh.rsbsa.runner;
 
+import com.hashjosh.rsbsa.entity.Rsbsa;
+import com.hashjosh.rsbsa.repository.RsbsaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;

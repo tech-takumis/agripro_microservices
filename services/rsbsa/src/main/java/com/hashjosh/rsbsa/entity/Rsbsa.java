@@ -1,4 +1,4 @@
-package com.hashjosh.rsbsa;
+package com.hashjosh.rsbsa.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

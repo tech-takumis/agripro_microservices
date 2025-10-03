@@ -2,6 +2,7 @@ package com.example.agriculture.handler;
 
 import com.example.agriculture.dto.ExceptionResponse;
 import com.example.agriculture.exception.ApplicationNotFoundException;
+import com.example.agriculture.exception.BatchException;
 import com.example.agriculture.exception.TokenNotFoundException;
 import com.example.agriculture.exception.VerificationException;
 import org.springframework.http.HttpStatus;
@@ -27,5 +28,9 @@ public class VerificationExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getExceptionResponse());
     }
 
+    @ExceptionHandler(BatchException.class)
+    public ResponseEntity<String> batchException(BatchException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
 
 }

@@ -1,4 +1,4 @@
-package com.example.agriculture.config;
+package com.hashjosh.farmer.config;
 
 
 import lombok.RequiredArgsConstructor;
