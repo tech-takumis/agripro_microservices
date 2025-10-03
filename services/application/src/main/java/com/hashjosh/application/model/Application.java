@@ -31,9 +31,6 @@ public class Application implements Serializable {
     @JsonProperty("id")
     private UUID id; // Unique per submission, serves as submissionId
 
-    @Column(name = "batch_id", nullable = false)
-    @JsonProperty("batchId")
-    private UUID batchId; // Links to Batch in Agriculture
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_type_id", nullable = false)

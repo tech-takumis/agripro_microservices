@@ -23,17 +23,14 @@ public class InspectionRecord {
     private UUID id;
 
     @Column(name = "submission_id", nullable = false)
-    private UUID submissionId; // Maps to Application.id
-
-    @Column(name = "batch_id", nullable = false)
-    private UUID batchId; // Links to Batch
+    private UUID submissionId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private InspectionStatus status; // PENDING, COMPLETED, INVALID
+    private InspectionStatus status;
 
     @Column(name = "comments", length = 255)
-    private String comments; // Inspection/validation notes
+    private String comments;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -1,8 +1,6 @@
 package com.hashjosh.application.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.clients.AgricultureServiceClient;
-import com.hashjosh.application.clients.BatchResponse;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
@@ -17,9 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,8 +26,6 @@ import java.util.UUID;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    private final ObjectMapper objectMapper;
-    private AgricultureServiceClient agricultureServiceClient;
 
     @PostMapping("/submit")
     @PreAuthorize("isAuthenticated()")
@@ -40,7 +34,6 @@ public class ApplicationController {
             HttpServletRequest request) {
 
         try {
-            BatchResponse batch = agricultureServiceClient.getOpenBatch();
 
             // Get the current user from security context
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
@@ -50,8 +43,7 @@ public class ApplicationController {
             // Process the submission
             ApplicationSubmissionResponse response = applicationService.processSubmission(
                     submission,
-                    userDetails,
-                    batch
+                    userDetails
             );
 
             // Return appropriate response

@@ -22,8 +22,6 @@ public class VerificationRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "batch_id", nullable = false)
-    private UUID batchId; // Links to Batch
 
     @Column(name = "uploaded_by", nullable = false)
     private UUID uploadedBy;
