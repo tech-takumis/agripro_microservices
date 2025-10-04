@@ -29,5 +29,13 @@ public class RsbsaController {
         return new ResponseEntity<>(rsbsaService.findAll(),HttpStatus.FOUND);
     }
 
+    @GetMapping("/{rsbsa-id}")
+    public ResponseEntity<RsbsaResponseDto> findByRsbsaId(
+            @PathVariable("rsbsa-id") String rsbaId,
+            HttpServletRequest request
+    ){
+        return new ResponseEntity<>(rsbsaService.findByRsbsaId(rsbaId,request), HttpStatus.OK);
+    };
+
 
 }

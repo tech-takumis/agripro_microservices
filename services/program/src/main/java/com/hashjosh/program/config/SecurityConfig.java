@@ -19,7 +19,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(
+                                "/actuator/**",
+                                "/api/v1/programs/**",
+                                "/api/v1/schedules/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

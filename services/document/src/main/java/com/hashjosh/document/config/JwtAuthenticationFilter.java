@@ -23,36 +23,67 @@ import java.util.*;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TrustedConfig trustedConfig;
+    private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+            // Allow internal service access without JWT
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            new CustomUserDetails(
+                                    null, // No token
+                                    "internal-service-" + internalServiceHeader, // Unique userId
+                                    internalServiceHeader, // Use service ID as username
+                                    null, null, null, null, // No firstname, lastname, email, phone
+                                    Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                            ),
+                            null,
+                            Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                    );
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+
+        // JWT validation for non-internal requests
         String authHeader = request.getHeader("Authorization");
-
-        String token = authHeader.substring(7);
-
-        if(token.trim().isEmpty()){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             response.setContentType("application/json");
             response.getWriter().write(
-                    """
-                            "message": "Unauthorized - Invalid or null token"
-                            """
+                    "{\"message\": \"Unauthorized - Missing or invalid Authorization header\"}"
             );
             response.getWriter().flush();
             return;
         }
 
+        String token = authHeader.substring(7);
+        if (token.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"message\": \"Unauthorized - Invalid or null token\"}"
+            );
+            response.getWriter().flush();
+            return;
+        }
+
+
+
+        // NOTE: I THINK THIS IS UNNECESSARY SINCE MY GATEWAY ALREADY IMPLEMENTS
+        // TOKEN RENEWAL IF THE TOKEN EXPIRED
         if (!jwtService.validateToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write(
-                    """
-                    {
-                      "message": "Unauthorized: invalid or expired token"
-                    }
-                    """
+                    "{\"message\": \"Unauthorized: invalid or expired token\"}"
             );
             response.getWriter().flush();
-            return; // stop filter chain
+            return;
         }
 
         Claims claims = jwtService.getAllClaims(token);
@@ -65,50 +96,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         List<String> claimRoles = claims.get("roles", List.class);
         List<String> claimPermission = claims.get("permissions", List.class);
 
-
         Set<SimpleGrantedAuthority> roles = new HashSet<>();
-
-        if(claimRoles != null){
-            for(String role : claimRoles){
-                roles.add(new SimpleGrantedAuthority("ROLE_"+role));
+        if (claimRoles != null) {
+            for (String role : claimRoles) {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role));
             }
         }
-
-        if(claimPermission != null){
-            for(String permission : claimPermission){
+        if (claimPermission != null) {
+            for (String permission : claimPermission) {
                 roles.add(new SimpleGrantedAuthority(permission));
             }
         }
 
-
         CustomUserDetails userDetails = new CustomUserDetails(
-                token,
-                userId,
-                username,
-                firstname,
-                lastname,
-                email,
-                phone,
-                roles
+                token, userId, username, firstname, lastname, email, phone, roles
         );
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        roles
+                        userDetails, null, roles
                 );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-
-        try{
+        try {
             filterChain.doFilter(request, response);
-        }finally {
+        } finally {
             SecurityContextHolder.clearContext();
+        }
+
+
+
+        if (!jwtService.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    """
+                    {
+                      "message": "Unauthorized: invalid or expired token"
+                    }
+                    """
+            );
+            response.getWriter().flush();
         }
     }
 }

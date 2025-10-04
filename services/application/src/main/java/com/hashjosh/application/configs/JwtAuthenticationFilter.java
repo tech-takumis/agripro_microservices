@@ -28,15 +28,11 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final TrustedConfig trustedConfig;
-
-
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        // Log request for debugging
-
         // Check for internal service header
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
         if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {

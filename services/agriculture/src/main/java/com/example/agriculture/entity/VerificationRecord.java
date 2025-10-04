@@ -22,12 +22,14 @@ public class VerificationRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "submission_id", nullable = false)
+    private UUID submissionId; // Maps to Application.id
 
     @Column(name = "uploaded_by", nullable = false)
     private UUID uploadedBy;
 
     @Column(name = "verification_type", length = 50)
-    private String verificationType; // e.g., "Batch Verification"
+    private String verificationType; // e.g., "Application Verification"
 
     @Column(name = "report", length = 255)
     private String report;

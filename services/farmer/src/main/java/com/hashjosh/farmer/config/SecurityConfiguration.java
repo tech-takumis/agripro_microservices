@@ -33,9 +33,7 @@ public class SecurityConfiguration {
                                 "/actuator/**",
 
                                 // Public Farmer Endpoint
-                                "/api/v1/public/farmer"
-
-
+                                "/api/v1/farmer/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/farmer/auth/me","/api/v1/farmer/auth/logout").authenticated()
                         .anyRequest().authenticated()

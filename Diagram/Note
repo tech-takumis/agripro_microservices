@@ -55,7 +55,7 @@ Jwt Claim payload to all tenant:
         -> docker-compose logs -f <service_name>
 
     To up or down a specific docker compose file service:
-        -> docker compose up -d -f docker-compose.local.yaml
+        -> docker compose -f docker-compose.local.yaml up -d
         -> docker-compose down -f docker-compose.local.yaml
 
 

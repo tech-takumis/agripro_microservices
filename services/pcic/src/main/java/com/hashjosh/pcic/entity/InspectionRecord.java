@@ -23,19 +23,21 @@ public class InspectionRecord {
     private UUID id;
 
     @Column(name = "submission_id", nullable = false)
-    private UUID submissionId;
+    private UUID submissionId; // Maps to Application.id
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private InspectionStatus status;
+    private InspectionStatus status; // PENDING, COMPLETED, INVALID
 
     @Column(name = "comments", length = 255)
-    private String comments;
+    private String comments; // Inspection/validation notes
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Version
