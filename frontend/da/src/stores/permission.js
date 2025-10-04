@@ -30,7 +30,7 @@ export const usePermissionStore = defineStore('permission', {
             this.error = null;
 
             try {
-                const response = await axios.get('/api/v1/permissions');
+                const response = await axios.get('/api/v1/agriculture/permissions');
                 this.permissions = response.data;
                 return { success: true, data: response.data };
             } catch (error) {
@@ -47,7 +47,7 @@ export const usePermissionStore = defineStore('permission', {
             this.error = null;
 
             try {
-                const response = await axios.get(`/api/v1/permissions/${id}`);
+                const response = await axios.get(`/api/v1/agriculture/permissions/${id}`);
                 this.currentPermission = response.data;
                 return { success: true, data: response.data };
             } catch (error) {
@@ -64,7 +64,7 @@ export const usePermissionStore = defineStore('permission', {
             this.error = null;
 
             try {
-                const response = await axios.post('/api/v1/permissions', {
+                const response = await axios.post('/api/v1/agriculture/permissions', {
                     name: permissionData.name,
                     description: permissionData.description
                 });
@@ -85,7 +85,7 @@ export const usePermissionStore = defineStore('permission', {
             this.error = null;
 
             try {
-                const response = await axios.put(`/api/v1/permissions/${id}`, {
+                const response = await axios.put(`/api/v1/agriculture/permissions/${id}`, {
                     name: updateData.name,
                     description: updateData.description
                 });
@@ -114,7 +114,7 @@ export const usePermissionStore = defineStore('permission', {
             this.error = null;
 
             try {
-                await axios.delete(`/api/v1/permissions/${id}`);
+                await axios.delete(`/api/v1/agriculture/permissions/${id}`);
 
                 const index = this.permissions.findIndex(p => p.id === id);
                 if (index !== -1) {

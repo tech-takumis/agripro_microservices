@@ -19,20 +19,10 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.configurationSource(
-                        request -> {
-                            var config = new CorsConfiguration();
-                            config.setAllowCredentials(true);
-                            config.addAllowedOrigin("http://localhost:3000");
-                            config.addAllowedHeader("*");
-                            config.addAllowedMethod("*");
-                            return config;
-
-                        }
-                ))
+                .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->{
-                    authorizeRequests.requestMatchers("/api/v1/rsbsa/public/**").permitAll();
+                    authorizeRequests.requestMatchers("/api/v1/rsbsa/**").permitAll();
                     authorizeRequests.anyRequest().authenticated();
                 })
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

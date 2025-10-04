@@ -145,7 +145,10 @@ export const useAuthStore = defineStore('auth', {
 
                 this.userData = response.data;
                 console.log('User data fetched:', this.userData);
-                return this.userData;
+                return {
+                    status: true,
+                    data: response.data,
+                }
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
                 this.userData = {};
@@ -200,7 +203,7 @@ export const useAuthStore = defineStore('auth', {
 
                 if (loginResponse.status === 200) {
                     // Fetch the authenticated user
-                    const userResponse = await axios.get('/api/v1/auth/me');
+                    const userResponse = await axios.get('/api/v1/agriculture/auth/me');
 
                     if (userResponse.status === 200) {
                         this.userData = userResponse.data;

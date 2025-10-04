@@ -15,9 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +26,6 @@ import java.util.UUID;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    private final ObjectMapper objectMapper;
 
     @PostMapping("/submit")
     @PreAuthorize("isAuthenticated()")
@@ -37,6 +34,7 @@ public class ApplicationController {
             HttpServletRequest request) {
 
         try {
+
             // Get the current user from security context
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
                     .getAuthentication()

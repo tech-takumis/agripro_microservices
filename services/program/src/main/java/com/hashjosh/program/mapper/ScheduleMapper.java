@@ -1,7 +1,7 @@
 package com.hashjosh.program.mapper;
 
-import com.hashjosh.program.dto.ScheduleRequestDto;
-import com.hashjosh.program.dto.ScheduleResponseDto;
+import com.hashjosh.constant.program.dto.ScheduleRequestDto;
+import com.hashjosh.constant.program.dto.ScheduleResponseDto;
 import com.hashjosh.program.entity.Schedule;
 import org.springframework.stereotype.Service;
 

@@ -20,11 +20,8 @@
         <module>discovery-server</module>
         <module>document</module>
         <module>gateway</module>
-        <module>insurance</module>
         <module>jwtshareable</module>
         <module>kafka-common</module>
-        <module>verification</module>
-        <module>workflow</module>
         <module>rsbsa</module>
         <module>program</module>
     </modules>
@@ -38,16 +35,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.shared-library</groupId>
-                <artifactId>jwtshareable</artifactId>
-                <version>1.0.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.shared-library</groupId>
-                <artifactId>kafka-common</artifactId>
-                <version>1.0.0</version>
-            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>

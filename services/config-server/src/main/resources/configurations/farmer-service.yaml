@@ -26,7 +26,21 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: false
+        spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract
+          
+
+    consumer:
+      group-id: farmer-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: >
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
@@ -35,6 +49,17 @@ token:
   refreshTokenExpirationMs: 86400000               # 1 day
   refreshTokenExpirationRememberMeMs: 345600000
 
+
+trusted:
+  internal-service-ids:
+    - agriculture-service
+    - notification-service
+    - farmer-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service
 
 eureka:
   client:

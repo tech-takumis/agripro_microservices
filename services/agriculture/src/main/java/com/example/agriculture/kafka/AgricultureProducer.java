@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AgricultureProducer {
 
-    private final KafkaTemplate<String, AgricultureRegistrationContract> template;
+    private final KafkaTemplate<String, Object> template;
 
-    public void publishAgricultureRegistrationEvent(AgricultureRegistrationContract agricultureRegistrationContract){
-        Message<AgricultureRegistrationContract> contract = MessageBuilder
-                .withPayload(agricultureRegistrationContract)
-                .setHeader(KafkaHeaders.TOPIC, "agriculture-event")
+    public <T> void publishEvent(String topic, T event){
+        Message<T> contract = MessageBuilder
+                .withPayload(event)
+                .setHeader(KafkaHeaders.TOPIC, topic)
                 .build();
 
         template.send(contract);

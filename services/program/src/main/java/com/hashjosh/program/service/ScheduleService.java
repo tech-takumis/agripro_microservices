@@ -1,8 +1,8 @@
 package com.hashjosh.program.service;
 
-import com.hashjosh.program.dto.ScheduleRequestDto;
-import com.hashjosh.program.dto.ScheduleResponseDto;
-import com.hashjosh.program.dto.ScheduleUpdateRequestDto;
+import com.hashjosh.constant.program.dto.ScheduleRequestDto;
+import com.hashjosh.constant.program.dto.ScheduleResponseDto;
+import com.hashjosh.constant.program.dto.ScheduleUpdateRequestDto;
 import com.hashjosh.program.mapper.ScheduleMapper;
 import com.hashjosh.program.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;

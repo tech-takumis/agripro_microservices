@@ -109,20 +109,11 @@ public class DocumentController {
     }
 
     @GetMapping
-//    @PreAuthorize("hasRole('ADMIN')")
     public Page<DocumentResponse> getAllDocuments(Pageable pageable) {
         return documentService.findAll(pageable);
     }
 
-    @DeleteMapping("/{documentId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize("hasAnyRole('ADMIN', 'FARMER')")
-    public void deleteDocument(@PathVariable UUID documentId) 
-            throws ServerException, InsufficientDataException, ErrorResponseException,
-            IOException, NoSuchAlgorithmException, InvalidKeyException,
-            InvalidResponseException, XmlParserException, InternalException {
-        documentService.delete(documentId);
-    }
+
 
     @GetMapping("/{documentId}/metadata")
 //    @PreAuthorize("isAuthenticated()")

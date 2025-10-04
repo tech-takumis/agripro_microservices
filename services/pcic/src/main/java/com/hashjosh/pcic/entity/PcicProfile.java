@@ -2,7 +2,10 @@ package com.hashjosh.pcic.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -10,6 +13,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_profile")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PcicProfile {
 
     @Id
@@ -34,15 +40,15 @@ public class PcicProfile {
     private String headOfficeAddress;
     @Column(name = "phone")
     private String phone;
-    @Column(name = "email")
-    private String email;
+    @Column(name = "pcic_email")
+    private String pcicEmail;
     @Column(name = "website")
     private String website; // e.g., https://pcic.gov.ph
 
     // Audit fields
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    @OneToOne(mappedBy = "pcicProfile")
+    @OneToOne(mappedBy = "pcicProfile",cascade = CascadeType.PERSIST)
     @JsonIgnore
     private Pcic pcic;
 

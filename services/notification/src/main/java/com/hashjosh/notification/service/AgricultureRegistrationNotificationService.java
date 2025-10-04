@@ -3,7 +3,6 @@ package com.hashjosh.notification.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
-import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.repository.NotificationRepository;
 import com.hashjosh.notification.utils.NotificationUtils;
@@ -11,6 +10,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -26,8 +26,10 @@ import java.time.format.DateTimeFormatter;
 public class AgricultureRegistrationNotificationService {
 
     private final TemplateEngine templateEngine;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
     private final NotificationRepository notificationRepository;
+
+    @KafkaListener(topics = "agriculture-events", groupId = "notification-group" )
     public void sendAgricultureRegistrationEmailNotification(AgricultureRegistrationContract event) {
         try {
             // Prepare email content
@@ -55,7 +57,7 @@ public class AgricultureRegistrationNotificationService {
             );
 
             // Send email
-            sendEmail(recipientEmail, subject, emailContent, true);
+            emailService.sendEmail(recipientEmail, subject, emailContent, true);
 
             // Update notification status to SENT
             notification.setStatus("SENT");
@@ -65,43 +67,10 @@ public class AgricultureRegistrationNotificationService {
 
         } catch (Exception e) {
             log.error("❌ Failed to send registration email notification to: {}", event.getEmail(), e);
-            saveFailedFarmerNotification(event, "Failed to send registration email: " + e.getMessage());
+            emailService.saveFailedNotification(event.getEmail(),"Failed: User Registration Notification", event.getUserId(),"Failed to send registration email: " + e.getMessage());
             throw new RuntimeException("Failed to send registration email notification", e);
         }
     }
 
-    private void sendEmail(String to, String subject, String content, boolean isHtml) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(content, isHtml);
-
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            log.error("❌ Error sending email to {}: {}", to, e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
-        }
-    }
-
-
-    private void saveFailedFarmerNotification(AgricultureRegistrationContract contract, String errorMessage) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Notification<JsonNode> failedNotification = NotificationUtils.createNotification(
-                    contract.getEmail(),
-                    "EMAIL",
-                    "Failed: User Registration Notification",
-                    objectMapper.createObjectNode()
-                            .put("error", errorMessage)
-                            .put("userId", contract.getUserId().toString())
-            );
-            failedNotification.setStatus("FAILED");
-            notificationRepository.save(failedNotification);
-        } catch (Exception e) {
-            log.error("❌ Failed to save failed notification for user: {}", contract.getEmail(), e);
-        }
-    }
 }
