@@ -17,7 +17,7 @@ public class FarmerProducer {
     public void publishFarmerRegistrationEvent(FarmerRegistrationContract agricultureRegistrationContract){
         Message<FarmerRegistrationContract> contract = MessageBuilder
                 .withPayload(agricultureRegistrationContract)
-                .setHeader(KafkaHeaders.TOPIC, "farmer-event")
+                .setHeader(KafkaHeaders.TOPIC, "farmer-events")
                 .build();
 
         template.send(contract);

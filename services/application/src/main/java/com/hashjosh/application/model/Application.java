@@ -3,7 +3,6 @@ package com.hashjosh.application.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.constant.ApplicationStatus;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;

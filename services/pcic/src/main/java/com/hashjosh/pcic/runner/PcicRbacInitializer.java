@@ -1,6 +1,5 @@
 package com.hashjosh.pcic.runner;
 
-import com.hashjosh.jwtshareable.service.TenantContext;
 import com.hashjosh.jwtshareable.utils.SlugUtil;
 import com.hashjosh.pcic.entity.Permission;
 import com.hashjosh.pcic.entity.Role;
@@ -141,8 +140,6 @@ public class PcicRbacInitializer implements CommandLineRunner {
     }
 
     private boolean isRoleNotNull() {
-        String tenantId = TenantContext.getTenantId();
-        log.info("Checking roles/permissions for tenant '{}', context: {}", tenantId, tenantId);
         long permissionCount = permissionRepository.count();
         long roleCount = roleRepository.count();
         log.info("Permission count: {}, Role count: {}", permissionCount, roleCount);

@@ -36,16 +36,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.shared-library</groupId>
-                <artifactId>jwtshareable</artifactId>
-                <version>1.0.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.shared-library</groupId>
-                <artifactId>kafka-common</artifactId>
-                <version>1.0.0</version>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>

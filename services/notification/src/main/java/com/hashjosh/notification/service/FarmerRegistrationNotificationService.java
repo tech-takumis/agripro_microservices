@@ -29,7 +29,7 @@ public class FarmerRegistrationNotificationService {
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
 
-    @KafkaListener(topics = "farmer-event", groupId = "notification-group")
+    @KafkaListener(topics = "farmer-events", groupId = "notification-group")
     public void sendFarmerRegistrationEmailNotification(FarmerRegistrationContract contract) {
         try {
             // Prepare email content

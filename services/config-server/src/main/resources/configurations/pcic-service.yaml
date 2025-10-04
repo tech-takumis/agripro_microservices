@@ -29,7 +29,7 @@ spring:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
           pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
-          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
           policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
           claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
           
@@ -45,9 +45,10 @@ spring:
             spring.json.type.mapping: >
               pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
               inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
-              verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
               policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
-              claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
+              claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
+              applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent
+
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours

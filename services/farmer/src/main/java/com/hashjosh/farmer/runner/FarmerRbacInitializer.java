@@ -4,7 +4,6 @@ import com.hashjosh.farmer.entity.Permission;
 import com.hashjosh.farmer.entity.Role;
 import com.hashjosh.farmer.repository.PermissionRepository;
 import com.hashjosh.farmer.repository.RoleRepository;
-import com.hashjosh.jwtshareable.service.TenantContext;
 import com.hashjosh.jwtshareable.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +92,7 @@ public class FarmerRbacInitializer implements CommandLineRunner {
     }
 
     private boolean isRoleNotNull() {
-        log.info("Checking roles/permissions for tenant '{}'", TenantContext.getTenantId());
+
         long permissionCount = permissionRepository.count();
         long roleCount = roleRepository.count();
         log.info("Permission count: {}, Role count: {}", permissionCount, roleCount);

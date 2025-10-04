@@ -215,7 +215,7 @@ public class ApplicationService {
 
     public void publishApplicationStatus(Application application, CustomUserDetails user) {
 
-        applicationProducer.publishEvent("application-events",
+        applicationProducer.publishEvent("application-lifecycle",
                ApplicationSubmittedEvent.builder()
                        .submissionId(application.getId())
                        .userId(UUID.fromString(user.getUserId()))

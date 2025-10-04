@@ -6,7 +6,6 @@ import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.constant.ApplicationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

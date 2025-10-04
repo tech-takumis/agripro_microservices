@@ -1,9 +1,8 @@
 package com.hashjosh.pcic.entity;
 
-import com.hashjosh.pcic.enums.ClaimStatus;
+import com.hashjosh.constant.pcic.enums.ClaimStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,6 +13,9 @@ import java.util.UUID;
 @Table(name = "claims")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Claim {
 
     @Id

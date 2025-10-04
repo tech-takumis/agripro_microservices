@@ -21,7 +21,7 @@
     <div class="content">
         <p>Dear <span th:text="${name}"></span>,</p>
         <p>Verification for your application (ID: <span th:text="${event.submissionId}"></span>) has started on <span th:text="${#temporals.format(event.startedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
-        <p>We will notify you once verification is complete.</p>
+        <p>You will be notified once the review process begins.</p>
     </div>
     <div class="footer">
         <p>Agriculture Service Team</p>

@@ -1,4 +1,4 @@
-package com.hashjosh.program.enums;
+package com.hashjosh.constant.program.enums;
 
 public enum ProgramType {
     TRAINING,

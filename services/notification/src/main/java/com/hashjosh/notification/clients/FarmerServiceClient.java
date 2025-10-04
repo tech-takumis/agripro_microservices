@@ -1,6 +1,7 @@
 package com.hashjosh.notification.clients;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -12,23 +13,22 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FarmerServiceClient {
 
-    private RestClient restClient;
+    private final RestClient farmerRestClient;
 
-    public FarmerServiceClient(RestClient.Builder builder) {
-        this.restClient = builder
-                .baseUrl("http://farmer-service/api/v1/public/farmer/")
-                .build();
-    }
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     public FarmerResponse getFarmerById(UUID farmerId) {
-        return restClient.get()
+        return farmerRestClient.get()
                 .uri("/{farmer-id}", farmerId)
+                .header("X-Internal-Service", applicationName)
                 .retrieve()
                 .body(FarmerResponse.class);
     }
 
     public List<FarmerResponse> getAllFarmers() {
-        return restClient.get()
+        return farmerRestClient.get()
+                .header("X-Internal-Service", applicationName)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<FarmerResponse>>() {});
     }
