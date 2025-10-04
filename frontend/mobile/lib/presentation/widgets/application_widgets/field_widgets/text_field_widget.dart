@@ -20,7 +20,7 @@ class TextFieldWidget extends StatelessWidget {
     return CustomTextField(
       controller: controller,
       label: field.fieldName + (field.required ? ' *' : ''),
-      prefixIcon: Icons.text_fields,
+      prefixIcon: Icons.text_fields_outlined,
       validator: validator,
       maxLines: field.fieldName.toLowerCase().contains('address') ||
               field.fieldName.toLowerCase().contains('boundaries')

@@ -269,13 +269,15 @@ class ApplicationDetailPage extends StatelessWidget {
   IconData _getFieldIcon(String fieldType) {
     switch (fieldType) {
       case 'TEXT':
-        return Icons.text_fields;
+        return Icons.text_format_outlined;
       case 'NUMBER':
         return Icons.numbers;
       case 'SELECT':
-        return Icons.arrow_drop_down_circle;
+        return Icons.arrow_drop_down_circle_outlined;
       case 'DATE':
         return Icons.calendar_today;
+      case 'BOOLEAN':
+        return Icons.check_circle_outline;
       case 'FILE':
         return Icons.attach_file;
       case 'SIGNATURE':
