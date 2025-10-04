@@ -1,36 +1,36 @@
 <template>
-  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-10
               hover:shadow-xl hover:border-indigo-300 transition-all duration-300 cursor-pointer
-              transform hover:-translate-y-1 h-full flex flex-col min-h-[380px]">
+              transform hover:-translate-y-1 h-full flex flex-col min-h-[400px]">
     
-    <!-- Header Section -->
-    <div class="flex items-start justify-between mb-8">
-      <div class="flex items-start space-x-4 flex-1 min-w-0">
+    <!-- Header Section with Icon and Title -->
+    <div class="flex items-start justify-between mb-10">
+      <div class="flex items-start space-x-5 flex-1 min-w-0">
         <div :class="[
-          'p-4 rounded-xl flex-shrink-0 mt-1',
+          'p-5 rounded-2xl flex-shrink-0 mt-1',
           iconBgColor
         ]">
-          <component :is="icon" :class="['h-8 w-8', iconColor]" />
+          <component :is="icon" :class="['h-10 w-10', iconColor]" />
         </div>
         <div class="min-w-0 flex-1">
-          <h3 class="text-xl font-bold text-gray-900 leading-tight mb-2">{{ title }}</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">{{ description }}</p>
+          <h3 class="text-xl font-bold text-gray-900 leading-tight mb-3">{{ title }}</h3>
+          <p class="text-base text-gray-500 leading-relaxed">{{ description }}</p>
         </div>
       </div>
-      <div v-if="trend" class="flex items-center text-xs font-semibold px-3 py-1 rounded-full bg-gray-50" :class="trendColor">
-        <component :is="trendIcon" class="h-3 w-3 mr-1.5" />
+      <div v-if="trend" class="flex items-center text-sm font-semibold px-4 py-2 rounded-full bg-gray-50" :class="trendColor">
+        <component :is="trendIcon" class="h-4 w-4 mr-2" />
         {{ trend }}
       </div>
     </div>
     
     <!-- Main Value Section -->
     <div class="flex-1 flex flex-col justify-between">
-      <div class="mb-6">
+      <div class="mb-8">
         <div class="flex items-baseline space-x-3 mb-4">
-          <span class="text-5xl font-bold text-gray-900 leading-none">{{ value }}</span>
+          <span class="text-6xl font-bold text-gray-900 leading-none">{{ value }}</span>
           <div v-if="change" class="flex items-center">
             <span :class="[
-              'text-sm font-bold px-3 py-1 rounded-lg',
+              'text-base font-bold px-3 py-2 rounded-lg',
               changeColor,
               change.startsWith('+') ? 'bg-green-50' : 'bg-red-50'
             ]">
@@ -40,8 +40,8 @@
         </div>
       </div>
       
-      <!-- Chart Section -->
-      <div v-if="chartData" class="h-24 flex items-end bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4">
+      <!-- Enhanced Chart Section -->
+      <div v-if="chartData" class="h-32 flex items-end bg-gray-50 rounded-xl p-4">
         <div class="w-full h-full">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-medium text-gray-600">Trend</span>
@@ -142,18 +142,18 @@ const createMiniChart = () => {
       datasets: [{
         data: props.chartData,
         borderColor: primaryColor,
-        backgroundColor: `${primaryColor}15`,
-        borderWidth: 3,
+        backgroundColor: `${primaryColor}20`,
+        borderWidth: 4,
         fill: true,
         tension: 0.5,
         pointRadius: 0,
-        pointHoverRadius: 6,
+        pointHoverRadius: 8,
         pointHoverBackgroundColor: primaryColor,
         pointHoverBorderColor: '#ffffff',
-        pointHoverBorderWidth: 2,
+        pointHoverBorderWidth: 3,
         pointBackgroundColor: primaryColor,
         pointBorderColor: '#ffffff',
-        pointBorderWidth: 1
+        pointBorderWidth: 2
       }]
     },
     options: {
@@ -168,7 +168,7 @@ const createMiniChart = () => {
           bodyColor: '#ffffff',
           borderColor: primaryColor,
           borderWidth: 1,
-          cornerRadius: 6,
+          cornerRadius: 8,
           displayColors: false,
           callbacks: {
             title: () => '',
@@ -189,7 +189,7 @@ const createMiniChart = () => {
       elements: {
         point: { 
           radius: 0,
-          hoverRadius: 6
+          hoverRadius: 8
         },
         line: {
           borderJoinStyle: 'round',
@@ -201,7 +201,7 @@ const createMiniChart = () => {
         mode: 'index'
       },
       animation: {
-        duration: 1500,
+        duration: 2000,
         easing: 'easeInOutQuart'
       }
     }

@@ -1,5 +1,9 @@
 spring:
+  application:
+    name: user-service
   profiles:
     active: local
-  application:
-    name: farmer-service
+
+  kafka:
+
+

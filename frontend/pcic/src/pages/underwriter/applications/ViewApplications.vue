@@ -4,174 +4,169 @@
     role-title="Underwriter Portal"
     page-title="All Applications"
   >
-    <template #header>
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">All Applications</h1>
-          <p class="text-gray-600">Review and manage crop insurance applications</p>
-        </div>
-        <div class="flex items-center space-x-3">
-          <button
-            @click="refreshApplications"
-            :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw :class="['h-4 w-4 mr-2', loading ? 'animate-spin' : '']" />
-            Refresh
-          </button>
-          <button
-            @click="printApplication"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-          >
-            <Printer class="h-4 w-4 mr-2" />
-            Print Application
-          </button>
-        </div>
-      </div>
-    </template>
+  <template #header>
+  <div class="flex items-center justify-between bg-gray-100 px-6 py-4 border-b border-gray-200 rounded-lg">
+    
+    <!-- Left: Logo + Title -->
+    <div class="flex items-center space-x-3">
+      <!-- Logo -->
+      <img 
+        src="@/assets/pcic-logo.png" 
+        alt="PCIC Logo" 
+        class="h-10 w-auto"
+      />
 
-    <div class="space-y-6">
-      <!-- Filters and Search -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Filter Applications</h2>
-        </div>
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Search -->
-            <div class="md:col-span-2">
-              <label for="search" class="block text-sm font-medium text-gray-700 mb-1">
-                Search Applications
-              </label>
-              <div class="relative">
-                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  id="search"
-                  placeholder="Search by farmer name, location..."
-                  class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
-            <!-- Status Filter -->
-            <div>
-              <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                v-model="selectedStatus"
-                id="statusFilter"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            <!-- Crop Type Filter -->
-            <div>
-              <label for="cropFilter" class="block text-sm font-medium text-gray-700 mb-1">
-                Crop Type
-              </label>
-            <select
-              v-model="selectedCrop"
-              id="cropFilter"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">All Crops</option>
-              <option value="rice">Rice</option>
-              <option value="corn">Corn</option>
-            </select>
-          </div>
-        </div>
+      <!-- Title -->
+      <div>
+        <h1 class="text-2xl font-bold text-green-800">All Applications</h1>
+        <p class="text-sm text-black-600">
+          Review and manage crop insurance applications
+        </p>
       </div>
     </div>
 
-    <!-- Applications List -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Applications</h2>
-      </div>
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-4">
+      <!-- Refresh Button -->
+      <button
+        @click="refreshApplications"
+        :disabled="loading"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+      >
+        <RefreshCw :class="['h-4 w-4 mr-2', loading ? 'animate-spin' : '']" />
+        Refresh
+      </button>
+
+      <!-- Print Button -->
+      <button
+        @click="printApplication"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+      >
+        <Printer class="h-4 w-4 mr-2" />
+        Print Application
+      </button>
+    </div>
+  </div>
+</template>
+
+<div class="space-y-6">
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
       
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Application ID
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Farmer/Group Name
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Crop Type
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Location
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date Applied
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr 
-              v-for="application in filteredApplications" 
-              :key="application.id"
-              :class="[
-                'hover:bg-gray-50 cursor-pointer',
-                selectedApplication?.id === application.id ? 'bg-indigo-50' : ''
-              ]"
-              @click="selectApplication(application)"
-            >
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ application.id }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ application.groupName || application.farmerName }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ application.cropType }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ application.location }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="[
-                  'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                  application.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  application.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                ]">
-                  {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(application.dateApplied) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  @click.stop="viewApplication(application)"
-                  class="text-indigo-600 hover:text-indigo-900"
-                >
-                  View
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Search -->
+      <div class="md:col-span-3">
+        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">
+          Search Applications
+        </label>
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            id="search"
+            placeholder="Search by farmer name, location..."
+            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="md:col-span-1">
+        <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">
+          Status
+        </label>
+        <select
+          v-model="selectedStatus"
+          id="statusFilter"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
     </div>
+  </div>
+
+<!-- Applications List -->
+<div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-900">Applications</h2>
+    <span class="text-sm text-gray-500">{{ filteredApplications.length }} total</span>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Application ID</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Farmer/Group</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Crop</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Applied</th>
+          <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr 
+          v-for="application in filteredApplications" 
+          :key="application.id"
+          :class="[
+            'hover:bg-indigo-50 transition cursor-pointer',
+            selectedApplication?.id === application.id ? 'bg-indigo-100' : ''
+          ]"
+          @click="selectApplication(application)"
+        >
+          <!-- ID -->
+          <td class="px-6 py-4 text-sm font-medium text-gray-900">
+            {{ application.id }}
+          </td>
+          <!-- Farmer/Group -->
+          <td class="px-6 py-4 text-sm text-gray-800">
+            {{ application.groupName || application.farmerName }}
+          </td>
+          <!-- Crop -->
+          <td class="px-6 py-4 text-sm text-gray-800">
+            {{ application.cropType }}
+          </td>
+          <!-- Location -->
+          <td class="px-6 py-4 text-sm text-gray-800">
+            {{ application.location }}
+          </td>
+          <!-- Status -->
+          <td class="px-6 py-4">
+            <span :class="[
+              'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold',
+              application.status === 'approved' ? 'bg-green-100 text-green-700' :
+              application.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            ]">
+              {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
+            </span>
+          </td>
+          <!-- Date -->
+          <td class="px-6 py-4 text-sm text-gray-500">
+            {{ formatDate(application.dateApplied) }}
+          </td>
+          <!-- Actions -->
+          <td class="px-6 py-4 text-right">
+            <button
+              @click.stop="viewApplication(application)"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-900 rounded-lg hover:bg-indigo-50 transition"
+            >
+              <Eye class="w-4 h-4 mr-1.5" />
+              View
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
     <!-- PCIC Form Preview (Hidden, for printing) -->
     <div id="printable-form" class="hidden print:block">
@@ -448,18 +443,20 @@
         </div>
       </div>
     </div>
+
 <!-- Application Detail Modal -->
 <div 
   v-if="showDetailModal" 
-  class="fixed inset-0 z-50 overflow-hidden"
+  class="fixed inset-0 z-50 flex items-center justify-center"
   @click="closeDetailModal"
 >
-  <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+<div class="absolute inset-0 bg-black bg-opacity-50"></div>
   
   <div class="flex items-start justify-center min-h-screen p-4 pt-16">
     <div 
-      class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden relative z-10"
-      @click.stop
+    class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden z-10 transform transition-all duration-300 scale-95 opacity-0"
+    :class="showDetailModal ? 'opacity-100 scale-100' : ''"
+    @click.stop
     >
       <div class="flex flex-col max-h-[80vh]">
         <!-- Modal Header -->
@@ -482,96 +479,142 @@
           </div>
         </div>
 
-        <!-- Modal Body -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div v-if="viewingApplication" class="space-y-6">
-            <!-- Basic Information -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Group/Farmer Name</h4>
-                <p class="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {{ viewingApplication.groupName || viewingApplication.farmerName }}
-                </p>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Location</h4>
-                <p class="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {{ viewingApplication.location }}
-                </p>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Crop Type</h4>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  {{ viewingApplication.cropType }}
-                </span>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Status</h4>
-                <span :class="[
-                  'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                  viewingApplication.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  viewingApplication.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                ]">
-                  {{ viewingApplication.status.charAt(0).toUpperCase() + viewingApplication.status.slice(1) }}
-                </span>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Program</h4>
-                <p class="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {{ viewingApplication.program?.charAt(0).toUpperCase() + viewingApplication.program?.slice(1) }}
-                </p>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Date Applied</h4>
-                <p class="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {{ formatDate(viewingApplication.dateApplied) }}
-                </p>
-              </div>
-            </div>
+<!-- Modal Body -->
+<div class="flex-1 overflow-y-auto p-6">
+  <div v-if="viewingApplication" class="space-y-8">
 
-            <!-- Farmers List -->
-            <div>
-              <h4 class="text-lg font-semibold text-gray-900 mb-4">Farmers ({{ viewingApplication.farmers?.length || 0 }})</h4>
-              <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Civil Status</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Area (ha)</th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="farmer in viewingApplication.farmers" :key="farmer.id">
-                      <td class="px-4 py-4 text-sm text-gray-900">
-                        {{ farmer.firstName }} {{ farmer.middleName }} {{ farmer.lastName }}
-                      </td>
-                      <td class="px-4 py-4 text-sm text-gray-900">{{ farmer.gender }}</td>
-                      <td class="px-4 py-4 text-sm text-gray-900">{{ farmer.civilStatus }}</td>
-                      <td class="px-4 py-4 text-sm text-gray-900">{{ farmer.cellphone }}</td>
-                      <td class="px-4 py-4 text-sm text-gray-900">{{ farmer.area }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+    <!-- Basic Information -->
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <Info class="w-5 h-5 text-green-600 mr-2" /> Application Details
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Farmer/Group -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <Users class="w-4 h-4 mr-2 text-gray-500" /> Group/Farmer Name
+          </h4>
+          <p class="text-sm text-gray-900 font-medium">
+            {{ viewingApplication.groupName || viewingApplication.farmerName }}
+          </p>
         </div>
 
-        <!-- Modal Footer -->
-        <div class="px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
-          <div class="flex justify-end space-x-3">
-            <button
-              @click="closeDetailModal"
-              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+        <!-- Location -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <MapPin class="w-4 h-4 mr-2 text-gray-500" /> Location
+          </h4>
+          <p class="text-sm text-gray-900 font-medium">{{ viewingApplication.location }}</p>
+        </div>
+
+        <!-- Crop Type -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <Leaf class="w-4 h-4 mr-2 text-gray-500" /> Crop Type
+          </h4>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            {{ viewingApplication.cropType }}
+          </span>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <CheckCircle2 v-if="viewingApplication.status === 'approved'" class="w-4 h-4 mr-2 text-green-600" />
+            <Clock v-else-if="viewingApplication.status === 'pending'" class="w-4 h-4 mr-2 text-yellow-600" />
+            <XCircle v-else class="w-4 h-4 mr-2 text-red-600" />
+            Status
+          </h4>
+          <span :class="[
+            'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
+            viewingApplication.status === 'approved' ? 'bg-green-100 text-green-800' :
+            viewingApplication.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
+          ]">
+            {{ viewingApplication.status.charAt(0).toUpperCase() + viewingApplication.status.slice(1) }}
+          </span>
+        </div>
+
+        <!-- Program -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <Layers class="w-4 h-4 mr-2 text-gray-500" /> Program
+          </h4>
+          <p class="text-sm text-gray-900 font-medium">
+            {{ viewingApplication.program?.charAt(0).toUpperCase() + viewingApplication.program?.slice(1) }}
+          </p>
+        </div>
+
+        <!-- Date -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition">
+          <h4 class="text-sm font-medium text-gray-600 flex items-center mb-2">
+            <Calendar class="w-4 h-4 mr-2 text-gray-500" /> Date Applied
+          </h4>
+          <p class="text-sm text-gray-900 font-medium">
+            {{ formatDate(viewingApplication.dateApplied) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Farmers List -->
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <UserCheck class="w-5 h-5 text-green-600 mr-2" /> Farmers ({{ viewingApplication.farmers?.length || 0 }})
+      </h3>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Civil Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Area (ha)</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr 
+              v-for="farmer in viewingApplication.farmers" 
+              :key="farmer.id" 
+              class="hover:bg-indigo-50 transition"
             >
-              Close
-            </button>
-          </div>
-        </div>
+              <td class="px-4 py-3 text-sm text-gray-900 font-medium flex items-center">
+                <User class="inline w-4 h-4 text-gray-400 mr-2" />
+                {{ farmer.firstName }} {{ farmer.middleName }} {{ farmer.lastName }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-700">{{ farmer.gender }}</td>
+              <td class="px-4 py-3 text-sm text-gray-700">{{ farmer.civilStatus }}</td>
+              <td class="px-4 py-3 text-sm text-gray-700">{{ farmer.cellphone }}</td>
+              <td class="px-4 py-3 text-sm text-gray-700">{{ farmer.area }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Footer -->
+<div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+  <div class="flex justify-end space-x-3">
+    <!-- Close Button -->
+    <button
+      @click="closeDetailModal"
+      class="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 transition"
+    >
+      <X class="w-4 h-4 mr-2 text-gray-500" /> Close
+    </button>
+
+    <!-- Optional Delete Button -->
+    <button
+      @click="deleteApplication(viewingApplication.id)"
+      class="flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition"
+    >
+      <Trash2 class="w-4 h-4 mr-2" /> Delete
+    </button>
+  </div>
+</div>
       </div>
     </div>
       </div>
@@ -586,6 +629,9 @@ import { useRouter } from 'vue-router'
 import { RefreshCw, Search, Printer, X } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { UNDERWRITER_NAVIGATION } from '@/lib/constants'
+import { 
+  Info, Users, MapPin, Leaf, CheckCircle2, Clock, XCircle, Layers, Calendar, UserCheck, User, Trash2 
+} from "lucide-vue-next";
 
 const router = useRouter()
 const underwriterNavigation = UNDERWRITER_NAVIGATION

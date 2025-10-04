@@ -5,7 +5,6 @@ import 'package:mime/mime.dart';
 import 'package:image/image.dart' as img;
 import 'package:http_parser/http_parser.dart';
 import '../models/document_response.dart';
-import 'api_service.dart';
 import 'storage_service.dart';
 
 /// Service for handling document uploads

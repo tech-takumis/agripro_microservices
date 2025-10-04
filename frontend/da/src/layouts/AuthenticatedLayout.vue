@@ -5,10 +5,10 @@
       <SidebarNavigation
         :navigation="navigation"
         :role-title="roleTitle"
-        :agriculture-full-name="authStore.userFullName"
-        :agriculture-email="authStore.userEmail"
-        :agriculture-initials="userInitials"
-        @logout="handleLogout"
+        :user-full-name="authStore.userFullName"
+        :user-email="authStore.userEmail"
+        :user-initials="userInitials"
+        @help-support="handleHelpSupport"
       />
     </div>
 
@@ -28,10 +28,10 @@
         <SidebarNavigation
           :navigation="navigation"
           :role-title="roleTitle"
-          :agriculture-full-name="authStore.userFullName"
-          :agriculture-email="authStore.userEmail"
-          :agriculture-initials="userInitials"
-          @logout="handleLogout"
+          :user-full-name="authStore.userFullName"
+          :user-email="authStore.userEmail"
+          :user-initials="userInitials"
+          @help-support="handleHelpSupport"
         />
       </div>
     </div>
@@ -106,7 +106,22 @@ const userInitials = computed(() => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
 })
 
-const handleLogout = () => {
-  authStore.logout()
+const handleHelpSupport = (action) => {
+  switch (action) {
+    case 'faq':
+      // Navigate to FAQ page or show FAQ modal
+      console.log('Navigate to FAQ page')
+      break
+    case 'user-guide':
+      // Navigate to user guide page or show user guide modal
+      console.log('Navigate to user guide page')
+      break
+    case 'contact':
+      // Navigate to contact form or show contact modal
+      console.log('Navigate to contact form')
+      break
+    default:
+      console.log('Unknown help support action:', action)
+  }
 }
 </script>
