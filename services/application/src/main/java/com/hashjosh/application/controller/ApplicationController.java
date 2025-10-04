@@ -30,8 +30,8 @@ public class ApplicationController {
     @PostMapping("/submit")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
-            @Valid @RequestBody ApplicationSubmissionDto submission,
-            HttpServletRequest request) {
+            @Valid @RequestBody ApplicationSubmissionDto submission
+    ) {
 
         try {
 
@@ -80,5 +80,10 @@ public class ApplicationController {
             @PathVariable("application_type_id") UUID applicationTypeId
      ){
         return new ResponseEntity<>(applicationService.findApplicationbyType(applicationTypeId), HttpStatus.OK);
+    }
+
+    @GetMapping("/agriculture")
+    public ResponseEntity<List<ApplicationResponseDto>> findAllAgricultureApplication(){
+            return new ResponseEntity<>(applicationService.findAllAgricultureApplication(),HttpStatus.OK);
     }
 }

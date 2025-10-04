@@ -241,4 +241,15 @@ public class ApplicationService {
                         HttpStatus.BAD_REQUEST.value()
                 ));
     }
+
+    public List<ApplicationResponseDto> findAllAgricultureApplication() {
+        ApplicationType type = applicationTypeRepository.findByNameContains("Crop Insurance Application")
+                .orElseThrow(() -> new ApplicationNotFoundException(
+                        "Application for agriculture not found",
+                        HttpStatus.NOT_FOUND.value()
+                ));
+        List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
+
+        return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
+    }
 }
