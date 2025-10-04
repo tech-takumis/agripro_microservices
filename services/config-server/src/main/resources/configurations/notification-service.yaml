@@ -27,11 +27,15 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
         spring.json.type.mapping: >
-            applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
-            applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
-            farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
-            pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
-            agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
+          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
+          
 
   mail:
     host: smtp.gmail.com

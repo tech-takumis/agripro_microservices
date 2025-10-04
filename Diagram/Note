@@ -20,3 +20,45 @@ Jwt Claim payload to all tenant:
                     ).toList()
 
             );
+
+
+ Kafka command:
+    Reset the consumer group's offset to skip old messages:
+        ->  docker exec kafka kafka-consumer-groups --bootstrap-server localhost:29092 --reset-offsets --to-latest --topic application-events --group insurance-service --execute
+    To delete a topic:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --delete --topic application-events
+    To list all topics:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --list
+    To describe a topic:
+        -> docker exec kafka kafka-topics --bootstrap-server localhost:29092 --describe --topic
+    To consume messages from a topic:
+        -> docker exec kafka kafka-console-consumer --bootstrap-server localhost:29092 --topic application
+
+
+  Docker command:
+    To stop and remove all containers, networks, and volumes defined in the docker-compose file:
+        -> docker-compose down -v
+    To stop and remove all containers, networks, and volumes defined in the docker-compose file:
+        -> docker-compose up -d --build
+    To view the logs of a specific service (e.g., kafka):
+        -> docker-compose logs -f kafka
+    To list all running containers:
+        -> docker ps
+    To access the shell of a running container (e.g., kafka):
+        -> docker exec -it kafka bash
+    To remove all stopped containers, unused networks, and dangling images:
+        -> docker system prune -a
+    To start or stop a specific docker compose file service:
+        -> docker-compose start <service_name> up -d
+        -> docker-compose stop <service_name> down
+    To view the logs of a specific service (e.g., kafka):
+        -> docker-compose logs -f <service_name>
+
+    To up or down a specific docker compose file service:
+        -> docker compose -f docker-compose.local.yaml up -d
+        -> docker-compose down -f docker-compose.local.yaml
+
+
+Kafka notes:
+
+Application.id = submissionId

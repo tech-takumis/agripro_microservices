@@ -8,11 +8,14 @@ import com.hashjosh.application.dto.*;
 import com.hashjosh.application.exceptions.ApplicationNotFoundException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
-import com.hashjosh.application.model.*;
-import com.hashjosh.application.repository.*;
-import com.hashjosh.application.validators.*;
-import com.hashjosh.constant.*;
-import com.hashjosh.kafkacommon.application.ApplicationSubmissionContract;
+import com.hashjosh.application.model.Application;
+import com.hashjosh.application.model.ApplicationField;
+import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.repository.ApplicationRepository;
+import com.hashjosh.application.repository.ApplicationTypeRepository;
+import com.hashjosh.application.validators.FieldValidatorFactory;
+import com.hashjosh.application.validators.ValidatorStrategy;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -134,7 +137,7 @@ public class ApplicationService {
         Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
         Application savedApplication = applicationRepository.save(application);
 
-        publishApplicationStatus(savedApplication, EventType.APPLICATION_SUBMITTED, userDetails);
+        publishApplicationStatus(savedApplication, userDetails);
 
         return ApplicationSubmissionResponse.builder()
                 .success(true)
@@ -210,22 +213,17 @@ public class ApplicationService {
     }
 
 
-    public void publishApplicationStatus(Application application, EventType eventType, CustomUserDetails user) {
+    public void publishApplicationStatus(Application application, CustomUserDetails user) {
 
         applicationProducer.publishEvent("application-events",
-                ApplicationSubmissionContract.builder()
-                        .eventId(UUID.randomUUID())
-                        .schemaVersion(1)
-                        .status(ApplicationStatus.SUBMITTED)
-                        .version(application.getVersion())
-                        .token(user.getToken())
-                        .gmail(user.getEmail())
-                        .eventType(eventType)
-                        .uploadedBy(application.getUserId())
-                        .applicationId(application.getId())
-                        .occurredAt(LocalDateTime.now())
-                        .applicationId(application.getId())
-                        .build()
+               ApplicationSubmittedEvent.builder()
+                       .submissionId(application.getId())
+                       .userId(UUID.fromString(user.getUserId()))
+                       .applicationTypeId(application.getApplicationType().getId())
+                       .dynamicFields(application.getDynamicFields())
+                       .documentIds(application.getDocumentId())
+                       .submittedAt(LocalDateTime.now())
+                       .build()
         );
     }
 

@@ -10,7 +10,6 @@ public record ApplicationResponseDto(
         UUID applicationTypeId,
         UUID userId,
         JsonNode dynamicFields,
-        String status,
         LocalDateTime  submittedAt,
         LocalDateTime updatedAt,
         Long version

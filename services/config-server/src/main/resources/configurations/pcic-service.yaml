@@ -26,8 +26,28 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: false
+        spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
+          
 
+    consumer:
+        group-id: pcic-service
+        auto-offset-reset: earliest
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+        properties:
+            spring.json.trusted.packages: "*"
+            spring.json.use.type.headers: true
+            spring.json.type.mapping: >
+              pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+              inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+              verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+              policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+              claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours
@@ -35,6 +55,17 @@ token:
   refreshTokenExpirationMs: 86400000               # 1 day
   refreshTokenExpirationRememberMeMs: 345600000
 
+
+trusted:
+  internal-service-ids:
+    - agriculture-service
+    - notification-service
+    - farmer-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service
 
 eureka:
   client:

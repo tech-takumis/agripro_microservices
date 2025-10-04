@@ -28,8 +28,19 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent
 
+    consumer:
+      group-id: agriculture-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+        spring.json.type.mapping: >
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours
@@ -37,6 +48,17 @@ token:
   refreshTokenExpirationMs: 86400000               # 1 day
   refreshTokenExpirationRememberMeMs: 345600000
 
+trusted:
+  internal-service-ids:
+    - agriculture-service
+    - verification-service
+    - notification-service
+    - farmer-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service
 
 eureka:
   client:

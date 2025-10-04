@@ -20,11 +20,8 @@
         <module>discovery-server</module>
         <module>document</module>
         <module>gateway</module>
-        <module>insurance</module>
         <module>jwtshareable</module>
         <module>kafka-common</module>
-        <module>verification</module>
-        <module>workflow</module>
         <module>rsbsa</module>
         <module>program</module>
     </modules>

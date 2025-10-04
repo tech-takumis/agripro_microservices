@@ -1,6 +1,7 @@
 package com.hashjosh.application;
 
 
+import com.hashjosh.application.configs.TrustedConfig;
 import com.hashjosh.jwtshareable.properties.JwtProperties;
 import com.hashjosh.jwtshareable.service.JwtService;
 import org.springframework.boot.SpringApplication;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 
 @SpringBootApplication
-@EnableConfigurationProperties({JwtProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, TrustedConfig.class})
 @EnableKafka
 @EnableDiscoveryClient
 @Import(JwtService.class)

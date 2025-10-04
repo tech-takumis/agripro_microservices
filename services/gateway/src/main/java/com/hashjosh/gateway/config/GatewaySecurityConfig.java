@@ -38,9 +38,8 @@ public class GatewaySecurityConfig {
                                 "/api/v1/agriculture/auth/registration",
                                 // Pcic
                                 "/api/v1/pcic/auth/login",
-                                "/api/v1/pcic/auth/registration",
-                                // Public endpoit
-                                "/api/v1/rsbsa/public/**").permitAll()
+                                "/api/v1/pcic/auth/registration"
+                        ).permitAll()
                         .pathMatchers(
                                 // Farmer
                                 "/api/v1/farmer/auth/me",

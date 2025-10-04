@@ -9,47 +9,84 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
 
+    private final String token;
     private final Farmer farmer;
+    private final Collection<? extends GrantedAuthority> authorities;
+    private final String serviceId; // For internal services
+
+    // Constructor for internal services
+    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
+        this.token = null;
+        this.farmer = null;
+        this.authorities = authorities != null ? authorities : Collections.emptyList();
+        this.serviceId = serviceId;
+    }
+
+    // Constructor for JWT-based authentication
+    public CustomUserDetails(Farmer farmer) {
+        this.token = null;
+        this.farmer = farmer;
+        this.serviceId = null;
+        List<SimpleGrantedAuthority> roles = new ArrayList<>();
+        if (CustomUserDetails.this.farmer != null && CustomUserDetails.this.farmer.getRoles() != null) {
+            CustomUserDetails.this.farmer.getRoles().forEach(role -> {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
+                if (role.getPermissions() != null) {
+                    role.getPermissions().forEach(permission -> {
+                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+                    });
+                }
+            });
+        }
+        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> rolesAndPermission = new ArrayList<>();
-
-        farmer.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
-        farmer.getRoles().forEach(
-                role -> role.getPermissions()
-                        .forEach(permission ->
-                                rolesAndPermission.add(new SimpleGrantedAuthority(permission.getName()))
-                        ));
-
-        return rolesAndPermission;
+        return authorities;
     }
 
     @Override
     public String getPassword() {
-        return farmer.getPassword();
+        return farmer != null ? farmer.getPassword() : null;
     }
 
     @Override
     public String getUsername() {
-        return farmer.getUsername();
+        if (farmer != null) {
+            return farmer.getUsername();
+        }
+        if (serviceId != null) {
+            return "internal-service-" + serviceId; // Unique username for internal services
+        }
+        throw new IllegalStateException("Neither agriculture nor serviceId is set");
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        return true;
+    }
+
 }

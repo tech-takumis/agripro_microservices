@@ -28,7 +28,8 @@ public class SecurityConfiguration {
                 .cors(AbstractHttpConfigurer::disable) // ✅ Enable CORS
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/pcic/auth/registration",
-                                "/api/v1/pcic/auth/login", "/actuator/**").permitAll()
+                                "/api/v1/pcic/auth/login",
+                                "/actuator/**","/api/v1/pcic/**").permitAll()
                         .requestMatchers("/api/v1/pcic/auth/me","/api/v1/pcic/auth/logout").authenticated()
                         .anyRequest().authenticated()
                 )

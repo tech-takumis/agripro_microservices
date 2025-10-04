@@ -10,6 +10,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,9 @@ public class FarmerRegistrationNotificationService {
 
     private final TemplateEngine templateEngine;
     private final NotificationRepository notificationRepository;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
 
+    @KafkaListener(topics = "farmer-event", groupId = "notification-group")
     public void sendFarmerRegistrationEmailNotification(FarmerRegistrationContract contract) {
         try {
             // Prepare email content
@@ -55,7 +57,7 @@ public class FarmerRegistrationNotificationService {
             );
 
             // Send email
-            sendEmail(recipientEmail, subject, emailContent, true);
+            emailService.sendEmail(recipientEmail, subject, emailContent, true);
 
             // Update notification status to SENT
             notification.setStatus("SENT");
@@ -65,44 +67,10 @@ public class FarmerRegistrationNotificationService {
 
         } catch (Exception e) {
             log.error("❌ Failed to send registration email notification to: {}", contract.getEmail(), e);
-            saveFailedFarmerNotification(contract, "Failed to send registration email: " + e.getMessage());
+            emailService.saveFailedNotification(contract.getEmail(),"Failed: User Registration Notification", contract.getUserId(),"Failed to send registration email: " + e.getMessage());
             throw new RuntimeException("Failed to send registration email notification", e);
         }
     }
 
 
-    private void sendEmail(String to, String subject, String content, boolean isHtml) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(content, isHtml);
-
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            log.error("❌ Error sending email to {}: {}", to, e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
-        }
-    }
-
-
-    private void saveFailedFarmerNotification(FarmerRegistrationContract contract, String errorMessage) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Notification<JsonNode> failedNotification = NotificationUtils.createNotification(
-                    contract.getEmail(),
-                    "EMAIL",
-                    "Failed: User Registration Notification",
-                    objectMapper.createObjectNode()
-                            .put("error", errorMessage)
-                            .put("userId", contract.getUserId().toString())
-            );
-            failedNotification.setStatus("FAILED");
-            notificationRepository.save(failedNotification);
-        } catch (Exception e) {
-            log.error("❌ Failed to save failed notification for user: {}", contract.getEmail(), e);
-        }
-    }
 }

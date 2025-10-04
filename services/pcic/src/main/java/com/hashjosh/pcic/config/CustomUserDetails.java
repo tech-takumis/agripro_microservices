@@ -9,47 +9,83 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
 
+    private final String token;
     private final Pcic pcic;
+    private final Collection<? extends GrantedAuthority> authorities;
+    private final String serviceId; // For internal services
+
+    // Constructor for internal services
+    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
+        this.token = null;
+        this.pcic = null;
+        this.authorities = authorities != null ? authorities : Collections.emptyList();
+        this.serviceId = serviceId;
+    }
+
+    // Constructor for JWT-based authentication
+    public CustomUserDetails(Pcic pcic) {
+        this.token = null;
+        this.pcic = pcic;
+        this.serviceId = null;
+        List<SimpleGrantedAuthority> roles = new ArrayList<>();
+        if (pcic != null && pcic.getRoles() != null) {
+            pcic.getRoles().forEach(role -> {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
+                if (role.getPermissions() != null) {
+                    role.getPermissions().forEach(permission -> {
+                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+                    });
+                }
+            });
+        }
+        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> rolesAndPermission = new ArrayList<>();
-
-        pcic.getRoles().forEach(role -> rolesAndPermission.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
-        pcic.getRoles().forEach(
-                role -> role.getPermissions()
-                        .forEach(permission ->
-                                rolesAndPermission.add(new SimpleGrantedAuthority(permission.getName()))
-                        ));
-
-        return rolesAndPermission;
+        return authorities;
     }
 
     @Override
     public String getPassword() {
-        return pcic.getPassword();
+        return pcic != null ? pcic.getPassword() : null;
     }
 
     @Override
     public String getUsername() {
-        return pcic.getUsername();
+        if (pcic != null) {
+            return pcic.getUsername();
+        }
+        if (serviceId != null) {
+            return "internal-service-" + serviceId; // Unique username for internal services
+        }
+        throw new IllegalStateException("Neither pcic nor serviceId is set");
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        return true;
+    }
 }

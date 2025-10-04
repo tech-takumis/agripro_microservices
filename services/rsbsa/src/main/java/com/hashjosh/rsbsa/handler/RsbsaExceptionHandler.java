@@ -1,7 +1,7 @@
 package com.hashjosh.rsbsa.handler;
 
-import com.hashjosh.rsbsa.ExceptionResponse;
-import com.hashjosh.rsbsa.RsbsaNotFoundException;
+import com.hashjosh.rsbsa.dto.ExceptionResponse;
+import com.hashjosh.rsbsa.exception.RsbsaNotFoundException;
 import com.hashjosh.rsbsa.exception.RsbsaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

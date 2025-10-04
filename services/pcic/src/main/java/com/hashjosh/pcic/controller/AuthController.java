@@ -35,8 +35,7 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest farmer,
-            HttpServletRequest request
+            @RequestBody RegistrationRequest farmer
     ){
 
         Pcic pcic = authService.register(farmer);

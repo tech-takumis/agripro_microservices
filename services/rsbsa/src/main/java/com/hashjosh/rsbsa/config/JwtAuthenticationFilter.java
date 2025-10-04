@@ -27,100 +27,101 @@ import java.util.UUID;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TrustedConfig trustedConfig;
+    private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String authHeader = request.getHeader("Authorization");
-            
-            // Check if header exists and has correct format
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String token = authHeader.substring(7);
-            
-            // Check if token is empty
-            if (token.trim().isEmpty()) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write(
-                        """
-                        {
-                          "message": "Unauthorized: empty token"
-                        }
-                        """
-                );
-                response.getWriter().flush();
-                return;
-            }
-
-            // Validate token
-            if (!jwtService.validateToken(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write(
-                        """
-                        {
-                          "message": "Unauthorized: invalid or expired token"
-                        }
-                        """
-                );
-                response.getWriter().flush();
-                return;
-            }
-
-            Claims claims = jwtService.getAllClaims(token);
-            String username = jwtService.getUsernameFromToken(token);
-            String userId = claims.get("userId", String.class);
-            String firstname = claims.get("firstname", String.class);
-            String lastname = claims.get("lastname", String.class);
-            String email = claims.get("email", String.class);
-            String phone = claims.get("phone", String.class);
-            List<String> claimRoles = claims.get("roles", List.class);
-            List<String> claimPermission = claims.get("permissions", List.class);
-
-
-            Set<SimpleGrantedAuthority> roles = new HashSet<>();
-
-            if(claimRoles != null){
-                for(String role : claimRoles){
-                    roles.add(new SimpleGrantedAuthority("ROLE_"+role));
-                }
-            }
-
-            if(claimPermission != null){
-                for(String permission : claimPermission){
-                    roles.add(new SimpleGrantedAuthority(permission));
-                }
-            }
-
-
-            CustomUserDetails userDetails = new CustomUserDetails(
-                    token,
-                    userId,
-                    username,
-                    firstname,
-                    lastname,
-                    email,
-                    phone,
-                    roles
-            );
-
+        // Check for internal service header
+        String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+            // Allow internal service access without JWT
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            userDetails,
+                            new CustomUserDetails(
+                                    null, // No token
+                                    "internal-service-" + internalServiceHeader, // Unique userId
+                                    internalServiceHeader, // Use service ID as username
+                                    null, null, null, null, // No firstname, lastname, email, phone
+                                    Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                            ),
                             null,
-                            roles
+                            Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                     );
-
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
-            SecurityContextHolder.setContext(context);
+        // JWT validation for non-internal requests
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"message\": \"Unauthorized - Missing or invalid Authorization header\"}"
+            );
+            response.getWriter().flush();
+            return;
+        }
 
+        String token = authHeader.substring(7);
+        if (token.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"message\": \"Unauthorized - Invalid or null token\"}"
+            );
+            response.getWriter().flush();
+            return;
+        }
+
+        if (!jwtService.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"message\": \"Unauthorized: invalid or expired token\"}"
+            );
+            response.getWriter().flush();
+            return;
+        }
+
+        Claims claims = jwtService.getAllClaims(token);
+        String username = jwtService.getUsernameFromToken(token);
+        String userId = claims.get("userId", String.class);
+        String firstname = claims.get("firstname", String.class);
+        String lastname = claims.get("lastname", String.class);
+        String email = claims.get("email", String.class);
+        String phone = claims.get("phone", String.class);
+        List<String> claimRoles = claims.get("roles", List.class);
+        List<String> claimPermission = claims.get("permissions", List.class);
+
+        Set<SimpleGrantedAuthority> roles = new HashSet<>();
+        if (claimRoles != null) {
+            for (String role : claimRoles) {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role));
+            }
+        }
+        if (claimPermission != null) {
+            for (String permission : claimPermission) {
+                roles.add(new SimpleGrantedAuthority(permission));
+            }
+        }
+
+        CustomUserDetails userDetails = new CustomUserDetails(
+                token, userId, username, firstname, lastname, email, phone, roles
+        );
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails, null, roles
+                );
+
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
             filterChain.doFilter(request, response);
         } finally {
             SecurityContextHolder.clearContext();

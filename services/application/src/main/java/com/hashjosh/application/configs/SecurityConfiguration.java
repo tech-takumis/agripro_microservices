@@ -22,7 +22,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/**","/api/v1/applications/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

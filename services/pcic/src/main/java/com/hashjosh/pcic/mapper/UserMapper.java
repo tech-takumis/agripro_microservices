@@ -16,8 +16,22 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
 
+    public PcicProfile toPcicProfileEntity(RegistrationRequest request) {
+        return PcicProfile.builder()
+                .mandate(request.getMandate())
+                .mission(request.getMission())
+                .vision(request.getVision())
+                .coreValues(request.getCoreValues())
+                .headOfficeAddress(request.getHeadOfficeAddress())
+                .phone(request.getPhone())
+                .pcicEmail(request.getPcicEmail())
+                .website(request.getWebsite())
+                .build();
+    }
     public Pcic toUserEntity(
             RegistrationRequest request, Set<Role> roles) {
+
+        PcicProfile profile = toPcicProfileEntity(request);
         return Pcic.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -27,6 +41,7 @@ public class UserMapper {
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())
                 .roles(roles)
+                .pcicProfile(profile)
                 .build();
     }
 

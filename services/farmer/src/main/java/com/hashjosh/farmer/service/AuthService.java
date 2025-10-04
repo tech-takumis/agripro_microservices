@@ -3,7 +3,7 @@ package com.hashjosh.farmer.service;
 import com.hashjosh.farmer.config.CustomUserDetails;
 import com.hashjosh.farmer.dto.*;
 import com.hashjosh.farmer.entity.*;
-import com.hashjosh.farmer.exception.UserException;
+import com.hashjosh.farmer.exception.FarmerNotFoundException;
 import com.hashjosh.farmer.kafka.FarmerProducer;
 import com.hashjosh.farmer.mapper.UserMapper;
 import com.hashjosh.farmer.repository.*;
@@ -35,15 +35,15 @@ public class AuthService {
     @Transactional
     public Farmer register(RegistrationRequest request) {
         if (farmerRepository.existsByEmail(request.getEmail())) {
-            throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
+            throw new FarmerNotFoundException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
 
         if (farmerRepository.existsByUsername(request.getRsbsaId())) {
-            throw new UserException("RSBSA ID already exists", HttpStatus.BAD_REQUEST.value());
+            throw new FarmerNotFoundException("RSBSA ID already exists", HttpStatus.BAD_REQUEST.value());
         }
 
         Set<Role> roles = Collections.singleton(roleRepository.findByName("FARMER")
-                .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value())));
+                .orElseThrow(() -> new FarmerNotFoundException("Role not found", HttpStatus.NOT_FOUND.value())));
 
 
         // Create and save UserProfile first
@@ -123,7 +123,7 @@ public class AuthService {
     public AuthenticatedResponse getAuthenticatedUser(Farmer request) {
 
         Farmer farmer = farmerRepository.findByIdWithRolesAndPermissions(request.getId())
-                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> new FarmerNotFoundException("User not found", HttpStatus.NOT_FOUND.value()));
 
         return userMapper.toAuthenticatedResponse(farmer);
     }
