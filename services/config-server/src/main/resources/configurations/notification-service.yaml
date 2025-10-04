@@ -11,7 +11,6 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-    generate-ddl: true
     database: postgresql
     properties:
       hibernate:
@@ -27,11 +26,18 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
         spring.json.type.mapping: >
-            applicationSubmissionContract:com.hashjosh.kafkacommon.application.ApplicationSubmissionContract,
-            applicationVerificationContract:com.hashjosh.kafkacommon.application.ApplicationVerificationContract,
-            farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
-            pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
-            agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract
+          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
+          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
+          applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent,
+          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+          inspectionScheduledEvent:com.hashjosh.kafkacommon.application.InspectionScheduledEvent,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
 
   mail:
     host: smtp.gmail.com
@@ -44,16 +50,13 @@ spring:
           auth: true
           starttls:
             enable: true
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-    mode: HTML
-    encoding: UTF-8
 
-notification:
-    from: pracullosjohnpaul@gmail.com
-    sender-name: AgriPro Notifications
+thymeleaf:
+  cache: false
+  prefix: classpath:/templates/
+  suffix: .html
+  mode: HTML
+  encoding: UTF-8
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
@@ -62,6 +65,9 @@ token:
   refreshTokenExpirationMs: 86400000               # 1 day
   refreshTokenExpirationRememberMeMs: 345600000
 
+notification:
+  from: pracullosjohnpaul@gmail.com
+  sender-name: AgriPro Notifications
 
 eureka:
   client:
@@ -72,4 +78,3 @@ eureka:
 
 server:
   port: 8090
-

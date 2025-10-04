@@ -1,0 +1,34 @@
+package com.hashjosh.farmer.service;
+
+import com.hashjosh.farmer.dto.FarmerReponse;
+import com.hashjosh.farmer.exception.FarmerNotFoundException;
+import com.hashjosh.farmer.mapper.FarmerMapper;
+import com.hashjosh.farmer.repository.FarmerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class FarmerService {
+
+    private final FarmerRepository farmerRepository;
+    private final FarmerMapper farmerMapper;
+    public FarmerReponse findById(UUID farmerId) {
+        return farmerMapper.toFarmerResponse(
+                farmerRepository.findById(farmerId)
+                        .orElseThrow(() ->
+                                new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value()))
+        );
+    }
+
+    public List<FarmerReponse> findAll() {
+        return farmerRepository.findAll()
+                .stream()
+                .map(farmerMapper::toFarmerResponse)
+                .toList();
+    }
+}

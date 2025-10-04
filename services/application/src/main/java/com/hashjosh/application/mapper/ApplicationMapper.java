@@ -6,7 +6,6 @@ import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.constant.ApplicationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,6 @@ public class ApplicationMapper {
                 application.getApplicationType().getId(),
                 application.getUserId(),
                 application.getDynamicFields(),
-                application.getStatus().name(),
                 application.getSubmittedAt(),
                 application.getUpdatedAt(),
                 application.getVersion()
@@ -41,7 +39,6 @@ public class ApplicationMapper {
                 .userId(UUID.fromString(userId))
                 .documentId(submission.getDocumentIds())
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
-                .status(ApplicationStatus.SUBMITTED)
                 .submittedAt(LocalDateTime.now())
                 .build();
     }

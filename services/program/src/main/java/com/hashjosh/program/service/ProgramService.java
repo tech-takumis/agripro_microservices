@@ -1,8 +1,8 @@
 package com.hashjosh.program.service;
 
-import com.hashjosh.program.dto.ProgramCreateRequestDto;
-import com.hashjosh.program.dto.ProgramResponseDto;
-import com.hashjosh.program.dto.ProgramUpdateRequestDto;
+import com.hashjosh.constant.program.dto.ProgramCreateRequestDto;
+import com.hashjosh.constant.program.dto.ProgramResponseDto;
+import com.hashjosh.constant.program.dto.ProgramUpdateRequestDto;
 import com.hashjosh.program.mapper.ProgramMapper;
 import com.hashjosh.program.repository.ProgramRepository;
 import lombok.RequiredArgsConstructor;

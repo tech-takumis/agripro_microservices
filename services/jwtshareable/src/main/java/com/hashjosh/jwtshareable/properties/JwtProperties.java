@@ -8,12 +8,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @Setter
 public class JwtProperties {
-
     private String secret;
     private long accessTokenExpirationMs;
     private long accessTokenExpirationRememberMeMs;
     private long refreshTokenExpirationMs;
     private long refreshTokenExpirationRememberMeMs;
-
 }
 

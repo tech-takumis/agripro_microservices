@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -29,6 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
     private final TokenRenewalService tokenRenewalService;
+    private final TrustedConfig trustedConfig;
+
+    private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private static final Set<String> PUBLIC_ENDPOINTS = Set.of(
+            "/api/v1/farmer/auth/login",
+            "/api/v1/farmer/auth/registration"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,48 +44,125 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                   FilterChain filterChain)
             throws ServletException, IOException {
 
-        try {
-            String accessToken = extractAccessToken(request);
-            String refreshToken = extractRefreshToken(request);
-            String clientIp = request.getRemoteAddr();
-            String path = request.getRequestURI();
-            String userAgent = request.getHeader("User-Agent");
+        String requestUri = request.getRequestURI();
 
-            log.info("Refresh and access token received from {} the user " +
-                    "jwt authentication filter access token: {} refresh token{}"
-                    , path, accessToken, refreshToken);
+        // Skip authentication for public endpoints
+        if (PUBLIC_ENDPOINTS.contains(requestUri)) {
+            log.debug("Skipping authentication for public endpoint: {}", requestUri);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (accessToken != null) {
-                if (!jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
-                    // ✅ Normal authentication flow
-                    setAuthentication(accessToken);
-                } else if (refreshToken != null &&
-                        jwtService.validateRefreshToken(refreshToken, clientIp, userAgent)) {
-                    // 🔄 Access expired, refresh valid → generate new tokens
-                    Claims claims = jwtService.getClaimsAllowExpired(accessToken);
-                    String username = claims.getSubject();
-                    String userId = claims.get("userId", String.class);
+        // Check for internal service header
+        String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        log.debug("X-Internal-Service header: {}, Trusted service IDs: {}", internalServiceHeader, trustedConfig.getInternalServiceIds());
 
-                    // Build the new claims for new token
-                    Map<String, Object> claimsMap = new HashMap<>();
-                    claimsMap.put("userId", userId);
-
-                    Map<String, String> newTokens = tokenRenewalService.refreshTokens(
-                            UUID.fromString(userId), refreshToken, username,
-                            null, claimsMap, clientIp, userAgent, false);
-
-                    // ⬆ Set Authentication for downstream
-                    setAuthentication(newTokens.get("accessToken"));
-
-                    // 🍪 Return as cookies
-                    addTokenCookies(response, newTokens.get("accessToken"), newTokens.get("refreshToken"));
+        if (internalServiceHeader != null) {
+            if (trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+                log.info("Internal service request from {} to {}", internalServiceHeader, requestUri);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                new CustomUserDetails(internalServiceHeader, Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))),
+                                null,
+                                Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                        );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                try {
+                    filterChain.doFilter(request, response);
+                } catch (Exception e) {
+                    log.error("Error processing internal service request {}: {}", requestUri, e.getMessage(), e);
+                    if (!response.isCommitted()) {
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+                        response.setContentType("application/json");
+                        response.getWriter().write(
+                                "{\"message\": \"Internal server error: " + e.getMessage() + "\"}"
+                        );
+                        response.getWriter().flush();
+                    }
                 }
+                return;
+            } else {
+                log.warn("Invalid X-Internal-Service header: {}. Expected one of: {}", internalServiceHeader, trustedConfig.getInternalServiceIds());
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid X-Internal-Service header");
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                            "{\"message\": \"Unauthorized - Invalid X-Internal-Service header\"}"
+                    );
+                    response.getWriter().flush();
+                }
+                return;
+            }
+        }
+        String accessToken = extractAccessToken(request);
+        String refreshToken = extractRefreshToken(request);
+        String clientIp = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        // Reject requests without access token or internal service header
+        if (accessToken == null) {
+            log.warn("Unauthorized request to {}: Missing both X-Internal-Service and Authorization headers", requestUri);
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing X-Internal-Service or Authorization header");
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"message\": \"Unauthorized - Missing X-Internal-Service or Authorization header\"}"
+                );
+                response.getWriter().flush();
+            }
+            return;
+        }
+
+        try {
+
+            if (!jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
+                // Normal Authentication flow
+                setAuthentication(accessToken);
+                filterChain.doFilter(request, response);
+                return;
             }
 
-            filterChain.doFilter(request, response);
+            // Handle expired access token with valid refresh token
+            if (refreshToken != null && jwtService.validateRefreshToken(refreshToken, clientIp, userAgent)) {
+                Claims claim = jwtService.getClaimsAllowExpired(accessToken);
+                String username = claim.getSubject();
+                String userId = claim.get("userId", String.class);
 
-        } finally {
-            // No cleanup needed
+                // Build new claims for token renewal
+                Map<String, Object> claimsMap = new HashMap<>();
+                claimsMap.put("userId", userId);
+
+                Map<String, String> newTokens = tokenRenewalService.refreshTokens(
+                        UUID.fromString(userId), refreshToken, username,
+                        null, claimsMap, clientIp, userAgent, false);
+
+                // Set authentication with new access token
+                setAuthentication(newTokens.get("accessToken"));
+
+                // Add new tokens as cookies
+                addTokenCookies(response, newTokens.get("accessToken"), newTokens.get("refreshToken"));
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"message\": \"Unauthorized - Invalid or expired token\"}"
+                );
+                response.getWriter().flush();
+            }
+        }catch (Exception e) {
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"message\": \"Unauthorized - Authentication error: " + e.getMessage() + "\"}"
+                );
+                response.getWriter().flush();
+            }
         }
     }
 

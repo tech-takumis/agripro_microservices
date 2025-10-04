@@ -1,8 +1,8 @@
 package com.hashjosh.program.controller;
 
-import com.hashjosh.program.dto.ProgramCreateRequestDto;
-import com.hashjosh.program.dto.ProgramResponseDto;
-import com.hashjosh.program.dto.ProgramUpdateRequestDto;
+import com.hashjosh.constant.program.dto.ProgramCreateRequestDto;
+import com.hashjosh.constant.program.dto.ProgramResponseDto;
+import com.hashjosh.constant.program.dto.ProgramUpdateRequestDto;
 import com.hashjosh.program.service.ProgramService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

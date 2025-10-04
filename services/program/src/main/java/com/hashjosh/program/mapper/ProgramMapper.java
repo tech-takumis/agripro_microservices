@@ -1,7 +1,7 @@
 package com.hashjosh.program.mapper;
 
-import com.hashjosh.program.dto.ProgramCreateRequestDto;
-import com.hashjosh.program.dto.ProgramResponseDto;
+import com.hashjosh.constant.program.dto.ProgramCreateRequestDto;
+import com.hashjosh.constant.program.dto.ProgramResponseDto;
 import com.hashjosh.program.entity.Program;
 import org.springframework.stereotype.Service;
 

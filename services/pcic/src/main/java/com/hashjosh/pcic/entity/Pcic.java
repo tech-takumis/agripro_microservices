@@ -52,7 +52,7 @@ public class Pcic {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_id", nullable = false)
     @JsonIgnore
     private PcicProfile pcicProfile;

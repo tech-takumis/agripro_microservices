@@ -1,6 +1,6 @@
 package com.hashjosh.rsbsa.exception;
 
-import com.hashjosh.rsbsa.ExceptionResponse;
+import com.hashjosh.rsbsa.dto.ExceptionResponse;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

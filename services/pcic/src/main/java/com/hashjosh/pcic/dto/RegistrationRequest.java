@@ -19,4 +19,14 @@ public class RegistrationRequest {
     private String phoneNumber;
     private String address;
     private Set<UUID> rolesId;
+
+    // Profile section
+    private String mandate;
+    private String vision;
+    private String mission;
+    private String coreValues;
+    private String headOfficeAddress;
+    private String phone;
+    private String pcicEmail;
+    private String website;
 }
