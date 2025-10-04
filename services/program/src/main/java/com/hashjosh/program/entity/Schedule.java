@@ -1,9 +1,8 @@
 package com.hashjosh.program.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.program.enums.SchedulePriority;
-import com.hashjosh.program.enums.ScheduleType;
+import com.hashjosh.constant.program.enums.SchedulePriority;
+import com.hashjosh.constant.program.enums.ScheduleType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;

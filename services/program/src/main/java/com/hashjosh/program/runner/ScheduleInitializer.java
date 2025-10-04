@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.hashjosh.program.entity.Schedule;
-import com.hashjosh.program.enums.SchedulePriority;
-import com.hashjosh.program.enums.ScheduleType;
+import com.hashjosh.constant.program.enums.SchedulePriority;
+import com.hashjosh.constant.program.enums.ScheduleType;
 import com.hashjosh.program.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 

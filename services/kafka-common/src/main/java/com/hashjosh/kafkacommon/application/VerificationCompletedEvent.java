@@ -14,19 +14,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VerificationCompletedEvent implements ApplicationDomainEvent {
-    @JsonProperty("submissionId")
     private UUID submissionId;
-
-    @JsonProperty("userId")
     private UUID userId;
-
-    @JsonProperty("status")
-    private String status;
-
-    @JsonProperty("rejectionReason")
+    private String verificationType;
+    private String report;
+    private String status; // COMPLETED, REJECTED
     private String rejectionReason;
-
-    @JsonProperty("verifiedAt")
     private LocalDateTime verifiedAt;
 
 }

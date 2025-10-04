@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/policy")
+@RequestMapping("/api/v1/pcic/policy")
 @Slf4j
 public class PolicyController {
 

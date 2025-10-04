@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api/v1/claim")
+@RequestMapping("/api/v1/pcic/claim")
 public class ClaimController {
 
     private final ClaimService claimService;

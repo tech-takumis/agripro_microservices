@@ -1,8 +1,8 @@
 package com.hashjosh.program.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.program.enums.ProgramStatus;
-import com.hashjosh.program.enums.ProgramType;
+import com.hashjosh.constant.program.enums.ProgramStatus;
+import com.hashjosh.constant.program.enums.ProgramType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;

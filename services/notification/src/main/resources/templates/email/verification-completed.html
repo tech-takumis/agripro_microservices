@@ -21,10 +21,10 @@
   </div>
   <div class="content">
     <p>Dear <span th:text="${name}"></span>,</p>
-    <p th:if="${event.status == 'COMPLETED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) has been successfully verified on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
-    <p th:if="${event.status == 'REJECTED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) was rejected on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
+    <p th:if="${event.status == 'COMPLETED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) has been successfully verified by Agriculture on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
+    <p th:if="${event.status == 'REJECTED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) was rejected by Agriculture on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
     <p th:if="${event.status == 'REJECTED'}" class="alert">Reason: <span th:text="${event.rejectionReason}"></span></p>
-    <p th:if="${event.status == 'COMPLETED'}">You will be notified once inspection begins.</p>
+    <p th:if="${event.status == 'COMPLETED'}">Your application will be sent to PCIC for inspection soon.</p>
     <p th:if="${event.status == 'REJECTED'}">Please contact support for further assistance.</p>
   </div>
   <div class="footer">

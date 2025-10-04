@@ -1,8 +1,8 @@
-package com.hashjosh.program.dto;
+package com.hashjosh.constant.program.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.program.enums.ProgramStatus;
-import com.hashjosh.program.enums.ProgramType;
+import com.hashjosh.constant.program.enums.ProgramStatus;
+import com.hashjosh.constant.program.enums.ProgramType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;

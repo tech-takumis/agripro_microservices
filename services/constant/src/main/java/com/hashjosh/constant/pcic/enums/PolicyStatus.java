@@ -1,4 +1,4 @@
-package com.hashjosh.pcic.enums;
+package com.hashjosh.constant.pcic.enums;
 
 public enum PolicyStatus {
     PENDING,

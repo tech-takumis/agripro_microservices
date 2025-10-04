@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Submitted</title>
+    <title>Application Received</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
@@ -16,12 +16,12 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>Application Submitted</h1>
+        <h1>Application Received</h1>
     </div>
     <div class="content">
         <p>Dear <span th:text="${name}"></span>,</p>
-        <p>Your application has been successfully submitted on <span th:text="${#temporals.format(event.submittedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
-        <p>We will notify you once verification begins.</p>
+        <p>Your application (ID: <span th:text="${event.submissionId}"></span>) has been received by Agriculture on <span th:text="${#temporals.format(event.submittedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
+        <p>Verification will start soon, and you will be notified when it begins.</p>
     </div>
     <div class="footer">
         <p>Agriculture Service Team</p>

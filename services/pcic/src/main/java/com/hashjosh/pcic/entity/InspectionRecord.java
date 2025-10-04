@@ -1,7 +1,7 @@
 package com.hashjosh.pcic.entity;
 
 
-import com.hashjosh.pcic.enums.InspectionStatus;
+import com.hashjosh.constant.pcic.enums.InspectionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,6 +24,9 @@ public class InspectionRecord {
 
     @Column(name = "submission_id", nullable = false)
     private UUID submissionId; // Maps to Application.id
+
+    @Column(name = "submitted_by")
+    private UUID submittedBy;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)

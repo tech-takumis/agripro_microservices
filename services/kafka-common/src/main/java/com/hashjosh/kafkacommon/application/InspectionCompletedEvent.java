@@ -17,20 +17,13 @@ import java.util.UUID;
 public class InspectionCompletedEvent implements ApplicationDomainEvent {
     @JsonProperty("submissionId")
     private UUID submissionId;
-
-    @JsonProperty("userId")
+    @JsonProperty("userID")
     private UUID userId;
-
-    @JsonProperty("applicationTypeId")
-    private String inspectionType;
-
-    @JsonProperty("report")
-    private String report;
-
-    @JsonProperty("uploadedBy")
-    private UUID uploadedBy;
-
-    @JsonProperty("createdAt")
+    @JsonProperty("status")
+    private String status; // COMPLETED, INVALID
+    @JsonProperty("comments")
+    private String comments;
+    @JsonProperty("inspectedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private LocalDateTime createdAt;
+    private LocalDateTime inspectedAt;
 }

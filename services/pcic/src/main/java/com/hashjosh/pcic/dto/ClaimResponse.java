@@ -1,7 +1,7 @@
 package com.hashjosh.pcic.dto;
 
 
-import com.hashjosh.pcic.enums.ClaimStatus;
+import com.hashjosh.constant.pcic.enums.ClaimStatus;
 
 import java.util.UUID;
 

@@ -24,20 +24,27 @@ public class AgricultureConsumer {
 
     @KafkaListener(topics = "application-lifecycle", groupId = "agriculture-group")
     public void handleApplicationSubmitted(ApplicationSubmittedEvent event) {
-        VerificationRecord record = VerificationRecord.builder()
-                .submissionId(event.getSubmissionId())
-                .uploadedBy(event.getUserId())
-                .status(VerificationStatus.PENDING)
-                .verificationType("Application Verification")
-                .build();
-        verificationRecordRepository.save(record);
-        agricultureProducer.publishEvent("application-lifecycle",
-                new VerificationStartedEvent(
-                        event.getSubmissionId(),
-                        event.getUserId(),
-                        LocalDateTime.now()
-                ));
+       try{
+           VerificationRecord record = VerificationRecord.builder()
+                   .submissionId(event.getSubmissionId())
+                   .uploadedBy(event.getUserId())
+                   .status(VerificationStatus.PENDING)
+                   .verificationType("Application Verification")
+                   .build();
+           verificationRecordRepository.save(record);
+           agricultureProducer.publishEvent("application-lifecycle",
+                   new VerificationStartedEvent(
+                           event.getSubmissionId(),
+                           event.getUserId(),
+                           LocalDateTime.now()
+                   ));
 
+           log.info("Verification started for application: {}", event.getSubmissionId());
+
+       }catch (Exception e){
+           log.error("Failed to process ApplicationSubmittedEvent: {}", event.getSubmissionId(), e);
+           throw e;
+       }
     }
 
 }

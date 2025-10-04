@@ -3,8 +3,8 @@ package com.hashjosh.pcic.service;
 
 import com.hashjosh.pcic.dto.*;
 import com.hashjosh.pcic.entity.*;
-import com.hashjosh.pcic.enums.ClaimStatus;
-import com.hashjosh.pcic.enums.PolicyStatus;
+import com.hashjosh.constant.pcic.enums.ClaimStatus;
+import com.hashjosh.constant.pcic.enums.PolicyStatus;
 import com.hashjosh.pcic.exception.ClaimNotFoundException;
 import com.hashjosh.pcic.mapper.ClaimMapper;
 import com.hashjosh.pcic.repository.*;
@@ -48,5 +48,14 @@ public class ClaimService {
         claimRepository.save(savedClaim);
 
         return claimMapper.toClaimResponse(savedClaim);
+    }
+
+    public Claim createClaim(UUID submissionId, UUID policyId) {
+        return Claim.builder()
+                .submissionId(submissionId)
+                .policyId(policyId)
+                .claimAmount(5000.0)
+                .payoutStatus(ClaimStatus.PENDING)
+                .build();
     }
 }

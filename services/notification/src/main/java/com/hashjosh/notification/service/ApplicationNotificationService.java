@@ -68,9 +68,13 @@ public class ApplicationNotificationService {
 
     private String getNotificationSubject(Object event) {
         return switch (event) {
-            case ApplicationSubmittedEvent e -> "Application Submitted";
+            case ApplicationSubmittedEvent e -> "Application Received";
             case VerificationStartedEvent e -> "Verification Started";
+            case ApplicationUnderReviewEvent e -> "Application Under Review";
             case VerificationCompletedEvent e -> "Verification " + e.getStatus();
+            case ApplicationSentToPcicEvent e -> "Application Sent to PCIC";
+            case ApplicationReceivedByPcicEvent e -> "Application Received by PCIC";
+            case InspectionScheduledEvent e -> "Inspection Scheduled";
             case InspectionCompletedEvent e -> "Inspection Completed";
             case PolicyIssuedEvent e -> "Policy Issued: #" + e.getPolicyNumber();
             case ClaimProcessedEvent e -> "Claim Processing Started";
@@ -82,7 +86,11 @@ public class ApplicationNotificationService {
         return switch (event) {
             case ApplicationSubmittedEvent e -> "email/application-submitted";
             case VerificationStartedEvent e -> "email/verification-started";
+            case ApplicationUnderReviewEvent e -> "email/application-under-review";
             case VerificationCompletedEvent e -> "email/verification-completed";
+            case ApplicationSentToPcicEvent e -> "email/application-sent-to-pcic";
+            case ApplicationReceivedByPcicEvent e -> "email/application-received-by-pcic";
+            case InspectionScheduledEvent e -> "email/inspection-scheduled";
             case InspectionCompletedEvent e -> "email/inspection-completed";
             case PolicyIssuedEvent e -> "email/policy-issued";
             case ClaimProcessedEvent e -> "email/claim-processed";
@@ -93,7 +101,7 @@ public class ApplicationNotificationService {
     private String renderTemplate(Object event, String template, FarmerResponse user) {
         Context context = new Context();
         context.setVariable("email", user.getEmail());
-        context.setVariable("name", user.getFirstName() + " "+ user.getLastName()); // Assuming User has name
+        context.setVariable("name", user.getFirstName() + " " + user.getLastName());
         context.setVariable("event", event);
         return templateEngine.process(template, context);
     }
@@ -102,7 +110,11 @@ public class ApplicationNotificationService {
         return switch (event) {
             case ApplicationSubmittedEvent e -> e.getUserId();
             case VerificationStartedEvent e -> e.getUserId();
+            case ApplicationUnderReviewEvent e -> e.getUserId();
             case VerificationCompletedEvent e -> e.getUserId();
+            case ApplicationSentToPcicEvent e -> e.getUserId();
+            case ApplicationReceivedByPcicEvent e -> e.getUserId();
+            case InspectionScheduledEvent e -> e.getUserId();
             case InspectionCompletedEvent e -> e.getUserId();
             case PolicyIssuedEvent e -> e.getUserId();
             case ClaimProcessedEvent e -> e.getUserId();

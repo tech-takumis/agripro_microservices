@@ -2,9 +2,8 @@ package com.example.agriculture.clients;
 
 
 import com.example.agriculture.exception.ApplicationNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -16,18 +15,19 @@ import java.util.UUID;
 public class ApplicationClient {
 
     private final RestClient restClient;
-
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     public ApplicationClient(RestClient.Builder clientBuilder) {
         this.restClient = RestClient.builder()
-                .baseUrl("http://application-service/api/v1/applications")
+                .baseUrl("http://localhost:8010/api/v1/applications")
                 .build();
     }
 
-    public ApplicationResponseDto getApplicationById(String token, UUID applicationId, HttpServletRequest request) {
+    public ApplicationResponseDto getApplicationById(UUID applicationId) {
         return restClient.get()
                 .uri("/{application-id}", applicationId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer "+token)
+                .header("X-Internal-Service", applicationName)
                 .exchange((req, res) -> {
                     if(res.getStatusCode().is2xxSuccessful()) {
                         return res.bodyTo(ApplicationResponseDto.class);
