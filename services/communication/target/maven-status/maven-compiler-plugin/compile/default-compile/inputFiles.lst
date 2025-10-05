@@ -1,0 +1,15 @@
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\CommunicationApplication.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\config\WebSocketConfig.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\controller\MessageController.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\AttachmentDto.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\MessageDto.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Conversation.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Message.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Post.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\PostAttachment.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\User.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\kafka\CommunicationPublisher.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\mapper\MessageMapper.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\repository\ConversationRepository.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\repository\MessageRepository.java
+D:\Projects\Thesis_Final\agripro_microservices\services\communication\src\main\java\com\hashjosh\communication\service\MessageService.java

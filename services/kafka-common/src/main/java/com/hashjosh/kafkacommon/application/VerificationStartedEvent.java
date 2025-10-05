@@ -14,7 +14,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerificationStartedEvent implements ApplicationDomainEvent {
+public class VerificationStartedEvent{
     @JsonProperty("submissionId")
     private UUID submissionId;
 
