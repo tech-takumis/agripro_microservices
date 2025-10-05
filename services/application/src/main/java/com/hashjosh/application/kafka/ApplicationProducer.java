@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ApplicationProducer {
 
-    private final KafkaTemplate<String, ApplicationDomainEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public  void publishEvent(String topic,ApplicationDomainEvent event) {
+    public <T> void publishEvent(String topic,T event) {
         log.info("submitting application::: {}", event);
 
         kafkaTemplate.send(MessageBuilder

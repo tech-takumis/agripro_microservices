@@ -11,12 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 @Builder
-@Data
-@Getter
-@Setter
 @NoArgsConstructor
+@Data
 @AllArgsConstructor
-public class ApplicationSubmittedEvent implements ApplicationDomainEvent {
+public class ApplicationSubmittedEvent  {
     @JsonProperty("submissionId")
     private UUID submissionId;
 
@@ -35,4 +33,5 @@ public class ApplicationSubmittedEvent implements ApplicationDomainEvent {
     @JsonProperty("submittedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime submittedAt;
+
 }

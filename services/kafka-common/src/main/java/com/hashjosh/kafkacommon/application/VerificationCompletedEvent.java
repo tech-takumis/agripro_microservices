@@ -13,7 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerificationCompletedEvent implements ApplicationDomainEvent {
+public class VerificationCompletedEvent {
     private UUID submissionId;
     private UUID userId;
     private String verificationType;

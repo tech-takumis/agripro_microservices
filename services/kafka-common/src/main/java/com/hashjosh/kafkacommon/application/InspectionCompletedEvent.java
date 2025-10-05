@@ -9,12 +9,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
-@Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InspectionCompletedEvent implements ApplicationDomainEvent {
+@Data
+public class InspectionCompletedEvent {
     @JsonProperty("submissionId")
     private UUID submissionId;
     @JsonProperty("userID")
@@ -26,4 +24,5 @@ public class InspectionCompletedEvent implements ApplicationDomainEvent {
     @JsonProperty("inspectedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime inspectedAt;
+
 }

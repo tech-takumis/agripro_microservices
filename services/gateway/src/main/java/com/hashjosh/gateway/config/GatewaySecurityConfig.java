@@ -1,6 +1,5 @@
 package com.hashjosh.gateway.config;
 
-import com.hashjosh.jwtshareable.service.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -15,10 +14,10 @@ import java.util.List;
 @Configuration
 public class GatewaySecurityConfig {
 
-    private final JwtService jwtService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public GatewaySecurityConfig(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public GatewaySecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -53,7 +52,7 @@ public class GatewaySecurityConfig {
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )
-                .addFilterAt(jwtAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
 
@@ -71,8 +70,4 @@ public class GatewaySecurityConfig {
         return source;
     }
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService);
-    }
 }
