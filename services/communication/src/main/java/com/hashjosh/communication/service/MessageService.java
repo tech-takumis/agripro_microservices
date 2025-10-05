@@ -5,7 +5,6 @@ import com.hashjosh.communication.entity.Conversation;
 import com.hashjosh.communication.entity.Message;
 import com.hashjosh.communication.entity.User;
 import com.hashjosh.communication.kafka.CommunicationPublisher;
-import com.hashjosh.communication.mapper.MessageMapper;
 import com.hashjosh.communication.repository.ConversationRepository;
 import com.hashjosh.communication.repository.MessageRepository;
 import com.hashjosh.kafkacommon.communication.NewMessageEvent;
