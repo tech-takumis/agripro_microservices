@@ -12,6 +12,7 @@
     <modules>
         <module>farmer</module>
         <module>agriculture</module>
+        <module>communication</module>
         <module>pcic</module>
         <module>constant</module>
         <module>notification</module>
