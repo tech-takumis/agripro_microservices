@@ -1,12 +1,12 @@
 package com.hashjosh.gateway.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -14,10 +14,14 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-@RequiredArgsConstructor
+@Service
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
+
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

@@ -13,7 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClaimProcessedEvent implements ApplicationDomainEvent {
+public class ClaimProcessedEvent{
     @JsonProperty("submissionId")
     private UUID submissionId;
 
