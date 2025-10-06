@@ -10,6 +10,14 @@ class AuthController extends GetxController {
   final _isLoading = false.obs;
   final _isLoggedIn = false.obs;
   final _errorMessage = ''.obs;
+  // Add at the top (below the other observables)
+final RxString _userName = ''.obs;
+final RxString _userEmail = ''.obs;
+
+// Public getters
+String get userName => _userName.value;
+String get userEmail => _userEmail.value;
+
 
   bool get isLoading => _isLoading.value;
   bool get isLoggedIn => _isLoggedIn.value;

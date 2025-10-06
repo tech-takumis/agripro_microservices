@@ -2,7 +2,7 @@
   <AuthenticatedLayout :navigation="navigation" :role-title="'Municipal Agriculturist'" :page-title="'Municipal Dashboard'">
 <!-- Navbar -->
 <nav class="w-full bg-transparent border-0 shadow-none px-6 py-3 mb-6 flex items-center justify-between">
-      <h4 class="text-3xl font-bold text-gray-900">Dashboard</h4>
+      <h4 class="text-3xl font-bold text-black-700">Dashboard</h4>
       <!-- Right Side: Notifications + Profile -->
       <div class="flex items-center space-x-6">
         
@@ -119,7 +119,6 @@
     </div>
   </div>
 </div>
-
         </div>
       </div>
     </nav>
@@ -132,7 +131,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
           <div class="p-5">
             <div class="flex items-center justify-between">
-              <p class="text-2xs font-medium text-black">Local Farmers</p>
+              <p class="text-2xs font-medium text-green-700">Local Farmers</p>
               <div
                 :class="[
                   farmersChange > 0 ? 'text-green-700 bg-green-50' : farmersChange < 0 ? 'text-red-700 bg-red-50' : 'text-gray-700 bg-gray-50',
@@ -158,7 +157,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
           <div class="p-5">
             <div class="flex items-center justify-between">
-              <p class="text-2xs font-medium text-black">Disbursements</p>
+              <p class="text-2xs font-medium text-green-700">Disbursements</p>
               <div
                 :class="[
                   disbursementsChange > 0 ? 'text-green-700 bg-green-50' : disbursementsChange < 0 ? 'text-red-700 bg-red-50' : 'text-gray-700 bg-gray-50',
@@ -171,8 +170,8 @@
               </div>
             </div>
             <div class="mt-2 flex items-center justify-between">
-              <div class="p-2 rounded-lg bg-yellow-50">
-                <TrendingUp class="h-6 w-6 text-yellow-600" />
+              <div class="p-2 rounded-lg bg-green-50">
+                <TrendingUp class="h-6 w-6 text-green-600" />
               </div>
               <p class="text-3xl font-semibold text-gray-900">₱{{ stats.disbursements.toLocaleString() }}K</p>
             </div>
@@ -213,10 +212,10 @@
   <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center space-x-3">
-        <div class="p-2 bg-blue-100 rounded-lg">
-          <CreditCard class="h-6 w-6 text-blue-600" />
+        <div class="p-2 bg-red-50 rounded-lg">
+          <CreditCard class="h-6 w-6 text-red-600" />
         </div>
-        <h3 class="text-lg font-semibold text-gray-900">Financial Transactions</h3>
+        <h3 class="text-lg font-semibold text-red-600">Financial Transactions</h3>
       </div>
       <PermissionGuard :permissions="['CAN_MANAGE_FINANCE']">
         <button
@@ -232,7 +231,7 @@
       <div
         v-for="transaction in recentTransactions"
         :key="transaction.id"
-        class="flex items-center justify-between border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition"
+        class="flex items-center justify-between border border-black-100 rounded-lg p-4 hover:bg-green-50 transition"
       >
         <div class="flex items-center space-x-3">
           <div
@@ -268,17 +267,17 @@
   <!-- Municipal Programs Card -->
   <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
     <div class="flex items-center space-x-3 mb-6">
-      <div class="p-2 bg-purple-100 rounded-lg">
-        <Briefcase class="h-6 w-6 text-purple-600" />
+      <div class="p-2 bg-green-50 rounded-lg">
+        <Briefcase class="h-6 w-6 text-green-600" />
       </div>
-      <h3 class="text-lg font-semibold text-gray-900">Municipal Programs</h3>
+      <h3 class="text-lg font-semibold text-green-700">Municipal Programs</h3>
     </div>
 
     <div class="space-y-4">
       <div
         v-for="program in municipalPrograms"
         :key="program.id"
-        class="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition"
+        class="border border-black-100 rounded-lg p-4 hover:bg-green-50 transition"
       >
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center space-x-2">
@@ -310,9 +309,9 @@
 
         <div class="mt-2">
           <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-blue-600 h-2 rounded-full" :style="{ width: program.progress + '%' }"></div>
+            <div class="bg-green-600 h-2 rounded-full" :style="{ width: program.progress + '%' }"></div>
           </div>
-          <p class="text-xs text-gray-500 mt-1">{{ program.progress }}% Complete</p>
+          <p class="text-xs text-green-600 mt-1">{{ program.progress }}% Complete</p>
         </div>
       </div>
     </div>
