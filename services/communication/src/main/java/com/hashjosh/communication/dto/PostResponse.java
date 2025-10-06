@@ -11,8 +11,8 @@ public class PostResponse {
     private UUID id;
     private String title;
     private String content;
-    private UUID authorId;
-    private List<UUID> documentIds;
+    private String authorId;
+    private List<String> documentIds;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

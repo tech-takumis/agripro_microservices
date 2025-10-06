@@ -2,6 +2,7 @@ package com.hashjosh.document.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.constant.document.dto.*;
+import com.hashjosh.constant.program.enums.DocumentType;
 import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
 import io.minio.errors.*;
@@ -37,16 +38,15 @@ public class DocumentController {
     @Operation(summary = "Upload a document")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DocumentResponse> uploadDocument(
-            @RequestParam("referenceId") String referenceId,
+            @RequestParam("referenceId") UUID referenceId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("documentType") String documentType,
+            @RequestParam("documentType") DocumentType documentType,
             @RequestParam(value = "metaData", required = false) String metaData
     ) {
         try {
-            UUID referenceUuid = UUID.fromString(referenceId);
 
             DocumentRequest request = new DocumentRequest(
-                    referenceUuid,
+                    referenceId,
                     file,
                     documentType,
                     metaData != null ? new ObjectMapper().readTree(metaData) : null

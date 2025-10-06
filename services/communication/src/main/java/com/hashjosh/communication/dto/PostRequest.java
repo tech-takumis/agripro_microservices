@@ -11,4 +11,5 @@ public class PostRequest {
     private String content;
     private UUID authorId;
     private List<UUID> documentIds;
+
 }
