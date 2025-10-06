@@ -26,6 +26,7 @@ trusted:
   internal-service-ids:
     - agriculture-service
     - notification-service
+    - communication-service
     - farmer-service
     - application-service
     - pcic-service

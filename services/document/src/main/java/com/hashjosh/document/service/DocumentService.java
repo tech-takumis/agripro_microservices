@@ -1,8 +1,7 @@
 package com.hashjosh.document.service;
 
+import com.hashjosh.constant.document.dto.*;
 import com.hashjosh.document.config.CustomUserDetails;
-import com.hashjosh.document.dto.DocumentRequest;
-import com.hashjosh.document.dto.DocumentResponse;
 import com.hashjosh.document.exception.DocumentNotFoundException;
 import com.hashjosh.document.mapper.DocumentMapper;
 import com.hashjosh.document.model.Document;
@@ -20,14 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;

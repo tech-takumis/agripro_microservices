@@ -1,15 +1,13 @@
 package com.hashjosh.document.mapper;
 
+import com.hashjosh.constant.document.dto.*;
 import com.hashjosh.document.config.CustomUserDetails;
-import com.hashjosh.document.dto.DocumentRequest;
-import com.hashjosh.document.dto.DocumentResponse;
-import com.hashjosh.document.enums.DocumentType;
+import com.hashjosh.constant.program.enums.DocumentType;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.UUID;
 
 @Component
