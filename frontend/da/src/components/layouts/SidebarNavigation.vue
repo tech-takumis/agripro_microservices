@@ -13,7 +13,7 @@
     </div>
 
     <!-- Department Name -->
-    <h1 class="mt-4 text-base font-bold text-gray-900 tracking-tight text-center">
+    <h1 class="mt-4 text-base font-bold text-black-900 tracking-tight text-center">
       Department of Agriculture
     </h1>
 

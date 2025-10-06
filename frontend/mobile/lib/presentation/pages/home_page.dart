@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import '../controllers/auth_controller.dart';
 import 'application_page.dart';
+import 'package:mobile/presentation/pages/profile_page.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,53 +33,21 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Allows the body to extend behind the nav bar
+      extendBody: true,
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
         },
         children: [
-          // Original Home Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.home, size: 100, color: Colors.blue),
-                SizedBox(height: 24),
-                Text(
-                  'Welcome to Home Page!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'You have successfully logged in.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                SizedBox(height: 32),
-                ElevatedButton.icon(
-                  onPressed: authController.logout,
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Logout'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // New Application Page
+          // 🏠 Home Page
+          _buildHomePage(),
+
+          // 📄 Application Page
           const ApplicationPage(),
+
+          // 👤 Profile Page
+         const ProfilePage(),
         ],
       ),
       bottomNavigationBar: Padding(
@@ -91,19 +61,39 @@ class _HomePageState extends State<HomePage> {
             });
           },
           indicatorColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey[600],
+          unselectedItemColor: const Color.fromARGB(255, 24, 171, 46),
           selectedItemColor: Theme.of(context).primaryColor,
-          backgroundColor: Colors.white.withAlpha(230),
-          items: [
-            CrystalNavigationBarItem(
-              icon: Icons.home_outlined, // Only 'icon' parameter is used
-            ),
-            CrystalNavigationBarItem(
-              icon: Icons.description_outlined, // Only 'icon' parameter is used
-            ),
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255).withAlpha(240),
+          items:  [
+            CrystalNavigationBarItem(icon: Icons.home_outlined),
+            CrystalNavigationBarItem(icon: Icons.description_outlined),
+            CrystalNavigationBarItem(icon: Icons.person_outline),
           ],
         ),
       ),
     );
   }
+
+  // 🏠 HOME PAGE
+  Widget _buildHomePage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.home, size: 100, color: Colors.green),
+          SizedBox(height: 24),
+          Text(
+            'Welcome to the Dashboard!',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Manage your agricultural programs easily.',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
