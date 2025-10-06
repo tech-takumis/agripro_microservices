@@ -4,7 +4,7 @@ import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import '../controllers/auth_controller.dart';
 import 'application_page.dart';
 import 'package:mobile/presentation/pages/profile_page.dart';
-
+import 'contact_department_page.dart'; // 👈 import your chat page
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -47,9 +47,25 @@ class _HomePageState extends State<HomePage> {
           const ApplicationPage(),
 
           // 👤 Profile Page
-         const ProfilePage(),
+          const ProfilePage(),
         ],
       ),
+
+      // 💬 Floating Chat Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.green,
+        onPressed: () {
+          // navigate to chatbot-style page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ContactDepartmentPage(),
+            ),
+          );
+        },
+        child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+      ),
+
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
         child: CrystalNavigationBar(
@@ -63,8 +79,9 @@ class _HomePageState extends State<HomePage> {
           indicatorColor: Theme.of(context).primaryColor,
           unselectedItemColor: const Color.fromARGB(255, 24, 171, 46),
           selectedItemColor: Theme.of(context).primaryColor,
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255).withAlpha(240),
-          items:  [
+          backgroundColor:
+              const Color.fromARGB(255, 255, 255, 255).withAlpha(240),
+          items: [
             CrystalNavigationBarItem(icon: Icons.home_outlined),
             CrystalNavigationBarItem(icon: Icons.description_outlined),
             CrystalNavigationBarItem(icon: Icons.person_outline),
@@ -95,5 +112,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }

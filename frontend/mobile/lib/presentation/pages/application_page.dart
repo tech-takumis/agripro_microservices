@@ -4,9 +4,8 @@ import 'package:mobile/presentation/controllers/application_controller.dart';
 import 'package:mobile/presentation/widgets/application_widgets/application_card.dart';
 import 'application_detail_page.dart';
 
-/// Main application page showing all available application types
-///
-/// Displays applications in card format with important information
+/// 🌿 Main Application Page
+/// Displays all available application types in card format.
 class ApplicationPage extends StatelessWidget {
   const ApplicationPage({super.key});
 
@@ -15,28 +14,26 @@ class ApplicationPage extends StatelessWidget {
     final controller = Get.find<ApplicationController>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color.fromARGB(72, 248, 248, 248),
       appBar: AppBar(
         title: const Text('Applications'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         actions: [
           Obx(
-                () => IconButton(
+            () => IconButton(
               onPressed: controller.isLoading || controller.isRetrying
                   ? null
                   : controller.fetchApplications,
               icon: controller.isLoading || controller.isRetrying
                   ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.white,
-                  ),
-                ),
-              )
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
                   : const Icon(Icons.refresh),
               tooltip: 'Refresh',
             ),
@@ -44,14 +41,14 @@ class ApplicationPage extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        // Loading state
+        // 🌀 Loading State
         if (controller.isLoading) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
 
-        // Error state
+        // ❌ Error State
         if (controller.errorMessage.isNotEmpty) {
           return Center(
             child: Padding(
@@ -68,8 +65,8 @@ class ApplicationPage extends StatelessWidget {
                   Text(
                     'Error Loading Applications',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -89,7 +86,7 @@ class ApplicationPage extends StatelessWidget {
           );
         }
 
-        // Empty state
+        // 📭 Empty State
         if (controller.applications.isEmpty) {
           return Center(
             child: Column(
@@ -104,9 +101,9 @@ class ApplicationPage extends StatelessWidget {
                 Text(
                   'No Applications Available',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -118,7 +115,7 @@ class ApplicationPage extends StatelessWidget {
           );
         }
 
-        // Success state - show applications
+        // ✅ Success State — Show List
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 16),
           itemCount: controller.applications.length,
@@ -128,7 +125,7 @@ class ApplicationPage extends StatelessWidget {
               application: application,
               onTap: () {
                 Get.to(
-                      () => ApplicationDetailPage(
+                  () => ApplicationDetailPage(
                     application: application,
                   ),
                 );
