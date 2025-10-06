@@ -1,7 +1,7 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="flex h-screen bg-gray-100 print:h-auto print:bg-white">
     <!-- Desktop Sidebar -->
-    <div class="hidden md:flex md:w-64 md:flex-col">
+    <div class="hidden md:flex md:w-64 md:flex-col print:hidden">
       <SidebarNavigation
         :navigation="navigation"
         :role-title="roleTitle"
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Mobile Sidebar (Off-canvas) -->
-    <div v-if="sidebarOpen" class="fixed inset-0 z-40 md:hidden">
+    <div v-if="sidebarOpen" class="fixed inset-0 z-40 md:hidden print:hidden">
       <div class="fixed inset-0 bg-gray-600 bg-opacity-75" @click="sidebarOpen = false"></div>
       <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
         <div class="absolute top-0 right-0 -mr-12 pt-2">
@@ -37,9 +37,9 @@
     </div>
 
     <!-- Main content area -->
-    <div class="flex flex-col flex-1 overflow-hidden">
+    <div class="flex flex-col flex-1 overflow-hidden print:overflow-visible">
       <!-- Top bar for mobile (visible on small screens) -->
-      <div class="md:hidden bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
+      <div class="md:hidden bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm print:hidden">
         <button
           @click="sidebarOpen = true"
           class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
@@ -52,13 +52,13 @@
       </div>
 
       <!-- Page header (visible on all screens, but mobile has its own top bar) -->
-      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 hidden md:block">
+      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 hidden md:block print:hidden">
         <div class="px-4 py-4 sm:px-6 lg:px-8">
           <slot name="header" />
         </div>
       </header>
       <!-- Mobile header for consistency with desktop header slot -->
-      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 md:hidden">
+      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 md:hidden print:hidden">
         <div class="px-4 py-4 sm:px-6 lg:px-8">
           <slot name="header" />
         </div>
@@ -66,8 +66,8 @@
 
 
       <!-- Main content area -->
-      <main class="flex-1 overflow-y-auto bg-gray-50">
-        <div class="p-4 sm:p-6 lg:p-8">
+      <main class="flex-1 overflow-y-auto bg-gray-50 print:overflow-visible print:bg-white">
+        <div class="p-4 sm:p-6 lg:p-8 print:p-0">
           <slot />
         </div>
       </main>

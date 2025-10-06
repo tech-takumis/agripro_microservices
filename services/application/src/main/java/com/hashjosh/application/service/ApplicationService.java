@@ -250,6 +250,7 @@ public class ApplicationService {
                 ));
         List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
 
+
         return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 }

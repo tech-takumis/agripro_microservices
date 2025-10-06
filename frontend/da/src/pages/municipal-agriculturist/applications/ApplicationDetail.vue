@@ -111,7 +111,6 @@
                         <DetailField label="Barangay" :value="fields.lot_1_location?.barangay" />
                         <DetailField label="Municipality/City" :value="fields.lot_1_location?.municipality || fields.lot_1_location?.city" />
                         <DetailField label="Province" :value="fields.lot_1_location?.province" />
-                        <DetailField label="Region" :value="fields.lot_1_location?.region" />
                     </div>
                 </div>
 
@@ -127,6 +126,43 @@
                 </div>
             </div>
 
+            <!-- Documents section to display images from documentIds -->
+            <div v-if="application.documentIds && application.documentIds.length > 0" class="bg-white shadow-sm rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FileText class="h-5 w-5" />
+                    Documents
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div v-for="docId in application.documentIds" :key="docId" class="border border-gray-200 rounded-lg overflow-hidden">
+                        <img
+                            :src="`http://localhost:9001/api/v1/documents/${docId}`"
+                            :alt="`Document ${docId}`"
+                            class="w-full h-48 object-cover"
+                            @error="handleImageError"
+                        />
+                        <div class="p-2 bg-gray-50">
+                            <p class="text-xs text-gray-600 truncate">ID: {{ docId }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farmer Signature section if it exists -->
+            <div v-if="farmerSignatureDocId" class="bg-white shadow-sm rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FileText class="h-5 w-5" />
+                    Farmer Signature
+                </h2>
+                <div class="border border-gray-200 rounded-lg overflow-hidden inline-block">
+                    <img
+                        :src="`http://localhost:9001/api/v1/documents/${farmerSignatureDocId}`"
+                        alt="Farmer Signature"
+                        class="max-w-md h-auto"
+                        @error="handleImageError"
+                    />
+                </div>
+            </div>
+
             <!-- Submission Information -->
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -135,6 +171,8 @@
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <DetailField label="Application ID" :value="application.id" class="md:col-span-2" />
+                    <DetailField label="Application Type ID" :value="application.applicationTypeId" class="md:col-span-2" />
+                    <DetailField label="User ID" :value="application.userId" class="md:col-span-2" />
                     <DetailField label="Submitted At" :value="formatDateTime(application.submittedAt)" />
                     <DetailField label="Updated At" :value="formatDateTime(application.updatedAt)" />
                     <DetailField label="Version" :value="application.version" />
@@ -184,6 +222,14 @@ const roleTitle = computed(() => {
 
 const fields = computed(() => application.value?.dynamicFields || {})
 
+const farmerSignatureDocId = computed(() => {
+    const signature = fields.value.farmer_signature
+    if (signature && signature.startsWith('signature:')) {
+        return signature.replace('signature:', '')
+    }
+    return null
+})
+
 // Methods
 const fetchApplication = async () => {
     loading.value = true
@@ -224,6 +270,10 @@ const formatAmount = (amount) => {
     return new Intl.NumberFormat('en-PH').format(amount)
 }
 
+const handleImageError = (event) => {
+    event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E'
+}
+
 const handleEdit = () => {
     // Navigate to edit page (to be implemented)
     console.log('Edit application:', application.value.id)
@@ -250,4 +300,3 @@ onMounted(() => {
     fetchApplication()
 })
 </script>
-

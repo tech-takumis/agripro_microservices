@@ -5,13 +5,12 @@
         page-title="Applications"
     >
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between print:hidden">
                 <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
                 <div class="flex items-center gap-3">
                     <!-- Action buttons (shown when checkboxes are selected) -->
                     <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
                         <button
-                            v-if="selectedApplications.length === 1"
                             @click="handleUpdate"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
@@ -27,6 +26,15 @@
                         </button>
                     </div>
 
+                    <!-- Print button -->
+                    <button
+                        @click="handlePrint"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        <Printer class="h-4 w-4 mr-2" />
+                        Print
+                    </button>
+
                     <!-- Filter button -->
                     <button
                         @click="showFilterModal = true"
@@ -40,17 +48,17 @@
         </template>
 
         <!-- Loading state -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
+        <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
 
         <!-- Error state -->
-        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 print:hidden">
             <p class="text-red-800">{{ error }}</p>
         </div>
 
         <!-- Applications table -->
-        <div v-else class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div v-else class="bg-white shadow-sm rounded-lg overflow-hidden print:hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -124,7 +132,7 @@
             </div>
 
             <!-- Empty state -->
-            <div v-if="filteredApplications.length === 0" class="text-center py-12">
+            <div v-if="filteredApplications.length === 0" class="text-center py-12 print:hidden">
                 <FileText class="mx-auto h-12 w-12 text-gray-400" />
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No applications found</h3>
                 <p class="mt-1 text-sm text-gray-500">No farmer applications match your current filters.</p>
@@ -137,7 +145,301 @@
             :filters="filters"
             @apply-filters="applyFilters"
             @reset-filters="resetFilters"
+            class="print:hidden"
         />
+
+        <!-- Print Layout (hidden, only visible when printing) -->
+        <div id="print-layout" class="hidden print:block">
+            <div v-for="(chunk, chunkIndex) in farmerChunks" :key="chunkIndex">
+                <!-- PAGE 1: APPLICATION DETAILS -->
+                <div class="pcic-page">
+                    <!-- Restructured header into proper 3-column grid layout -->
+                    <!-- Header - 3 Column Layout -->
+                    <div class="grid grid-cols-12 gap-2 mb-2 text-xs">
+                        <!-- Column 1: Requirements, Note, Organization Details (4 cols) -->
+                        <div class="col-span-4">
+                            <p class="font-bold">REQUIREMENTS:</p>
+                            <p class="ml-4">• GOVERNMENT ID OR ANY VALID ID</p>
+                            <p class="ml-4">• RSBSA STUB</p>
+                            <p class="mt-1"><strong>NOTE:</strong> Please complete details.</p>
+                            
+                            <div class="mt-2">
+                                <p><strong>*Name of FO/PA/COOP/IA/Barangay:</strong></p>
+                                <p class="border-b border-black mt-4">{{ chunk[0]?.dynamicFields.organization_name }}</p>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <p><strong>Underwriter / Solicitor:</strong></p>
+                                <p class="border-b border-black mt-4">{{ chunk[0]?.dynamicFields.underwriter  }}</p>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <p><strong>Program:</strong> [ ]Regular [ ]Sikat saka [ ]RBSSA [ ]APCP/CAP-PBD [ ]PUNLA [ ]Corporate Rice Farming [ ]Others:______</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 2: PCIC Header and Mailing Address (5 cols) -->
+                        <div class="col-span-5 text-center">
+                            <p class="font-bold text-sm">PHILIPPINE CROP INSURANCE CORPORATION</p>
+                            <p>REGION ___</p>
+                            
+                            <div class="mt-4 text-left">
+                                <p><strong>Mailing Address:</strong></p>
+                                <p class="border-b border-black mt-4">{{ chunk[0]?.dynamicFields.mailing_address }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 3: FOR PCIC ONLY and RC-UPI-07 (3 cols) -->
+                        <div class="col-span-3">
+                            <div class="text-right mb-2">
+                                <p class="font-bold">RC-UPI-07</p>
+                                <p>2017/FEB</p>
+                                <p>PAGE 1</p>
+                            </div>
+                            
+                            <div class="border border-black p-1">
+                                <p class="font-bold text-center mb-1">FOR PCIC ONLY:</p>
+                                <div class="grid grid-cols-2 gap-x-1 text-xs leading-tight">
+                                    <div>CIC No. ___________</div>
+                                    <div>COC No. ___________</div>
+                                    <div>Date Issued: _______</div>
+                                    <div>Date Insured From: ___</div>
+                                    <div>Crop: [ ]Rice [ ]Corn</div>
+                                    <div>Phase: ___________</div>
+                                    <div>Phase: Wet ___ Dry ___</div>
+                                    <div>Period Insured From: ___</div>
+                                    <div>O.R. No.: _________</div>
+                                    <div>To: _____________</div>
+                                    <div>Date: ___________</div>
+                                    <div>Amount Paid: _____</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Farmer Table -->
+                    <table class="pcic-table w-full border-collapse border border-black mb-1">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">No.</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" colspan="3">Name of Farmers</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Suffix</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Civil<br/>Status</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Gender</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Address<br/>(Sitio & Barangay)</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Cellphone</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Spouse</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Beneficiary</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Bank name/<br/>Bank no.</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Amount<br/>of Cover</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" colspan="3">Planting Calendar</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Variety</th>
+                            </tr>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black px-0.5 py-0.5 text-xs">Last Name</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">First Name</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">Middle Name</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">Sowing/DS</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">TP/Planting</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">Harvest</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Display actual farmers from chunk -->
+                            <tr v-for="(app, index) in chunk" :key="app.id">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + index + 1 }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.last_name }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.first_name }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.middle_name || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.suffix || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ getCivilStatusShort(app.dynamicFields.civil_status) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ getGenderShort(app.dynamicFields.sex) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ getBarangay(app.dynamicFields.lot_1_location) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.cell_phone_number }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.spouse_name || '' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.primary_beneficiary }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs"></td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">₱{{ formatAmount(app.dynamicFields.amount_of_cover) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_sowing) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_planting) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_harvest) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_variety }}</td>
+                            </tr>
+                            <!-- Fill empty rows if less than 10 farmers -->
+                            <tr v-for="n in (10 - chunk.length)" :key="`empty-${n}`">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + chunk.length + n }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            </tr>
+                            <tr class="font-bold">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs" colspan="17">TOTAL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Restructured footer into 10:2 column ratio with proper subdivisions -->
+                    <!-- Footer - 2 Column Layout (10:2 ratio) -->
+                    <div class="grid grid-cols-12 gap-2 text-xs mb-1">
+                        <!-- Column 1: Certifications and Legends (10 cols) -->
+                        <div class="col-span-10">
+                            <!-- Top: 5:5 split for certifications -->
+                            <div class="grid grid-cols-2 gap-2 mb-1">
+                                <div class="border border-black p-1">
+                                    <p class="font-bold text-center mb-1">TECHNOLOGIST'S CERTIFICATION</p>
+                                    <p class="leading-tight mb-2">I hereby certify that the above farmer-applicants have<br/>
+                                    for crop already planted/to be planted. (Encircle). NO RISK INSURED<br/>
+                                    against has occured.</p>
+                                    <div class="grid grid-cols-3 gap-1 mt-4">
+                                        <div class="text-center border-t border-black pt-0.5">Signature Over Printed Name</div>
+                                        <div class="text-center border-t border-black pt-0.5">Office</div>
+                                        <div class="text-center border-t border-black pt-0.5">Date</div>
+                                    </div>
+                                </div>
+                                <div class="border border-black p-1">
+                                    <p class="font-bold text-center mb-1">CERTIFICATION</p>
+                                    <p class="leading-tight mb-2">I hereby certify that the above information are true and correct<br/>
+                                    to the best of my knowledge.</p>
+                                    <div class="grid grid-cols-2 gap-1 mt-4">
+                                        <div class="text-center border-t border-black pt-0.5">Signature Over Printed Name</div>
+                                        <div class="text-center border-t border-black pt-0.5">Date</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bottom: Full width for legends -->
+                            <div class="border border-black p-1">
+                                <p class="font-bold inline">LEGENDS:</p>
+                                <span class="ml-2">FO - Farmers' Organization | PA - Farmers' Association | COOP - Cooperative | IA - Irrigation Association</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 2: Premium Computation (2 cols) -->
+                        <div class="col-span-2">
+                            <div class="border border-black p-1 h-full">
+                                <p class="font-bold text-center mb-1">PREMIUM COMPUTATION (FOR PCIC ONLY)</p>
+                                <p class="leading-tight">Premium Rate: ___________</p>
+                                <p class="leading-tight">Sum Insured: ___________</p>
+                                <p class="leading-tight">Gov't Premium Subsidy(GPS): ___________</p>
+                                <p class="leading-tight">Gross Premium: ___________</p>
+                                <p class="leading-tight">Less: GPS: ___________</p>
+                                <p class="leading-tight">Farmer's share (less outstanding): ___________</p>
+                                <p class="leading-tight">Total: ___________</p>
+                                <p class="leading-tight">Net Premium Due to PCIC: ___________</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PAGE 2: APPLICATION INSURANCE -->
+                <div class="pcic-page page-break">
+                    <!-- Insurance Table -->
+                    <table class="pcic-table w-full border-collapse border border-black mb-1">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">No.</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Name of the Farmers<br/>(Follow the order on page1)</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Farm Location</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Area<br/>(ha)</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Land Category<br/>/ Soil Type</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Tenural<br/>Status</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" colspan="4">Adjacent Lot Owners</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Signature</th>
+                            </tr>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black px-0.5 py-0.5 text-xs">North</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">South</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">East</th>
+                                <th class="border border-black px-0.5 py-0.5 text-xs">West</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Display actual farmers from chunk -->
+                            <tr v-for="(app, index) in chunk" :key="app.id">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + index + 1 }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">
+x                                    <div class="mt-0.5">
+                                        IP <input type="checkbox" :checked="app.dynamicFields.indigenous_people" class="align-middle" /> 
+                                        Tribe: {{ app.dynamicFields.tribe }}
+                                    </div>
+                                </td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ getLocation(app.dynamicFields.lot_1_location) }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.lot_1_area }} ha</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_land_category }}<br/>{{ app.dynamicFields.lot_1_soil_type }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.lot_1_tenurial_status }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.north || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.south || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.east || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.west || 'N/A' }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">Picture</td>
+                            </tr>
+                            <!-- Fill empty rows if less than 10 farmers -->
+                            <tr v-for="n in (10 - chunk.length)" :key="`empty-${n}`">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + chunk.length + n }}</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">
+                                    <div>&nbsp;</div>
+                                    <div class="mt-0.5">IP <input type="checkbox" class="align-middle" /> Tribe: ___________</div>
+                                </td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                                <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            </tr>
+                            <tr class="font-bold">
+                                <td class="border border-black px-0.5 py-0.5 text-center text-xs" colspan="11">TOTAL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Legends -->
+                    <div class="text-xs border border-black p-1">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <p class="font-bold">LAND CATEGORY/SOIL TYPE:</p>
+                                <p class="mt-0.5"><strong>For Rice Crop (Land Category):</strong></p>
+                                <p class="leading-tight">(1) Irrigated - Irrigated</p>
+                                <p class="leading-tight">(2) Irrigated - Pump Well Pump/Shallow Tube Well (STW)</p>
+                                <p class="leading-tight">(3) Irrigated - Open Source (Swlp, Creek, River)</p>
+                                <p class="leading-tight">(4) Rainfed</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">&nbsp;</p>
+                                <p class="mt-0.5"><strong>For Corn Crop (Soil Type/Topography):</strong></p>
+                                <p class="leading-tight">(A) Broad Plain - Clay Loam</p>
+                                <p class="leading-tight">(B) Broad Plain - Silty Clay Loam</p>
+                                <p class="leading-tight">(C) Broad Plain - Silty Loam</p>
+                                <p class="leading-tight">(E) Rolling/Upland</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">TENURAL STATUS:</p>
+                                <p class="mt-0.5 leading-tight">(1) Landowner (2) Lessee (3) Other (please specify)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page break after each chunk except the last one -->
+                <div v-if="chunkIndex < farmerChunks.length - 1" class="page-break"></div>
+            </div>
+        </div>
     </AuthenticatedLayout>
 </template>
 
@@ -148,7 +450,7 @@ import { useApplicationStore } from '@/stores/application'
 import { useAuthStore } from '@/stores/auth'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationFilterModal from '@/components/modals/ApplicationFilterModal.vue'
-import { Filter, Edit, Trash2, FileText } from 'lucide-vue-next'
+import { Filter, Edit, Trash2, FileText, Printer } from 'lucide-vue-next'
 import {
     ADMIN_NAVIGATION,
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
@@ -220,6 +522,17 @@ const filteredApplications = computed(() => {
     return apps
 })
 
+const farmerChunks = computed(() => {
+    const chunks = []
+    const apps = filteredApplications.value
+    
+    for (let i = 0; i < apps.length; i += 10) {
+        chunks.push(apps.slice(i, i + 10))
+    }
+    
+    return chunks
+})
+
 const isAllSelected = computed(() => {
     return filteredApplications.value.length > 0 &&
         selectedApplications.value.length === filteredApplications.value.length
@@ -254,6 +567,26 @@ const getLocation = (location) => {
     return parts.join(', ')
 }
 
+const getBarangay = (location) => {
+    if (!location) return 'N/A'
+    return location.barangay || 'N/A'
+}
+
+const getGenderShort = (gender) => {
+    if (!gender) return 'N/A'
+    if (gender.toLowerCase() === 'male') return 'M'
+    if (gender.toLowerCase() === 'female') return 'F'
+    return gender.charAt(0).toUpperCase()
+}
+
+const getCivilStatusShort = (status) => {
+    if (!status) return 'N/A'
+    if (status.toLowerCase() === 'single') return 'S'
+    if (status.toLowerCase() === 'married') return 'M'
+    if (status.toLowerCase() === 'widow') return 'W'
+    return status.charAt(0).toUpperCase()
+}
+
 const formatAmount = (amount) => {
     return new Intl.NumberFormat('en-PH').format(amount)
 }
@@ -263,6 +596,26 @@ const formatDate = (dateString) => {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
+    })
+}
+
+const formatPrintDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+    })
+}
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
     })
 }
 
@@ -333,9 +686,115 @@ const resetFilters = () => {
     showFilterModal.value = false
 }
 
-// Lifecycle
+const handlePrint = () => {
+    window.print()
+}
+
+const getShortLocation = (location) => {
+    if (!location) return 'N/A'
+    const parts = [
+        location.sitio,
+        location.barangay
+    ].filter(Boolean)
+    return parts.join(', ') || 'N/A'
+}
+
+const formatShortDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+    })
+}
+
 onMounted(() => {
     fetchApplications()
 })
 </script>
 
+<style scoped>
+/* Improved print CSS to properly hide UI elements and fix layout */
+/* Print-specific styles */
+@media print {
+    /* Hide everything except print layout */
+    body * {
+        visibility: hidden;
+    }
+    
+    #print-layout,
+    #print-layout * {
+        visibility: visible;
+    }
+    
+    #print-layout {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    /* Page setup for landscape letter paper (8.5" x 11") */
+    @page {
+        size: letter landscape;
+        margin: 0.4in;
+    }
+
+    .pcic-page {
+        width: 100%;
+        font-family: Arial, sans-serif;
+        font-size: 7pt;
+        line-height: 1.1;
+    }
+
+    .pcic-header {
+        margin-bottom: 4px;
+    }
+
+    .pcic-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .pcic-table th,
+    .pcic-table td {
+        border: 1px solid black;
+        padding: 1px 2px;
+        font-size: 7pt;
+        line-height: 1.1;
+        vertical-align: top;
+    }
+
+    .pcic-table th {
+        background-color: #f3f4f6;
+        font-weight: bold;
+    }
+
+    /* Page break after each page */
+    .page-break {
+        page-break-after: always;
+        break-after: page;
+    }
+
+    /* Ensure tables don't break across pages */
+    table {
+        page-break-inside: avoid;
+    }
+    
+    /* Ensure proper text sizing */
+    .text-xs {
+        font-size: 7pt !important;
+    }
+}
+
+/* Hide print layout on screen */
+#print-layout {
+    display: none;
+}
+
+@media print {
+    #print-layout {
+        display: block;
+    }
+}
+</style>
