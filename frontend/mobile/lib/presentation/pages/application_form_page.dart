@@ -21,7 +21,7 @@ class ApplicationFormPage extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(application.displayName),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         elevation: 0,
       ),

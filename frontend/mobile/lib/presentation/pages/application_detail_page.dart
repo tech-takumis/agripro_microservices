@@ -22,7 +22,7 @@ class ApplicationDetailPage extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(application.name),
-        backgroundColor: theme.primaryColor,
+        backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -131,7 +131,8 @@ class ApplicationDetailPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
+                    backgroundColor: Colors.green[700],
+
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

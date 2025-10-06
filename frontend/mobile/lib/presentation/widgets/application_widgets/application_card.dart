@@ -38,7 +38,7 @@ class ApplicationCard extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.description_outlined,
-                    color: theme.primaryColor,
+                    color: Colors.green[700],
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -47,14 +47,14 @@ class ApplicationCard extends StatelessWidget {
                       application.name,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[900],
+                        color: Colors.green[700],
                       ),
                     ),
                   ),
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                    color: Colors.grey[400],
+                    color: const Color.fromARGB(255, 235, 234, 234),
                   ),
                 ],
               ),
@@ -65,7 +65,7 @@ class ApplicationCard extends StatelessWidget {
               Text(
                 application.description,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
+                  color: const Color.fromARGB(255, 0, 0, 0),
                   height: 1.4,
                 ),
                 maxLines: 2,
@@ -80,7 +80,7 @@ class ApplicationCard extends StatelessWidget {
                   _buildInfoChip(
                     icon: Icons.layers_outlined,
                     label: '${application.sections.length} Sections',
-                    color: Colors.blue,
+                    color: const Color.fromARGB(255, 218, 17, 17),
                   ),
                   const SizedBox(width: 8),
                   _buildInfoChip(
