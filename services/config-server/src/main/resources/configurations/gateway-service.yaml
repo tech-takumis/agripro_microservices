@@ -68,7 +68,7 @@ spring:
             - id: websocket_sockjs
               uri: lb:http://communication-service
               predicates:
-                - Path=/ws/info{?params}
+                - Path=/ws/info/**
 
             - id: websocket_main
               uri: lb:ws://communication-service
