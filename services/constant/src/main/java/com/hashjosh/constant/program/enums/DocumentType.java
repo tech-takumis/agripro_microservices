@@ -7,5 +7,6 @@ public enum DocumentType {
     VERIFICATION,
     TRAINING_MATERIAL,
     CONTRACT,
-    CAUSE_OF_LOSS
+    CAUSE_OF_LOSS,
+    POST
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -76,12 +77,18 @@ public class PostService {
 
     // Helper
     private PostResponse mapToResponse(Post post) {
+
+        List<String> strDocuments = post.getDocumentIds().stream()
+                .map(
+                    String::valueOf
+                ).toList();
+
         PostResponse response = new PostResponse();
         response.setId(post.getId());
         response.setTitle(post.getTitle());
         response.setContent(post.getContent());
-        response.setAuthorId(post.getAuthor().getId());
-        response.setDocumentIds(post.getDocumentIds());
+        response.setAuthorId(String.valueOf(post.getAuthor().getId()));
+        response.setDocumentIds(strDocuments);
         response.setCreatedAt(post.getCreatedAt());
         response.setUpdatedAt(post.getUpdatedAt());
         return response;

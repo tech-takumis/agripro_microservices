@@ -36,7 +36,7 @@ public class DocumentMapper {
                     .fileName(request.file().getOriginalFilename())
                     .fileType(request.file().getContentType())
                     .referenceId(request.referenceId())
-                    .documentType(DocumentType.valueOf(request.documentType().toUpperCase()))
+                    .documentType(request.documentType())
                     .uploadedBy(UUID.fromString(userDetails.getUserId()))
                     .objectKey(objectKey)
                     .metaData(request.metaData())
