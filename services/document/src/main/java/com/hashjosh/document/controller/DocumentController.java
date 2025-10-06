@@ -1,8 +1,7 @@
 package com.hashjosh.document.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.document.dto.DocumentRequest;
-import com.hashjosh.document.dto.DocumentResponse;
+import com.hashjosh.constant.document.dto.*;
 import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
 import io.minio.errors.*;

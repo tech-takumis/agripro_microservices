@@ -1,4 +1,4 @@
-package com.hashjosh.document.dto;
+package com.hashjosh.constant.document.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

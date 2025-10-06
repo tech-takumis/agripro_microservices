@@ -1,4 +1,4 @@
-package com.hashjosh.application.configs;
+package com.hashjosh.communication.config;
 
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -11,17 +11,16 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class RestClientConfiguration {
+public class RestClientConfig {
 
     @Bean
-    public RestClient.Builder getRestClientBuilder() {
+    public RestClient.Builder getRestClientBuilder(){
         return RestClient.builder();
     }
 
     @Bean
-    public RestClientCustomizer restClientCustomizer() {
+    public RestClientCustomizer restClientCustomizer(){
         return builder -> {
-
             RequestConfig requestConfig = RequestConfig.custom()
                     .setConnectionRequestTimeout(Timeout.ofSeconds(5))
                     .setResponseTimeout(Timeout.ofSeconds(10))

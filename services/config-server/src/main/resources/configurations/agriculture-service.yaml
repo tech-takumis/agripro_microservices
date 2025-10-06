@@ -60,6 +60,7 @@ trusted:
     - agriculture-service
     - verification-service
     - notification-service
+    - communication-service
     - farmer-service
     - application-service
     - pcic-service

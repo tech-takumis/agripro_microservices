@@ -2,6 +2,7 @@ package com.hashjosh.application.mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.dto.ApplicationDynamicFieldsDTO;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
@@ -16,18 +17,28 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApplicationMapper {
 
+    private  final ObjectMapper objectMapper;
+    public ApplicationResponseDto toApplicationResponseDto(Application entity) {
+        ApplicationResponseDto dto = new ApplicationResponseDto();
+        dto.setId(entity.getId());
+        dto.setApplicationTypeId(entity.getApplicationType().getId());
+        dto.setUserId(entity.getUserId());
+        dto.setDocumentIds(entity.getDocumentId());
+        dto.setSubmittedAt(entity.getSubmittedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setVersion(entity.getVersion());
 
-    public ApplicationResponseDto toApplicationResponseDto(Application application) {
-        return new ApplicationResponseDto(
-            application.getId(),
-                application.getApplicationType().getId(),
-                application.getUserId(),
-                application.getDynamicFields(),
-                application.getSubmittedAt(),
-                application.getUpdatedAt(),
-                application.getVersion()
-        );
-
+        // map JsonNode into typed DTO
+        if (entity.getDynamicFields() != null) {
+            try {
+                ApplicationDynamicFieldsDTO dynamic =
+                        objectMapper.treeToValue(entity.getDynamicFields(), ApplicationDynamicFieldsDTO.class);
+                dto.setDynamicFields(dynamic);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to map dynamicFields", e);
+            }
+        }
+        return dto;
     }
 
     public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, String userId) {

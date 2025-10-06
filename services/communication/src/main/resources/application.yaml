@@ -1,0 +1,65 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: communication-service
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/communication
+#    username: agripro
+#    password: agripro
+#    driver-class-name: org.postgresql.Driver
+#  jpa:
+#    database-platform: org.hibernate.Dialect.PostgreSQLDialect
+#    hibernate:
+#      ddl-auto: update
+#    database: postgresql
+#    show-sql: true
+#    generate-ddl: true
+#  kafka:
+#    bootstrap-servers: localhost:29092
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      properties:
+#        spring.json.add.type.headers: true
+#        spring.json.type.mapping: >
+#          newMessageEvent:com.hashjosh.kafkacommon.communication.NewMessageEvent
+#    consumer:
+#      group-id: communication-service
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      properties:
+#        spring.json.add.type.headers: true
+#        spring.json.trusted.packages: "*"
+#        spring.json.type.mapping: >
+#          newMessageEvent:com.hashjosh.kafkacommon.communication.NewMessageEvent,
+#          
+#
+#eureka:
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#  instance:
+#    prefer-ip-address: true
+#
+#token:
+#  secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
+#  access-token-expiration-ms: 14400000
+#  access-token-expiration-remember-me-ms: 2592000000
+#  refresh-token-expiration-ms: 86400000
+#  refresh-token-expiration-remember-me-ms: 345600000
+#
+#trusted:
+#  internal-service-ids:
+#    - agriculture-service
+#    - notification-service
+#    - farmer-service
+#    - pcic-service
+#    - application-service
+#    - document-service
+#    - rsbsa-service
+#    - program-service
+#
+#server:
+#  port: 9040

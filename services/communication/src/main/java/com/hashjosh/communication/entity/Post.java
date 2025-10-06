@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,8 +34,13 @@ public class Post {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostAttachment> attachments;
+    @ElementCollection
+    @CollectionTable(
+            name = "post_documents",
+            joinColumns = @JoinColumn(name = "post_id")
+    )
+    @Column(name = "document_id")
+    private List<UUID> documentIds = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -43,4 +49,12 @@ public class Post {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void addDocument(UUID docId) {
+        documentIds.add(docId);
+    }
+
+    public void removeDocument(UUID docId) {
+        documentIds.remove(docId);
+    }
 }

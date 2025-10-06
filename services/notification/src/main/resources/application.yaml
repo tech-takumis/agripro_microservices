@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    active: local
   application:
     name: notification-service
+  profiles:
+    active: local
 

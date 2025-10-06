@@ -3,6 +3,7 @@ package com.hashjosh.pcic.service;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
+import com.hashjosh.kafkacommon.pcic.PcicRegistrationContract;
 import com.hashjosh.pcic.config.CustomUserDetails;
 import com.hashjosh.pcic.dto.*;
 import com.hashjosh.pcic.entity.*;
@@ -55,18 +56,18 @@ public class AuthService {
     }
 
     private void publishUserRegistrationEvent(RegistrationRequest request, Pcic savedPcic) {
-        AgricultureRegistrationContract agricultureRegistrationContract =
-                AgricultureRegistrationContract.builder()
+        PcicRegistrationContract contract =
+                PcicRegistrationContract.builder()
                         .userId(savedPcic.getId())
                         .username(savedPcic.getUsername())
                         .password(request.getPassword())
+                        .email(savedPcic.getEmail())
                         .firstName(savedPcic.getFirstName())
                         .lastName(savedPcic.getLastName())
-                        .email(savedPcic.getEmail())
                         .phoneNumber(savedPcic.getPhoneNumber())
                         .build();
 
-        pcicProducer.publishEvent("pcic-events",agricultureRegistrationContract);
+        pcicProducer.publishEvent("pcic-events",contract);
     }
 
     public LoginResponse login(LoginRequest request,String clientIp, String userAgent) {

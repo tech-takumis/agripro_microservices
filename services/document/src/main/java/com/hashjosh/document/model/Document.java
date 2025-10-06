@@ -1,7 +1,7 @@
 package com.hashjosh.document.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.document.enums.DocumentType;
+import com.hashjosh.constant.program.enums.DocumentType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;

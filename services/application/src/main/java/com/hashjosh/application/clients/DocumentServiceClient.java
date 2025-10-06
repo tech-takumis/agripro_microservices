@@ -1,20 +1,13 @@
 package com.hashjosh.application.clients;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.dto.DocumentResponse;
 import com.hashjosh.application.exceptions.FileUploadException;
+import com.hashjosh.constant.document.dto.DocumentResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -22,11 +15,13 @@ import java.util.UUID;
 public class DocumentServiceClient {
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     public DocumentServiceClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://document-service/api/v1/documents")
+                .baseUrl("http://localhost:8020/api/v1/documents")
                 .build();
     }
 
@@ -35,7 +30,7 @@ public class DocumentServiceClient {
         try {
             return restClient.get()
                     .uri("/info/{documentId}", documentId)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .header("X-Internal-Service", applicationName)
                     .retrieve()
                     .onStatus(
                             status -> status.is4xxClientError() || status.is5xxServerError(),
@@ -50,7 +45,7 @@ public class DocumentServiceClient {
                     )
                     .body(DocumentResponse.class);
         } catch (Exception ex) {
-            log.error("Error fetching document with id: " + documentId, ex);
+            log.error("Error fetching document with id: {}", documentId, ex);
             throw new FileUploadException(
                     "Error fetching document: " + ex.getMessage(),
                     500,

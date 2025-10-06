@@ -1,4 +1,4 @@
-package com.hashjosh.document.enums;
+package com.hashjosh.constant.program.enums;
 
 public enum DocumentType {
     ID,

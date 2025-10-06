@@ -1,5 +1,6 @@
-package com.hashjosh.application.configs;
+package com.hashjosh.communication.config;
 
+import com.hashjosh.communication.properties.TrustedProperties;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -7,11 +8,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -19,42 +21,43 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Component
+@Service
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter  extends OncePerRequestFilter {
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final TrustedConfig trustedConfig;
+    private final JwtService   jwtService;
+    private final TrustedProperties trustedProperties;
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        // Check for internal service header
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        // Check for internal service - service communication
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
-        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+        if(internalServiceHeader != null && trustedProperties.getInternalServiceIds().contains(internalServiceHeader) ){
             // Allow internal service access without JWT
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserDetails(
-                                    null, // No token
-                                    "internal-service-" + internalServiceHeader, // Unique userId
-                                    internalServiceHeader, // Use service ID as username
-                                    null, null, null, null, // No firstname, lastname, email, phone
+                                    null,
+                                    "internal-service"+internalServiceHeader,
+                                    internalServiceHeader,
+                                    null,null,null,null, // No firstname,lastname,email,and phone
                                     Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                             ),
                             null,
                             Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                     );
+
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // JWT validation for non-internal requests
+        // For non service filter
+        // JWT validation for non-internal  service request
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             response.setContentType("application/json");
             response.getWriter().write(
@@ -65,7 +68,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        if (token.trim().isEmpty()) {
+        if(token.trim().isEmpty()){
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write(
@@ -74,7 +77,6 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             response.getWriter().flush();
             return;
         }
-
         if (!jwtService.validateToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
@@ -124,5 +126,6 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         } finally {
             SecurityContextHolder.clearContext();
         }
+
     }
 }

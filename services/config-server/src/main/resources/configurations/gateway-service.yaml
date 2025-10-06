@@ -60,6 +60,21 @@ spring:
               predicates:
                 - Path=/api/v1/rsbsa/**,/api/v1/rsbsa/public/**
 
+            - id: communication-service
+              uri: lb://communication-service
+              predicates:
+                - Path=/api/v1/posts/**,/api/v1/messages/**
+
+            - id: websocket_sockjs
+              uri: lb:http://communication-service
+              predicates:
+                - Path=/ws/info{?params}
+
+            - id: websocket_main
+              uri: lb:ws://communication-service
+              predicates:
+                - Path=/ws/**
+
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
