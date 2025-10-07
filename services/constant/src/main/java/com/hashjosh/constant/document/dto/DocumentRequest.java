@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 public record DocumentRequest(
-        UUID referenceId,
         MultipartFile file,
         DocumentType documentType,
         JsonNode metaData

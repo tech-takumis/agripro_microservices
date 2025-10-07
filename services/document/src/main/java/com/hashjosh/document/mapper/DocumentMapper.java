@@ -1,12 +1,12 @@
 package com.hashjosh.document.mapper;
 
-import com.hashjosh.constant.document.dto.*;
+import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.document.config.CustomUserDetails;
-import com.hashjosh.constant.program.enums.DocumentType;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -19,37 +19,24 @@ public class DocumentMapper {
     public DocumentResponse toDocumentResponse(Document document) {
         return DocumentResponse.builder()
                 .documentId(document.getId())
-                .referenceId(document.getReferenceId())
                 .uploadedBy(document.getUploadedBy())
                 .fileName(document.getFileName())
                 .fileType(document.getFileType())
                 .objectKey(document.getObjectKey())
                 .uploadedAt(document.getUploadedAt())
-                .metaData(document.getMetaData())
-                .downloadUrl(generateDownloadUrl(document.getObjectKey()))
                 .build();
     }
 
-    public Document toDocument(String objectKey, CustomUserDetails userDetails, DocumentRequest request) {
+    public Document toDocument(String objectKey, CustomUserDetails userDetails, MultipartFile file) {
         try {
             return Document.builder()
-                    .fileName(request.file().getOriginalFilename())
-                    .fileType(request.file().getContentType())
-                    .referenceId(request.referenceId())
-                    .documentType(request.documentType())
+                    .fileName(file.getOriginalFilename())
+                    .fileType(file.getContentType())
                     .uploadedBy(UUID.fromString(userDetails.getUserId()))
                     .objectKey(objectKey)
-                    .metaData(request.metaData())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("Error creating document", e);
         }
-    }
-    
-    private String generateDownloadUrl(String objectKey) {
-        return String.format("%s/%s/%s", 
-            minioProperties.url(), 
-            minioProperties.bucket(), 
-            objectKey);
     }
 }

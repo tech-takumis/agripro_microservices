@@ -34,10 +34,10 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest farmer
+            @RequestBody @Valid RegistrationRequest request
     ){
 
-        Agriculture agriculture = authService.register(farmer);
+        Agriculture agriculture = authService.register(request);
 
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
