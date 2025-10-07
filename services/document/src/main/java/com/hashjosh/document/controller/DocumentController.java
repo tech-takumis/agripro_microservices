@@ -1,8 +1,6 @@
 package com.hashjosh.document.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.constant.document.dto.*;
-import com.hashjosh.constant.program.enums.DocumentType;
+import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
 import io.minio.errors.*;
@@ -10,8 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,21 +34,11 @@ public class DocumentController {
     @Operation(summary = "Upload a document")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DocumentResponse> uploadDocument(
-            @RequestParam("referenceId") UUID referenceId,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("documentType") DocumentType documentType,
-            @RequestParam(value = "metaData", required = false) String metaData
+            @RequestPart("file") MultipartFile file
     ) {
         try {
 
-            DocumentRequest request = new DocumentRequest(
-                    referenceId,
-                    file,
-                    documentType,
-                    metaData != null ? new ObjectMapper().readTree(metaData) : null
-            );
-
-            DocumentResponse document = documentService.upload(request);
+            DocumentResponse document = documentService.upload(file);
             return ResponseEntity.status(HttpStatus.CREATED).body(document);
         } catch (FileValidationException e) {
             return ResponseEntity.badRequest()
@@ -73,14 +59,15 @@ public class DocumentController {
     }
 
 
-    @GetMapping("/{documentId}")
-//    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<DocumentResponse>> getAllDocuments() {
+        return ResponseEntity.status(HttpStatus.OK).body(documentService.findAll());
+    }
+
+    @GetMapping("/{documentId}/preview")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(
-            @PathVariable UUID documentId,
-            HttpServletRequest request) 
-            throws ServerException, InsufficientDataException, ErrorResponseException,
-            IOException, NoSuchAlgorithmException, InvalidKeyException,
-            InvalidResponseException, XmlParserException, InternalException {
+            @PathVariable UUID documentId) {
         var document = documentService.download(documentId);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(document.fileType()))
@@ -88,37 +75,18 @@ public class DocumentController {
                 .body(document.fileData());
     }
     
-    @GetMapping("/info/{documentId}")
-//    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{documentId}")
     public ResponseEntity<DocumentResponse> getDocumentById(@PathVariable UUID documentId) {
         DocumentResponse document = documentService.getDocumentById(documentId);
         return ResponseEntity.ok(document);
     }
 
-    @GetMapping("/by-application/{applicationId}")
-//    @PreAuthorize("isAuthenticated()")
-    public List<DocumentResponse> getDocumentsByApplication(@PathVariable UUID applicationId) {
-        return documentService.findByApplicationId(applicationId);
-    }
-
-    @GetMapping("/by-user/{userId}")
+    @GetMapping("/user/{userId}")
 //    @PreAuthorize("isAuthenticated()")
     public List<DocumentResponse> getDocumentsByUser(@PathVariable UUID userId) {
         return documentService.findByUploadedBy(userId);
     }
 
-    @GetMapping
-    public Page<DocumentResponse> getAllDocuments(Pageable pageable) {
-        return documentService.findAll(pageable);
-    }
-
-
-
-    @GetMapping("/{documentId}/metadata")
-//    @PreAuthorize("isAuthenticated()")
-    public DocumentResponse getDocumentMetadata(@PathVariable UUID documentId) {
-        return documentService.getDocumentMetadata(documentId);
-    }
 
     // Generate pre-signed url
     @GetMapping("/{id}/download-url")

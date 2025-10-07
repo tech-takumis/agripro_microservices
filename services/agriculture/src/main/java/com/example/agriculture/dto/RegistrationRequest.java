@@ -1,5 +1,6 @@
 package com.example.agriculture.dto;
 
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,26 +13,66 @@ import java.util.UUID;
 @Builder
 public class RegistrationRequest {
     // User
+    @NotBlank(message = "Username is required")
+    @Size(max = 100,message = "Username cannot be exceed 100 character")
     private String username;
+    @NotBlank(message = "Firstname is required")
+    @Size(max = 100,message = "Firstname cannot be exceed 100 character")
     private String firstName;
+    @NotBlank(message = "Lastname is required")
+    @Size(max = 100,message = "Lastname cannot be exceed 100 character")
     private String lastName;
+    @NotBlank(message = "Password is required")
+    @Pattern(
+            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+=-]).{8,}$",
+            message = "Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character"
+    )
     private String password;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
+    @NotBlank(message = "Phone number is required")
+    @Pattern(
+            regexp = "^\\+63\\d{10}$",
+            message = "Phone number must start with +63 followed by 10 digits (e.g. +639123456789)"
+    )
     private String phoneNumber;
+    @NotBlank(message = "Address is required")
+    @Size(max = 100,message = "Address cannot be exceed 100 character")
     private String address;
+
+    @NotEmpty(message = "Agriculture must have at least one role associated to it")
     private Set<UUID> rolesId;
 
     // Profile
+    @NotBlank(message = "Head quarter address is required")
+    @Size(max = 100, message = "Head quarter addess must not exceed up to 100 character only")
     private String headquartersAddress;
+    @NotBlank(message = "Public affairs email is required")
+    @Size(max = 100, message = "Public affairs email  must to exceed up to 100 character")
     private String publicAffairsEmail;
 
     // Address
+    @NotBlank(message = "Street it required")
+    @Size(max = 100, message = "Street must not exceed up to 100 character")
     private String street;
+    @NotBlank(message = "Barangay it required")
+    @Size(max = 100, message = "Barangay must not exceed up to 100 character")
     private String barangay;
+    @NotBlank(message = "Street it required")
+    @Size(max = 100, message = "Province must not exceed up to 100 character")
     private String city;
+    @NotBlank(message = "Province it required")
+    @Size(max = 100, message = "Street must not exceed up to 100 character")
     private String province;
+    @NotBlank(message = "Region it required")
+    @Size(max = 100, message = "Region must not exceed up to 100 character")
     private String region;
+    @NotBlank(message = "Country it required")
+    @Size(max = 100, message = "Country must not exceed up to 100 character")
     private String country;
+    @NotBlank(message = "Postal code it required")
+    @Size(max = 100, message = "Postal code must not exceed up to 100 character")
     private String postalCode;
 
 }

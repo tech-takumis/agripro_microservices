@@ -24,12 +24,6 @@ public class Document {
     @Column(name = "id")
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", nullable = false)
-    private DocumentType documentType;
-
-    @Column(name = "reference_id    ", nullable = false)
-    private UUID referenceId ; // ID of the entity this document relates to
 
     @Column(name = "uploaded_by",nullable = false)
     private UUID uploadedBy;
@@ -40,13 +34,8 @@ public class Document {
     @Column(name = "file_type", nullable = false)
     private String fileType;
 
-
     @Column(name = "object_key", length = 255)
     private String objectKey; // Minio object key
-
-    @Type(JsonBinaryType.class)
-    @Column(name = "meta_data", columnDefinition = "jsonb")
-    private JsonNode metaData;
 
     @Column(name = "uploaded_at")
     @CreationTimestamp

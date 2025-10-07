@@ -1,5 +1,6 @@
 package com.example.agriculture.handler;
 
+import com.example.agriculture.dto.ErrorResponse;
 import com.example.agriculture.dto.ExceptionResponse;
 import com.example.agriculture.exception.ApplicationNotFoundException;
 import com.example.agriculture.exception.BatchException;
@@ -7,8 +8,13 @@ import com.example.agriculture.exception.TokenNotFoundException;
 import com.example.agriculture.exception.VerificationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class VerificationExceptionHandler {
@@ -33,4 +39,31 @@ public class VerificationExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        Map<String,String> fieldErrors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach((fieldError) -> {
+            fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
+        });
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Invalid Arguments",
+                fieldErrors,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Unexpected Error",
+                Map.of("message", ex.getMessage()),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
