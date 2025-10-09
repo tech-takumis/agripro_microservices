@@ -170,29 +170,28 @@ class MultiStepRegistrationController extends GetxController {
       _successMessage.value = '';
       _registrationResult.value = null;
 
+      // Collect all required fields
       final request = RegistrationRequest(
-        // Basic Information
-        rsbsaNumber: rsbsaNumber.text.trim(),
+        rsbsaId: rsbsaNumber.text.trim(),
         firstName: firstNameController.text.trim(),
         lastName: lastNameController.text.trim(),
+        password: 'password123', // TODO: Replace with actual password input
         middleName: middleNameController.text.trim().isEmpty
             ? null
             : middleNameController.text.trim(),
         email: emailController.text.trim(),
         phoneNumber: phoneNumberController.text.trim(),
-
-        // Geographic Information
-        city: selectedCity,
-        state: selectedProvince,
-        country: selectedRegion,
-        zipCode: zipCodeController.text.trim(),
-
-        // Farm Information
-        farmLocation: farmLocationController.text.trim(),
-        tenureStatus: selectedTenureStatus,
-        farmSize: farmSizeController.text.trim(),
-        farmType: selectedFarmType,
-        primaryCrop: primaryCropController.text.trim(),
+        dateOfBirth: '01-01-2000', // TODO: Replace with actual date picker value
+        gender: 'Male', // TODO: Replace with actual gender selection
+        civilStatus: 'Single', // TODO: Replace with actual civil status selection
+        houseNo: '123', // TODO: Replace with actual houseNo input
+        street: 'Sample Street', // TODO: Replace with actual street input
+        barangay: 'Sample Barangay', // TODO: Replace with actual barangay input
+        municipality: selectedCity,
+        province: selectedProvince,
+        region: selectedRegion,
+        farmerType: selectedFarmType,
+        totalFarmAreaHa: double.tryParse(farmSizeController.text.trim()) ?? 0.0,
       );
 
       final response = await ApiService.to.register(request);

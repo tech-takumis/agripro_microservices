@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
 import { useRoleStore } from './role';
 import { usePermissionStore } from './permission';
+import {useWebSocket} from '@/composables/useWebSocket'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -203,6 +204,7 @@ export const useAuthStore = defineStore('auth', {
 
                 if (loginResponse.status === 200) {
                     // Fetch the authenticated user
+                    localStorage.setItem("ACCESS_TOKEN", loginResponse.data.token)
                     const userResponse = await axios.get('/api/v1/agriculture/auth/me');
 
                     if (userResponse.status === 200) {
@@ -260,8 +262,10 @@ export const useAuthStore = defineStore('auth', {
         // Logout user
         async logout() {
             try {
+                const { connected, connect, disconnect, subscribe } = useWebSocket()
                 // Call the logout endpoint to clear the server-side session
                 await axios.post('/api/v1/agriculture/auth/logout');
+                disconnect()
             } catch (error) {
                 console.error('Logout error:', error);
             } finally {
