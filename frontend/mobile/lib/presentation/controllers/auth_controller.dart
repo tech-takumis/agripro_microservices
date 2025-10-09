@@ -22,6 +22,7 @@ String get userEmail => _userEmail.value;
   bool get isLoading => _isLoading.value;
   bool get isLoggedIn => _isLoggedIn.value;
   String get errorMessage => _errorMessage.value;
+  bool get isAuthenticated => isLoggedIn; // Add this line
 
   @override
   void onInit() {

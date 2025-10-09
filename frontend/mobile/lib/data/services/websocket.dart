@@ -1,6 +1,4 @@
-import 'package:stomp_dart_client/stomp.dart';
-import 'package:stomp_dart_client/stomp_config.dart';
-import 'package:stomp_dart_client/stomp_frame.dart';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class WebSocketService {
   StompClient? _client;
@@ -8,16 +6,14 @@ class WebSocketService {
   void connect({
     required String url,
     required String accessToken,
-    void Function(StompFrame frame)? onConnect,
-    void Function(dynamic error)? onError,
+    required StompFrameCallback onConnect,
+    required StompWebSocketErrorCallback onError,
   }) {
     _client = StompClient(
-      config: StompConfig.SockJS(
+      config: StompConfig.sockJS(
         url: url,
         onConnect: onConnect,
-        beforeConnect: () async {
-          // Optionally add delay or other logic
-        },
+        beforeConnect: () async {},
         onWebSocketError: onError,
         stompConnectHeaders: {
           'Authorization': 'Bearer $accessToken',
@@ -25,12 +21,12 @@ class WebSocketService {
         webSocketConnectHeaders: {
           'Authorization': 'Bearer $accessToken',
         },
-        // Uncomment for debugging
-        // onDebugMessage: (msg) => print('STOMP DEBUG: $msg'),
       ),
     );
     _client?.activate();
   }
+
+
 
   void subscribe({
     required String destination,
