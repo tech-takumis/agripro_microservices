@@ -326,8 +326,10 @@ import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, LogOut,ArrowUpCircle, ArrowDownCircle,ClipboardList,Briefcase, Bell, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import PermissionGuard from '../../components/others/PermissionGuard.vue'
-import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '../../lib/constants.js'
-import { useAuthStore } from '../../stores/auth'
+import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/constants'
+import { useAuthStore } from '@/stores/auth'
+import { Plus, Wallet } from 'lucide-vue-next'
+
 
 const navigation = ref(MUNICIPAL_AGRICULTURIST_NAVIGATION)
 const authStore = useAuthStore()

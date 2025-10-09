@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -70,7 +71,7 @@ public class AuthController {
             httpResponse.addCookie(accessCookie);
             httpResponse.addCookie(refreshCookie);
 
-            return ResponseEntity.ok("Login successful");
+            return ResponseEntity.ok("Login successfully");
     }
 
 
@@ -132,6 +133,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
+        cookie.setAttribute("SameSite", "None");
         cookie.setMaxAge(maxAgeSeconds);
         return cookie;
     }

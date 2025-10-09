@@ -14,6 +14,7 @@ import io.minio.errors.*;
 import io.minio.http.Method;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
@@ -127,18 +129,18 @@ public class DocumentService {
                 .toList();
     }
 
-    public String generatePresignedUrl(UUID documentId, int expiryMinutes) 
+    public String generatePresignedDownloadUrl(UUID documentId, int expiryMinutes)
             throws ServerException, InsufficientDataException, ErrorResponseException,
             IOException, NoSuchAlgorithmException, InvalidKeyException,
             InvalidResponseException, XmlParserException, InternalException {
-                
+
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException(
                         "Document not found with id: " + documentId,
                         HttpStatus.NOT_FOUND.value()
                         ));
-                
-        return generatePresignedUrl(document.getObjectKey(),expiryMinutes,Method.PUT);
+
+        return generatePresignedUrl(document.getObjectKey(),expiryMinutes,Method.GET);
     }
 
     public String generatePresignedUploadUrl(String fileName, int expiryMinutes)
@@ -151,7 +153,7 @@ public class DocumentService {
         return generatePresignedUrl(objectKey,30,Method.PUT);
     }
 
-    public void delete(UUID documentId, HttpServletRequest request) throws ServerException,
+    public void delete(UUID documentId) throws ServerException,
             InsufficientDataException, ErrorResponseException,
             IOException, NoSuchAlgorithmException,
             InvalidKeyException, InvalidResponseException,
@@ -195,7 +197,7 @@ public class DocumentService {
             io.minio.errors.InsufficientDataException, io.minio.errors.InternalException,
             io.minio.errors.InvalidResponseException, io.minio.errors.XmlParserException {
 
-        return minioClient.getPresignedObjectUrl(
+        String presigned = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(method)
                         .bucket(minioProperties.bucket())
@@ -203,5 +205,15 @@ public class DocumentService {
                         .expiry(expiryMin, TimeUnit.MINUTES)
                         .build()
         );
+
+        // Automatically rewrite internal to external url for client-safe access
+        if(!minioProperties.urlInternal().equals(minioProperties.urlExternal())){
+            presigned = presigned.replace(
+                    minioProperties.urlInternal(),
+                    minioProperties.urlExternal()
+            );
+        }
+        log.debug("Generated presigned URL: {}", presigned);
+        return presigned;
     }
 }

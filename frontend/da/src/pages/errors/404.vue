@@ -1,6 +1,5 @@
 <script setup>
 import { useUserStore } from '../../stores/user'
-import ApplicationLogo from '@/components/ApplicationLogo.vue'
 
 const store = useUserStore()
 
@@ -15,8 +14,7 @@ const auth = store.authUser
                 <div
                     class="mx-auto flex items-center justify-center h-12 w-auto">
                     <router-link to="/">
-                        <ApplicationLogo
-                            class="w-20 h-20 fill-current text-gray-500" />
+                        Home
                     </router-link>
                 </div>
                 <p

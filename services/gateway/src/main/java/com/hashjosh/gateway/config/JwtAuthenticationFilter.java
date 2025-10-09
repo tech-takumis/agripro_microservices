@@ -1,6 +1,7 @@
 package com.hashjosh.gateway.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
+@Slf4j
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
@@ -26,9 +28,11 @@ public class JwtAuthenticationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        HttpHeaders header = request.getHeaders();
 
         String accessToken = extractAccessToken(request);
         String refreshToken = extractRefreshToken(request);
+        log.info("Received token: {} in request {}", accessToken, request.getURI());
 
         if (accessToken != null && jwtService.validateToken(accessToken)) {
             String username = jwtService.getUsernameFromToken(accessToken);
@@ -62,15 +66,21 @@ public class JwtAuthenticationFilter implements WebFilter {
         // 1️⃣ Header
         String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            log.info("Extracted token from Authorization header {}:",bearerToken.substring(7));
             return bearerToken.substring(7);
         }
 
         // 2️⃣ Cookie
         List<HttpCookie> cookies = request.getCookies().get("ACCESS_TOKEN");
         if (cookies != null && !cookies.isEmpty()) {
-            return cookies.getFirst().getValue();
+            String token =  cookies.getFirst().getValue();
+            log.info("Extracted token from ACCESS_TOKEN cookie: {}", token);
+            return token;
+        }else {
+            log.warn("No ACCESS_TOKEN cookie found in request");
         }
 
+        log.warn("No valid token found in headers or cookies");
         return null;
     }
 

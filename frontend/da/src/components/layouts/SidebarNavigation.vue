@@ -75,7 +75,6 @@
           <div 
             v-show="expandedGroups.includes(item.title)"
             class="mt-1 space-y-1 pl-4"
-            v-animate="{ animation: 'slideDown' }"
           >
             <router-link
               v-for="child in item.children"

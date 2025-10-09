@@ -76,8 +76,12 @@ public class SignatureValidator implements ValidatorStrategy {
         try {
             UUID documentId = UUID.fromString(documentIdStr);
             try {
-                String token = getCurrentToken();
-                DocumentResponse document = documentServiceClient.getDocument(token, documentId);
+                 if(!documentServiceClient.documentExists(documentId)){
+                    errors.add(new ValidationErrors(
+                            field.getKey(),
+                            "Document does not exist"
+                    ));
+                 }
                 
             } catch (HttpClientErrorException.NotFound e) {
                 errors.add(new ValidationErrors(
@@ -99,14 +103,5 @@ public class SignatureValidator implements ValidatorStrategy {
         }
 
         return errors;
-    }
-    
-    private String getCurrentToken() {
-        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .map(Authentication::getPrincipal)
-                .filter(principal -> principal instanceof CustomUserDetails)
-                .map(CustomUserDetails.class::cast)
-                .map(CustomUserDetails::getToken)
-                .orElseThrow(() -> new SecurityException("No authentication token found in security context"));
     }
 }

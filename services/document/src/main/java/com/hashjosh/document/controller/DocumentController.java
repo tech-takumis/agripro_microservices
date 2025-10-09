@@ -93,7 +93,7 @@ public class DocumentController {
     public ResponseEntity<String> getDownloadUrl(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "5") int expiryMinutes) throws Exception {
-        String url = documentService.generatePresignedUrl(id, expiryMinutes);
+        String url = documentService.generatePresignedDownloadUrl(id, expiryMinutes);
         return ResponseEntity.ok(url);
     }
 
@@ -114,7 +114,7 @@ public class DocumentController {
             ErrorResponseException, IOException,
             NoSuchAlgorithmException, InvalidKeyException,
             InvalidResponseException, XmlParserException, InternalException {
-        documentService.delete(documentId,request);
+        documentService.delete(documentId);
         return ResponseEntity.noContent().build();
     }
 }

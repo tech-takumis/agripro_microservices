@@ -2,6 +2,7 @@ package com.hashjosh.application.mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.dto.ApplicationDynamicFieldsDTO;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
@@ -11,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -18,16 +22,19 @@ import java.util.UUID;
 public class ApplicationMapper {
 
     private  final ObjectMapper objectMapper;
+    private final DocumentServiceClient documentServiceClient;
     public ApplicationResponseDto toApplicationResponseDto(Application entity) {
         ApplicationResponseDto dto = new ApplicationResponseDto();
         dto.setId(entity.getId());
         dto.setApplicationTypeId(entity.getApplicationType().getId());
         dto.setUserId(entity.getUserId());
-        dto.setDocumentIds(entity.getDocumentId());
         dto.setSubmittedAt(entity.getSubmittedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setVersion(entity.getVersion());
 
+        List<String> generatedUrl = new ArrayList<>();
+        entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document,30)));
+        dto.setFileUploads(generatedUrl);
         // map JsonNode into typed DTO
         if (entity.getDynamicFields() != null) {
             try {

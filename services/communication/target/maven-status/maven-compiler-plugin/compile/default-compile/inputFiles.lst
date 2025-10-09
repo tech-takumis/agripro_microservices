@@ -14,6 +14,9 @@ D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\m
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Message.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Post.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\User.java
+D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\exception\AuthorizationException.java
+D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\exception\InvalidJwtException.java
+D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\handle\GlobalExceptionHandler.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\kafka\CommunicationConsumer.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\kafka\CommunicationPublisher.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\mapper\MessageMapper.java

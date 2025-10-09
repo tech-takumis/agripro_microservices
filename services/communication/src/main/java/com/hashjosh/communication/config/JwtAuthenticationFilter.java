@@ -5,10 +5,12 @@ import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // Check for internal service - service communication
+        String uri = request.getRequestURI();
+        log.info("Processing request for URI: {}", uri);
+
+        // Skip authentication for WebSocket endpoints
+        if (uri.startsWith("/ws")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
         if(internalServiceHeader != null && trustedProperties.getInternalServiceIds().contains(internalServiceHeader) ){
             // Allow internal service access without JWT
@@ -54,10 +64,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // For non service filter
-        // JWT validation for non-internal  service request
-        String authHeader = request.getHeader("Authorization");
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String token = extractAccessToken(request);
+
+        if(token == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             response.setContentType("application/json");
             response.getWriter().write(
@@ -67,16 +76,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
-        if(token.trim().isEmpty()){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"message\": \"Unauthorized - Invalid or null token\"}"
-            );
-            response.getWriter().flush();
-            return;
-        }
         if (!jwtService.validateToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
@@ -127,5 +126,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
 
+    }
+
+    private String extractAccessToken(HttpServletRequest request) {
+        // First try Authorization header
+        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            log.info("Extracted token from Authorization header for path: {}", request.getRequestURI());
+            return bearerToken.substring(7);
+        }
+
+        // Then try cookies
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                    log.info("Extracted token from ACCESS_TOKEN cookie for path: {}", request.getRequestURI());
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        // Finally try custom header
+        String customToken = request.getHeader("X-Auth-Token");
+        if (customToken != null) {
+            log.info("Extracted token from X-Auth-Token header for path: {}", request.getRequestURI());
+            return customToken;
+        }
+
+        log.warn("No token found in headers or cookies for path: {}", request.getRequestURI());
+        return null;
     }
 }

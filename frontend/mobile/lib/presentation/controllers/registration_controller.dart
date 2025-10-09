@@ -15,21 +15,24 @@ class RegistrationController extends GetxController {
   RegistrationResponse? get registrationResult => _registrationResult.value;
 
   Future<void> register(
-      String rsbsaNumber,
+      String rsbsaId,
       String firstName,
       String lastName,
+      String password,
       String? middleName,
       String email,
       String phoneNumber,
-      String city,
-      String state,
-      String country,
-      String zipCode,
-      String farmLocation,
-      String tenureStatus,
-      String farmSize,
-      String farmType,
-      String primaryCrop
+      String dateOfBirth, // format: dd-MM-yyyy
+      String gender,
+      String civilStatus,
+      String houseNo,
+      String street,
+      String barangay,
+      String municipality,
+      String province,
+      String region,
+      String farmerType,
+      double totalFarmAreaHa,
       ) async {
     try {
       _isLoading.value = true;
@@ -38,21 +41,24 @@ class RegistrationController extends GetxController {
       _registrationResult.value = null;
 
       final request = RegistrationRequest(
-          rsbsaNumber: rsbsaNumber,
-          firstName: firstName,
-          lastName: lastName,
-          middleName: middleName,
-          email: email,
-          phoneNumber: phoneNumber,
-          city: city,
-          state: state,
-          country: country,
-          zipCode: zipCode,
-          farmLocation: farmLocation,
-          tenureStatus: tenureStatus,
-          farmSize: farmSize,
-          farmType: farmType,
-          primaryCrop: primaryCrop
+        rsbsaId: rsbsaId,
+        firstName: firstName,
+        lastName: lastName,
+        password: password,
+        middleName: middleName,
+        email: email,
+        phoneNumber: phoneNumber,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+        civilStatus: civilStatus,
+        houseNo: houseNo,
+        street: street,
+        barangay: barangay,
+        municipality: municipality,
+        province: province,
+        region: region,
+        farmerType: farmerType,
+        totalFarmAreaHa: totalFarmAreaHa,
       );
 
       final response = await ApiService.to.register(request);

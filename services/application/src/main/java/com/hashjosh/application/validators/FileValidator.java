@@ -62,9 +62,13 @@ public class FileValidator implements ValidatorStrategy {
         try {
             UUID documentId = UUID.fromString(documentIdStr);
             try {
-                // Get the current authentication token from security context
-                String token = getCurrentToken();
-                DocumentResponse document = documentServiceClient.getDocument(token, documentId);
+
+                if(!documentServiceClient.documentExists(documentId)){
+                    errors.add(new ValidationErrors(
+                            field.getKey(),
+                            "Document does not exist"
+                    ));
+                }
 
                 
             } catch (HttpClientErrorException.NotFound e) {
