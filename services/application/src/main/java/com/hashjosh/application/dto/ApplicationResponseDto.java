@@ -13,8 +13,7 @@ public class ApplicationResponseDto{
     UUID id;
     UUID applicationTypeId;
     UUID userId;
-
-    List<UUID> documentIds;
+    List<String> fileUploads;
     @JsonProperty("dynamicFields")
     ApplicationDynamicFieldsDTO dynamicFields;
     LocalDateTime  submittedAt;

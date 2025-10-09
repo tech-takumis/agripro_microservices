@@ -26,10 +26,10 @@ public class DocumentServiceClient {
     }
 
 
-    public DocumentResponse getDocument(String token, UUID documentId) {
+    public DocumentResponse getDocument(UUID documentId) {
         try {
             return restClient.get()
-                    .uri("/info/{documentId}", documentId)
+                    .uri("/{documentId}", documentId)
                     .header("X-Internal-Service", applicationName)
                     .retrieve()
                     .onStatus(
@@ -54,11 +54,11 @@ public class DocumentServiceClient {
         }
     }
 
-    public boolean documentExists(String token, UUID documentId) {
+    public boolean documentExists(UUID documentId) {
         try {
             restClient.head()
                     .uri("/{documentId}", documentId)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .header("X-Internal-Service",applicationName)
                     .retrieve()
                     .toBodilessEntity();
             return true;
@@ -66,5 +66,13 @@ public class DocumentServiceClient {
             log.debug("Document not found: {}", documentId);
             return false;
         }
+    }
+
+    public String generatePresignedUrl(UUID documentId, int expiry) {
+        return restClient.get()
+                .uri("/{id}/download-url?expiryMinutes={expiry}", documentId, expiry)
+                .header("X-Internal-Service", applicationName)
+                .retrieve()
+                .body(String.class);
     }
 }

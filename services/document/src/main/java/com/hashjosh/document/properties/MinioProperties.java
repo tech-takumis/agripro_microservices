@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "minio")
 public record MinioProperties(
-        String url,
+        String urlInternal,
+        String urlExternal,
         String accessKey,
         String secretKey,
         String bucket

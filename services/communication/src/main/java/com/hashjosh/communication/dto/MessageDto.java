@@ -11,6 +11,7 @@ import java.util.UUID;
 public class MessageDto {
     private UUID conversationId;
     private UUID senderId;
+    private UUID recipientId;
     private String text;
     private JsonNode attachments; // From document service
     private LocalDateTime timestamp;

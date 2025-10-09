@@ -74,5 +74,4 @@ public class RegistrationRequest {
     @NotBlank(message = "Postal code it required")
     @Size(max = 100, message = "Postal code must not exceed up to 100 character")
     private String postalCode;
-
 }

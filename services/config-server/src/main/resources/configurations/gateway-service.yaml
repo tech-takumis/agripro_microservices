@@ -1,88 +1,76 @@
 spring:
   cloud:
     gateway:
-      default-filters:
-        - RemoveRequestHeader=Cookie
       server:
         webflux:
           discovery:
             locator:
               enabled: true
               lower-case-service-id: true
+
+          filter:
+            remove-hop-by-hop:
+              headers:
+                - Keep-Alive
+                - Proxy-Authorization
+                - TE
+                - Trailer
+                - Transfer-Encoding
+
           routes:
             - id: agriculture-service
               uri: lb://agriculture-service
               predicates:
                 - Path=/api/v1/agriculture/auth/**,/api/v1/agriculture/**
-
             - id: farmer-service
               uri: lb://farmer-service
               predicates:
                 - Path=/api/v1/farmer/auth/**,/api/v1/farmer/**
-
             - id: pcic-service
               uri: lb://pcic-service
               predicates:
                 - Path=/api/v1/pcic/auth/**,/api/v1/pcic/**
-
             - id: application-service
               uri: lb://application-service
               predicates:
                 - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**
-
             - id: document-service
               uri: lb://document-service
               predicates:
                 - Path=/api/v1/documents/**
-
             - id: insurance-service
               uri: lb://insurance-service
               predicates:
                 - Path=/api/v1/documents/**
-
             - id: verification-service
               uri: lb://verification-service
               predicates:
                 - Path=/api/v1/verify/**
-
             - id: workflow-service
               uri: lb://workflow-service
               predicates:
                 - Path=/api/v1/workflow/**
-
             - id: program-service
               uri: lb://program-service
               predicates:
                 - Path=/api/v1/programs/**,/api/v1/schedules/**
-
             - id: rsbsa-service
               uri: lb://rsbsa-service
               predicates:
                 - Path=/api/v1/rsbsa/**,/api/v1/rsbsa/public/**
-
             - id: communication-service
               uri: lb://communication-service
               predicates:
-                - Path=/api/v1/posts/**,/api/v1/messages/**
-
-            - id: websocket_sockjs
-              uri: lb:http://communication-service
-              predicates:
-                - Path=/ws/info/**
-
-            - id: websocket_main
-              uri: lb:ws://communication-service
-              predicates:
-                - Path=/ws/**
-
+                - Path=/api/v1/posts/**,/api/v1/messages/**,/ws/**
+              filters:
+                - PreserveHostHeader
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
-  accessTokenExpirationMs: 14400000                # 4 hours
-  accessTokenExpirationRememberMeMs: 2592000000    # 30 days
-  refreshTokenExpirationMs: 86400000               # 1 day
+  accessTokenExpirationMs: 14400000
+  accessTokenExpirationRememberMeMs: 2592000000
+  refreshTokenExpirationMs: 86400000
   refreshTokenExpirationRememberMeMs: 345600000
-
 
 eureka:
   client:
@@ -90,6 +78,12 @@ eureka:
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+
+logger:
+  level:
+    org.springframework.web: TRACE
+    org.springframework.cloud.gateway: TRACE
+    reactor.netty: TRACE
 
 server:
   port: 9001
@@ -102,6 +96,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-
-

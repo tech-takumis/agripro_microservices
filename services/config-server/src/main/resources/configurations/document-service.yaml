@@ -23,7 +23,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 minio:
-  url: http://localhost:9000
+  url-internal: http://localhost:9000   # used inside Docker network
+  url-external: http://localhost:9000   # used for URLs returned to clients
   accessKey: minio
   secretKey: minio123
   bucket: documents

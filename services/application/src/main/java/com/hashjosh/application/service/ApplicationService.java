@@ -70,12 +70,11 @@ public class ApplicationService {
      */
     private List<ValidationError> validateDocumentIds(List<UUID> documentIds) {
         List<ValidationError> errors = new ArrayList<>();
-        String token = getCurrentUserToken(); // You'll need to implement this method to get the current user's token
-        
+
         for (UUID documentId : documentIds) {
             try {
                 // Check if document exists
-                boolean exists = documentServiceClient.documentExists(token, documentId);
+                boolean exists = documentServiceClient.documentExists(documentId);
                 if (!exists) {
                     errors.add(new ValidationError(
                             "documents",

@@ -34,7 +34,7 @@ public class MinioConfiguration {
                     .build();
 
             return MinioClient.builder()
-                    .endpoint(minioProperties.url())
+                    .endpoint(minioProperties.urlInternal())
                     .credentials(minioProperties.accessKey(), minioProperties.secretKey())
                     .httpClient(httpClient)
                     .build();
