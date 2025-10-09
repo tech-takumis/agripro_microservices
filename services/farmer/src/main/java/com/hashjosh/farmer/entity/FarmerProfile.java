@@ -87,7 +87,7 @@ public class FarmerProfile {
     private LocalDateTime updatedAt;
 
 
-    @OneToOne(mappedBy = "farmerProfile")
+    @OneToOne(mappedBy = "farmerProfile",cascade = CascadeType.PERSIST)
     @ToString.Exclude
     @JsonIgnore
     private Farmer farmer;

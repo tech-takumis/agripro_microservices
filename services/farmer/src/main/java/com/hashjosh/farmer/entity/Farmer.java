@@ -48,7 +48,7 @@ public class Farmer {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @OneToOne(cascade = CascadeType.PERSIST, optional = false)
     @JoinColumn(name = "profile_id")
     @JsonIgnore
     private FarmerProfile farmerProfile;
