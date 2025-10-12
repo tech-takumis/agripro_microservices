@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 @Entity
 @Table(name = "conversations",
@@ -27,18 +26,13 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    private UUID senderId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private User receiver;
+    private UUID receiverId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ConversationType type;
-    // FARMER_AGRICULTURE or AGRICULTURE_PCIC
 
     @CreationTimestamp
     private LocalDateTime createdAt;

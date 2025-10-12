@@ -53,7 +53,8 @@ public class AgricultureRbacInitializer implements CommandLineRunner {
                     new Permission(null, "CAN_PROVIDE_DIAGNOSTIC_SERVICES", slug.toSlug("CAN_PROVIDE_DIAGNOSTIC_SERVICES"), "Can provide diagnostic services like soil testing, water quality analysis, or disease identification"),
                     new Permission(null, "CAN_ENHANCE_MARKET_ACCESS", slug.toSlug("CAN_ENHANCE_MARKET_ACCESS"), "Can assist farmers in accessing markets, meeting quality standards, and linking to value chains"),
                     new Permission(null, "CAN_PROMOTE_SUSTAINABILITY", slug.toSlug("CAN_PROMOTE_SUSTAINABILITY"), "Can promote sustainable practices, including erosion control, resource conservation, and community self-reliance"),
-                    new Permission(null, "CAN_SUPPORT_VETERINARY", slug.toSlug("CAN_SUPPORT_VETERINARY"), "Can support livestock health, including assisting with animal disease treatment and farmer guidance")
+                    new Permission(null, "CAN_SUPPORT_VETERINARY", slug.toSlug("CAN_SUPPORT_VETERINARY"), "Can support livestock health, including assisting with animal disease treatment and farmer guidance"),
+                    new Permission(null,"CAN_MANAGE_CHAT", slug.toSlug("CAN_MANAGE_CHAT"), "Can manage chat functionalities")
             );
 
             permissionRepository.saveAllAndFlush(permissions);

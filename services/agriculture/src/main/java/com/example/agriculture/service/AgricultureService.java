@@ -2,15 +2,19 @@ package com.example.agriculture.service;
 
 import com.example.agriculture.dto.AgricultureResponseDto;
 import com.example.agriculture.entity.Agriculture;
+import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
 import com.example.agriculture.repository.AgricultureRepository;
+import com.example.agriculture.repository.PermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,6 +23,17 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AgricultureService {
     private final AgricultureRepository agricultureRepository;
+    private final PermissionRepository permissionRepository;
+
+    private Agriculture getUserById(UUID userId){
+        return agricultureRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Agriculturist not found"));
+    }
+
+    private  Permission getPermissionById(UUID permissionId){
+       return permissionRepository.findById(permissionId)
+               .orElseThrow(() -> new EntityNotFoundException("Permission not found"));
+    }
 
     public Page<AgricultureResponseDto> getAll(String search, Pageable pageable) {
         Page<Agriculture> result;
@@ -31,9 +46,19 @@ public class AgricultureService {
         return result.map(this::toResponseDto);
     }
 
+    public void assignDirectPermission(UUID userId,UUID permissionId){
+       Agriculture agriculture = getUserById(userId);
+        Permission permission = getPermissionById(permissionId);
+
+        agriculture.assignDirectPermission(permission);
+    }
+
+    public Set<String> getEffectivePermissions(UUID userId){
+        Agriculture agriculture = getUserById(userId);
+        return agriculture.getEffectivePermissions();
+    }
     public AgricultureResponseDto getById(UUID id) {
-        Agriculture agri = agricultureRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Agriculture user not found"));
+        Agriculture agri = getUserById(id);
         return toResponseDto(agri);
     }
     public void delete(UUID id) {
