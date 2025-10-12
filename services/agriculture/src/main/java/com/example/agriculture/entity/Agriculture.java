@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -48,8 +49,43 @@ public class Agriculture {
     )
     private Set<Role> roles = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_permission",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private Set<Permission> permissions;
+
+
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_id", nullable = false)
     @JsonIgnore
     private AgricultureProfile agricultureProfile;
+
+    // Method to compute effective permissions (union of role  and direct, deduplicated)
+    public Set<String> getEffectivePermissions() {
+        Set<String> permissionFromRoles = roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        Set<String> directPermissions = permissions.stream()
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        permissionFromRoles.addAll(directPermissions);
+
+        return permissionFromRoles;
+    }
+
+    // Method to assign direct permission with a check to avoid duplicates
+    public void assignDirectPermission(Permission permission){
+        Set<String> effectivePermissions = getEffectivePermissions();
+        if(effectivePermissions.contains(permission.getName())){
+            throw  new IllegalArgumentException("Permission "+permission.getName()+" already assigned directly or via role");
+        }
+
+       permissions.add(permission);
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -20,6 +21,13 @@ import java.util.UUID;
 public class AgricultureController {
 
     private final AgricultureService agricultureService;
+
+
+    @PostMapping("/{userId}/permissions/{permissionId}")
+    public ResponseEntity<Void> assignDirectPermission(@PathVariable UUID userId, @PathVariable UUID permissionId) {
+        agricultureService.assignDirectPermission(userId, permissionId);
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping
     public ResponseEntity<Page<AgricultureResponseDto>> getAll(
@@ -39,6 +47,13 @@ public class AgricultureController {
     @GetMapping("/{id}")
     public ResponseEntity<AgricultureResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(agricultureService.getById(id));
+    }
+
+
+    @GetMapping("/{userId}/effective-permissions")
+    public ResponseEntity<Set<String>> getEffectivePermissions(@PathVariable UUID userId) {
+        Set<String> permissions = agricultureService.getEffectivePermissions(userId);
+        return ResponseEntity.ok(permissions);
     }
 
     @DeleteMapping("/{id}")
