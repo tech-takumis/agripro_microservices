@@ -8,7 +8,6 @@ import {
 
 const APP_NAME = import.meta.env.VITE_APP_NAME;
 
-// Combine routes from all route arrays
 const routes = [
     ...ADMIN_ROUTES,
     ...MUNICIPALITY_ROUTES,
@@ -18,9 +17,6 @@ const routes = [
         path: '/',
         name: 'login',
         component: () => import('@/pages/auth/Login.vue'),
-        query: {
-            reset: 'reset'
-        },
         meta: {
             title: 'PCIC Staff Login',
             guard: 'guest'
@@ -54,126 +50,52 @@ const router = createRouter({
     routes
 });
 
-// Main navigation guard
+// Global navigation guard
 router.beforeEach(async (to, from, next) => {
-    const store = useAuthStore();
+    const auth = useAuthStore();
 
-    // Skip if already navigating to the same route to prevent loops
-    if (to.path === from.path) {
-        return next();
-    }
+    // Set page title
+    document.title = to.meta.title
+        ? `${to.meta.title} - ${APP_NAME}`
+        : APP_NAME;
 
-    const requiresAuth = to.matched.some(route => route.meta.guard === 'auth');
-    const requiresGuest = to.matched.some(route => route.meta.guard === 'guest');
-
-    // Initialize store if not already done
-    if (!store.isInitialized) {
-        try {
-            await store.initialize();
-        } catch (error) {
-            console.error('Failed to initialize store:', error);
-        }
-    }
-
-    // Handle guest routes (login, register, etc.)
-    if (requiresGuest) {
-        if (store.isAuthenticate) {
-            console.log('Already authenticated, redirecting to dashboard');
-            const redirectPath = store.getRedirectPath();
-            // Prevent redirect loop by checking if we're already going to the target
-            if (to.name !== redirectPath.name) {
-                return next(redirectPath);
-            }
-        }
-        return next();
-    }
-
-    // Handle protected routes
-    if (requiresAuth) {
-        // If not authenticated, try to authenticate
-        if (!store.isAuthenticate) {
-            try {
-                console.log('Not authenticated, attempting to fetch user data...');
-                await store.getData();
-            } catch (error) {
-                console.error('Authentication failed:', error);
-                // Clear any stale data and redirect to login
-                store.$reset();
-                return next({ name: 'login', query: { redirect: to.fullPath } });
-            }
-        }
-
-        // Check if user has valid staff role
-        if (!store.isValidStaff) {
-            console.error('User is not valid staff:', store.userData?.roles);
-            return next({ name: 'access-denied' });
-        }
-
-        // Check permission-based access if required
-        const requiredPermissions = to.meta.permissions || [];
-        if (requiredPermissions.length > 0) {
-            const hasRequiredPermission = requiredPermissions.some(permission =>
-                store.hasPermission(permission)
-            );
-
-            if (!hasRequiredPermission) {
-                console.log('Insufficient permissions, redirecting to dashboard');
-                const redirectPath = store.getRedirectPath();
-                // Only redirect if not already going to the target
-                if (to.name !== redirectPath.name) {
-                    return next(redirectPath);
+    try {
+        // Handle guest routes (like login) first
+        if (to.meta.guard === 'guest') {
+            if (auth.isAuthenticated) {
+                // If already authenticated, redirect to user's default route
+                const defaultRoute = auth.defaultRoute;
+                if (defaultRoute) {
+                    return next(defaultRoute);
                 }
+                return next('/');
             }
+            // Skip auth check for guest routes
+            await auth.initialize(true);
+            return next();
         }
 
-        // Handle dashboard redirection
-        if (to.name === 'dashboard') {
-            const redirectPath = store.getRedirectPath();
-            if (redirectPath.name !== to.name) {
-                console.log('Redirecting to role-specific dashboard:', redirectPath);
-                return next(redirectPath);
-            }
+        // For protected routes, initialize normally
+        if (!auth.isAuthenticated) {
+            await auth.initialize();
         }
+
+        // Check authentication for protected routes
+        if (!auth.isAuthenticated) {
+            return next({ name: 'login' });
+        }
+
+        // User is authenticated, allow navigation to protected route
+        return next();
+    } catch (error) {
+        console.error('Navigation guard error:', error);
+        // Clear auth state and redirect to login on any error
+        auth.$reset();
+        if (to.name !== 'login') {
+            return next({ name: 'login' });
+        }
+        return next();
     }
-
-    // If we've made it here, allow the navigation
-    next();
-});
-
-// Page Title and Metadata
-router.beforeEach((to, from, next) => {
-    const nearestWithTitle = to.matched
-        .slice()
-        .reverse()
-        .find((r) => r.meta && r.meta.title);
-
-    const nearestWithMeta = to.matched
-        .slice()
-        .reverse()
-        .find((r) => r.meta && r.meta.metaTags);
-
-    if (nearestWithTitle) {
-        document.title = nearestWithTitle.meta.title + ' - ' + APP_NAME;
-    } else {
-        document.title = APP_NAME;
-    }
-
-    Array.from(document.querySelectorAll('[data-vue-router-controlled]')).map((el) => el.parentNode.removeChild(el));
-
-    if (!nearestWithMeta) return next();
-
-    nearestWithMeta.meta.metaTags
-        .map((tagDef) => {
-            const tag = document.createElement('meta');
-            Object.keys(tagDef).forEach((key) => {
-                tag.setAttribute(key, tagDef[key]);
-            });
-            tag.setAttribute('data-vue-router-controlled', '');
-            return tag;
-        })
-        .forEach((tag) => document.head.appendChild(tag));
-
-    next();
 });
 
 export default router;

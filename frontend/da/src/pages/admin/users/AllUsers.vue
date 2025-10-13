@@ -267,7 +267,7 @@ import {
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { useUserStore } from '@/stores/agriculture'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const router = useRouter()
 const userStore = useUserStore()

@@ -41,7 +41,7 @@
 import { computed } from 'vue'
 import { FileCheck } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const adminNavigation = ADMIN_NAVIGATION
 

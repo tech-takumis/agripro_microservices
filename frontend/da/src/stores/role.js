@@ -6,46 +6,61 @@ export const useRoleStore = defineStore("rolePermission", {
     roles: [],
     loading: false,
     error: null,
+    initialized: false
   }),
 
   getters: {
     // Get all roles
     allRoles: (state) => state.roles,
-    
+    isLoading: (state) => state.loading,
+    getError: (state) => state.error,
+
+    // Get role by name (case insensitive)
+    getRoleByName: (state) => (name) => {
+      return state.roles.find(
+        role => role.name.toUpperCase() === name.toUpperCase()
+      );
+    },
+
     // Get role by ID
     getRoleById: (state) => (id) => {
       return state.roles.find(role => role.id === id)
     },
 
     // Get permissions for a specific role
-    getRolePermissions: (state) => (roleId) => {
-      const role = state.roles.find(role => role.id === roleId)
-      return role ? role.permissions || [] : []
-    },
-    
-    // Check if role has specific permission
-    roleHasPermission: (state) => (roleId, permissionName) => {
-      const role = state.roles.find(role => role.id === roleId)
-      if (!role || !role.permissions) return false
-      return role.permissions.some(permission => permission.name === permissionName)
-    },
+    getRolePermissions: (state) => (roleName) => {
+      const role = state.roles.find(
+        r => r.name.toUpperCase() === roleName.toUpperCase()
+      );
+      return role?.permissions || [];
+    }
   },
 
   actions: {
     // Fetch all roles
     async fetchRoles() {
+      if (this.initialized) return;
+
+      this.loading = true
+      this.error = null
+
       try {
-        this.loading = true
-        this.error = null
-        
         const response = await axios.get("/api/v1/agriculture/roles")
-        this.roles = response.data
-        
-        console.log("Roles fetched successfully:", this.roles)
-        return { success: true, data: response.data }
+        // Normalize all role names and their permissions to uppercase
+        this.roles = response.data.map(role => ({
+          ...role,
+          name: role.name.toUpperCase(),
+          permissions: (role.permissions || []).map(perm => ({
+            ...perm,
+            name: perm.name.toUpperCase()
+          }))
+        }))
+        this.initialized = true
+        console.log("Roles fetched and normalized:", this.roles)
+        return { success: true, data: this.roles }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message
-        console.error("Error fetching roles:", error.response?.data || error.message)
+        this.error = error.response?.data?.message || "Failed to fetch roles"
+        console.error("Error fetching roles:", error)
         return { success: false, error: this.error }
       } finally {
         this.loading = false
@@ -153,11 +168,29 @@ export const useRoleStore = defineStore("rolePermission", {
       this.error = null;
     },
     
+    // Check if role exists (case insensitive)
+    hasRole(roleName) {
+      return this.roles.some(
+        role => role.name.toUpperCase() === roleName.toUpperCase()
+      );
+    },
+
+    // Check if role has specific permission (case insensitive)
+    roleHasPermission(roleName, permissionName) {
+      const role = this.roles.find(
+        r => r.name.toUpperCase() === roleName.toUpperCase()
+      );
+      return role?.permissions.some(
+        p => p.name.toUpperCase() === permissionName.toUpperCase()
+      );
+    },
+
+    // Reset store
     $reset() {
       this.roles = [];
       this.loading = false;
       this.error = null;
-      this.currentRole = null;
+      this.initialized = false;
     }
   },
   

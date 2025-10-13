@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import PermissionGuard from '@/components/others/PermissionGuard.vue'
-import { AGRICULTURAL_EXTENSION_WORKER_NAVIGATION } from "@/lib/constants"
+import { AGRICULTURAL_EXTENSION_WORKER_NAVIGATION } from "@/lib/navigation"
 import { useAuthStore } from '@/stores/auth'
 import { useProgramStore } from '@/stores/program'
 import { useScheduleStore } from '@/stores/schedule'

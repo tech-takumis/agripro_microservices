@@ -387,7 +387,7 @@ import {
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationDetailModal from '@/components/modals/ApplicationDetailModal.vue'
 import { useApplicationStore } from '@/stores/application'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 import axios from '@/lib/axios'
 
 const router = useRouter()
