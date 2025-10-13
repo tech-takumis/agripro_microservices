@@ -13,6 +13,4 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     Page<Transaction> findByType(String type, Pageable pageable);
     Page<Transaction> findByDateBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-    Page<Transaction> findByStatus(String status, Pageable pageable);
-    Page<Transaction> findByIsPositive(boolean isPositive, Pageable pageable);
 }
