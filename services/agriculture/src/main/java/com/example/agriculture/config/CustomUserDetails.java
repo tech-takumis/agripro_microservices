@@ -2,50 +2,65 @@ package com.example.agriculture.config;
 
 import com.example.agriculture.entity.Agriculture;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-@RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final String token;
+    private final String username;
+    private final Set<SimpleGrantedAuthority> authorities;
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+    private final String phoneNumber;
+    private final UUID userId;
     private final Agriculture agriculture;
-    private final Collection<? extends GrantedAuthority> authorities;
-    private final String serviceId; // For internal services
+    private final String serviceId;
 
-    // Constructor for internal services
-    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
-        this.token = null;
-        this.agriculture = null;
-        this.authorities = authorities != null ? authorities : Collections.emptyList();
-        this.serviceId = serviceId;
-    }
-
-    // Constructor for JWT-based authentication
-    public CustomUserDetails(Agriculture agriculture) {
-        this.token = null;
+    // Constructor for database-based authentication
+    public CustomUserDetails(Agriculture agriculture, Set<SimpleGrantedAuthority> authorities) {
+        this.username = agriculture.getUsername();
+        this.authorities = authorities;
+        this.firstName = agriculture.getFirstName();
+        this.lastName = agriculture.getLastName();
+        this.email = agriculture.getEmail();
+        this.phoneNumber = agriculture.getPhoneNumber();
+        this.userId = agriculture.getId();
         this.agriculture = agriculture;
         this.serviceId = null;
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-        if (agriculture != null && agriculture.getRoles() != null) {
-            agriculture.getRoles().forEach(role -> {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-                if (role.getPermissions() != null) {
-                    role.getPermissions().forEach(permission -> {
-                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
-                    });
-                }
-            });
-        }
-        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
+    }
+
+    // Constructor for JWT claims-based authentication
+    public CustomUserDetails(Map<String, Object> claims, Set<SimpleGrantedAuthority> authorities) {
+        this.username = claims.get("sub").toString();
+        this.authorities = authorities;
+        this.firstName = (String) claims.get("firstname");
+        this.lastName = (String) claims.get("lastname");
+        this.email = (String) claims.get("email");
+        this.phoneNumber = (String) claims.get("phoneNumber");
+        this.userId = UUID.fromString((String) claims.get("userId"));
+        this.agriculture = null;
+        this.serviceId = null;
+    }
+
+    // Constructor for internal service
+    public CustomUserDetails(String serviceId, Set<SimpleGrantedAuthority> authorities) {
+        this.username = serviceId;
+        this.authorities = authorities;
+        this.firstName = null;
+        this.lastName = null;
+        this.email = null;
+        this.phoneNumber = null;
+        this.userId = null;
+        this.agriculture = null;
+        this.serviceId = serviceId;
     }
 
     @Override
@@ -60,13 +75,10 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        if (agriculture != null) {
-            return agriculture.getUsername();
-        }
         if (serviceId != null) {
-            return "internal-service-" + serviceId; // Unique username for internal services
+            return "internal-service-" + serviceId;
         }
-        throw new IllegalStateException("Neither agriculture nor serviceId is set");
+        return username;
     }
 
     @Override

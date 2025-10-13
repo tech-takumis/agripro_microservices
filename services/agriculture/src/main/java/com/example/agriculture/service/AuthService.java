@@ -1,10 +1,7 @@
 package com.example.agriculture.service;
 
 import com.example.agriculture.config.CustomUserDetails;
-import com.example.agriculture.dto.AuthenticatedResponse;
-import com.example.agriculture.dto.LoginRequest;
-import com.example.agriculture.dto.LoginResponse;
-import com.example.agriculture.dto.RegistrationRequest;
+import com.example.agriculture.dto.*;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
@@ -15,17 +12,21 @@ import com.example.agriculture.repository.RoleRepository;
 import com.example.agriculture.repository.AgricultureRepository;
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,58 +76,77 @@ public class AuthService {
         agricultureProducer.publishEvent("agriculture-events",agricultureRegistrationContract);
     }
 
-    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
+    public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         // ✅ authenticate user
+        String clientIp = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
+
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
+        // Set authentication in security context
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+
+        // Get the CustomUserDetails from the authenticated principal
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        Agriculture agriculture = userDetails.getAgriculture();
 
-        // Extract permissions first
-        Set<String> permissions = agriculture.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
+        // Build JWT claims from the authenticated user
+        Map<String, Object> claims = buildClaims(getAgricultureWithRoles(userDetails.getUserId()));
 
-        // Convert roles to string names
-        Set<String> roleNames = agriculture.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        // Jwt claims for user
-        Map<String, Object> claims = Map.of(
-                "userId", agriculture.getId(),
-                "firstname", agriculture.getFirstName(),
-                "lastname", agriculture.getLastName(),
-                "email", agriculture.getEmail(),
-                "phoneNumber", agriculture.getPhoneNumber(),
-                "roles", roleNames,
-                "permissions", permissions
-        );
-
-        // ✅ generate tokens (do NOT call login or authenticate again)
+        // ✅ generate tokens
         String accessToken = jwtService.generateAccessToken(
-                agriculture.getUsername(),
+                userDetails.getUsername(),
                 claims,
                 jwtService.getAccessTokenExpiry(request.isRememberMe())
         );
 
         String refreshToken = jwtService.generateRefreshToken(
-                agriculture.getUsername(), clientIp, userAgent,
+                userDetails.getUsername(), clientIp, userAgent,
                 jwtService.getRefreshTokenExpiry(request.isRememberMe())
         );
 
         return new LoginResponse(accessToken, refreshToken);
     }
 
-    @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(Agriculture request) {
-
-        Agriculture agriculture = agricultureRepository.findByIdWithRolesAndPermissions(request.getId())
+    public Agriculture getAgricultureWithRoles(UUID userId) {
+        return agricultureRepository.findByIdWithRolesAndPermissions(userId)
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
+    }
+    public RoleResponse getRole(Role role) {
+        return userMapper.toRoleResponse(role);
+    }
 
-        return userMapper.toAuthenticatedResponse(agriculture);
+    private Set<String> extractPermissions(Set<Role> roles) {
+        return roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> extractRoles(Set<Role> roles) {
+        return roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+    }
+
+    private Map<String,Object> buildClaims(Agriculture agriculture) {
+
+        // Extract permissions first
+        Set<String> permissions = extractPermissions(agriculture.getRoles());
+
+        // Convert roles to string names
+        Set<String> roles = extractRoles(agriculture.getRoles());
+
+        return Map.of(
+                "userId", agriculture.getId(),
+                "firstname", agriculture.getFirstName(),
+                "lastname", agriculture.getLastName(),
+                "email", agriculture.getEmail(),
+                "phoneNumber", agriculture.getPhoneNumber(),
+                "roles", roles,
+                "permissions", permissions
+        );
     }
 }

@@ -1,7 +1,9 @@
 package com.example.agriculture.mapper;
 
 import com.example.agriculture.dto.AuthenticatedResponse;
+import com.example.agriculture.dto.PermissionResponse;
 import com.example.agriculture.dto.RegistrationRequest;
+import com.example.agriculture.dto.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Role;
 import com.example.agriculture.entity.AgricultureProfile;
@@ -39,15 +41,15 @@ public class UserMapper {
     }
 
     public AuthenticatedResponse toAuthenticatedResponse(Agriculture agriculture) {
-        Set<String> roles = new HashSet<>();
-        Set<String> permissions = new HashSet<>();
 
-        // roles and permissions are now initialized
-        agriculture.getRoles().forEach(role -> {
-            roles.add(role.getName());
-            role.getPermissions().forEach(permission -> permissions.add(permission.getName()));
-        });
+        Set<RoleResponse> roles = new HashSet<>();
 
+        if (agriculture.getRoles() != null) {
+            for (Role role : agriculture.getRoles()) {
+                RoleResponse roleResponse = toRoleResponse(role);
+                roles.add(roleResponse);
+            }
+        }
 
         return new AuthenticatedResponse(
                 agriculture.getId(),
@@ -56,8 +58,7 @@ public class UserMapper {
                 agriculture.getLastName(),
                 agriculture.getEmail(),
                 agriculture.getPhoneNumber(),
-                roles,
-                permissions
+                roles
         );
     }
 
@@ -72,6 +73,22 @@ public class UserMapper {
                 .postalCode(request.getPostalCode())
                 .publicAffairsEmail(request.getPublicAffairsEmail())
                 .headquartersAddress(request.getHeadquartersAddress())
+                .build();
+    }
+
+    public RoleResponse toRoleResponse(Role role) {
+        return RoleResponse.builder()
+                .id(role.getId())
+                .name(role.getName())
+                .slug(role.getSlug())
+                .permissions(role.getPermissions() != null ? role.getPermissions().stream().map(permission ->
+                        new PermissionResponse(
+                                permission.getId(),
+                                permission.getName(),
+                                permission.getSlug(),
+                                permission.getDescription()
+                        )).toList() : null)
+                .defaultRoute(role.getDefaultRoute())
                 .build();
     }
 }

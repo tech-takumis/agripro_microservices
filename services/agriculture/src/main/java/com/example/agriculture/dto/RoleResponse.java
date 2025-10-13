@@ -15,4 +15,5 @@ public class RoleResponse {
     private String name;
     private String slug;
     private List<PermissionResponse> permissions;
+    private String defaultRoute;
 }

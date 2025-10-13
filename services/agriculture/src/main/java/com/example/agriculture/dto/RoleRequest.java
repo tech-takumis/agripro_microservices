@@ -12,5 +12,6 @@ import java.util.UUID;
 @Builder
 public class RoleRequest {
     private String name;
+    private String defaultRoute; // optional
     private List<UUID> permissionIds; // optional
 }

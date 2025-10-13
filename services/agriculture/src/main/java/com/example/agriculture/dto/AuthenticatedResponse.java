@@ -1,16 +1,23 @@
 package com.example.agriculture.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Set;
 import java.util.UUID;
 
-public record AuthenticatedResponse(
-         UUID userId,
-         String username,
-         String firstName,
-         String lastName,
-         String email,
-         String phoneNumber,
-         Set<String> roles,
-         Set<String> permission
-) {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthenticatedResponse {
+    private UUID id;
+    private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private Set<RoleResponse> roles;
 }

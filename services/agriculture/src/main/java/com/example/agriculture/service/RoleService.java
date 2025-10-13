@@ -24,7 +24,6 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
-    private final AgricultureRepository agricultureRepository;
     private final RoleMapper roleMapper;
 
     @Transactional
@@ -56,7 +55,8 @@ public class RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        role.setName(request.getName());
+        role.setName(request.getName() != null ? request.getName() : role.getName());
+        role.setDefaultRoute(request.getDefaultRoute() != null ? request.getDefaultRoute() : role.getDefaultRoute());
 
         if (request.getPermissionIds() != null) {
             List<Permission> permissions = permissionRepository.findAllById(request.getPermissionIds());

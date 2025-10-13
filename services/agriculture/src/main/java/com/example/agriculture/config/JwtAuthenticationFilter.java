@@ -28,7 +28,6 @@ import java.util.*;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
     private final TokenRenewalService tokenRenewalService;
     private final TrustedConfig trustedConfig;
 
@@ -119,7 +118,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (!jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
                 // Normal authentication flow
-                setAuthentication(accessToken);
+                setAuthentication(accessToken, request);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -139,7 +138,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         null, claimsMap, clientIp, userAgent, false);
 
                 // Set authentication with new access token
-                setAuthentication(newTokens.get("accessToken"));
+                setAuthentication(newTokens.get("accessToken"), request);
 
                 // Add new tokens as cookies
                 addTokenCookies(response, newTokens.get("accessToken"), newTokens.get("refreshToken"));
@@ -170,12 +169,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void setAuthentication(String accessToken) {
+    private void setAuthentication(String accessToken, HttpServletRequest request) {
         Claims claims = jwtService.getAllClaims(accessToken);
-        String username = claims.getSubject();
-        CustomUserDetails customUser = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser, null, customUser.getAuthorities());
+
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+
+        // Add roles
+        if (claims.get("roles") instanceof Collection<?>) {
+            ((Collection<?>) claims.get("roles")).forEach(role -> {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString().toUpperCase()));
+            });
+        }
+
+        // Add permissions
+        if (claims.get("permissions") instanceof Collection<?>) {
+            ((Collection<?>) claims.get("permissions")).forEach(permission -> {
+                authorities.add(new SimpleGrantedAuthority(permission.toString().toUpperCase()));
+            });
+        }
+
+        log.debug("[JWT Filter] Extracted authorities from token: {}", authorities);
+
+        // Create CustomUserDetails directly from claims
+        CustomUserDetails userDetails = new CustomUserDetails(claims, authorities);
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                authorities
+        );
+
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(auth);
+
+        log.debug("[JWT Filter] Successfully set authentication for user: {} with authorities: {}",
+                userDetails.getUsername(), authorities);
     }
 
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {

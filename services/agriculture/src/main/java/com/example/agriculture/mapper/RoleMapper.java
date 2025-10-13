@@ -28,6 +28,7 @@ public class RoleMapper {
                 .permissions(role.getPermissions().stream()
                         .map(this::toPermissionResponse)
                         .collect(Collectors.toList()))
+                .defaultRoute(role.getDefaultRoute())
                 .build();
     }
 
@@ -45,6 +46,7 @@ public class RoleMapper {
                 .name(request.getName())
                 .slug(slugUtil.toSlug(request.getName()))
                 .permissions(permissions != null ? Set.copyOf(permissions) : Set.of())
+                .defaultRoute(request.getDefaultRoute())
                 .build();
     }
 
