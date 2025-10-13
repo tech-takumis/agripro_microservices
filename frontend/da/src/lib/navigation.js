@@ -14,7 +14,8 @@ import {
     MonitorCheck,
     ShoppingCart,
     HeartPulse,
-    Pipette
+    Pipette,
+    MessageCircleIcon
 } from 'lucide-vue-next';
 
 /**
@@ -145,6 +146,12 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
         icon: FileBarChart2,
         to: { name: 'municipal-agriculturist-reports' },
         permission: 'CAN_VIEW_REPORTS'
+    },
+    {
+        title: 'Messages',
+        icon: MessageCircleIcon,
+        to: { name: 'municipal-agriculturist-message' },
+        // permission: 'CAN_VIEW_MESSAGES'
     }
 ];
 
