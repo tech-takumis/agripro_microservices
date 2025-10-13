@@ -488,7 +488,7 @@ import {
     ADMIN_NAVIGATION,
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
-} from '@/lib/constants'
+} from '@/lib/navigation'
 
 const router = useRouter()
 const applicationStore = useApplicationStore()
