@@ -2,50 +2,60 @@ package com.hashjosh.farmer.config;
 
 import com.hashjosh.farmer.entity.Farmer;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-@RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final String token;
-    private final Farmer farmer;
-    private final Collection<? extends GrantedAuthority> authorities;
-    private final String serviceId; // For internal services
+    private final String username;
+    private final Set<SimpleGrantedAuthority> authorities;
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+    private final String phoneNumber;
+    private final UUID userId;
+    private final Farmer farmer; // Keep for backward compatibility
 
-    // Constructor for internal services
-    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
-        this.token = null;
-        this.farmer = null;
-        this.authorities = authorities != null ? authorities : Collections.emptyList();
-        this.serviceId = serviceId;
+    public CustomUserDetails(Farmer farmer) {
+        this.username = farmer.getUsername();
+        this.authorities = Set.of();  // Will be set separately
+        this.firstName = farmer.getFirstName();
+        this.lastName = farmer.getLastName();
+        this.email = farmer.getEmail();
+        this.phoneNumber = farmer.getPhoneNumber();
+        this.userId = farmer.getId();
+        this.farmer = farmer;
     }
 
-    // Constructor for JWT-based authentication
-    public CustomUserDetails(Farmer farmer) {
-        this.token = null;
-        this.farmer = farmer;
-        this.serviceId = null;
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-        if (CustomUserDetails.this.farmer != null && CustomUserDetails.this.farmer.getRoles() != null) {
-            CustomUserDetails.this.farmer.getRoles().forEach(role -> {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-                if (role.getPermissions() != null) {
-                    role.getPermissions().forEach(permission -> {
-                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
-                    });
-                }
-            });
-        }
-        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
+    // Constructor for JWT claims-based authentication
+    public CustomUserDetails(Map<String, Object> claims, Set<SimpleGrantedAuthority> authorities) {
+        this.username = claims.get("sub").toString();
+        this.authorities = authorities;
+        this.firstName = (String) claims.get("firstname");
+        this.lastName = (String) claims.get("lastname");
+        this.email = (String) claims.get("email");
+        this.phoneNumber = (String) claims.get("phoneNumber");
+        this.userId = UUID.fromString((String) claims.get("userId"));
+        this.farmer = null;
+    }
+
+    // Constructor for internal service
+    public CustomUserDetails(String serviceId, Set<SimpleGrantedAuthority> authorities) {
+        this.username = serviceId;
+        this.authorities = authorities;
+        this.firstName = null;
+        this.lastName = null;
+        this.email = null;
+        this.phoneNumber = null;
+        this.userId = null;
+        this.farmer = null;
     }
 
     @Override
@@ -55,18 +65,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return farmer != null ? farmer.getPassword() : null;
-    }
-
-    @Override
-    public String getUsername() {
-        if (farmer != null) {
-            return farmer.getUsername();
-        }
-        if (serviceId != null) {
-            return "internal-service-" + serviceId; // Unique username for internal services
-        }
-        throw new IllegalStateException("Neither agriculture nor serviceId is set");
+        return null; // Not needed for token-based auth
     }
 
     @Override
@@ -88,5 +87,4 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
 }
