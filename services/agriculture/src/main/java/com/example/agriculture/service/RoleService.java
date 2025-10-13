@@ -1,13 +1,12 @@
 package com.example.agriculture.service;
 
 
-import com.example.agriculture.dto.RoleRequest;
-import com.example.agriculture.dto.RoleResponse;
-import com.example.agriculture.dto.RoleUpdateRequest;
+import com.example.agriculture.dto.rbac.RoleRequest;
+import com.example.agriculture.dto.rbac.RoleResponse;
+import com.example.agriculture.dto.rbac.RoleUpdateRequest;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
 import com.example.agriculture.mapper.RoleMapper;
-import com.example.agriculture.repository.AgricultureRepository;
 import com.example.agriculture.repository.PermissionRepository;
 import com.example.agriculture.repository.RoleRepository;
 import jakarta.transaction.Transactional;
@@ -24,7 +23,6 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
-    private final AgricultureRepository agricultureRepository;
     private final RoleMapper roleMapper;
 
     @Transactional
@@ -56,7 +54,8 @@ public class RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        role.setName(request.getName());
+        role.setName(request.getName() != null ? request.getName() : role.getName());
+        role.setDefaultRoute(request.getDefaultRoute() != null ? request.getDefaultRoute() : role.getDefaultRoute());
 
         if (request.getPermissionIds() != null) {
             List<Permission> permissions = permissionRepository.findAllById(request.getPermissionIds());

@@ -1,6 +1,5 @@
 package com.hashjosh.farmer.config;
 
-import com.hashjosh.farmer.entity.Farmer;
 import com.hashjosh.farmer.service.TokenRenewalService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -28,7 +27,6 @@ import java.util.*;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
     private final TokenRenewalService tokenRenewalService;
     private final TrustedConfig trustedConfig;
 
@@ -100,6 +98,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String clientIp = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
+        // Log extracted tokens and URI
+        log.info("[JWT Filter] URI: {} | Extracted access token: {} | Extracted refresh token: {}", requestUri, accessToken, refreshToken);
+
         // Reject requests without access token or internal service header
         if (accessToken == null) {
             log.warn("Unauthorized request to {}: Missing both X-Internal-Service and Authorization headers", requestUri);
@@ -115,16 +116,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-
             if (!jwtService.isExpired(accessToken) && jwtService.validateToken(accessToken)) {
-                // Normal Authentication flow
-                setAuthentication(accessToken);
+                log.info("[JWT Filter] Valid access token for URI: {}", requestUri);
+                setAuthentication(accessToken, request);
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // Handle expired access token with valid refresh token
             if (refreshToken != null && jwtService.validateRefreshToken(refreshToken, clientIp, userAgent)) {
+                log.info("[JWT Filter] Expired access token, valid refresh token for URI: {}", requestUri);
                 Claims claim = jwtService.getClaimsAllowExpired(accessToken);
                 String username = claim.getSubject();
                 String userId = claim.get("userId", String.class);
@@ -138,7 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         null, claimsMap, clientIp, userAgent, false);
 
                 // Set authentication with new access token
-                setAuthentication(newTokens.get("accessToken"));
+                setAuthentication(newTokens.get("accessToken"), request);
 
                 // Add new tokens as cookies
                 addTokenCookies(response, newTokens.get("accessToken"), newTokens.get("refreshToken"));
@@ -146,6 +147,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            log.warn("[JWT Filter] Invalid or expired token for URI: {}", requestUri);
             if (!response.isCommitted()) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
                 response.setContentType("application/json");
@@ -155,6 +157,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter().flush();
             }
         }catch (Exception e) {
+            log.error("[JWT Filter] Authentication error for URI: {} | Exception: {}", requestUri, e.getMessage(), e);
             if (!response.isCommitted()) {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
                 response.setContentType("application/json");
@@ -166,26 +169,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void setAuthentication(String accessToken) {
+    private void setAuthentication(String accessToken, HttpServletRequest request) {
         Claims claims = jwtService.getAllClaims(accessToken);
-        String username = claims.getSubject();
 
-        CustomUserDetails customUser =
-                (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
 
-        Farmer farmer = customUser.getFarmer();
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-
-        farmer.getRoles().forEach(role -> {
-            roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-            role.getPermissions().forEach(permission -> {
-                roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+        // Add roles
+        if (claims.get("roles") instanceof Collection<?>) {
+            ((Collection<?>) claims.get("roles")).forEach(role -> {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString().toUpperCase()));
             });
-        });
+        }
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser,
-                null, roles);
+        // Add permissions
+        if (claims.get("permissions") instanceof Collection<?>) {
+            ((Collection<?>) claims.get("permissions")).forEach(permission -> {
+                authorities.add(new SimpleGrantedAuthority(permission.toString().toUpperCase()));
+            });
+        }
+
+        log.debug("[JWT Filter] Extracted authorities from token: {}", authorities);
+
+        // Create CustomUserDetails directly from claims
+        CustomUserDetails userDetails = new CustomUserDetails(claims, authorities);
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            authorities
+        );
+
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(auth);
+
+        log.debug("[JWT Filter] Successfully set authentication for user: {} with authorities: {}",
+            userDetails.getUsername(), authorities);
     }
 
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {

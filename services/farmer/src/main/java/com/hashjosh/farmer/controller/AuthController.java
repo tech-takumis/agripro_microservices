@@ -20,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -97,26 +99,24 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Farmer farmer = customUserDetails.getFarmer();
-        if (farmer == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        // Build response directly from CustomUserDetails
+        AuthenticatedResponse response = AuthenticatedResponse.builder()
+                .id(customUserDetails.getUserId())
+                .username(customUserDetails.getUsername())
+                .email(customUserDetails.getEmail())
+                .firstName(customUserDetails.getFirstName())
+                .lastName(customUserDetails.getLastName())
+                .phoneNumber(customUserDetails.getPhoneNumber())
+                .roles( authentication.getAuthorities().stream()
+                        .filter(auth -> auth.getAuthority().startsWith("ROLE_"))
+                        .map(auth -> auth.getAuthority().substring(5)) // Remove "ROLE_" prefix
+                        .collect(Collectors.toSet()))
+                .permissions(authentication.getAuthorities().stream()
+                        .filter(auth -> !auth.getAuthority().startsWith("ROLE_"))
+                        .map(Object::toString)
+                        .collect(Collectors.toSet()))
+                .build();
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(farmer);
         return ResponseEntity.ok(response);
-    }
-
-    private Cookie buildCookie(String name, String value, int maxAgeSeconds) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeSeconds);
-        return cookie;
-    }
-
-    private long jwtExpirySeconds(String token) {
-        Claims claims = jwtService.getAllClaims(token);
-        return (claims.getExpiration().getTime() - System.currentTimeMillis()) / 1000;
     }
 }

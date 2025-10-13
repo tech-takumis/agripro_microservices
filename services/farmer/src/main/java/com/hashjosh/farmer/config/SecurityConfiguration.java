@@ -1,8 +1,10 @@
 package com.hashjosh.farmer.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,6 +19,9 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -25,17 +30,15 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable) // ✅ Enable CORS
+                .cors(AbstractHttpConfigurer::disable)
+                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/farmer/auth/registration",
                                 "/api/v1/farmer/auth/login",
-                                "/actuator/**",
-
-                                // Public Farmer Endpoint
-                                "/api/v1/farmer/**"
+                                "/actuator/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/farmer/auth/me","/api/v1/farmer/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/farmer/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -47,6 +50,14 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean

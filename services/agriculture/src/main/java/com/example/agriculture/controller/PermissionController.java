@@ -1,7 +1,7 @@
 package com.example.agriculture.controller;
 
-import com.example.agriculture.dto.PermissionRequest;
-import com.example.agriculture.dto.PermissionResponse;
+import com.example.agriculture.dto.rbac.PermissionRequest;
+import com.example.agriculture.dto.rbac.PermissionResponse;
 import com.example.agriculture.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

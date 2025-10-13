@@ -7,7 +7,7 @@ const axios = Axios.create({
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
     },
-    withCredentials: true
+    withCredentials: true // Ensure credentials (cookies) are sent with every request
 });
 
 // Request interceptor
@@ -25,10 +25,15 @@ axios.interceptors.request.use(
     }
 );
 
-// Response interceptor
+// Response interceptor to handle authentication errors
 axios.interceptors.response.use(
     response => response,
     error => {
+        // Handle authentication errors (401 Unauthorized)
+        if (error.response?.status === 401) {
+            // Redirect to login page if authentication fails
+            window.location.href = '/';
+        }
         // Handle 403 Forbidden errors
         if (error.response?.status === 403) {
             console.error('Access Denied:', error.response?.data?.message || 'You do not have permission to access this resource');

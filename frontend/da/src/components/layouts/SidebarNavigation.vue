@@ -97,84 +97,61 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronDown, HelpCircle, BookOpen, Mail } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import { ChevronDown } from 'lucide-vue-next'
+import {
+  ADMIN_NAVIGATION,
+  MUNICIPAL_AGRICULTURIST_NAVIGATION,
+  AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
+} from '@/lib/navigation'
 
 const route = useRoute()
-const authStore = useAuthStore()
-
-const props = defineProps({
-  navigation: {
-    type: Array,
-    default: () => []
-  },
-  roleTitle: {
-    type: String,
-    default: 'Staff Portal'
-  }
-})
-
-const emit = defineEmits(['help-support'])
-
+const auth = useAuthStore()
 const expandedGroups = ref([])
 
-const supportItems = [
-  { title: 'FAQs', icon: HelpCircle, action: () => emit('help-support', 'faq') },
-  { title: 'User Guide', icon: BookOpen, action: () => emit('help-support', 'user-guide') },
-  { title: 'Contact Support', icon: Mail, action: () => emit('help-support', 'contact') }
-]
+const toggleGroup = (groupTitle) => {
+  const index = expandedGroups.value.indexOf(groupTitle)
+  if (index === -1) {
+    expandedGroups.value.push(groupTitle)
+  } else {
+    expandedGroups.value.splice(index, 1)
+  }
+}
 
+const isActive = (to) => {
+  if (!to || !route) return false
+  if (to.name === route.name) return true
+  return route.path.startsWith(to.path)
+}
+
+// Get navigation items based on user's role
 const filteredNavigation = computed(() => {
-  if (!props.navigation || props.navigation.length === 0) return []
-
-  return props.navigation.filter(item => {
-    if (!item.children && !item.permission) return true
-    if (!item.children && item.permission) {
-      return authStore.hasPermission(item.permission)
-    }
-    if (item.children) {
-      const filteredChildren = item.children.filter(child => {
-        if (!child.permission) return true
-        return authStore.hasPermission(child.permission)
-      })
-      return filteredChildren.length > 0
-    }
-    return true
-  }).map(item => {
-    if (item.children) {
-      return {
-        ...item,
-        children: item.children.filter(child => {
-          if (!child.permission) return true
-          return authStore.hasPermission(child.permission)
-        })
-      }
-    }
-    return item
-  })
+  const roles = auth.userRoles
+  if (roles.includes('ADMIN')) return ADMIN_NAVIGATION
+  if (roles.includes('MUNICIPAL AGRICULTURISTS')) return MUNICIPAL_AGRICULTURIST_NAVIGATION
+  if (roles.includes('AGRICULTURAL EXTENSION WORKERS')) return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
+  return []
 })
 
-const isActive = (routeObj) => {
-  if (!routeObj) return false
-  if (typeof routeObj === 'object' && routeObj.name) {
-    return route.name === routeObj.name
-  }
-  if (typeof routeObj === 'string') {
-    return route.path === routeObj || route.path.startsWith(routeObj + '/')
-  }
-  return false
-}
+// Get formatted role title for display
+const roleTitle = computed(() => {
+  if (!auth.userData.roles || auth.userData.roles.length === 0) return ''
+  return auth.userData.roles[0].name.split('_').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ')
+})
 
-const toggleGroup = (groupName) => {
-  const index = expandedGroups.value.indexOf(groupName)
-  if (index > -1) {
-    expandedGroups.value.splice(index, 1)
-  } else {
-    expandedGroups.value.push(groupName)
-  }
-}
+onMounted(() => {
+  // Only expand the current active group if it exists
+  const currentPath = route.path
+  filteredNavigation.value.forEach(item => {
+    if (item.children && item.children.some(child => child.to.path === currentPath)) {
+      expandedGroups.value.push(item.title)
+    }
+  })
+})
 </script>
 
 <style scoped>

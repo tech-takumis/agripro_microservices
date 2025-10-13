@@ -220,7 +220,7 @@ import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import RoleModal from '@/components/modals/RoleModal.vue'
 import { useRoleStore } from '@/stores/role'
 import { usePermissionStore } from '@/stores/permission'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const roleStore = useRoleStore()
 const permissionStore = usePermissionStore()

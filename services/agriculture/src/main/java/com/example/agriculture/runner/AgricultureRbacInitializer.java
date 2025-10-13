@@ -65,7 +65,7 @@ public class AgricultureRbacInitializer implements CommandLineRunner {
 
             // Define roles
             List<Role> roles = Arrays.asList(
-                    new Role(null, "Municipal Agriculturists", slug.toSlug("Municipal Agriculturists"), new HashSet<>(Arrays.asList(
+                    new Role(null, "Municipal Agriculturists", slug.toSlug("Municipal Agriculturists"),"/municipal-agriculturist/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_PROCESS_CLAIM"),
                             permMap.get("CAN_SUBMIT_CROP_DATA"),
@@ -77,7 +77,7 @@ public class AgricultureRbacInitializer implements CommandLineRunner {
                             permMap.get("CAN_MONITOR_PROGRAMS"),
                             permMap.get("CAN_CONDUCT_SURVEYS")
                     ))),
-                    new Role(null, "Agricultural Extension Workers", slug.toSlug("Agricultural Extension Workers"), new HashSet<>(Arrays.asList(
+                    new Role(null, "Agricultural Extension Workers", slug.toSlug("Agricultural Extension Workers"),"/extension-worker/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_PROCESS_CLAIM"),
                             permMap.get("CAN_SUBMIT_CROP_DATA"),
@@ -88,7 +88,7 @@ public class AgricultureRbacInitializer implements CommandLineRunner {
                             permMap.get("CAN_PROMOTE_SUSTAINABILITY"),
                             permMap.get("CAN_SUPPORT_VETERINARY")
                     ))),
-                    new Role(null, "ADMIN", slug.toSlug("ADMIN"), new HashSet<>(Arrays.asList(
+                    new Role(null, "ADMIN", slug.toSlug("ADMIN"), "/admin/dashboard",new HashSet<>(Arrays.asList(
                             permMap.get("CAN_CREATE_USER"),
                             permMap.get("CAN_DELETE_USER"),
                             permMap.get("CAN_UPDATE_USER"),

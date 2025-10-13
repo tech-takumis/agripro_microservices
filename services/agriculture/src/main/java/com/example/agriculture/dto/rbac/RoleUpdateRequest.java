@@ -1,4 +1,4 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.rbac;
 
 import lombok.*;
 
@@ -10,7 +10,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoleRequest {
+public class RoleUpdateRequest {
     private String name;
-    private List<UUID> permissionIds; // optional
+    private String defaultRoute;
+    private List<UUID> permissionIds;
 }

@@ -1,7 +1,8 @@
 package com.example.agriculture.controller;
 
 import com.example.agriculture.config.CustomUserDetails;
-import com.example.agriculture.dto.*;
+import com.example.agriculture.dto.auth.*;
+import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.service.AuthService;
 import com.example.agriculture.service.RefreshTokenService;
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,26 +54,45 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
+    public ResponseEntity<AuthenticatedResponse> login(
             @RequestBody @Valid LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
+        // First authenticate and get tokens
+        LoginResponse tokens = authService.login(request, httpRequest);
 
-        String clientIp = httpRequest.getRemoteAddr();
-        String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
+        // Set cookies
+        Cookie accessCookie = buildCookie("ACCESS_TOKEN", tokens.getAccessToken(),
+                (int) (jwtExpirySeconds(tokens.getAccessToken())));
+        Cookie refreshCookie = buildCookie("REFRESH_TOKEN", tokens.getRefreshToken(),
+                (int) Duration.ofDays(1).toSeconds());
 
-        LoginResponse tokens = authService.login(request, clientIp, userAgent);
+        httpResponse.addCookie(accessCookie);
+        httpResponse.addCookie(refreshCookie);
 
-            Cookie accessCookie = buildCookie("ACCESS_TOKEN", tokens.getAccessToken(),
-                    (int) (jwtExpirySeconds(tokens.getAccessToken())));
-            Cookie refreshCookie = buildCookie("REFRESH_TOKEN", tokens.getRefreshToken(),
-                    (int) Duration.ofDays(1).toSeconds());
+        // Get authenticated user from security context
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
 
-            httpResponse.addCookie(accessCookie);
-            httpResponse.addCookie(refreshCookie);
+        // Get agriculture entity with roles
+        Agriculture agriculture = authService.getAgricultureWithRoles(userDetails.getUserId());
 
-            return ResponseEntity.ok("Login successfully");
+        Set<RoleResponse> roles = agriculture.getRoles().stream()
+                .map(authService::getRole)
+                .collect(Collectors.toSet());
+
+        AuthenticatedResponse response = AuthenticatedResponse.builder()
+                .id(agriculture.getId())
+                .username(agriculture.getUsername())
+                .firstName(agriculture.getFirstName())
+                .lastName(agriculture.getLastName())
+                .email(agriculture.getEmail())
+                .phoneNumber(agriculture.getPhoneNumber())
+                .roles(roles)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
 
@@ -105,27 +126,33 @@ public class AuthController {
             return ResponseEntity.ok("Logged out: refresh token removed");
     }
 
-
     @GetMapping("/me")
     public ResponseEntity<AuthenticatedResponse> getAuthenticatedUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = getUserDetails();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        // Get agriculture entity with roles
+        Agriculture agriculture = authService.getAgricultureWithRoles(userDetails.getUserId());
 
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof CustomUserDetails customUserDetails)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        Set<RoleResponse> roles = agriculture.getRoles().stream()
+                .map(authService::getRole)
+                .collect(Collectors.toSet());
 
-        Agriculture agriculture = customUserDetails.getAgriculture();
-        if (agriculture == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        AuthenticatedResponse response = AuthenticatedResponse.builder()
+                .id(agriculture.getId())
+                .username(agriculture.getUsername())
+                .firstName(agriculture.getFirstName())
+                .lastName(agriculture.getLastName())
+                .email(agriculture.getEmail())
+                .phoneNumber(agriculture.getPhoneNumber())
+                .roles(roles)
+                .build();
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(agriculture);
         return ResponseEntity.ok(response);
+    }
+
+    private CustomUserDetails getUserDetails() {
+        return (CustomUserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
     }
 
     private Cookie buildCookie(String name, String value, int maxAgeSeconds) {

@@ -5,9 +5,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/AdminDashboard.vue'),
         meta: {
             title: 'Admin Dashboard',
-            guard: 'auth',
-            roles: ['Admin'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/admin/register-staff',
@@ -15,10 +14,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/staff/RegisterStaff.vue'),
         meta: {
             title: 'Register New Staff',
-            guard: 'auth',
-            roles: ['Admin'],
-            permissions: ['CAN_CREATE_USER'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/admin/users',
@@ -26,14 +23,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/users/AllUsers.vue'),
         meta: {
             title: 'All Users',
-            guard: 'auth',
-            roles: [
-                'Admin',
-                'Municipal Agriculturists',
-                'Agricultural Extension Workers',
-            ],
-            permissions: ['CAN_VIEW_USER'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/admin/roles-permissions',
@@ -41,10 +32,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/roles/RolesPermissions.vue'),
         meta: {
             title: 'Roles & Permissions',
-            guard: 'auth',
-            roles: ['Admin'],
-            permissions: ['CAN_MANAGE_ROLES'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/admin/reports',
@@ -52,177 +41,121 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/AdminReports.vue'),
         meta: {
             title: 'Reports',
-            guard: 'auth',
-            roles: ['Admin', 'Municipal Agriculturists'],
-            permissions: ['CAN_VIEW_REPORTS']
+            guard: 'auth'
         }
     }
-]
+];
 
 export const MUNICIPALITY_ROUTES = [
     {
         path: '/municipal-agriculturist/dashboard',
         name: 'municipal-agriculturist-dashboard',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistDashboard.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistDashboard.vue'),
         meta: {
             title: 'Municipal Agriculturist Dashboard',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/submit-crop-data',
         name: 'municipal-agriculturist-submit-crop-data',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/applications/ApplicationList.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/applications/ApplicationList.vue'),
         meta: {
             title: 'Submit Crop Data',
-            guard: 'auth',
-            roles: [
-                'Municipal Agriculturists',
-                'Agricultural Extension Workers',
-            ],
-            permissions: ['CAN_SUBMIT_CROP_DATA'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/submit-crop-data/:id',
         name: 'municipal-agriculturist-submit-crop-data-detail',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/applications/ApplicationDetail.vue'
-                ),
+        component: () => import('@/pages/municipal-agriculturist/applications/ApplicationDetail.vue'),
         meta: {
             title: 'Submit Crop Data Detail',
-            guard: 'auth',
-            roles: [
-                'Municipal Agriculturists',
-                'Agricultural Extension Workers',
-            ],
-            permissions: ['CAN_SUBMIT_CROP_DATA'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/develop-plans',
         name: 'municipal-agriculturist-develop-plans',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistDevelopPlans.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistDevelopPlans.vue'),
         meta: {
             title: 'Develop Plans',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_DEVELOP_PLANS'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/coordinate-agencies',
         name: 'municipal-agriculturist-coordinate-agencies',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistCoordinateAgencies.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistCoordinateAgencies.vue'),
         meta: {
             title: 'Coordinate Agencies',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_COORDINATE_AGENCIES'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/provide-infrastructure',
         name: 'municipal-agriculturist-provide-infrastructure',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistProvideInfrastructure.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistProvideInfrastructure.vue'),
         meta: {
             title: 'Provide Infrastructure',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_PROVIDE_INFRASTRUCTURE'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/technical-advice',
         name: 'municipal-agriculturist-technical-advice',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistTechnicalAdvice.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistTechnicalAdvice.vue'),
         meta: {
             title: 'Provide Technical Advice',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_PROVIDE_TECHNICAL_ADVICE'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/monitor-programs',
         name: 'municipal-agriculturist-monitor-programs',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistMonitorPrograms.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistMonitorPrograms.vue'),
         meta: {
             title: 'Monitor Programs',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_MONITOR_PROGRAMS'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/conduct-surveys',
         name: 'municipal-agriculturist-conduct-surveys',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistConductSurveys.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistConductSurveys.vue'),
         meta: {
             title: 'Conduct Surveys',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_CONDUCT_SURVEYS'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/process-claims',
         name: 'municipal-agriculturist-process-claims',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistProcessClaims.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistProcessClaims.vue'),
         meta: {
             title: 'Process Claims',
-            guard: 'auth',
-            roles: [
-                'Municipal Agriculturists',
-                'Agricultural Extension Workers',
-            ],
-            permissions: ['CAN_PROCESS_CLAIM'],
-        },
+            guard: 'auth'
+        }
     },
     {
         path: '/municipal-agriculturist/reports',
         name: 'municipal-agriculturist-reports',
-        component: () =>
-            import(
-                '@/pages/municipal-agriculturist/MunicipalAgriculturistReports.vue'
-            ),
+        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistReports.vue'),
         meta: {
             title: 'Reports',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists'],
-            permissions: ['CAN_VIEW_REPORTS'],
-        },
+            guard: 'auth'
+        }
     },
-]
+    {
+        path: '/municipal-agriculturist/message',
+        name: 'municipal-agriculturist-message',
+        component: () => import('@/pages/municipal-agriculturist/message/MunicipalAgriculturistMessage.vue'),
+        meta: {
+            title: 'Message',
+            guard: 'auth'
+        }
+    }
+];
 
 export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
     {
@@ -231,8 +164,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerDashboard.vue'),
         meta: {
             title: 'Extension Worker Dashboard',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers']
+            guard: 'auth'
         }
     },
     {
@@ -241,9 +173,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerSubmitCropData.vue'),
         meta: {
             title: 'Submit Crop Data',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists', 'Agricultural Extension Workers'],
-            permissions: ['CAN_SUBMIT_CROP_DATA']
+            guard: 'auth'
         }
     },
     {
@@ -252,9 +182,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerConductTraining.vue'),
         meta: {
             title: 'Conduct Training',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_CONDUCT_TRAINING']
+            guard: 'auth'
         }
     },
     {
@@ -263,9 +191,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerFacilitateTechAdoption.vue'),
         meta: {
             title: 'Facilitate Tech Adoption',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_FACILITATE_TECH_ADOPTION']
+            guard: 'auth'
         }
     },
     {
@@ -274,9 +200,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerDiagnosticServices.vue'),
         meta: {
             title: 'Provide Diagnostic Services',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_PROVIDE_DIAGNOSTIC_SERVICES']
+            guard: 'auth'
         }
     },
     {
@@ -285,9 +209,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerMarketAccess.vue'),
         meta: {
             title: 'Enhance Market Access',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_ENHANCE_MARKET_ACCESS']
+            guard: 'auth'
         }
     },
     {
@@ -296,9 +218,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerPromoteSustainability.vue'),
         meta: {
             title: 'Promote Sustainability',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_PROMOTE_SUSTAINABILITY']
+            guard: 'auth'
         }
     },
     {
@@ -307,9 +227,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerSupportVeterinary.vue'),
         meta: {
             title: 'Support Veterinary',
-            guard: 'auth',
-            roles: ['Agricultural Extension Workers'],
-            permissions: ['CAN_SUPPORT_VETERINARY']
+            guard: 'auth'
         }
     },
     {
@@ -318,9 +236,7 @@ export const AGRICULTURAL_EXTENSION_WORKER_ROUTES = [
         component: () => import('@/pages/extension-worker/ExtensionWorkerProcessClaims.vue'),
         meta: {
             title: 'Process Claims',
-            guard: 'auth',
-            roles: ['Municipal Agriculturists', 'Agricultural Extension Workers'],
-            permissions: ['CAN_PROCESS_CLAIM']
+            guard: 'auth'
         }
     }
 ];

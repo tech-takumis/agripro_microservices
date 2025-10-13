@@ -1,4 +1,4 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

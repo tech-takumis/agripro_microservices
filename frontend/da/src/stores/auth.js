@@ -1,197 +1,116 @@
 import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
-import { useRoleStore } from './role';
-import { usePermissionStore } from './permission';
-import {useWebSocket} from '@/composables/useWebSocket'
+import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         userData: {},
         loading: false,
         error: null,
-        isInitialized: false,
+        router: null,
+        normalizedPermissions: new Set(),
+        normalizedRoles: new Set(),
+        isAuthenticated: false,
+        initializationPromise: null
     }),
 
     getters: {
-        isAuthenticate: (state) => Object.values(state.userData).length > 0,
-        hasVerified: (state) =>
-            Object.keys(state.userData).length > 0 ? state.userData.email_verified_at !== null : false,
-
-        // User basic info
         userFullName: (state) => state.userData?.firstName && state.userData?.lastName
             ? `${state.userData.firstName} ${state.userData.lastName}`
             : state.userData?.username || "",
         userEmail: (state) => state.userData?.email || "",
-        userRoles: (state) => state.userData?.roles || [],
-        userPermissions: (state) => state.userData?.permission || [],
-        userPrimaryRole: (state) => {
-            const roles = state.userData?.roles || [];
-            if (roles.length === 0) return null;
-
-            // Get role store to access role hierarchy
-            const roleStore = useRoleStore();
-            const roleHierarchy = roleStore.roles.reduce((acc, role) => {
-                acc[role.name] = role.id; // Using ID as priority for now, adjust if needed
-                return acc;
-            }, {});
-
-            return roles.reduce((highest, role) => {
-                const currentPriority = roleHierarchy[role] || 0;
-                const highestPriority = roleHierarchy[highest] || 0;
-                return currentPriority > highestPriority ? role : highest;
-            }, roles[0]);
-        },
+        userRoles: (state) => Array.from(state.normalizedRoles),
+        userPermissions: (state) => Array.from(state.normalizedPermissions),
         userPhoneNumber: (state) => state.userData?.phoneNumber || "",
-        userAddress: (state) => state.userData?.address || "",
-        userId: (state) => state.userData?.userId || "",
+        userId: (state) => state.userData?.id || "",
 
-        // Dynamic role-specific checks
-        hasRole: (state) => (roleName) => (state.userData?.roles).includes(roleName),
-        checkRole: (state) => (roleName) => (state.userData?.roles).includes(roleName),
-
-        // Permission-specific checks
-        // Permission-specific checks
-        hasPermission: (state) => (permissionName) => (state.userData?.permission || []).includes(permissionName),
-        checkPermission: (state) => (permissionName) => (state.userData?.permission || []).includes(permissionName),
-
-        // Check if user is valid staff (has at least one valid role from backend)
-        isValidStaff: (state) => {
-            const userRoles = state.userData?.roles || [];
-            const roleStore = useRoleStore();
-            const validRoles = roleStore.roles.map(role => role.name);
-            console.log("Checking roles:", userRoles, "Valid roles:", validRoles);
-            return userRoles.some((role) => validRoles.includes(role));
+        // Permission and role checks
+        hasRole: (state) => (roleName) => {
+            if (!roleName) return false;
+            return state.userData.roles?.some(role => role.name.toUpperCase() === roleName.toUpperCase());
         },
 
-        // Get user display info
-        userDisplayInfo: (state) => {
-            if (!state.userData || Object.keys(state.userData).length === 0) return null;
-
-            return {
-                userId: state.userData.userId,
-                username: state.userData.username,
-                name: state.userData.firstName && state.userData.lastName
-                    ? `${state.userData.firstName} ${state.userData.lastName}`
-                    : state.userData.username,
-                firstName: state.userData.firstName,
-                lastName: state.userData.lastName,
-                email: state.userData.email,
-                phoneNumber: state.userData.phoneNumber,
-                address: state.userData.address,
-                roles: state.userData.roles,
-                permissions: state.userData.permission,
-                primaryRole: state.userData.roles?.[0] || null,
-            };
+        hasPermission: (state) => (permissionName) => {
+            if (!permissionName) return true;
+            return state.userData.roles?.some(role =>
+                role.permissions.some(perm => perm.name.toUpperCase() === permissionName.toUpperCase())
+            );
         },
 
-        // Alias for compatibility
-        currentUser: (state) => state.userData,
-        isLoading: (state) => state.loading,
-        getError: (state) => state.error,
-        isAdmin: (state) => (state.userData?.roles || []).includes('ADMIN'),
-
-        // Alias for compatibility
-        fullName: (state) => state.userData?.firstName && state.userData?.lastName
-            ? `${state.userData.firstName} ${state.userData.lastName}`.trim()
-            : state.userData?.username || ""
-
-        // Note: hasAnyRole and hasAllRoles are not directly used in the provided store
-        // but we'll keep them for backward compatibility
+        // Get default route from primary role
+        defaultRoute: (state) => {
+            if (!state.userData.roles || state.userData.roles.length === 0) return null;
+            return state.userData.roles[0].defaultRoute;
+        }
     },
 
     actions: {
-        // Initialize the store with roles and permissions
-        async initialize() {
-            if (this.isInitialized) return;
-
-            try {
-                // Try to fetch user data first to check if authenticated
-                try {
-                    await this.fetchUserData();
-
-                    // Only fetch roles and permissions if user is authenticated
-                    if (this.isAuthenticate) {
-                        const roleStore = useRoleStore();
-                        const permissionStore = usePermissionStore();
-
-                        // Fetch roles and permissions in parallel
-                        await Promise.all([
-                            roleStore.fetchRoles(),
-                            permissionStore.fetchPermissions()
-                        ]);
-
-                        console.log('User store initialized with roles and permissions');
-                    }
-
-                    this.isInitialized = true;
-                    return { success: true, user: this.userData };
-                } catch (error) {
-                    // Not authenticated, but store is still initialized
-                    this.isInitialized = true;
-                    return { success: true, user: null };
-                }
-            } catch (error) {
-                console.error('Failed to initialize user store:', error);
-                this.isInitialized = true; // Mark as initialized even on error to prevent loops
-                return { success: false, error: error.message };
+        initializeRouter() {
+            if (!this.router) {
+                this.router = useRouter();
             }
         },
-        // Fetch current user data
-        async fetchUserData() {
-            this.loading = true;
-            this.error = null;
 
+        // Initialize auth state by fetching current user, with option to skip for guest routes
+        async initialize(skipForGuest = false) {
+            // If already initializing, return the existing promise
+            if (this.initializationPromise) {
+                return this.initializationPromise;
+            }
+
+            // Skip initialization for guest routes if specified
+            if (skipForGuest) {
+                this.isAuthenticated = false;
+                return Promise.resolve();
+            }
+
+            this.initializationPromise = this.fetchCurrentUser()
+                .finally(() => {
+                    this.initializationPromise = null;
+                });
+
+            return this.initializationPromise;
+        },
+
+        // Fetch current authenticated user
+        async fetchCurrentUser() {
             try {
                 const response = await axios.get('/api/v1/agriculture/auth/me');
-
                 this.userData = response.data;
-                console.log('User data fetched:', this.userData);
-                return {
-                    status: true,
-                    data: response.data,
-                }
+                this.normalizeUserData();
+                this.isAuthenticated = true;
+                return response.data;
             } catch (error) {
-                console.error('Failed to fetch user data:', error);
-                this.userData = {};
+                console.error('Failed to fetch current user:', error);
+                this.$reset();
                 throw error;
-            } finally {
-                this.loading = false;
             }
         },
 
-        // Alias for fetchUserData for compatibility
-        async getData() {
-            return this.fetchUserData();
-        },
+        // Normalize user roles and permissions
+        normalizeUserData() {
+            this.normalizedRoles.clear();
+            this.normalizedPermissions.clear();
 
-        // Get redirect path based on user's highest priority role
-        getRedirectPath() {
-            const roles = this.userData?.roles || [];
-            if (!roles || roles.length === 0) return { name: 'login' };
-
-            // Define role-based redirect paths
-            const roleRoutes = {
-                'ADMIN': { name: 'admin-dashboard' },
-                'Municipal Agriculturists': { name: 'municipal-agriculturist-dashboard' },
-                'Agricultural Extension Workers': { name: 'extension-worker-dashboard' },
-            };
-
-            // Get the highest priority role (first one in the array by default)
-            const primaryRole = roles[0];
-            console.log('Primary role for redirect:', primaryRole, 'Available routes:', Object.keys(roleRoutes));
-
-            return roleRoutes[primaryRole] || { name: 'login' };
+            if (this.userData.roles) {
+                this.userData.roles.forEach(role => {
+                    this.normalizedRoles.add(role.name.toUpperCase());
+                    role.permissions.forEach(permission => {
+                        this.normalizedPermissions.add(permission.name.toUpperCase());
+                    });
+                });
+            }
         },
 
         // Login user
         async login(credentials, setErrors, processing) {
+            this.initializeRouter();
             try {
                 if (processing) processing.value = true;
                 this.loading = true;
                 this.error = null;
 
-                // First login
-                const loginResponse = await axios.post('/api/v1/agriculture/auth/login',
+                const response = await axios.post('/api/v1/agriculture/auth/login',
                     credentials.value,
                     {
                         headers: {
@@ -202,38 +121,30 @@ export const useAuthStore = defineStore('auth', {
                     }
                 );
 
-                if (loginResponse.status === 200) {
-                    // Fetch the authenticated user
-                    localStorage.setItem("ACCESS_TOKEN", loginResponse.data.token)
-                    const userResponse = await axios.get('/api/v1/agriculture/auth/me');
+                if (response.status === 200) {
+                    // After successful login, fetch user data
+                    const userData = await this.fetchCurrentUser();
 
-                    if (userResponse.status === 200) {
-                        this.userData = userResponse.data;
-                        const redirectPath = this.getRedirectPath();
-                        this.router.push(redirectPath);
+                    if (userData && this.isAuthenticated) {
+                        const defaultRoute = this.defaultRoute;
+                        if (defaultRoute) {
+                            await this.router.push(defaultRoute);
+                        } else {
+                            throw new Error('No default route found for user role');
+                        }
+                        return { success: true };
+                    } else {
+                        throw new Error('Failed to authenticate user');
                     }
                 }
             } catch (error) {
-                console.error('Login error details:', {
-                    message: error.message,
-                    response: error.response?.data,
-                    status: error.response?.status,
-                    headers: error.response?.headers
-                });
-
+                console.error('Login error:', error);
                 const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
                 this.error = errorMessage;
-
                 if (setErrors) {
                     setErrors.value = [errorMessage];
                 }
-
-                return {
-                    success: false,
-                    error: errorMessage,
-                    status: error.response?.status,
-                    data: error.response?.data
-                };
+                return { success: false, error: errorMessage };
             } finally {
                 this.loading = false;
                 if (processing) {
@@ -242,136 +153,33 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        // Register new user
-        async register(userData) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await axios.post('/api/v1/agriculture/auth/registration', userData);
-
-                return { success: true, data: response.data };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Registration failed. Please try again.';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
         // Logout user
         async logout() {
             try {
-                const { connected, connect, disconnect, subscribe } = useWebSocket()
-                // Call the logout endpoint to clear the server-side session
-                await axios.post('/api/v1/agriculture/auth/logout');
-                disconnect()
+                // Initialize router first
+                this.initializeRouter();
+
+                // Perform logout request
+                await axios.post('/api/v1/agriculture/auth/logout', {}, {
+                    withCredentials: true
+                });
             } catch (error) {
                 console.error('Logout error:', error);
             } finally {
-                // Always clear the user data regardless of logout API success
-                this.userData = {};
-                this.error = null;
-                this.loading = false;
+                // Reset the store state
+                this.$reset();
 
-                // Use the router instance to navigate to login
-                this.router.push({ name: 'login' });
+                // Re-initialize router after reset since it was cleared
+                this.initializeRouter();
+
+                // Navigate to login page
+                if (this.router) {
+                    await this.router.push({ name: 'login' });
+                } else {
+                    // Fallback if router initialization fails
+                    window.location.href = '/';
+                }
             }
-        },
-
-        // Update user profile
-        async updateProfile(profileData) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await axios.put(`/api/v1/users/${this.userId}`, profileData);
-                this.user = { ...this.user, ...response.data };
-                return { success: true, user: this.user };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to update profile';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Change password
-        async changePassword(currentPassword, newPassword) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                await axios.post('/api/v1/auth/change-password', {
-                    currentPassword,
-                    newPassword
-                });
-                return { success: true };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to change password';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Request password reset
-        async requestPasswordReset(email) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                await axios.post('/api/v1/auth/forgot-password', { email });
-                return { success: true };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to request password reset';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Reset password with token
-        async resetPassword(token, password, passwordConfirmation) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                await axios.post('/api/v1/auth/reset-password', {
-                    token,
-                    password,
-                    password_confirmation: passwordConfirmation
-                });
-                return { success: true };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to reset password';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Check if user has a specific permission
-        can(permission) {
-            if (!this.user?.permissions) return false;
-            return this.user.permissions.includes(permission);
-        },
-
-        // Check if user has any of the given permissions
-        canAny(permissions) {
-            if (!this.user?.permissions) return false;
-            return permissions.some(permission => this.user.permissions.includes(permission));
-        },
-
-        // Check if user has all of the given permissions
-        canAll(permissions) {
-            if (!this.user?.permissions) return false;
-            return permissions.every(permission => this.user.permissions.includes(permission));
-        },
-
-        // Clear error state
-        clearError() {
-            this.error = null;
         },
 
         // Reset store state
@@ -379,11 +187,11 @@ export const useAuthStore = defineStore('auth', {
             this.userData = {};
             this.loading = false;
             this.error = null;
-            this.isInitialized = false;
-        }
+            this.normalizedPermissions.clear();
+            this.normalizedRoles.clear();
+            this.isAuthenticated = false;
+            this.initializationPromise = null;
+            // Don't reset router here anymore
+        },
     }
-
 });
-
-
-

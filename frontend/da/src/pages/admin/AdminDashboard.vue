@@ -169,7 +169,7 @@ import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import ApplicationCard from '@/components/cards/ApplicationCard.vue'
 import UnderwriterQuickActionButton from '@/components/buttons/UnderwriterQuickActionButton.vue'// Reusing for quick actions
 import {useAuthStore} from '@/stores/auth'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const authStore = useAuthStore()
 const router = useRouter()

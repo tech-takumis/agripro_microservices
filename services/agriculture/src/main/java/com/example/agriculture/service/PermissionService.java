@@ -1,8 +1,8 @@
 package com.example.agriculture.service;
 
 
-import com.example.agriculture.dto.PermissionRequest;
-import com.example.agriculture.dto.PermissionResponse;
+import com.example.agriculture.dto.rbac.PermissionRequest;
+import com.example.agriculture.dto.rbac.PermissionResponse;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.mapper.RoleMapper;
 import com.example.agriculture.repository.PermissionRepository;

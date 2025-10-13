@@ -242,7 +242,7 @@ import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import SectionModal from '@/components/modals/SectionModal.vue'
 import FieldModal from '@/components/modals/FieldModal.vue'
 import { useApplicationStore } from '@/stores/application'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 import axios from '@/lib/axios'
 
 const router = useRouter()

@@ -27,6 +27,9 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String slug;
 
+    @Column(name = "default_route")
+    private String defaultRoute;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permission",

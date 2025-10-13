@@ -1,6 +1,6 @@
 package com.example.agriculture.controller;
 
-import com.example.agriculture.dto.AgricultureResponseDto;
+import com.example.agriculture.dto.auth.AgricultureResponseDto;
 import com.example.agriculture.service.AgricultureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
