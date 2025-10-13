@@ -1,7 +1,9 @@
 package com.hashjosh.communication.service;
 
-import com.hashjosh.communication.dto.*;
-import com.hashjosh.communication.entity.*;
+import com.hashjosh.communication.dto.PostRequest;
+import com.hashjosh.communication.dto.PostResponse;
+import com.hashjosh.communication.entity.Post;
+import com.hashjosh.communication.entity.User;
 import com.hashjosh.communication.mapper.PostMapper;
 import com.hashjosh.communication.repository.PostRepository;
 import com.hashjosh.communication.repository.UserRepository;
@@ -9,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

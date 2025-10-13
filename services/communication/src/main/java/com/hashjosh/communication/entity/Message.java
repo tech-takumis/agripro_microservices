@@ -1,14 +1,13 @@
 package com.hashjosh.communication.entity;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -23,21 +22,35 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conversation_id", nullable = false)
-    private Conversation conversation;
+    private UUID conversationId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    private UUID senderId;
+
+    private UUID receiverId;
 
     @Column(columnDefinition = "TEXT")
     private String text;
 
-    @Type(JsonBinaryType.class)
-    @Column(columnDefinition = "jsonb")
-    private JsonNode attachments;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "message_attachments",
+        joinColumns = @JoinColumn(name = "message_id"),
+        inverseJoinColumns = @JoinColumn(name = "attachment_id")
+    )
+    private Set<Attachment> attachments = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    // Helper method to add attachment
+    public void addAttachment(Attachment attachment) {
+        attachments.add(attachment);
+        attachment.getMessages().add(this);
+    }
+
+    // Helper method to remove attachment
+    public void removeAttachment(Attachment attachment) {
+        attachments.remove(attachment);
+        attachment.getMessages().remove(this);
+    }
 }

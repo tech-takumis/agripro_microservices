@@ -24,7 +24,7 @@ public class MessageController {
     public void sendMessage(@Payload MessageDto messageDto){
         Message savedMessage = messageService.saveMessage(messageDto);
         // Broadcast to the public conversation topic
-        messagingTemplate.convertAndSend("/topic/conversation/" + messageDto.getConversationId(), messageDto);
+        messagingTemplate.convertAndSend("/topic/conversation/" + savedMessage.getConversationId(), messageDto);
         messageService.publishNewMessageEvent(savedMessage);
     }
 
@@ -39,7 +39,7 @@ public class MessageController {
         // Send message to the specific user's private message topic
         // This resolves to /user/{recipientId}/topic/private
         messagingTemplate.convertAndSendToUser(
-                String.valueOf(messageDto.getRecipientId()), "/topic/private", messageDto
+                String.valueOf(messageDto.getReceiverId()), "/topic/private", messageDto
         );
         messageService.publishNewMessageEvent(savedMessage);
     }
@@ -55,7 +55,7 @@ public class MessageController {
         // Send notification to the specific user's notification topic
         // This resolves to /user/{recipientId}/topic/notification
         messagingTemplate.convertAndSendToUser(
-                String.valueOf(notificationDto.getRecipientId()), "/topic/notification", notificationDto
+                String.valueOf(notificationDto.getReceiverId()), "/topic/notification", notificationDto
         );
         // You might want a dedicated Kafka publisher for notifications
         messageService.publishNewMessageEvent(savedNotification);

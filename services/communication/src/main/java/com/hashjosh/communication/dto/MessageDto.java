@@ -1,18 +1,20 @@
 package com.hashjosh.communication.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MessageDto {
-    private UUID conversationId;
     private UUID senderId;
-    private UUID recipientId;
+    private UUID receiverId;
     private String text;
-    private JsonNode attachments; // From document service
-    private LocalDateTime timestamp;
+    private Set<String> attachments;
 }
