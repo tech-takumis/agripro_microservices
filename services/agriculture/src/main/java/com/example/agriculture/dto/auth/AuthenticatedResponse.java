@@ -1,5 +1,6 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.auth;
 
+import com.example.agriculture.dto.rbac.RoleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

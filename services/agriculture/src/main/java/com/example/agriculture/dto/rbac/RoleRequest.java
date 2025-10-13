@@ -1,4 +1,4 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.rbac;
 
 import lombok.*;
 

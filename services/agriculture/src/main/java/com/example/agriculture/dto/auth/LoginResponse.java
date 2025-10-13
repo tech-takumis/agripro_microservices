@@ -1,4 +1,4 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

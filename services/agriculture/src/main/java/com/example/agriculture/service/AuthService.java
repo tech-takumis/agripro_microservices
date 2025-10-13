@@ -1,7 +1,10 @@
 package com.example.agriculture.service;
 
 import com.example.agriculture.config.CustomUserDetails;
-import com.example.agriculture.dto.*;
+import com.example.agriculture.dto.auth.LoginRequest;
+import com.example.agriculture.dto.auth.LoginResponse;
+import com.example.agriculture.dto.auth.RegistrationRequest;
+import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;

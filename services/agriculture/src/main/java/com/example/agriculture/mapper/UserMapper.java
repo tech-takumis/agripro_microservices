@@ -1,9 +1,9 @@
 package com.example.agriculture.mapper;
 
-import com.example.agriculture.dto.AuthenticatedResponse;
-import com.example.agriculture.dto.PermissionResponse;
-import com.example.agriculture.dto.RegistrationRequest;
-import com.example.agriculture.dto.RoleResponse;
+import com.example.agriculture.dto.auth.AuthenticatedResponse;
+import com.example.agriculture.dto.rbac.PermissionResponse;
+import com.example.agriculture.dto.auth.RegistrationRequest;
+import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Role;
 import com.example.agriculture.entity.AgricultureProfile;

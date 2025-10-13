@@ -1,6 +1,6 @@
 package com.example.agriculture.service;
 
-import com.example.agriculture.dto.AgricultureResponseDto;
+import com.example.agriculture.dto.auth.AgricultureResponseDto;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
@@ -9,7 +9,6 @@ import com.example.agriculture.repository.PermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

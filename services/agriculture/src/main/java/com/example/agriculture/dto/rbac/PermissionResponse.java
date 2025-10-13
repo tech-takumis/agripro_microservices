@@ -1,19 +1,16 @@
-package com.example.agriculture.dto;
+package com.example.agriculture.dto.rbac;
 
 import lombok.*;
 
-import java.util.List;
 import java.util.UUID;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoleResponse {
+public class PermissionResponse {
     private UUID id;
     private String name;
     private String slug;
-    private List<PermissionResponse> permissions;
-    private String defaultRoute;
+    private String description;
 }

@@ -1,9 +1,9 @@
 package com.example.agriculture.mapper;
 
-import com.example.agriculture.dto.PermissionRequest;
-import com.example.agriculture.dto.PermissionResponse;
-import com.example.agriculture.dto.RoleRequest;
-import com.example.agriculture.dto.RoleResponse;
+import com.example.agriculture.dto.rbac.PermissionRequest;
+import com.example.agriculture.dto.rbac.PermissionResponse;
+import com.example.agriculture.dto.rbac.RoleRequest;
+import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
 import com.hashjosh.jwtshareable.utils.SlugUtil;

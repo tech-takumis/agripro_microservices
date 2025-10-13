@@ -1,9 +1,9 @@
 package com.example.agriculture.controller;
 
 
-import com.example.agriculture.dto.RoleRequest;
-import com.example.agriculture.dto.RoleResponse;
-import com.example.agriculture.dto.RoleUpdateRequest;
+import com.example.agriculture.dto.rbac.RoleRequest;
+import com.example.agriculture.dto.rbac.RoleResponse;
+import com.example.agriculture.dto.rbac.RoleUpdateRequest;
 import com.example.agriculture.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
