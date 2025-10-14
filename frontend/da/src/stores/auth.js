@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
-import { useRouter } from 'vue-router';
 import { ref, computed } from 'vue';
+import { router } from '@/router';
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -11,13 +11,12 @@ export const useAuthStore = defineStore('auth', () => {
     });
     const loading = ref(false);
     const error = ref(null);
-    const router = ref(null);
     const normalizedPermissions = ref(new Set());
     const normalizedRoles = ref(new Set());
     const isAuthenticated = ref(false);
     const initializationPromise = ref(null);
 
-    // Getters (converted to computed)
+    // Getters
     const userFullName = computed(() =>
         userData.value?.firstName && userData.value?.lastName
             ? `${userData.value.firstName} ${userData.value.lastName}`
@@ -30,7 +29,12 @@ export const useAuthStore = defineStore('auth', () => {
     const userPhoneNumber = computed(() => userData.value?.phoneNumber || "");
     const userId = computed(() => userData.value?.id || "");
 
-    // Complex getters that take parameters become functions
+    const defaultRoute = computed(() => {
+        if (!userData.value?.roles || userData.value.roles.length === 0) return null;
+        return userData.value.roles[0].defaultRoute;
+    });
+
+    // Methods that were getters with parameters
     const hasRole = (roleName) => {
         if (!roleName) return false;
         return userData.value?.roles?.some(role =>
@@ -56,18 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
         );
     };
 
-    const defaultRoute = computed(() => {
-        if (!userData.value?.roles || userData.value.roles.length === 0) return null;
-        return userData.value.roles[0].defaultRoute;
-    });
-
     // Actions
-    function initializeRouter() {
-        if (!router.value) {
-            router.value = useRouter();
-        }
-    }
-
     async function initialize(skipForGuest = false) {
         if (initializationPromise.value) {
             return initializationPromise.value;
@@ -115,7 +108,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function login(credentials, setErrors, processing) {
-        initializeRouter();
         try {
             if (processing) processing.value = true;
             loading.value = true;
@@ -138,8 +130,9 @@ export const useAuthStore = defineStore('auth', () => {
                 normalizeUserData();
 
                 if (userData.value && isAuthenticated.value) {
-                    if (defaultRoute.value) {
-                        await router.value.push(defaultRoute.value);
+                    const route = defaultRoute.value;
+                    if (route) {
+                        await router.push(route);
                     } else {
                         throw new Error('No default route found for user role');
                     }
@@ -148,9 +141,9 @@ export const useAuthStore = defineStore('auth', () => {
                     throw new Error('Failed to authenticate user');
                 }
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+        } catch (err) {
+            console.error('Login error:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
             error.value = errorMessage;
             if (setErrors) {
                 setErrors.value = [errorMessage];
@@ -164,9 +157,38 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    async function register(userData) {
+        try {
+            loading.value = true;
+            error.value = null;
+
+            const response = await axios.post('/api/v1/agriculture/auth/registration',
+                userData,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            if (response.status === 201 || response.status === 200) {
+                return { success: true, data: response.data };
+            } else {
+                throw new Error('Registration failed');
+            }
+        } catch (err) {
+            console.error('Registration error:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+            error.value = errorMessage;
+            return { success: false, error: errorMessage };
+        } finally {
+            loading.value = false;
+        }
+    }
+
     async function logout() {
         try {
-            initializeRouter();
             await axios.post('/api/v1/agriculture/auth/logout', {}, {
                 withCredentials: true
             });
@@ -174,13 +196,7 @@ export const useAuthStore = defineStore('auth', () => {
             console.error('Logout error:', error);
         } finally {
             reset();
-            initializeRouter();
-
-            if (router.value) {
-                await router.value.push({ name: 'login' });
-            } else {
-                window.location.href = '/';
-            }
+            await router.push({ name: 'login' });
         }
     }
 
@@ -215,6 +231,7 @@ export const useAuthStore = defineStore('auth', () => {
         hasPermission,
         initialize,
         login,
+        register,
         logout,
         reset
     };

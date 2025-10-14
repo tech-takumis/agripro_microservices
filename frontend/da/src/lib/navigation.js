@@ -1,4 +1,4 @@
-import { FileBarChart2, FileCheck, LayoutDashboard, MessageCircle, Sprout, Users } from 'lucide-vue-next'
+import { FileBarChart2, FileCheck, LayoutDashboard, MessageCircle, Sprout, Users, ClipboardList, CheckSquare, BarChart } from 'lucide-vue-next'
 
 /**
  * Admin navigation items
@@ -19,10 +19,38 @@ export const ADMIN_NAVIGATION = [
                 to: { name: 'admin-users' }
             },
             {
+                title: 'Register Staff',
+                to: { name: 'admin-register-staff' }
+            },
+            {
                 title: 'Roles & Permissions',
                 to: { name: 'admin-roles-permissions' }
             }
         ]
+    },
+    {
+        title: 'Applications',
+        icon: ClipboardList,
+        children: [
+            {
+                title: 'View Applications',
+                to: { name: 'admin-applications' }
+            },
+            {
+                title: 'New Application',
+                to: { name: 'admin-new-application' }
+            }
+        ]
+    },
+    {
+        title: 'Approvals',
+        icon: CheckSquare,
+        to: { name: 'admin-approvals' }
+    },
+    {
+        title: 'Analytics',
+        icon: BarChart,
+        to: { name: 'admin-analytics' }
     },
     {
         title: 'Reports',

@@ -1,5 +1,6 @@
 package com.example.agriculture.dto.auth;
 
+import com.example.agriculture.dto.rbac.RoleResponse;
 import lombok.*;
 
 import java.util.Set;
@@ -14,7 +15,8 @@ public class AgricultureResponseDto {
     private String username;
     private String firstName;
     private String lastName;
+    private String address;
     private String email;
     private String phoneNumber;
-    private Set<String> roles;
+    private Set<RoleResponse> roles;
 }

@@ -4,31 +4,6 @@
     role-title="Admin Portal"
     page-title="Roles & Permissions"
   >
-    <template #header>
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
-          <p class="text-gray-600">Manage agriculture roles and assign permissions</p>
-        </div>
-        <div class="flex items-center space-x-3">
-          <button
-            @click="refreshData"
-            :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw :class="['h-4 w-4 mr-2', loading ? 'animate-spin' : '']" />
-            Refresh
-          </button>
-          <button
-            @click="openRoleModal()"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Plus class="h-4 w-4 mr-2" />
-            Create Role
-          </button>
-        </div>
-      </div>
-    </template>
 
     <div class="space-y-6">
       <!-- Loading State -->
@@ -92,7 +67,7 @@
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">System Roles</h2>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-3">
               <div class="relative">
                 <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -102,6 +77,21 @@
                   class="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
+              <button
+                v-if="selectedRoles.length > 0"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                @click="deleteSelectedRoles"
+              >
+                <Trash2 class="h-4 w-4 mr-2" />
+                Delete Selected ({{ selectedRoles.length }})
+              </button>
+              <button
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                @click="editRole(null)"
+              >
+                <Plus class="h-4 w-4 mr-2" />
+                Create Role
+              </button>
             </div>
           </div>
         </div>
@@ -110,6 +100,14 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
+                <th class="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    @change="toggleAllSelection"
+                  />
+                </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role Name
                 </th>
@@ -119,16 +117,23 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Key Permissions
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created Date
-                </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="role in filteredRoles" :key="role.id" class="hover:bg-gray-50">
+              <tr
+                v-for="role in filteredRoles"
+                :key="role.id"
+                class="hover:bg-gray-50 cursor-pointer"
+                @click="handleRowClick($event, role)"
+              >
+                <td class="px-6 py-4 whitespace-nowrap" @click.stop>
+                  <input
+                    type="checkbox"
+                    :checked="isRoleSelected(role)"
+                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    @change="toggleRoleSelection(role)"
+                  />
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="p-2 rounded-lg bg-indigo-100 mr-3">
@@ -136,7 +141,7 @@
                     </div>
                     <div>
                       <div class="text-sm font-medium text-gray-900">{{ role.name }}</div>
-                      <div class="text-sm text-gray-500">ID: {{ role.id }}</div>
+                      <div class="text-sm text-gray-500">{{ role.slug }}</div>
                     </div>
                   </div>
                 </td>
@@ -160,34 +165,6 @@
                     >
                       +{{ role.permissions.length - 3 }} more
                     </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDate(role.createdAt) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="flex items-center justify-end space-x-2">
-                    <button
-                      @click="viewRoleDetails(role)"
-                      class="text-indigo-600 hover:text-indigo-900"
-                      title="View Details"
-                    >
-                      <Eye class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="editRole(role)"
-                      class="text-blue-600 hover:text-blue-900"
-                      title="Edit Role"
-                    >
-                      <Edit class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="confirmDeleteRole(role)"
-                      class="text-red-600 hover:text-red-900"
-                      title="Delete Role"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -214,23 +191,26 @@
 import { ref, computed, onMounted } from 'vue'
 import { 
   Plus, RefreshCw, Loader2, AlertCircle, Shield, Key, Users, 
-  Search, Eye, Edit, Trash2 
+  Search, Eye, Edit, Trash2, X
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import RoleModal from '@/components/modals/RoleModal.vue'
 import { useRoleStore } from '@/stores/role'
 import { usePermissionStore } from '@/stores/permission'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
+import { useRouter } from 'vue-router'
 
 const roleStore = useRoleStore()
 const permissionStore = usePermissionStore()
 const adminNavigation = ADMIN_NAVIGATION
+const router = useRouter()
 
 // Reactive state
 const searchQuery = ref('')
 const roleModalOpen = ref(false)
 const selectedRole = ref(null)
 const isEditingRole = ref(false)
+const selectedRoles = ref([])
 
 // Computed properties
 const roles = computed(() => roleStore.allRoles)
@@ -254,6 +234,13 @@ const filteredRoles = computed(() => {
     role.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
+
+const isAllSelected = computed(() => {
+  return filteredRoles.value.length > 0 &&
+    filteredRoles.value.every(role => selectedRoles.value.includes(role.id))
+})
+
+const isRoleSelected = (role) => selectedRoles.value.includes(role.id)
 
 // Methods
 const refreshData = async () => {
@@ -327,6 +314,36 @@ const confirmDeleteRole = (role) => {
         alert(`Failed to delete role: ${result.error}`)
       }
     })
+  }
+}
+
+const toggleAllSelection = () => {
+  if (isAllSelected.value) {
+    selectedRoles.value = []
+  } else {
+    selectedRoles.value = filteredRoles.value.map(role => role.id)
+  }
+}
+
+const toggleRoleSelection = (role) => {
+  const index = selectedRoles.value.indexOf(role.id)
+  if (index === -1) {
+    selectedRoles.value.push(role.id)
+  } else {
+    selectedRoles.value.splice(index, 1)
+  }
+}
+
+const handleRowClick = (event, role) => {
+  router.push(`/admin/roles/${role.id}`)
+}
+
+const deleteSelectedRoles = async () => {
+  if (confirm(`Are you sure you want to delete ${selectedRoles.value.length} selected roles? This action cannot be undone.`)) {
+    for (const roleId of selectedRoles.value) {
+      await roleStore.deleteRole(roleId)
+    }
+    selectedRoles.value = []
   }
 }
 

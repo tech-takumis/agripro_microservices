@@ -45,7 +45,7 @@ const routes = [
     }
 ];
 
-const router = createRouter({
+export const router = createRouter({
     history: createWebHistory(),
     routes
 });
@@ -85,7 +85,13 @@ router.beforeEach(async (to, from, next) => {
             return next({ name: 'login' });
         }
 
-        // User is authenticated, allow navigation to protected route
+        // Check role-based access
+        if (to.meta.role && !auth.hasRole(to.meta.role)) {
+            console.warn(`Access denied: User does not have required role ${to.meta.role}`);
+            return next({ name: 'access-denied' });
+        }
+
+        // User is authenticated and has required role, allow navigation
         return next();
     } catch (error) {
         console.error('Navigation guard error:', error);
@@ -97,5 +103,3 @@ router.beforeEach(async (to, from, next) => {
         return next();
     }
 });
-
-export default router;

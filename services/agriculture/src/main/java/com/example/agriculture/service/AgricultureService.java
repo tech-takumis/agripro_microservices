@@ -1,9 +1,12 @@
 package com.example.agriculture.service;
 
 import com.example.agriculture.dto.auth.AgricultureResponseDto;
+import com.example.agriculture.dto.rbac.PermissionResponse;
+import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
+import com.example.agriculture.mapper.UserMapper;
 import com.example.agriculture.repository.AgricultureRepository;
 import com.example.agriculture.repository.PermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 public class AgricultureService {
     private final AgricultureRepository agricultureRepository;
     private final PermissionRepository permissionRepository;
+    private final UserMapper userMapper;
 
     private Agriculture getUserById(UUID userId){
         return agricultureRepository.findById(userId)
@@ -42,7 +47,7 @@ public class AgricultureService {
             result = agricultureRepository.findAll(pageable);
         }
 
-        return result.map(this::toResponseDto);
+        return result.map(userMapper::toAgricultureResponseDto);
     }
 
     public void assignDirectPermission(UUID userId,UUID permissionId){
@@ -58,25 +63,14 @@ public class AgricultureService {
     }
     public AgricultureResponseDto getById(UUID id) {
         Agriculture agri = getUserById(id);
-        return toResponseDto(agri);
+        return userMapper.toAgricultureResponseDto(agri);
     }
+
     public void delete(UUID id) {
         if (!agricultureRepository.existsById(id)) {
             throw new EntityNotFoundException("Agriculture user not found");
         }
         agricultureRepository.deleteById(id);
     }
-    private AgricultureResponseDto toResponseDto(Agriculture entity) {
-        return AgricultureResponseDto.builder()
-                .id(entity.getId())
-                .username(entity.getUsername())
-                .firstName(entity.getFirstName())
-                .lastName(entity.getLastName())
-                .email(entity.getEmail())
-                .phoneNumber(entity.getPhoneNumber())
-                .roles(entity.getRoles().stream()
-                        .map(Role::getName)
-                        .collect(Collectors.toSet()))
-                .build();
-    }
+
 }

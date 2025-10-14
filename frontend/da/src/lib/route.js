@@ -5,16 +5,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/AdminDashboard.vue'),
         meta: {
             title: 'Admin Dashboard',
-            guard: 'auth'
-        }
-    },
-    {
-        path: '/admin/register-staff',
-        name: 'admin-register-staff',
-        component: () => import('@/pages/admin/staff/RegisterStaff.vue'),
-        meta: {
-            title: 'Register New Staff',
-            guard: 'auth'
+            guard: 'auth',
+            role: 'ADMIN'
         }
     },
     {
@@ -23,16 +15,88 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/users/AllUsers.vue'),
         meta: {
             title: 'All Users',
-            guard: 'auth'
+            guard: 'auth',
+            role: 'ADMIN'
         }
     },
     {
-        path: '/admin/roles-permissions',
+        path: '/admin/users/:id',
+        name: 'admin-user-view',
+        component: () => import('@/pages/admin/users/ViewUser.vue'),
+        meta: {
+            title: 'View User',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/users/:id/edit',
+        name: 'admin-user-edit',
+        component: () => import('@/pages/admin/users/EditUser.vue'),
+        meta: {
+            title: 'Edit User',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/staff/register',
+        name: 'admin-register-staff',
+        component: () => import('@/pages/admin/staff/RegisterStaff.vue'),
+        meta: {
+            title: 'Register New Staff',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/roles',
         name: 'admin-roles-permissions',
         component: () => import('@/pages/admin/roles/RolesPermissions.vue'),
         meta: {
             title: 'Roles & Permissions',
-            guard: 'auth'
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/applications',
+        name: 'admin-applications',
+        component: () => import('@/pages/admin/applications/ViewApplications.vue'),
+        meta: {
+            title: 'View Applications',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/applications/new',
+        name: 'admin-new-application',
+        component: () => import('@/pages/admin/applications/NewApplication.vue'),
+        meta: {
+            title: 'New Application',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/approvals',
+        name: 'admin-approvals',
+        component: () => import('@/pages/admin/approvals/Approvals.vue'),
+        meta: {
+            title: 'Approvals',
+            guard: 'auth',
+            role: 'ADMIN'
+        }
+    },
+    {
+        path: '/admin/analytics',
+        name: 'admin-analytics',
+        component: () => import('@/pages/admin/analytics/Analytics.vue'),
+        meta: {
+            title: 'Analytics',
+            guard: 'auth',
+            role: 'ADMIN'
         }
     },
     {
@@ -41,7 +105,8 @@ export const ADMIN_ROUTES = [
         component: () => import('@/pages/admin/AdminReports.vue'),
         meta: {
             title: 'Reports',
-            guard: 'auth'
+            guard: 'auth',
+            role: 'ADMIN'
         }
     }
 ];

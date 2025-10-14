@@ -10,6 +10,7 @@ import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
 import com.example.agriculture.exception.UserException;
 import com.example.agriculture.kafka.AgricultureProducer;
+import com.example.agriculture.mapper.RoleMapper;
 import com.example.agriculture.mapper.UserMapper;
 import com.example.agriculture.repository.RoleRepository;
 import com.example.agriculture.repository.AgricultureRepository;
@@ -42,6 +43,7 @@ public class AuthService {
     private final AgricultureProducer agricultureProducer;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RoleMapper roleMapper;
 
     @Transactional
     public Agriculture register(RegistrationRequest request) {
@@ -56,28 +58,29 @@ public class AuthService {
             roles.add(role);
         });
 
-        Agriculture agriculture = userMapper.toUserEntity(request, roles);
+        String username = generateSequentialUsername();
+
+        String password = generateUniquePassword();
+
+        Agriculture agriculture = userMapper.toUserEntity(request, roles, username,password);
         Agriculture registeredAgriculture = agricultureRepository.save(agriculture);
 
-        publishUserRegistrationEvent(request, agriculture);
+        AgricultureRegistrationContract agricultureRegistrationContract =
+                AgricultureRegistrationContract.builder()
+                        .userId(registeredAgriculture.getId())
+                        .username(username)
+                        .password(password)
+                        .firstName(registeredAgriculture.getFirstName())
+                        .lastName(registeredAgriculture.getLastName())
+                        .email(registeredAgriculture.getEmail())
+                        .phoneNumber(registeredAgriculture.getPhoneNumber())
+                        .build();
+
+        agricultureProducer.publishEvent("agriculture-events",agricultureRegistrationContract);
 
         return registeredAgriculture;
     }
 
-    private void publishUserRegistrationEvent(RegistrationRequest request, Agriculture savedAgriculture) {
-        AgricultureRegistrationContract agricultureRegistrationContract =
-                AgricultureRegistrationContract.builder()
-                        .userId(savedAgriculture.getId())
-                        .username(savedAgriculture.getUsername())
-                        .password(request.getPassword())
-                        .firstName(savedAgriculture.getFirstName())
-                        .lastName(savedAgriculture.getLastName())
-                        .email(savedAgriculture.getEmail())
-                        .phoneNumber(savedAgriculture.getPhoneNumber())
-                        .build();
-
-        agricultureProducer.publishEvent("agriculture-events",agricultureRegistrationContract);
-    }
 
     public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         // ✅ authenticate user
@@ -117,10 +120,6 @@ public class AuthService {
         return agricultureRepository.findByIdWithRolesAndPermissions(userId)
                 .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
     }
-    public RoleResponse getRole(Role role) {
-        return userMapper.toRoleResponse(role);
-    }
-
     private Set<String> extractPermissions(Set<Role> roles) {
         return roles.stream()
                 .flatMap(role -> role.getPermissions().stream())
@@ -133,6 +132,30 @@ public class AuthService {
                 .map(Role::getName)
                 .collect(Collectors.toSet());
     }
+
+    private String generateSequentialUsername() {
+        // Fetch the last username from the database, ordered descending
+        String lastUsername = agricultureRepository.findLastUsername();
+
+        int nextNumber = 1;
+        if (lastUsername != null && lastUsername.matches("100-\\d{3}")) {
+            String numberPart = lastUsername.substring(4);
+            nextNumber = Integer.parseInt(numberPart) + 1;
+        }
+        return String.format("100-%03d", nextNumber);
+    }
+
+
+    private String generateUniquePassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+        StringBuilder sb = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            int idx = (int) (Math.random() * chars.length());
+            sb.append(chars.charAt(idx));
+        }
+        return sb.toString();
+    }
+
 
     private Map<String,Object> buildClaims(Agriculture agriculture) {
 

@@ -14,6 +14,10 @@ import java.util.UUID;
 @Repository
 public interface AgricultureRepository extends JpaRepository<Agriculture, UUID> {
     boolean existsByEmail(String email);
+
+    @Query("SELECT a.username FROM Agriculture a WHERE a.username LIKE '100-%' ORDER BY a.username DESC LIMIT 1")
+    String findLastUsername();
+
     Optional<Agriculture> findByUsername(String username);
     @Query("SELECT u FROM Agriculture u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
     Optional<Agriculture> findByIdWithRolesAndPermissions(@Param("id") UUID id);

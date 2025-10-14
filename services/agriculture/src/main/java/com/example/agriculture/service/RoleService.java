@@ -31,15 +31,19 @@ public class RoleService {
                 ? permissionRepository.findAllById(request.getPermissionIds())
                 : List.of();
 
-        Role role = roleMapper.toRole(request,permissions);
+        Role role = roleMapper.toRoleEntity(request,permissions);
         roleRepository.save(role);
         return roleMapper.toRoleResponse(role);
     }
 
-    public RoleResponse getRole(UUID roleId) {
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+    public RoleResponse getRole(Role role) {
         return roleMapper.toRoleResponse(role);
+    }
+
+    public RoleResponse getRoleById(UUID roleId) {
+        Role role = roleRepository.findByIdWithPermissions(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        return getRole(role);
     }
 
     public List<RoleResponse> getAllRoles() {

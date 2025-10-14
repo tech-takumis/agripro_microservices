@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import FeatureUnavailable from '../../components/FeatureUnavailable.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
