@@ -1,197 +1,221 @@
 import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
 import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
 
-export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        userData: {},
-        loading: false,
-        error: null,
-        router: null,
-        normalizedPermissions: new Set(),
-        normalizedRoles: new Set(),
-        isAuthenticated: false,
-        initializationPromise: null
-    }),
+export const useAuthStore = defineStore('auth', () => {
+    // State
+    const userData = ref({
+        roles: [],
+        permissions: []
+    });
+    const loading = ref(false);
+    const error = ref(null);
+    const router = ref(null);
+    const normalizedPermissions = ref(new Set());
+    const normalizedRoles = ref(new Set());
+    const isAuthenticated = ref(false);
+    const initializationPromise = ref(null);
 
-    getters: {
-        userFullName: (state) => state.userData?.firstName && state.userData?.lastName
-            ? `${state.userData.firstName} ${state.userData.lastName}`
-            : state.userData?.username || "",
-        userEmail: (state) => state.userData?.email || "",
-        userRoles: (state) => Array.from(state.normalizedRoles),
-        userPermissions: (state) => Array.from(state.normalizedPermissions),
-        userPhoneNumber: (state) => state.userData?.phoneNumber || "",
-        userId: (state) => state.userData?.id || "",
+    // Getters (converted to computed)
+    const userFullName = computed(() =>
+        userData.value?.firstName && userData.value?.lastName
+            ? `${userData.value.firstName} ${userData.value.lastName}`
+            : userData.value?.username || ""
+    );
 
-        // Permission and role checks
-        hasRole: (state) => (roleName) => {
-            if (!roleName) return false;
-            return state.userData.roles?.some(role => role.name.toUpperCase() === roleName.toUpperCase());
-        },
+    const userEmail = computed(() => userData.value?.email || "");
+    const userRoles = computed(() => Array.from(normalizedRoles.value));
+    const userPermissions = computed(() => Array.from(normalizedPermissions.value));
+    const userPhoneNumber = computed(() => userData.value?.phoneNumber || "");
+    const userId = computed(() => userData.value?.id || "");
 
-        hasPermission: (state) => (permissionName) => {
-            if (!permissionName) return true;
-            return state.userData.roles?.some(role =>
-                role.permissions.some(perm => perm.name.toUpperCase() === permissionName.toUpperCase())
+    // Complex getters that take parameters become functions
+    const hasRole = (roleName) => {
+        if (!roleName) return false;
+        return userData.value?.roles?.some(role =>
+            role.name.toUpperCase() === roleName.toUpperCase()
+        );
+    };
+
+    const hasPermission = (permissionName) => {
+        if (!permissionName) return true;
+        if (Array.isArray(permissionName)) {
+            return permissionName.some(name =>
+                userData.value?.roles?.some(role =>
+                    role.permissions.some(perm =>
+                        perm.name.toUpperCase() === name.toUpperCase()
+                    )
+                )
             );
-        },
-
-        // Get default route from primary role
-        defaultRoute: (state) => {
-            if (!state.userData.roles || state.userData.roles.length === 0) return null;
-            return state.userData.roles[0].defaultRoute;
         }
-    },
+        return userData.value?.roles?.some(role =>
+            role.permissions.some(perm =>
+                perm.name.toUpperCase() === permissionName.toUpperCase()
+            )
+        );
+    };
 
-    actions: {
-        initializeRouter() {
-            if (!this.router) {
-                this.router = useRouter();
-            }
-        },
+    const defaultRoute = computed(() => {
+        if (!userData.value?.roles || userData.value.roles.length === 0) return null;
+        return userData.value.roles[0].defaultRoute;
+    });
 
-        // Initialize auth state by fetching current user, with option to skip for guest routes
-        async initialize(skipForGuest = false) {
-            // If already initializing, return the existing promise
-            if (this.initializationPromise) {
-                return this.initializationPromise;
-            }
-
-            // Skip initialization for guest routes if specified
-            if (skipForGuest) {
-                this.isAuthenticated = false;
-                return Promise.resolve();
-            }
-
-            this.initializationPromise = this.fetchCurrentUser()
-                .finally(() => {
-                    this.initializationPromise = null;
-                });
-
-            return this.initializationPromise;
-        },
-
-        // Fetch current authenticated user
-        async fetchCurrentUser() {
-            try {
-                const response = await axios.get('/api/v1/agriculture/auth/me');
-                this.userData = response.data;
-                this.normalizeUserData();
-                this.isAuthenticated = true;
-                return response.data;
-            } catch (error) {
-                console.error('Failed to fetch current user:', error);
-                this.$reset();
-                throw error;
-            }
-        },
-
-        // Normalize user roles and permissions
-        normalizeUserData() {
-            this.normalizedRoles.clear();
-            this.normalizedPermissions.clear();
-
-            if (this.userData.roles) {
-                this.userData.roles.forEach(role => {
-                    this.normalizedRoles.add(role.name.toUpperCase());
-                    role.permissions.forEach(permission => {
-                        this.normalizedPermissions.add(permission.name.toUpperCase());
-                    });
-                });
-            }
-        },
-
-        // Login user
-        async login(credentials, setErrors, processing) {
-            this.initializeRouter();
-            try {
-                if (processing) processing.value = true;
-                this.loading = true;
-                this.error = null;
-
-                const response = await axios.post('/api/v1/agriculture/auth/login',
-                    credentials.value,
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        withCredentials: true,
-                    }
-                );
-
-                if (response.status === 200) {
-                    // After successful login, fetch user data
-                    const userData = await this.fetchCurrentUser();
-
-                    if (userData && this.isAuthenticated) {
-                        const defaultRoute = this.defaultRoute;
-                        if (defaultRoute) {
-                            await this.router.push(defaultRoute);
-                        } else {
-                            throw new Error('No default route found for user role');
-                        }
-                        return { success: true };
-                    } else {
-                        throw new Error('Failed to authenticate user');
-                    }
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
-                this.error = errorMessage;
-                if (setErrors) {
-                    setErrors.value = [errorMessage];
-                }
-                return { success: false, error: errorMessage };
-            } finally {
-                this.loading = false;
-                if (processing) {
-                    processing.value = false;
-                }
-            }
-        },
-
-        // Logout user
-        async logout() {
-            try {
-                // Initialize router first
-                this.initializeRouter();
-
-                // Perform logout request
-                await axios.post('/api/v1/agriculture/auth/logout', {}, {
-                    withCredentials: true
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                // Reset the store state
-                this.$reset();
-
-                // Re-initialize router after reset since it was cleared
-                this.initializeRouter();
-
-                // Navigate to login page
-                if (this.router) {
-                    await this.router.push({ name: 'login' });
-                } else {
-                    // Fallback if router initialization fails
-                    window.location.href = '/';
-                }
-            }
-        },
-
-        // Reset store state
-        $reset() {
-            this.userData = {};
-            this.loading = false;
-            this.error = null;
-            this.normalizedPermissions.clear();
-            this.normalizedRoles.clear();
-            this.isAuthenticated = false;
-            this.initializationPromise = null;
-            // Don't reset router here anymore
-        },
+    // Actions
+    function initializeRouter() {
+        if (!router.value) {
+            router.value = useRouter();
+        }
     }
+
+    async function initialize(skipForGuest = false) {
+        if (initializationPromise.value) {
+            return initializationPromise.value;
+        }
+
+        if (skipForGuest) {
+            isAuthenticated.value = false;
+            return Promise.resolve();
+        }
+
+        initializationPromise.value = fetchCurrentUser()
+            .finally(() => {
+                initializationPromise.value = null;
+            });
+
+        return initializationPromise.value;
+    }
+
+    async function fetchCurrentUser() {
+        try {
+            const response = await axios.get('/api/v1/agriculture/auth/me');
+            userData.value = response.data;
+            normalizeUserData();
+            isAuthenticated.value = true;
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch current user:', error);
+            reset();
+            throw error;
+        }
+    }
+
+    function normalizeUserData() {
+        normalizedRoles.value.clear();
+        normalizedPermissions.value.clear();
+
+        if (userData.value.roles) {
+            userData.value.roles.forEach(role => {
+                normalizedRoles.value.add(role.name.toUpperCase());
+                role.permissions.forEach(permission => {
+                    normalizedPermissions.value.add(permission.name.toUpperCase());
+                });
+            });
+        }
+    }
+
+    async function login(credentials, setErrors, processing) {
+        initializeRouter();
+        try {
+            if (processing) processing.value = true;
+            loading.value = true;
+            error.value = null;
+
+            const response = await axios.post('/api/v1/agriculture/auth/login',
+                credentials.value,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.status === 200) {
+                isAuthenticated.value = true;
+                userData.value = response.data;
+                normalizeUserData();
+
+                if (userData.value && isAuthenticated.value) {
+                    if (defaultRoute.value) {
+                        await router.value.push(defaultRoute.value);
+                    } else {
+                        throw new Error('No default route found for user role');
+                    }
+                    return { success: true };
+                } else {
+                    throw new Error('Failed to authenticate user');
+                }
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+            error.value = errorMessage;
+            if (setErrors) {
+                setErrors.value = [errorMessage];
+            }
+            return { success: false, error: errorMessage };
+        } finally {
+            loading.value = false;
+            if (processing) {
+                processing.value = false;
+            }
+        }
+    }
+
+    async function logout() {
+        try {
+            initializeRouter();
+            await axios.post('/api/v1/agriculture/auth/logout', {}, {
+                withCredentials: true
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            reset();
+            initializeRouter();
+
+            if (router.value) {
+                await router.value.push({ name: 'login' });
+            } else {
+                window.location.href = '/';
+            }
+        }
+    }
+
+    function reset() {
+        userData.value = {};
+        loading.value = false;
+        error.value = null;
+        normalizedPermissions.value.clear();
+        normalizedRoles.value.clear();
+        isAuthenticated.value = false;
+        initializationPromise.value = null;
+    }
+
+    return {
+        // State
+        userData,
+        loading,
+        error,
+        isAuthenticated,
+
+        // Getters
+        userFullName,
+        userEmail,
+        userRoles,
+        userPermissions,
+        userPhoneNumber,
+        userId,
+        defaultRoute,
+
+        // Methods
+        hasRole,
+        hasPermission,
+        initialize,
+        login,
+        logout,
+        reset
+    };
 });

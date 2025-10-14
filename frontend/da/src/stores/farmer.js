@@ -1,83 +1,98 @@
 import { defineStore } from 'pinia'
 import axios from '@/lib/axios'
+import { ref, computed } from 'vue'
 
-export const useFarmerStore = defineStore('farmers', {
-    state: () => ({
-        farmers: [],
-        currentFarmer: null,
-        loading: false,
-        error: null,
-    }),
+export const useFarmerStore = defineStore('farmers', () => {
+    // State
+    const farmers = ref([])
+    const currentFarmer = ref(null)
+    const loading = ref(false)
+    const error = ref(null)
 
-    getters: {
-        // Get all farmers
-        allFarmers: state => state.farmers,
-        totalFarmer: (state) => state.farmers.length,
+    // Getters as computed
+    const allFarmers = computed(() => farmers.value)
+    const totalFarmer = computed(() => farmers.value.length)
+    const isLoading = computed(() => loading.value)
+    const getError = computed(() => error.value)
 
-        // Get farmer by ID
-        getFarmerById: state => id => state.farmers.find(farmer => farmer.id === id),
+    // Methods that were getters with parameters
+    const getFarmerById = (id) =>
+        farmers.value.find(farmer => farmer.id === id)
 
-        // Get loading state
-        isLoading: state => state.loading,
+    // Actions as functions
+    async function fetchFarmers() {
+        loading.value = true
+        error.value = null
 
-        // Get error state
-        getError: state => state.error,
-    },
+        try {
+            const response = await axios.get('/api/v1/farmer')
+            farmers.value = response.data
+            return { success: true, data: farmers.value }
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to fetch farmers'
+            return { success: false, error: error.value }
+        } finally {
+            loading.value = false
+        }
+    }
 
-    actions: {
-        // Fetch all farmers
-        async fetchFarmers() {
-            this.loading = true
-            this.error = null
-            try {
-                const response = await axios.get('/api/v1/farmer')
-                this.farmers = response.data
-                return { success: true, data: this.farmers }
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to fetch farmers'
-                return { success: false, error: this.error }
-            } finally {
-                this.loading = false
+    async function fetchFarmerById(id) {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await axios.get(`/api/v1/farmer/${id}`)
+            currentFarmer.value = response.data
+            // Update farmer in the farmers array if it exists
+            const index = farmers.value.findIndex(farmer => farmer.id === id)
+            if (index !== -1) {
+                farmers.value[index] = response.data
             }
-        },
+            return { success: true, data: response.data }
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to fetch farmer'
+            return { success: false, error: error.value }
+        } finally {
+            loading.value = false
+        }
+    }
 
-        // Fetch single farmer by ID
-        async fetchFarmerById(id) {
-            this.loading = true
-            this.error = null
-            try {
-                const response = await axios.get(`/api/v1/farmer/${id}`)
-                this.currentFarmer = response.data
-                // Update farmer in the farmers array if it exists
-                const index = this.farmers.findIndex(farmer => farmer.id === id)
-                if (index !== -1) {
-                    this.farmers[index] = response.data
-                }
-                return { success: true, data: response.data }
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to fetch farmer'
-                return { success: false, error: this.error }
-            } finally {
-                this.loading = false
-            }
-        },
+    function clearError() {
+        error.value = null
+    }
 
-        // Clear error state
-        clearError() {
-            this.error = null
-        },
+    function clearCurrentFarmer() {
+        currentFarmer.value = null
+    }
 
-        // Clear current farmer
-        clearCurrentFarmer() {
-            this.currentFarmer = null
-        },
+    function reset() {
+        farmers.value = []
+        currentFarmer.value = null
+        loading.value = false
+        error.value = null
+    }
 
-        // Reset store state
-        $reset() {
-            this.farmers = []
-            this.currentFarmer = null
-            this.loading = false
-            this.error = null
-        },
-    },
+    return {
+        // State
+        farmers,
+        currentFarmer,
+        loading,
+        error,
+
+        // Getters
+        allFarmers,
+        totalFarmer,
+        isLoading,
+        getError,
+
+        // Methods
+        getFarmerById,
+
+        // Actions
+        fetchFarmers,
+        fetchFarmerById,
+        clearError,
+        clearCurrentFarmer,
+        reset
+    }
 })

@@ -10,11 +10,13 @@ import { useAuthStore } from '@/stores/auth';
 
 const props = defineProps({
     permission: {
-        type: String,
+        type: [String, Array],
         required: true
     }
 });
 
 const auth = useAuthStore();
-const hasRequiredPermission = computed(() => auth.hasPermission(props.permission));
+const hasRequiredPermission = computed(() => {
+    return auth.hasPermission(props.permission);
+});
 </script>

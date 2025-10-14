@@ -9,8 +9,8 @@
         <!-- Notifications -->
         <div class="relative notifications-dropdown">
           <button
-            @click="toggleNotificationsDropdown"
             class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+            @click="toggleNotificationsDropdown"
           >
             <Bell class="h-5 w-5" />
             <!-- Notification Badge -->
@@ -88,30 +88,30 @@
   >
     <div class="py-1">
       <button
-        @click="handleProfileClick"
         class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        @click="handleProfileClick"
       >
         <User class="h-4 w-4 mr-3 text-gray-400" />
         View Profile
       </button>
       <button
-        @click="handleSettingsClick"
         class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        @click="handleSettingsClick"
       >
         <Settings class="h-4 w-4 mr-3 text-gray-400" />
         Settings
       </button>
       <button
-        @click="handlePreferencesClick"
         class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        @click="handlePreferencesClick"
       >
         <Sliders class="h-4 w-4 mr-3 text-gray-400" />
         Preferences
       </button>
       <hr class="my-1 border-gray-200" />
       <button
-        @click="handleLogoutClick"
         class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+        @click="handleLogoutClick"
       >
         <LogOut class="h-4 w-4 mr-3 text-red-400" />
         Logout
@@ -217,7 +217,7 @@
         </div>
         <h3 class="text-lg font-semibold text-red-600">Financial Transactions</h3>
       </div>
-      <PermissionGuard :permissions="['CAN_MANAGE_FINANCE']">
+      <PermissionGuard :permission="['CAN_MANAGE_FINANCE']">
         <button
           class="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
         >
@@ -284,7 +284,7 @@
             <ClipboardList class="h-5 w-5 text-gray-500" />
             <h4 class="font-medium text-gray-900">{{ program.name }}</h4>
           </div>
-          <PermissionGuard :permissions="['CAN_MANAGE_ROLES']">
+          <PermissionGuard :permission="['CAN_MANAGE_ROLES']">
             <button
               class="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-xs transition-colors"
             >
