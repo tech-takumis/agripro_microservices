@@ -2,152 +2,172 @@ import axios from '@/lib/axios'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export const useScheduleStore = defineStore('schedule', {
-    state: () => ({
-        schedule: [],
-        loading: false,
-        error: null
-    }),
-    getters: {
-        allSchedules: (state) => state.schedule,
-        isLoading: (state) => state.loading,
-        getError: (state) => state.error,
-        getPagination: (state) => state.pagination,
-        schedulesByType: (state) => (type) => {
-            return state.schedule.filter(schedule => schedule.type === type)
-        },
-        schedulesByPriority: (state) => (priority) => {
-            return state.schedule.filter(schedule => schedule.priority === priority)
-        },
-        meetingSchedules: (state) => {
-            return state.schedule.filter(schedule => schedule.type === 'MEETING')
-        },
-        visitSchedules: (state) => {
-            return state.schedule.filter(schedule => schedule.type === 'VISIT')
-        },
-        highPrioritySchedules: (state) => {
-            return state.schedule.filter(schedule => schedule.priority === 'HIGH')
-        },
-        mediumPrioritySchedules: (state) => {
-            return state.schedule.filter(schedule => schedule.priority === 'MEDIUM')
-        },
-        lowPrioritySchedules: (state) => {
-            return state.schedule.filter(schedule => schedule.priority === 'LOW')
-        },
-        upcomingSchedules: (state) => {
-            const now = new Date()
-            return state.schedule.filter(schedule => new Date(schedule.scheduleDate) > now)
-        },
-        todaySchedules: (state) => {
-            const today = new Date()
-            return state.schedule.filter(schedule => new Date(schedule.scheduleDate) === today)
-        },
-        schedulesByLocation: (state) => (location) => {
-            return state.schedule.filter(schedule =>
-                schedule.metaData?.location?.toLowerCase().includes(location.toLowerCase())
-            )
-        },
-        schedulesByFarmer: (state) => (farmerName) => {
-            return state.schedule.filter(schedule =>
-                schedule.metaData?.farmerName?.toLowerCase().includes(farmerName.toLowerCase())
-            )
-        },
-        getScheduleById: (state) => (id) => {
-            return state.schedule.find(schedule => schedule.id === id)
-        },
-        recentSchedules: (state) => state.schedule.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)
-    },
+export const useScheduleStore = defineStore('schedule', () => {
+    // State
+    const schedule = ref([])
+    const loading = ref(false)
+    const error = ref(null)
 
-    actions: {
-        async fetchSchedules() {
-            this.loading = true
-            this.error = null
+    // Getters as computed
+    const allSchedules = computed(() => schedule.value)
+    const isLoading = computed(() => loading.value)
+    const getError = computed(() => error.value)
 
-            try {
-                const response = await axios.get("/api/v1/schedules");
-                this.schedule = response.data
-            } catch (err) {
-                this.error = err.response?.data?.message || err.message || 'Failed to fetch schedules'
-                console.error('Error fetching schedules:', err)
-            } finally {
-                this.loading = false
-            }
-        },
+    const meetingSchedules = computed(() =>
+        schedule.value.filter(s => s.type === 'MEETING')
+    )
 
-        async createSchedule(scheduleData) {
-            this.loading = true
-            this.error = null
+    const visitSchedules = computed(() =>
+        schedule.value.filter(s => s.type === 'VISIT')
+    )
 
-            try {
-                const response = await axios.post("/api/v1/schedules", scheduleData);
-                this.schedule.push(response.data)
-                return response.data
-            } catch (err) {
-                this.error = err.response?.data?.message || err.message || 'Failed to create schedule'
-                console.error('Error creating schedule:', err)
-                throw err
-            } finally {
-                this.loading = false
-            }
-        },
+    const highPrioritySchedules = computed(() =>
+        schedule.value.filter(s => s.priority === 'HIGH')
+    )
 
-        async updateSchedule(id, scheduleData) {
-            this.loading = true
-            this.error = null
+    const mediumPrioritySchedules = computed(() =>
+        schedule.value.filter(s => s.priority === 'MEDIUM')
+    )
 
-            try {
-                const response = await axios.put(`/api/v1/schedules/${id}`, scheduleData);
-                const index = this.schedule.findIndex(schedule => schedule.id === id)
-                if (index !== -1) {
-                    this.schedule[index] = response.data
-                }
-                return response.data
-            } catch (err) {
-                this.error = err.response?.data?.message || err.message || 'Failed to update schedule'
-                console.error('Error updating schedule:', err)
-                throw err
-            } finally {
-                this.loading = false
-            }
-        },
+    const lowPrioritySchedules = computed(() =>
+        schedule.value.filter(s => s.priority === 'LOW')
+    )
 
-        async deleteSchedule(id) {
-            this.loading = true
-            this.error = null
+    const upcomingSchedules = computed(() => {
+        const now = new Date()
+        return schedule.value.filter(s => new Date(s.scheduleDate) > now)
+    })
 
-            try {
-                await axios.delete(`/api/v1/schedules/${id}`);
-                const index = this.schedule.findIndex(schedule => schedule.id === id)
-                if (index !== -1) {
-                    this.schedule.splice(index, 1)
-                }
-                return true
-            } catch (err) {
-                this.error = err.response?.data?.message || err.message || 'Failed to delete schedule'
-                console.error('Error deleting schedule:', err)
-                throw err
-            } finally {
-                this.loading = false
-            }
-        },
+    const todaySchedules = computed(() => {
+        const today = new Date()
+        return schedule.value.filter(s => new Date(s.scheduleDate) === today)
+    })
 
-        async updateSchedulePriority(id, priority) {
-            return this.updateSchedule(id, { priority })
-        },
+    const recentSchedules = computed(() =>
+        schedule.value
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 10)
+    )
 
-        async updateScheduleStatus(id, status) {
-            return this.updateSchedule(id, { status })
-        },
+    // Methods that were getters with parameters
+    const schedulesByType = (type) =>
+        schedule.value.filter(s => s.type === type)
 
-        clearError() {
-            this.error = null
-        },
+    const schedulesByPriority = (priority) =>
+        schedule.value.filter(s => s.priority === priority)
 
-        $reset() {
-            this.schedule = []
-            this.loading = false
-            this.error = null
+    const schedulesByLocation = (location) =>
+        schedule.value.filter(s =>
+            s.metaData?.location?.toLowerCase().includes(location.toLowerCase())
+        )
+
+    const schedulesByFarmer = (farmerName) =>
+        schedule.value.filter(s =>
+            s.metaData?.farmerName?.toLowerCase().includes(farmerName.toLowerCase())
+        )
+
+    const getScheduleById = (id) =>
+        schedule.value.find(s => s.id === id)
+
+    // Actions as functions
+    async function fetchSchedules() {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await axios.get("/api/v1/schedules")
+            schedule.value = response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to fetch schedules'
+            console.error('Error fetching schedules:', err)
+        } finally {
+            loading.value = false
         }
     }
-})
 
+    async function createSchedule(scheduleData) {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await axios.post("/api/v1/schedules", scheduleData)
+            schedule.value.push(response.data)
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to create schedule'
+            console.error('Error creating schedule:', err)
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function updateSchedule(id, scheduleData) {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await axios.put(`/api/v1/schedules/${id}`, scheduleData)
+            const index = schedule.value.findIndex(s => s.id === id)
+            if (index !== -1) {
+                schedule.value[index] = response.data
+            }
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to update schedule'
+            console.error('Error updating schedule:', err)
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function deleteSchedule(id) {
+        loading.value = true
+        error.value = null
+
+        try {
+            await axios.delete(`/api/v1/schedules/${id}`)
+            schedule.value = schedule.value.filter(s => s.id !== id)
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to delete schedule'
+            console.error('Error deleting schedule:', err)
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    return {
+        // State
+        schedule,
+        loading,
+        error,
+
+        // Getters
+        allSchedules,
+        isLoading,
+        getError,
+        meetingSchedules,
+        visitSchedules,
+        highPrioritySchedules,
+        mediumPrioritySchedules,
+        lowPrioritySchedules,
+        upcomingSchedules,
+        todaySchedules,
+        recentSchedules,
+
+        // Methods
+        schedulesByType,
+        schedulesByPriority,
+        schedulesByLocation,
+        schedulesByFarmer,
+        getScheduleById,
+
+        // Actions
+        fetchSchedules,
+        createSchedule,
+        updateSchedule,
+        deleteSchedule
+    }
+})

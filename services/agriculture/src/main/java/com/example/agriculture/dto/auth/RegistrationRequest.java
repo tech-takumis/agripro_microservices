@@ -12,22 +12,12 @@ import java.util.UUID;
 @Setter
 @Builder
 public class RegistrationRequest {
-    // User
-    @NotBlank(message = "Username is required")
-    @Size(max = 100,message = "Username cannot be exceed 100 character")
-    private String username;
     @NotBlank(message = "Firstname is required")
     @Size(max = 100,message = "Firstname cannot be exceed 100 character")
     private String firstName;
     @NotBlank(message = "Lastname is required")
     @Size(max = 100,message = "Lastname cannot be exceed 100 character")
     private String lastName;
-    @NotBlank(message = "Password is required")
-    @Pattern(
-            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+=-]).{8,}$",
-            message = "Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character"
-    )
-    private String password;
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;

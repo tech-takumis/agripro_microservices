@@ -26,7 +26,7 @@ public class RoleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getRole(@PathVariable UUID id) {
-        return ResponseEntity.ok(roleService.getRole(id));
+        return ResponseEntity.ok(roleService.getRoleById(id));
     }
 
     @GetMapping

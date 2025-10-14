@@ -4,6 +4,7 @@ package com.example.agriculture.service;
 import com.example.agriculture.dto.rbac.PermissionRequest;
 import com.example.agriculture.dto.rbac.PermissionResponse;
 import com.example.agriculture.entity.Permission;
+import com.example.agriculture.mapper.PermissionMapper;
 import com.example.agriculture.mapper.RoleMapper;
 import com.example.agriculture.repository.PermissionRepository;
 import jakarta.transaction.Transactional;
@@ -19,25 +20,25 @@ import java.util.stream.Collectors;
 public class PermissionService {
 
     private final PermissionRepository permissionRepository;
-    private final RoleMapper roleMapper;
+    private final PermissionMapper permissionMapper;
 
     @Transactional
     public PermissionResponse createPermission(PermissionRequest request) {
-        Permission permission = roleMapper.toPermission(request);
+        Permission permission = permissionMapper.toPermissionEntity(request);
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public PermissionResponse getPermission(UUID permissionId) {
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new RuntimeException("Permission not found"));
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public List<PermissionResponse> getAllPermissions() {
         return permissionRepository.findAll()
                 .stream()
-                .map(roleMapper::toPermissionResponse)
+                .map(permissionMapper::toPermissionResponse)
                 .collect(Collectors.toList());
     }
 
@@ -50,7 +51,7 @@ public class PermissionService {
         permission.setDescription(request.getDescription());
 
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     @Transactional

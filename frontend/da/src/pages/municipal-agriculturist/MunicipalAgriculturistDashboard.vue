@@ -9,8 +9,8 @@
         <!-- Notifications -->
         <div class="relative notifications-dropdown">
           <button
-            @click="toggleNotificationsDropdown"
             class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+            @click="toggleNotificationsDropdown"
           >
             <Bell class="h-5 w-5" />
             <!-- Notification Badge -->
@@ -66,59 +66,50 @@
 
         <!-- Profile Dropdown -->
         <div class="relative profile-dropdown">
-<!-- Profile Wrapper -->
-<div class="relative group">
-  <!-- Profile Button -->
-  <button
-    class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-  >
-    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-      <span class="text-sm font-medium text-white">{{ userInitials }}</span>
-    </div>
-    <div class="hidden md:block text-left">
-      <p class="text-sm font-medium text-gray-900">{{ userFullName }}</p>
-      <p class="text-xs text-gray-500">{{ userEmail }}</p>
-    </div>
-    <ChevronDown class="h-4 w-4 text-gray-400" />
-  </button>
+          <button
+            class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+            @mouseenter="showProfileDropdown = true"
+          >
+            <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+              <span class="text-sm font-medium text-white">{{ userInitials }}</span>
+            </div>
+            <div class="hidden md:block text-left">
+              <p class="text-sm font-medium text-gray-900">{{ userFullName }}</p>
+              <p class="text-xs text-gray-500">{{ userEmail }}</p>
+            </div>
+            <ChevronDown class="h-4 w-4 text-gray-400" />
+          </button>
 
-  <!-- Profile Dropdown Menu -->
-  <div
-    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition"
-  >
-    <div class="py-1">
-      <button
-        @click="handleProfileClick"
-        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-      >
-        <User class="h-4 w-4 mr-3 text-gray-400" />
-        View Profile
-      </button>
-      <button
-        @click="handleSettingsClick"
-        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-      >
-        <Settings class="h-4 w-4 mr-3 text-gray-400" />
-        Settings
-      </button>
-      <button
-        @click="handlePreferencesClick"
-        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-      >
-        <Sliders class="h-4 w-4 mr-3 text-gray-400" />
-        Preferences
-      </button>
-      <hr class="my-1 border-gray-200" />
-      <button
-        @click="handleLogoutClick"
-        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-      >
-        <LogOut class="h-4 w-4 mr-3 text-red-400" />
-        Logout
-      </button>
-    </div>
-  </div>
-</div>
+          <!-- Profile Dropdown Menu -->
+          <div
+            v-if="showProfileDropdown"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+            @mouseleave="showProfileDropdown = false"
+          >
+            <div class="py-1">
+              <button
+                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                @click="handleProfileClick"
+              >
+                <User class="h-4 w-4 mr-3 text-gray-400" />
+                View Profile
+              </button>
+              <button
+                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                @click="handleSettingsClick"
+              >
+                <Settings class="h-4 w-4 mr-3 text-gray-400" />
+                Settings
+              </button>
+              <button
+                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                @click="handlePreferencesClick"
+              >
+                <Sliders class="h-4 w-4 mr-3 text-gray-400" />
+                Preferences
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -217,7 +208,7 @@
         </div>
         <h3 class="text-lg font-semibold text-red-600">Financial Transactions</h3>
       </div>
-      <PermissionGuard :permissions="['CAN_MANAGE_FINANCE']">
+      <PermissionGuard :permission="['CAN_MANAGE_FINANCE']">
         <button
           class="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
         >
@@ -284,7 +275,7 @@
             <ClipboardList class="h-5 w-5 text-gray-500" />
             <h4 class="font-medium text-gray-900">{{ program.name }}</h4>
           </div>
-          <PermissionGuard :permissions="['CAN_MANAGE_ROLES']">
+          <PermissionGuard :permission="['CAN_MANAGE_PROGRAM']">
             <button
               class="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-xs transition-colors"
             >
@@ -323,7 +314,7 @@
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
-import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, LogOut, ArrowUpCircle, ArrowDownCircle, ClipboardList, Briefcase, Bell, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
+import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, ArrowUpCircle, ArrowDownCircle, ClipboardList, Briefcase, Bell, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import PermissionGuard from '../../components/others/PermissionGuard.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'

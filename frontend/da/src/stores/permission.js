@@ -1,86 +1,103 @@
 import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
+import { ref, computed } from 'vue';
 
-export const usePermissionStore = defineStore('permission', {
-    state: () => ({
-        permissions: [],
-        loading: false,
-        error: null,
-        initialized: false
-    }),
+export const usePermissionStore = defineStore('permission', () => {
+    // State
+    const permissions = ref([]);
+    const loading = ref(false);
+    const error = ref(null);
+    const initialized = ref(false);
 
-    getters: {
-        allPermissions: state => state.permissions,
-        isLoading: state => state.loading,
-        getError: state => state.error,
+    // Getters as computed
+    const allPermissions = computed(() => permissions.value);
+    const isLoading = computed(() => loading.value);
+    const getError = computed(() => error.value);
 
-        // Get permission by name (case insensitive)
-        getPermissionByName: state => name => {
-            return state.permissions.find(
-                permission => permission.name.toUpperCase() === name.toUpperCase()
-            );
-        },
+    // Methods that were getters with parameters
+    const getPermissionByName = (name) => {
+        return permissions.value.find(
+            permission => permission.name.toUpperCase() === name.toUpperCase()
+        );
+    };
 
-        // Check if permission exists
-        hasPermission: state => name => {
-            return state.permissions.some(
-                permission => permission.name.toUpperCase() === name.toUpperCase()
-            );
-        }
-    },
+    const hasPermission = (name) => {
+        return permissions.value.some(
+            permission => permission.name.toUpperCase() === name.toUpperCase()
+        );
+    };
 
-    actions: {
-        async fetchPermissions() {
-            if (this.initialized) return;
+    // Actions as functions
+    async function fetchPermissions() {
+        if (initialized.value) return;
 
-            this.loading = true;
-            this.error = null;
+        loading.value = true;
+        error.value = null;
 
-            try {
-                const response = await axios.get('/api/v1/agriculture/permissions');
-                // Normalize all permission names to uppercase when storing
-                this.permissions = response.data.map(permission => ({
-                    ...permission,
-                    name: permission.name.toUpperCase()
-                }));
-                this.initialized = true;
-                console.log('Permissions fetched and normalized:', this.permissions);
-                return { success: true, data: this.permissions };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to fetch permissions';
-                console.error('Error fetching permissions:', error);
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Add a new permission (admin only)
-        async addPermission(permissionData) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await axios.post('/api/v1/agriculture/permissions', {
-                    ...permissionData,
-                    name: permissionData.name.toUpperCase()
-                });
-                this.permissions.push(response.data);
-                return { success: true, data: response.data };
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to add permission';
-                return { success: false, error: this.error };
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Reset store
-        $reset() {
-            this.permissions = [];
-            this.loading = false;
-            this.error = null;
-            this.initialized = false;
+        try {
+            const response = await axios.get('/api/v1/agriculture/permissions');
+            // Normalize all permission names to uppercase when storing
+            permissions.value = response.data.map(permission => ({
+                ...permission,
+                name: permission.name.toUpperCase()
+            }));
+            initialized.value = true;
+            console.log('Permissions fetched and normalized:', permissions.value);
+            return { success: true, data: permissions.value };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to fetch permissions';
+            console.error('Error fetching permissions:', err);
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
         }
     }
+
+    async function addPermission(permissionData) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await axios.post('/api/v1/agriculture/permissions', {
+                ...permissionData,
+                name: permissionData.name.toUpperCase()
+            });
+            permissions.value.push(response.data);
+            return { success: true, data: response.data };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to add permission';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    function reset() {
+        permissions.value = [];
+        loading.value = false;
+        error.value = null;
+        initialized.value = false;
+    }
+
+    return {
+        // State
+        permissions,
+        loading,
+        error,
+        initialized,
+
+        // Getters
+        allPermissions,
+        isLoading,
+        getError,
+
+        // Methods
+        getPermissionByName,
+        hasPermission,
+
+        // Actions
+        fetchPermissions,
+        addPermission,
+        reset
+    };
 });

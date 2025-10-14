@@ -1,9 +1,9 @@
 <script setup>
-import { useUserStore } from '../../stores/farmer'
+import { useAuthStore } from '@/stores/auth'
 
-const store = useUserStore()
+const store = useAuthStore()
 
-const auth = store.authUser
+const auth = store.isAuthenticated
 </script>
 
 <template>

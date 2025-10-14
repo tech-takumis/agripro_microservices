@@ -167,7 +167,7 @@ import {
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import ApplicationCard from '@/components/cards/ApplicationCard.vue'
-import UnderwriterQuickActionButton from '@/components/buttons/UnderwriterQuickActionButton.vue'// Reusing for quick actions
+import UnderwriterQuickActionButton from '@/components/buttons/UnderwriterQuickActionButton.vue'
 import {useAuthStore} from '@/stores/auth'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 

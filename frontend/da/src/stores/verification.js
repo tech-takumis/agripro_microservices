@@ -1,111 +1,134 @@
 import { defineStore } from 'pinia'
 import axios from '@/lib/axios'
+import { ref, computed } from 'vue'
 
-export const useVerificationStore = defineStore('verification', {
-  state: () => ({
-    verifications: [],
-    loading: false,
-    error: null,
-  }),
-  getters: {
-    allVerifications: (state) => state.verifications,
-    isLoading: (state) => state.loading,
-    getError: (state) => state.error,
-    pendingVerifications: (state) =>
-      state.verifications.filter((v) => v.status === 'PENDING'),
-    approvedVerifications: (state) =>
-      state.verifications.filter((v) => v.status === 'APPROVED'),
-    rejectedVerifications: (state) =>
-      state.verifications.filter((v) => v.status === 'REJECTED'),
-    verificationsByType: (state) => (type) =>
-      state.verifications.filter((v) => v.type === type),
-    recentVerifications: (state) =>
-      state.verifications
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 10),
-    verificationsStats: (state) => {
-      const total = state.verifications.length
-      const pending = state.verifications.filter((v) => v.status === 'PENDING')
-        .length
-      const approved = state.verifications.filter((v) => v.status === 'APPROVED')
-        .length
-      const rejected = state.verifications.filter((v) => v.status === 'REJECTED')
-        .length
-      const byType = state.verifications.reduce((acc, v) => {
-        acc[v.type] = (acc[v.type] || 0) + 1
-        return acc
-      }, {})
-      return { total, pending, approved, rejected, byType }
-    },
-  },
-  actions: {
-    async fetchVerifications() {
-      this.loading = true
-      this.error = null
+export const useVerificationStore = defineStore('verification', () => {
+    // State
+    const verifications = ref([])
+    const loading = ref(false)
+    const error = ref(null)
 
-      try {
-        const response = await axios.get('/verifications')
-        this.verifications = response.data
-      } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Failed to fetch verifications'
-        console.error('Error fetching verifications:', error)
-      } finally {
-        this.loading = false
-      }
-    },
+    // Getters as computed
+    const allVerifications = computed(() => verifications.value)
+    const isLoading = computed(() => loading.value)
+    const getError = computed(() => error.value)
+    const pendingVerifications = computed(() =>
+        verifications.value.filter((v) => v.status === 'PENDING')
+    )
+    const approvedVerifications = computed(() =>
+        verifications.value.filter((v) => v.status === 'APPROVED')
+    )
+    const rejectedVerifications = computed(() =>
+        verifications.value.filter((v) => v.status === 'REJECTED')
+    )
+    const recentVerifications = computed(() =>
+        verifications.value
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 10)
+    )
+    const verificationsStats = computed(() => {
+        const total = verifications.value.length
+        const pending = verifications.value.filter((v) => v.status === 'PENDING').length
+        const approved = verifications.value.filter((v) => v.status === 'APPROVED').length
+        const rejected = verifications.value.filter((v) => v.status === 'REJECTED').length
+        const byType = verifications.value.reduce((acc, v) => {
+            acc[v.type] = (acc[v.type] || 0) + 1
+            return acc
+        }, {})
+        return { total, pending, approved, rejected, byType }
+    })
 
-    async createVerification(verificationData) {
-      this.loading = true
-      this.error = null
+    // Methods that were getters with params
+    const verificationsByType = (type) =>
+        verifications.value.filter((v) => v.type === type)
 
-      try {
-        const response = await axios.post('/verifications', verificationData)
-        this.verifications.push(response.data)
-        return response.data
-      } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Failed to create verification'
-        console.error('Error creating verification:', error)
-      } finally {
-        this.loading = false
-      }
-    },
+    // Actions as functions
+    async function fetchVerifications() {
+        loading.value = true
+        error.value = null
 
-    async updateVerification(id, verificationData) {
-      this.loading = true
-      this.error = null
-
-      try {
-        const response = await axios.put(`/verifications/${id}`, verificationData)
-        const index = this.verifications.findIndex((v) => v.id === id)
-        if (index !== -1) {
-          this.verifications[index] = response.data
+        try {
+            const response = await axios.get('/verifications')
+            verifications.value = response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to fetch verifications'
+            console.error('Error fetching verifications:', err)
+        } finally {
+            loading.value = false
         }
-        return response.data
-      } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Failed to update verification'
-        console.error('Error updating verification:', error)
-      } finally {
-        this.loading = false
-      }
-    },
+    }
 
-    async deleteVerification(id) {
-      this.loading = true
-      this.error = null
+    async function createVerification(verificationData) {
+        loading.value = true
+        error.value = null
 
-      try {
-        await axios.delete(`/verifications/${id}`)
-        this.verifications = this.verifications.filter((v) => v.id !== id)
-      } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Failed to delete verification'
-        console.error('Error deleting verification:', error)
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+        try {
+            const response = await axios.post('/verifications', verificationData)
+            verifications.value.push(response.data)
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to create verification'
+            console.error('Error creating verification:', err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function updateVerification(id, verificationData) {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await axios.put(`/verifications/${id}`, verificationData)
+            const index = verifications.value.findIndex((v) => v.id === id)
+            if (index !== -1) {
+                verifications.value[index] = response.data
+            }
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to update verification'
+            console.error('Error updating verification:', err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function deleteVerification(id) {
+        loading.value = true
+        error.value = null
+
+        try {
+            await axios.delete(`/verifications/${id}`)
+            verifications.value = verifications.value.filter((v) => v.id !== id)
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Failed to delete verification'
+            console.error('Error deleting verification:', err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    return {
+        // State
+        verifications,
+        loading,
+        error,
+
+        // Getters
+        allVerifications,
+        isLoading,
+        getError,
+        pendingVerifications,
+        approvedVerifications,
+        rejectedVerifications,
+        recentVerifications,
+        verificationsStats,
+
+        // Methods
+        verificationsByType,
+        fetchVerifications,
+        createVerification,
+        updateVerification,
+        deleteVerification
+    }
 })

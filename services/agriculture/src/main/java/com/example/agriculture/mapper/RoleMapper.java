@@ -19,29 +19,23 @@ import java.util.stream.Collectors;
 public class RoleMapper {
 
     private final SlugUtil slugUtil;
+    private final PermissionMapper permissionMapper;
 
     public RoleResponse toRoleResponse(Role role) {
+
+        List<PermissionResponse> permissions = permissionMapper
+                .toPermissionResponseList(role.getPermissions().stream().toList());
+
         return RoleResponse.builder()
                 .id(role.getId())
                 .name(role.getName())
                 .slug(role.getSlug())
-                .permissions(role.getPermissions().stream()
-                        .map(this::toPermissionResponse)
-                        .collect(Collectors.toList()))
+                .permissions(permissions)
                 .defaultRoute(role.getDefaultRoute())
                 .build();
     }
 
-    public PermissionResponse toPermissionResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .name(permission.getName())
-                .slug(permission.getSlug())
-                .description(permission.getDescription())
-                .build();
-    }
-
-    public Role toRole(RoleRequest request, List<Permission> permissions) {
+    public Role toRoleEntity(RoleRequest request, List<Permission> permissions) {
         return Role.builder()
                 .name(request.getName())
                 .slug(slugUtil.toSlug(request.getName()))
@@ -50,11 +44,9 @@ public class RoleMapper {
                 .build();
     }
 
-    public Permission toPermission(PermissionRequest request) {
-        return Permission.builder()
-                .name(request.getName())
-                .slug(slugUtil.toSlug(request.getName()))
-                .description(request.getDescription())
-                .build();
+    public Set<RoleResponse> toRoleResponseSet(Set<Role> roles) {
+        return roles.stream()
+                .map(this::toRoleResponse)
+                .collect(Collectors.toSet());
     }
 }

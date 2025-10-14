@@ -6,6 +6,7 @@ import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.service.AuthService;
 import com.example.agriculture.service.RefreshTokenService;
+import com.example.agriculture.service.RoleService;
 import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
@@ -34,6 +35,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final RoleService roleService;
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
@@ -79,7 +81,7 @@ public class AuthController {
         Agriculture agriculture = authService.getAgricultureWithRoles(userDetails.getUserId());
 
         Set<RoleResponse> roles = agriculture.getRoles().stream()
-                .map(authService::getRole)
+                .map(roleService::getRole)
                 .collect(Collectors.toSet());
 
         AuthenticatedResponse response = AuthenticatedResponse.builder()
@@ -134,7 +136,7 @@ public class AuthController {
         Agriculture agriculture = authService.getAgricultureWithRoles(userDetails.getUserId());
 
         Set<RoleResponse> roles = agriculture.getRoles().stream()
-                .map(authService::getRole)
+                .map(roleService::getRole)
                 .collect(Collectors.toSet());
 
         AuthenticatedResponse response = AuthenticatedResponse.builder()

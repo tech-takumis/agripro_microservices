@@ -4,70 +4,40 @@
     role-title="Admin Portal"
     page-title="All Users"
   >
-    <template #header>
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">All Users</h1>
-          <p class="text-gray-600">Manage system users and their access</p>
-        </div>
-        <div class="flex items-center space-x-2">
-          <button
-            @click="refreshUsers"
-            :disabled="userStore.isLoading"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            <RefreshCw :class="{ 'animate-spin': userStore.isLoading }" class="h-4 w-4 mr-2" />
-            Refresh
-          </button>
-          <router-link 
-            to="/admin/staff/register"
-            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            <UserPlus class="h-4 w-4 mr-2" />
-            Add New User
-          </router-link>
-        </div>
-      </div>
-    </template>
-
     <!-- Users Content -->
     <div class="space-y-6">
       <!-- Search and Filter -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div class="flex flex-col sm:flex-row gap-4">
-          <div class="flex-1">
-            <div class="relative">
-              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                v-model="searchTerm"
-                type="text"
-                placeholder="Search users by name, email, or phone..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                @input="handleSearch"
-              />
-            </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-3 flex items-center justify-between gap-4">
+          <div class="relative w-64">
+            <Search class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              v-model="searchTerm"
+              type="text"
+              placeholder="Search users..."
+              class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+              @input="handleSearch"
+            />
           </div>
-          <div class="flex gap-2">
-            <select
-              v-model="selectedRole"
-              @change="handleRoleFilter"
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          <select
+            v-model="selectedRole"
+            class="text-sm px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 min-w-[160px]"
+            @change="handleRoleFilter"
+          >
+            <option value="">All Roles</option>
+            <option
+              v-for="role in roleOptions"
+              :key="role.id"
+              :value="role.name"
             >
-              <option value="">All Roles</option>
-              <option value="ADMIN">Admin</option>
-              <option value="Regional Field Offices">Regional Field Offices</option>
-              <option value="Regional Rice Focal Person">Regional Rice Focal Person</option>
-              <option value="Provincial Rice Program Coordinator">Provincial Rice Program Coordinator</option>
-              <option value="Municipal Agriculturists">Municipal Agriculturists</option>
-              <option value="Rice Specialists">Rice Specialists</option>
-              <option value="Agricultural Extension Workers">Agricultural Extension Workers</option>
-            </select>
-          </div>
+              {{ role.name }}
+            </option>
+          </select>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="userStore.isLoading && userStore.allUsers.length === 0" class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div v-if="userStore.isLoading && (!userStore.allAgricultureUsers || userStore.allAgricultureUsers.length === 0)" class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-6">
           <div class="text-center py-12">
             <Loader2 class="mx-auto h-12 w-12 text-purple-600 animate-spin" />
@@ -76,7 +46,6 @@
           </div>
         </div>
       </div>
-
       <!-- Error State -->
       <div v-else-if="userStore.getError" class="bg-white rounded-lg shadow-sm border border-red-200">
         <div class="p-6">
@@ -85,8 +54,8 @@
             <h3 class="mt-2 text-sm font-medium text-red-900">Error Loading Users</h3>
             <p class="mt-1 text-sm text-red-600">{{ userStore.getError }}</p>
             <button
-              @click="refreshUsers"
               class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              @click="refreshUsers"
             >
               Try Again
             </button>
@@ -101,8 +70,22 @@
             <h2 class="text-lg font-semibold text-gray-900">
               System Users ({{ filteredUsers.length }})
             </h2>
-            <div class="text-sm text-gray-500">
-              Total: {{ userStore.allUsers.length }} users
+            <div class="flex items-center space-x-3">
+              <button
+                v-if="selectedUsers.length > 0"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                @click="deleteSelectedUsers"
+              >
+                <Trash2 class="h-4 w-4 mr-2" />
+                Delete Selected ({{ selectedUsers.length }})
+              </button>
+              <router-link
+                to="/admin/staff/register"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+              >
+                <UserPlus class="h-4 w-4 mr-2" />
+                Add New User
+              </router-link>
             </div>
           </div>
         </div>
@@ -111,6 +94,14 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
+                <th class="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    class="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    @change="toggleAllSelection"
+                  />
+                </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
@@ -120,16 +111,23 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Roles
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="agriculture in filteredUsers" :key="agriculture.id" class="hover:bg-gray-50">
+              <tr
+                v-for="agriculture in filteredUsers"
+                :key="agriculture.id"
+                class="hover:bg-gray-50 cursor-pointer"
+                @click="viewUser(agriculture)"
+              >
+                <td class="px-6 py-4 whitespace-nowrap" @click.stop>
+                  <input
+                    type="checkbox"
+                    :checked="isUserSelected(agriculture)"
+                    class="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    @change="toggleUserSelection(agriculture)"
+                  />
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
@@ -169,45 +167,6 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="role in agriculture.roles || []"
-                      :key="role.id"
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-                    >
-                      {{ role.name }}
-                    </span>
-                    <span v-if="!agriculture.roles || agriculture.roles.length === 0" class="text-sm text-gray-500">
-                      No roles assigned
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="viewUser(agriculture)"
-                      class="text-purple-600 hover:text-purple-900 transition-colors"
-                      title="View User"
-                    >
-                      <Eye class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="editUser(agriculture)"
-                      class="text-blue-600 hover:text-blue-900 transition-colors"
-                      title="Edit User"
-                    >
-                      <Edit class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="deleteUser(agriculture)"
-                      class="text-red-600 hover:text-red-900 transition-colors"
-                      title="Delete User"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
               </tr>
             </tbody>
           </table>
@@ -223,16 +182,16 @@
             </div>
             <div class="flex space-x-2">
               <button
-                @click="changePage(userStore.getPagination.currentPage - 1)"
                 :disabled="userStore.getPagination.currentPage <= 1"
                 class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                @click="changePage(userStore.getPagination.currentPage - 1)"
               >
                 Previous
               </button>
               <button
-                @click="changePage(userStore.getPagination.currentPage + 1)"
                 :disabled="userStore.getPagination.currentPage >= userStore.getPagination.totalPages"
                 class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                @click="changePage(userStore.getPagination.currentPage + 1)"
               >
                 Next
               </button>
@@ -266,20 +225,31 @@ import {
     Mail, Phone, MapPin, Eye, Edit, Trash2
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import { useUserStore } from '@/stores/agriculture'
+import { useAgricultureStore } from '@/stores/agriculture'
+import { useRoleStore } from '@/stores/role'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const router = useRouter()
-const userStore = useUserStore()
+const userStore = useAgricultureStore()
+const roleStore = useRoleStore()
 const adminNavigation = ADMIN_NAVIGATION
 
 // Reactive variables
 const searchTerm = ref('')
 const selectedRole = ref('')
+const isInitialized = ref(false)
 
 // Computed properties
+const roleOptions = computed(() => {
+    return roleStore.allRoles.map(role => ({
+        id: role.id,
+        name: role.name,
+        slug: role.slug
+    }))
+})
+
 const filteredUsers = computed(() => {
-    let users = userStore.allUsers
+    let users = userStore.allAgricultureUsers || []
 
     // Filter by search term
     if (searchTerm.value) {
@@ -300,15 +270,55 @@ const filteredUsers = computed(() => {
     // Filter by role
     if (selectedRole.value) {
         users = users.filter(agriculture =>
-            agriculture.roles && agriculture.roles.some(role => role.name === selectedRole.value)
+            agriculture.roles && agriculture.roles.some(role => role.name.toLowerCase() === selectedRole.value.toLowerCase())
         )
     }
 
     return users
 })
 
+// Add selectedUsers state
+const selectedUsers = ref([])
+
+// Add selection computed property
+const isAllSelected = computed(() => {
+  return filteredUsers.value.length > 0 &&
+    filteredUsers.value.every(user => selectedUsers.value.includes(user.id))
+})
+
+// Data fetching functions
+const fetchUsers = async () => {
+    try {
+        await userStore.fetchAgricultureUsers({
+            search: searchTerm.value,
+            page: userStore.getPagination.page,
+            size: userStore.getPagination.size
+        })
+        isInitialized.value = true
+    } catch (error) {
+        console.error('Failed to fetch users:', error)
+    }
+}
+
+const refreshUsers = async () => {
+    userStore.clearError()
+    await fetchUsers()
+}
+
+// Search and filter handlers
+const handleSearch = () => {
+    // Search is handled reactively by the computed property
+}
+
+const handleRoleFilter = () => {
+    // Role filtering is handled reactively by the filteredUsers computed property
+    // This function can be used for additional role filtering logic if needed
+    console.log('Role filter changed:', selectedRole.value)
+}
+
 // Helper functions
 const getUserFullName = (agriculture) => {
+    if (!agriculture) return 'Unknown User'
     if (agriculture.firstName && agriculture.lastName) {
         return `${agriculture.firstName} ${agriculture.lastName}`
     }
@@ -327,68 +337,80 @@ const getUserInitials = (agriculture) => {
         .substring(0, 2)
 }
 
-// Data fetching functions
-const fetchUsers = async () => {
-    try {
-        await userStore.fetchUsers()
-    } catch (error) {
-        console.error('Failed to fetch users:', error)
-    }
-}
-
-const refreshUsers = async () => {
-    userStore.clearError()
-    await fetchUsers()
-}
-
-// Search and filter handlers
-const handleSearch = () => {
-    // Search is handled reactively by the computed property
-}
-
-const handleRoleFilter = () => {
-    // Role filtering is handled reactively by the computed property
-}
-
 // Pagination functions
 const changePage = async (page) => {
     if (page >= 1 && page <= userStore.getPagination.totalPages) {
-        await userStore.fetchUsers({ page })
+        await userStore.fetchAgricultureUsers({ page })
     }
 }
 
 // User management functions
 const viewUser = (agriculture) => {
-    // Navigate to agriculture detail page or open modal
     router.push(`/admin/users/${agriculture.id}`)
 }
 
 const editUser = (agriculture) => {
-    // Navigate to agriculture edit page or open modal
     router.push(`/admin/users/${agriculture.id}/edit`)
 }
 
 const deleteUser = async (agriculture) => {
-    if (confirm(`Are you sure you want to delete agriculture "${getUserFullName(agriculture)}"? This action cannot be undone.`)) {
+    if (confirm(`Are you sure you want to delete user "${getUserFullName(agriculture)}"? This action cannot be undone.`)) {
         try {
-            const result = await userStore.deleteUser(agriculture.id)
+            const result = await userStore.deleteAgricultureUser(agriculture.id)
             if (result.success) {
                 alert('User deleted successfully!')
-                // Refresh the users list
                 await refreshUsers()
             } else {
-                alert(`Failed to delete agriculture: ${result.error}`)
+                alert(`Failed to delete user: ${result.error}`)
             }
         } catch (error) {
-            console.error('Error deleting agriculture:', error)
-            alert('An error occurred while deleting the agriculture.')
+            console.error('Error deleting user:', error)
+            alert('An error occurred while deleting the user.')
         }
     }
 }
 
+// Add selection methods
+const isUserSelected = (user) => selectedUsers.value.includes(user.id)
+
+const toggleAllSelection = () => {
+  if (isAllSelected.value) {
+    selectedUsers.value = []
+  } else {
+    selectedUsers.value = filteredUsers.value.map(user => user.id)
+  }
+}
+
+const toggleUserSelection = (user) => {
+  const index = selectedUsers.value.indexOf(user.id)
+  if (index === -1) {
+    selectedUsers.value.push(user.id)
+  } else {
+    selectedUsers.value.splice(index, 1)
+  }
+}
+
+const deleteSelectedUsers = async () => {
+  if (confirm(`Are you sure you want to delete ${selectedUsers.value.length} selected users? This action cannot be undone.`)) {
+    try {
+      for (const userId of selectedUsers.value) {
+        await userStore.deleteAgricultureUser(userId)
+      }
+      selectedUsers.value = []
+      await refreshUsers()
+      alert('Selected users deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting users:', error)
+      alert('An error occurred while deleting the selected users.')
+    }
+  }
+}
+
 // Lifecycle hooks
 onMounted(async () => {
-    // Fetch users when component mounts
-    await fetchUsers()
+    await Promise.all([
+        roleStore.fetchRoles(),
+        fetchUsers()
+    ])
 })
 </script>
