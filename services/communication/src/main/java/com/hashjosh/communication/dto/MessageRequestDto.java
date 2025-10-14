@@ -13,11 +13,11 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDto {
+public class MessageRequestDto {
     private UUID senderId;
     private UUID receiverId;
     private String text;
     private String type; // FARMER_AGRICULTURE, AGRICULTURE_PCIC
-    private Set<String> attachments;
+    private Set<UUID> attachments;
     private LocalDateTime sentAt;
 }

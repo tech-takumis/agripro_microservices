@@ -34,11 +34,11 @@ public class TransactionMapper {
     }
 
     public void updateTransactionFromRequest(Transaction transaction, TransactionRequest request) {
-        transaction.setName(request.getName());
-        transaction.setType(request.getType());
-        transaction.setAmount(request.getAmount());
-        transaction.setStatus(request.getStatus());
-        transaction.setPositive(request.isPositive());
+        transaction.setName(request.getName() != null ? request.getName() : transaction.getName());
+        transaction.setType(request.getType() != null ? request.getType() : transaction.getType());
+        transaction.setAmount(request.getAmount() > 0 ? request.getAmount() : transaction.getAmount());
+        transaction.setStatus(request.getStatus() != null ? request.getStatus() : transaction.getStatus());
+        transaction.setPositive(request.isPositive() != transaction.isPositive() ? request.isPositive() : transaction.isPositive());
         if (request.getDate() != null) {
             transaction.setDate(request.getDate());
         }

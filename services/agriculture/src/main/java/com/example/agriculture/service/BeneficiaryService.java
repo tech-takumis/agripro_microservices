@@ -69,8 +69,8 @@ public class BeneficiaryService {
             beneficiary.setProgram(newProgram);
         }
 
-        beneficiary.setUserId(request.getUserId());
-        beneficiary.setType(request.getType());
+        beneficiary.setUserId(request.getUserId() != null ? request.getUserId() : beneficiary.getUserId());
+        beneficiary.setType(request.getType() != null ? request.getType() : beneficiary.getType());
 
         return beneficiaryMapper.toBeneficiaryResponse(beneficiaryRepository.save(beneficiary));
     }

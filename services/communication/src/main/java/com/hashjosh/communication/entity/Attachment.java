@@ -19,9 +19,10 @@ public class Attachment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private String url;
+    @Column(name = "document_id",nullable = false, unique = true)
+    private UUID documentId;
 
-    @ManyToMany(mappedBy = "attachments")
-    private Set<Message> messages = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "message_id")
+    private Message message;
 }

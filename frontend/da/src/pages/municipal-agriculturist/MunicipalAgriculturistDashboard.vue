@@ -323,46 +323,80 @@
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
-import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, LogOut,ArrowUpCircle, ArrowDownCircle,ClipboardList,Briefcase, Bell, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
+import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, LogOut, ArrowUpCircle, ArrowDownCircle, ClipboardList, Briefcase, Bell, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import PermissionGuard from '../../components/others/PermissionGuard.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 import { useAuthStore } from '@/stores/auth'
+import { useDashboardStore } from '@/stores/dashboard'
 import { Plus, Wallet } from 'lucide-vue-next'
 
-
-// Use the navigation directly
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
-
 const authStore = useAuthStore()
+const dashboardStore = useDashboardStore()
 
-// Profile dropdown state
+// Profile and notification states
 const showProfileDropdown = ref(false)
-
-// Filters dropdown state
 const showFiltersDropdown = ref(false)
-
-// Notifications dropdown state
 const showNotificationsDropdown = ref(false)
 const notificationCount = ref(3)
 
 // User data from auth store
-const userFullName = computed(() => authStore.user?.fullName || 'Municipal Agriculturist')
-const userEmail = computed(() => authStore.user?.email || 'municipal@agripro.com')
+const userFullName = computed(() => authStore.userFullName)
+const userEmail = computed(() => authStore.userEmail)
 const userInitials = computed(() => {
   const name = userFullName.value
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 })
 
-const stats = ref({
-  localFarmers: 0,
-  municipalBudget: 0,
-  disbursements: 0,
-  activePrograms: 0
-})
+// Dashboard data
+const stats = computed(() => ({
+  localFarmers: 1250, // This could come from another API endpoint if needed
+  disbursements: dashboardStore.formatCurrency(
+    dashboardStore.municipalDashboard.transactions
+      ?.filter(t => t.type === 'EXPENSE')
+      ?.reduce((sum, t) => sum + t.amount, 0) || 0
+  ),
+  activePrograms: dashboardStore.municipalDashboard.activePrograms || 0
+}))
 
-const recentTransactions = ref([])
-const municipalPrograms = ref([])
+// Computed properties for dashboard data
+const recentTransactions = computed(() =>
+  (dashboardStore.municipalDashboard.transactions || [])
+    .map(t => ({
+      id: t.transactionId,
+      description: t.name || (t.type === 'INCOME' ? 'Budget Allocation' : 'Program Disbursement'),
+      date: new Date(t.date).toLocaleDateString(),
+      category: t.type === 'INCOME' ? 'Budget' : 'Disbursement',
+      amount: t.amount,
+      type: t.type.toLowerCase(),
+      status: t.status || 'Completed'
+    }))
+    .slice(0, 5)
+)
+
+const municipalPrograms = computed(() =>
+  (dashboardStore.municipalDashboard.programs || [])
+    .map(p => ({
+      id: p.programId,
+      name: p.programName,
+      beneficiaries: p.beneficiaries || 0,
+      budget: dashboardStore.formatCurrency(p.budget || 0),
+      progress: p.completedPercentage || 0,
+      status: p.status
+    }))
+)
+
+// Trend calculations (you might want to fetch historical data from API if needed)
+const farmersTrend = ref([900, 920, 915, 930, 945, 950, 960, 980, 990, 1005, 1010, 1025])
+const disbursementsTrend = computed(() => {
+  const transactions = dashboardStore.municipalDashboard.transactions || []
+  return transactions.map(t => t.amount / 1000)
+})
+const programsTrend = computed(() => {
+  const count = dashboardStore.municipalDashboard.activePrograms
+  return Array(12).fill(count)
+})
 
 // Notifications data
 const notifications = ref([
@@ -472,51 +506,7 @@ onMounted(async () => {
   
   // Load dashboard data
   try {
-    // Mock data - replace with actual API calls
-    stats.value = {
-      localFarmers: 1250,
-      municipalBudget: 2500,
-      disbursements: 1800,
-      activePrograms: 6
-    }
-
-    recentTransactions.value = [
-      {
-        id: 1,
-        description: 'Farmer Subsidy Payment',
-        date: '2024-01-15',
-        category: 'Subsidy',
-        amount: 150000,
-        type: 'expense',
-        status: 'Completed'
-      },
-      {
-        id: 2,
-        description: 'Provincial Budget Allocation',
-        date: '2024-01-14',
-        category: 'Budget',
-        amount: 500000,
-        type: 'income',
-        status: 'Completed'
-      }
-    ]
-
-    municipalPrograms.value = [
-      {
-        id: 1,
-        name: 'Seed Distribution Program',
-        beneficiaries: 450,
-        budget: 300,
-        progress: 75
-      },
-      {
-        id: 2,
-        name: 'Fertilizer Subsidy',
-        beneficiaries: 320,
-        budget: 250,
-        progress: 60
-      }
-    ]
+    await dashboardStore.fetchMunicipalDashboard()
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   }
@@ -529,9 +519,6 @@ onUnmounted(() => {
 
 // ----- Trends & Sparklines -----
 // Example trend data for the last 12 periods (e.g., weeks)
-const farmersTrend = ref([900, 920, 915, 930, 945, 950, 960, 980, 990, 1005, 1010, 1025])
-const disbursementsTrend = ref([1200, 1180, 1210, 1225, 1230, 1240, 1255, 1260, 1275, 1280, 1290, 1300])
-const programsTrend = ref([4, 4, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6])
 
 const computePercentChange = (arr) => {
   if (!arr || arr.length < 2) return 0

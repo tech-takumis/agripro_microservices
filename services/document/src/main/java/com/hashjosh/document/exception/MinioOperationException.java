@@ -1,23 +1,16 @@
 package com.hashjosh.document.exception;
 
-import lombok.Getter;
-import org.springframework.web.ErrorResponse;
+import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
-
-@Getter
 public class MinioOperationException extends RuntimeException {
-    private final LocalDateTime timestamp = LocalDateTime.now();
     private final int statusCode;
-    private final String message;
 
-    public MinioOperationException(
-            String message,
-            int statusCode
-    ) {
-        super(message);
+    public MinioOperationException(String message, int statusCode, Throwable cause) {
+        super(message, cause);
         this.statusCode = statusCode;
-        this.message = message;
     }
 
+    public int getStatusCode() {
+        return statusCode;
+    }
 }

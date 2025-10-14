@@ -22,7 +22,8 @@ export function useWebSocket(url = 'http://localhost:9040/ws') {
             return;
         }
 
-        console.log('[WebSocket] Connecting to', url);
+        const wsUrl = url.replace(/^http/, 'ws');
+        console.log('[WebSocket] Connecting to', wsUrl);
 
         try {
             const socket = new SockJS(url, null, {

@@ -5,6 +5,7 @@ import com.hashjosh.constant.document.dto.DownloadFile;
 import com.hashjosh.document.config.CustomUserDetails;
 import com.hashjosh.document.exception.DocumentNotFoundException;
 import com.hashjosh.document.exception.FileValidationException;
+import com.hashjosh.document.exception.MinioOperationException;
 import com.hashjosh.document.mapper.DocumentMapper;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
@@ -14,7 +15,9 @@ import io.minio.errors.*;
 import io.minio.http.Method;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -76,8 +79,7 @@ public class DocumentService {
         // Save document metadata to database
         Document document = documentMapper.toDocument(objectKey,userDetails, file);
         Document savedDocument = documentRepository.save(document);
-        
-        return documentMapper.toDocumentResponse(savedDocument);
+        return  documentMapper.toDocumentResponse(savedDocument);
     }
 
     public DownloadFile download(UUID documentId) {
@@ -104,77 +106,43 @@ public class DocumentService {
                 ));
         return documentMapper.toDocumentResponse(document);
     }
+
+    @Transactional(readOnly = true)
     public List<DocumentResponse> findByUploadedBy(UUID userId) {
         return documentRepository.findByUploadedBy(userId).stream()
                 .map(documentMapper::toDocumentResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<DocumentResponse> findAll() {
         return documentRepository.findAll().stream()
-                .map(
-                        document -> {
-                            DocumentResponse documentResponse = documentMapper.toDocumentResponse(document);
-                            try {
-                                documentResponse.setPreview(generatePresignedUrl(documentResponse.getObjectKey(),30,Method.GET));
-                            } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | ServerException |
-                                     ErrorResponseException | InsufficientDataException | InternalException |
-                                     InvalidResponseException | XmlParserException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            return documentResponse;
-                        }
-                )
+                .map(documentMapper::toDocumentResponse)
                 .toList();
     }
 
-    public String generatePresignedDownloadUrl(UUID documentId, int expiryMinutes)
-            throws ServerException, InsufficientDataException, ErrorResponseException,
-            IOException, NoSuchAlgorithmException, InvalidKeyException,
-            InvalidResponseException, XmlParserException, InternalException {
+    public void delete(UUID documentId) {
+        try {
+            Document document = documentRepository.findById(documentId)
+                    .orElseThrow(() -> new DocumentNotFoundException(
+                            "Document id "+documentId+ " not found!",
+                            HttpStatus.NOT_FOUND.value()
+                    ));
 
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException(
-                        "Document not found with id: " + documentId,
-                        HttpStatus.NOT_FOUND.value()
-                        ));
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(minioProperties.bucket())
+                            .object(document.getObjectKey())
+                            .build()
+            );
 
-        return generatePresignedUrl(document.getObjectKey(),expiryMinutes,Method.GET);
+            documentRepository.delete(document);
+        } catch (Exception e) {
+            log.error("Failed to delete document", e);
+            throw new MinioOperationException("Failed to delete document from storage",
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(), e);
+        }
     }
-
-    public String generatePresignedUploadUrl(String fileName, int expiryMinutes)
-            throws ServerException, InsufficientDataException,
-            ErrorResponseException, IOException, NoSuchAlgorithmException,
-            InvalidKeyException, InvalidResponseException,
-            XmlParserException, InternalException {
-        String objectKey = UUID.randomUUID() + "-" + fileName;
-
-        return generatePresignedUrl(objectKey,30,Method.PUT);
-    }
-
-    public void delete(UUID documentId) throws ServerException,
-            InsufficientDataException, ErrorResponseException,
-            IOException, NoSuchAlgorithmException,
-            InvalidKeyException, InvalidResponseException,
-            XmlParserException, InternalException {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException(
-                        "Document id "+documentId+ " not found!",
-                        HttpStatus.NOT_FOUND.value()
-                ));
-
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(minioProperties.bucket())
-                        .object(document.getObjectKey())
-                        .build()
-        );
-
-        documentRepository.delete(document);
-
-    }
-
 
     private byte[] getFile(String objectKey) {
         try(InputStream stream = minioClient.getObject(
@@ -184,36 +152,39 @@ public class DocumentService {
                         .build()
         )){
             return stream.readAllBytes();
-        } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
-                 InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
-                 XmlParserException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error("Failed to get file from storage", e);
+            throw new MinioOperationException(
+                    "Failed to retrieve file from storage",
+                    HttpStatus.NON_AUTHORITATIVE_INFORMATION.value(),
+                    e
+            );
         }
     }
 
-    public String generatePresignedUrl(String objectKey, int expiryMin, Method method)
-            throws IOException, NoSuchAlgorithmException, InvalidKeyException,
-            io.minio.errors.ServerException, io.minio.errors.ErrorResponseException,
-            io.minio.errors.InsufficientDataException, io.minio.errors.InternalException,
-            io.minio.errors.InvalidResponseException, io.minio.errors.XmlParserException {
+    public String generatePresignedUrl(UUID documentId, Method method) {
+        try {
+            Document document = documentRepository.findById(documentId)
+                    .orElseThrow(() -> new DocumentNotFoundException(
+                            "Document not found with id: " + documentId,
+                            HttpStatus.NOT_FOUND.value()
+                    ));
 
-        String presigned = minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .method(method)
-                        .bucket(minioProperties.bucket())
-                        .object(objectKey)
-                        .expiry(expiryMin, TimeUnit.MINUTES)
-                        .build()
-        );
-
-        // Automatically rewrite internal to external url for client-safe access
-        if(!minioProperties.urlInternal().equals(minioProperties.urlExternal())){
-            presigned = presigned.replace(
-                    minioProperties.urlInternal(),
-                    minioProperties.urlExternal()
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(method)
+                            .bucket(minioProperties.bucket())
+                            .object(document.getObjectKey())
+                            .expiry(30, TimeUnit.HOURS)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error("Failed to generate presigned URL", e);
+            throw new MinioOperationException(
+                    "Failed to generate presigned URL",
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    e
             );
         }
-        log.debug("Generated presigned URL: {}", presigned);
-        return presigned;
     }
 }

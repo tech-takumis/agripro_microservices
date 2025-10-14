@@ -34,13 +34,23 @@ public class CommunicationConsumer {
     public void subscribeFarmerRegistration(@Payload FarmerRegistrationContract event){
         log.info("Received Farmer Registration Event: {}", event);
 
-        User user = new User();
-        user.setServiceType(ServiceType.FARMER);
-        user.setUsername(event.getUsername());
-        user.setEmail(event.getEmail());
-        user.setCreatedAt(LocalDateTime.now());
-
-        userRepository.save(user);
+        User user = userRepository.findByEmail(event.getEmail())
+                .map(existingUser -> {
+                    log.info("User with email {} already exists, updating service type", event.getEmail());
+                    existingUser.setServiceType(ServiceType.FARMER);
+                    existingUser.setUsername(event.getUsername());
+                    return userRepository.save(existingUser);
+                })
+                .orElseGet(() -> {
+                    log.info("Creating new user with email {}", event.getEmail());
+                    User newUser = User.builder()
+                            .serviceType(ServiceType.FARMER)
+                            .username(event.getUsername())
+                            .email(event.getEmail())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
         // Let's create the conversation between Farmer and Agriculture staff
         UUID receiverId = designatedStaffRepository.findByServiceType(ServiceType.AGRICULTURE)
@@ -48,7 +58,7 @@ public class CommunicationConsumer {
                 .orElseThrow(() -> new IllegalStateException("No designated Agriculture staff"));
 
         log.info("Creating conversation between Farmer (ID: {}) and Agriculture staff (ID: {})", user.getId(), receiverId);
-        Conversation conversion = Conversation.builder()
+        Conversation conversation = Conversation.builder()
                 .senderId(user.getId())
                 .receiverId(receiverId)
                 .type(ConversationType.FARMER_AGRICULTURE)
@@ -56,7 +66,7 @@ public class CommunicationConsumer {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        conversationRepository.save(conversion);
+        conversationRepository.save(conversation);
         log.info("Saved Farmer Registration Event: {}", event);
     }
 
@@ -64,13 +74,48 @@ public class CommunicationConsumer {
     public void subscribeAgricultureRegistration(@Payload AgricultureRegistrationContract event){
         log.info("Received Agriculture Registration Event: {}", event);
 
-        User user = new User();
-        user.setServiceType(ServiceType.AGRICULTURE);
-        user.setUsername(event.getUsername());
-        user.setEmail(event.getEmail());
-        user.setCreatedAt(LocalDateTime.now());
+        User user = userRepository.findByEmail(event.getEmail())
+                .map(existingUser -> {
+                    log.info("User with email {} already exists, updating service type", event.getEmail());
+                    existingUser.setServiceType(ServiceType.AGRICULTURE);
+                    existingUser.setUsername(event.getUsername());
+                    return userRepository.save(existingUser);
+                })
+                .orElseGet(() -> {
+                    log.info("Creating new user with email {}", event.getEmail());
+                    User newUser = User.builder()
+                            .serviceType(ServiceType.AGRICULTURE)
+                            .username(event.getUsername())
+                            .email(event.getEmail())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
-        userRepository.save(user);
+        // If no designated Agriculture staff for farmer and agriculture conversation assigned the consume staff itself.
+        if(designatedStaffRepository.findByServiceType(ServiceType.AGRICULTURE).isEmpty()){
+            DesignatedStaff staff = new DesignatedStaff();
+            staff.setServiceType(ServiceType.AGRICULTURE);
+            staff.setUserId(user.getId());
+            staff.setCreatedAt(LocalDateTime.now());
+            designatedStaffRepository.save(staff);
+        }
+
+        // Let's create the conversation between Agriculture and PCIC staff
+        UUID receiverId = designatedStaffRepository.findByServiceType(ServiceType.PCIC)
+                .map(DesignatedStaff::getUserId)
+                .orElseThrow(() -> new IllegalStateException("No designated PCIC staff"));
+
+        log.info("Creating conversation between Agriculture (ID: {}) and PCIC staff (ID: {})", user.getId(), receiverId);
+        Conversation conversation = Conversation.builder()
+                .senderId(user.getId())
+                .receiverId(receiverId)
+                .type(ConversationType.AGRICULTURE_PCIC)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        conversationRepository.save(conversation);
 
         log.info("Save Agriculture Registration event {}", event);
     }
@@ -78,13 +123,34 @@ public class CommunicationConsumer {
     @KafkaListener(topics = "pcic-events", groupId = "communication-service")
     public void subscribePcicRegistration(@Payload PcicRegistrationContract event){
         log.info("Received Pcic Registration Event: {}", event);
-        User user = new User();
-        user.setServiceType(ServiceType.PCIC);
-        user.setUsername(event.getUsername());
-        user.setEmail(event.getEmail());
-        user.setCreatedAt(LocalDateTime.now());
 
-        userRepository.save(user);
-        log.info("Save PCIC Registration event {}",event);
+        User user = userRepository.findByEmail(event.getEmail())
+                .map(existingUser -> {
+                    log.info("User with email {} already exists, updating service type", event.getEmail());
+                    existingUser.setServiceType(ServiceType.PCIC);
+                    existingUser.setUsername(event.getUsername());
+                    return userRepository.save(existingUser);
+                })
+                .orElseGet(() -> {
+                    log.info("Creating new user with email {}", event.getEmail());
+                    User newUser = User.builder()
+                            .serviceType(ServiceType.PCIC)
+                            .username(event.getUsername())
+                            .email(event.getEmail())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        // If no designated PCIC staff for agriculture and PCIC conversation assigned the consume staff itself.
+        if(designatedStaffRepository.findByServiceType(ServiceType.PCIC).isEmpty()){
+            DesignatedStaff staff = new DesignatedStaff();
+            staff.setServiceType(ServiceType.PCIC);
+            staff.setUserId(user.getId());
+            staff.setCreatedAt(LocalDateTime.now());
+            designatedStaffRepository.save(staff);
+        }
+
+        log.info("Save PCIC Registration event {}", event);
     }
 }

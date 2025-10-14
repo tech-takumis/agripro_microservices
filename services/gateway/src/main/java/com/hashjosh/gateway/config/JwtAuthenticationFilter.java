@@ -28,7 +28,6 @@ public class JwtAuthenticationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        HttpHeaders header = request.getHeaders();
 
         String accessToken = extractAccessToken(request);
         String refreshToken = extractRefreshToken(request);

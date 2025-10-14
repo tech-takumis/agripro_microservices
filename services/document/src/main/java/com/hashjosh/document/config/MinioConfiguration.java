@@ -42,7 +42,8 @@ public class MinioConfiguration {
             log.error("Error creating MinIO client: {}", e.getMessage(), e);
             throw new MinioOperationException(
                     "Failed to initialize MinIO client: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value()
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    e
                     );
         }
     }
@@ -69,7 +70,8 @@ public class MinioConfiguration {
             log.error("Error initializing MinIO bucket: {}", e.getMessage(), e);
             throw new MinioOperationException(
                     "Failed to initialize MinIO bucket: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value()
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    e
                     );
         }
     }

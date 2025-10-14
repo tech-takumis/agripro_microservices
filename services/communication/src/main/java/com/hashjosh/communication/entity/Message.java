@@ -31,12 +31,7 @@ public class Message {
     @Column(columnDefinition = "TEXT")
     private String text;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-        name = "message_attachments",
-        joinColumns = @JoinColumn(name = "message_id"),
-        inverseJoinColumns = @JoinColumn(name = "attachment_id")
-    )
+    @OneToMany(mappedBy = "message")
     private Set<Attachment> attachments = new HashSet<>();
 
     @CreationTimestamp
@@ -45,12 +40,12 @@ public class Message {
     // Helper method to add attachment
     public void addAttachment(Attachment attachment) {
         attachments.add(attachment);
-        attachment.getMessages().add(this);
+        attachment.setMessage(this);
     }
 
     // Helper method to remove attachment
     public void removeAttachment(Attachment attachment) {
         attachments.remove(attachment);
-        attachment.getMessages().remove(this);
+        attachment.setMessage(null);
     }
 }

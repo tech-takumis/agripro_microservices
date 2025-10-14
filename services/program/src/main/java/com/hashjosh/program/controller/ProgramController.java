@@ -22,6 +22,7 @@ public class ProgramController {
         return service.getAll();
     }
 
+
     @GetMapping("/{id}")
     public ProgramResponseDto getById(@PathVariable UUID id) {
         return service.getById(id);
