@@ -1,6 +1,7 @@
 package com.hashjosh.communication.service;
 
 import com.hashjosh.communication.dto.MessageDto;
+import com.hashjosh.communication.dto.MessageRequestDto;
 import com.hashjosh.communication.entity.Attachment;
 import com.hashjosh.communication.entity.Conversation;
 import com.hashjosh.communication.entity.Message;
@@ -8,6 +9,7 @@ import com.hashjosh.communication.kafka.CommunicationPublisher;
 import com.hashjosh.communication.repository.AttachmentRepository;
 import com.hashjosh.communication.repository.ConversationRepository;
 import com.hashjosh.communication.repository.MessageRepository;
+import com.hashjosh.constant.communication.enums.ConversationType;
 import com.hashjosh.kafkacommon.communication.NewMessageEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +34,7 @@ public class MessageService {
     private final ConversationRepository conversationRepository;
 
     @Transactional
-    public Message saveMessage(MessageDto dto) {
+    public Message saveMessage(MessageRequestDto dto) {
         // Find existing conversation or create new one
         Conversation conversation = conversationRepository.findBySenderIdAndReceiverId(dto.getSenderId(), dto.getReceiverId())
                 .orElseGet(() -> {
@@ -39,11 +42,12 @@ public class MessageService {
                             .senderId(dto.getSenderId())
                             .receiverId(dto.getReceiverId())
                             .createdAt(LocalDateTime.now())
+                            .type(ConversationType.valueOf(dto.getType()))
                             .build();
                     return conversationRepository.save(newConversation);
                 });
 
-        // Create message with initial attributes
+        // Save the message first, without attachments
         Message message = Message.builder()
                 .conversationId(conversation.getId())
                 .senderId(dto.getSenderId())
@@ -53,14 +57,15 @@ public class MessageService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Handle attachments
+        Message savedMessage = messageRepository.save(message); // Persist the message
+
         if (dto.getAttachments() != null && !dto.getAttachments().isEmpty()) {
             Set<Attachment> attachments = dto.getAttachments().stream()
-                    .map(url -> attachmentRepository.findByUrl(url)
+                    .map(documentId -> attachmentRepository.findByDocumentId(documentId)
                             .orElseGet(() -> {
                                 Attachment newAttachment = Attachment.builder()
-                                        .url(url)
-                                        .messages(new HashSet<>())
+                                        .documentId(documentId)
+                                        .message(savedMessage)
                                         .build();
                                 return attachmentRepository.save(newAttachment);
                             }))
@@ -75,8 +80,8 @@ public class MessageService {
 
     public void publishNewMessageEvent(Message message) {
         // Convert Set<Attachment> to List<String> for the event
-        List<String> attachmentUrls = message.getAttachments().stream()
-                .map(Attachment::getUrl)
+        List<UUID> attachmentUrls = message.getAttachments().stream()
+                .map(Attachment::getDocumentId)
                 .collect(Collectors.toList());
 
         NewMessageEvent event = new NewMessageEvent(

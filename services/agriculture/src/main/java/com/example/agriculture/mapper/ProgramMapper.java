@@ -47,12 +47,12 @@ public class ProgramMapper {
     }
 
     public void updateProgramFromRequest(Program program, ProgramRequest request) {
-        program.setName(request.getProgramName());
-        program.setDescription(request.getDescription());
-        program.setBudget(request.getBudget());
-        program.setCompletedPercentage(request.getCompletedPercentage());
-        program.setStatus(request.getStatus());
-        program.setStartDate(request.getStartDate());
-        program.setEndDate(request.getEndDate());
+        program.setName(request.getProgramName() != null ? request.getProgramName() : program.getName());
+        program.setDescription(request.getDescription() != null ? request.getDescription() : program.getDescription());
+        program.setBudget(request.getBudget() != 0 ? request.getBudget() : program.getBudget());
+        program.setCompletedPercentage(request.getCompletedPercentage() != 0 ? request.getCompletedPercentage() : program.getCompletedPercentage());
+        program.setStatus(request.getStatus() != null ? request.getStatus() : program.getStatus());
+        program.setStartDate(request.getStartDate() != null ? request.getStartDate() : program.getStartDate());
+        program.setEndDate(request.getEndDate() != null ? request.getEndDate() : program.getEndDate());
     }
 }

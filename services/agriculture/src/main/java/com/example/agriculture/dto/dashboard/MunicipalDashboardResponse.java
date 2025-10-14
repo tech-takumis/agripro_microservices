@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 public class MunicipalDashboardResponse {
     private UUID dashboardId;
-    private int activePrograms;
+    private long activePrograms;
     private List<ProgramResponse> programs;
     private List<TransactionResponse> transactions;
 }

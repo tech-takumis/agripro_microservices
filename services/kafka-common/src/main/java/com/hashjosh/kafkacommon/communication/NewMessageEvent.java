@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -13,7 +14,8 @@ public class NewMessageEvent {
     private UUID messageId;
     private UUID conversationId;
     private UUID senderId;
+    private UUID receiverId;
     private String text;
-    private JsonNode attachments;
+    private List<UUID> attachments;
     private LocalDateTime timestamp;
 }

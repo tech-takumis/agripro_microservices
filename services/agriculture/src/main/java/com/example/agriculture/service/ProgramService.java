@@ -39,10 +39,11 @@ public class ProgramService {
 
         // Handle beneficiaries if provided
         if (request.getBeneficiaries() != null && !request.getBeneficiaries().isEmpty()) {
+            Program finalProgram = program;
             request.getBeneficiaries().forEach(beneficiaryRequest -> {
                 Beneficiary beneficiary = beneficiaryMapper.toBeneficiaryEntity(beneficiaryRequest);
-                beneficiary.setProgram(program);
-                program.addBeneficiary(beneficiaryRepository.save(beneficiary));
+                beneficiary.setProgram(finalProgram);
+                finalProgram.addBeneficiary(beneficiaryRepository.save(beneficiary));
             });
         }
 

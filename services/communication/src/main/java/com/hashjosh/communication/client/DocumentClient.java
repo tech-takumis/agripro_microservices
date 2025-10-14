@@ -25,7 +25,7 @@ public class DocumentClient {
     public DocumentResponse getDocument(UUID documentId){
         try {
             return restClient.get()
-                    .uri("/info/{documentId}",documentId)
+                    .uri("/{documentId}",documentId)
                     .header("X-Internal-Service",applicationName)
                     .retrieve()
                     .onStatus(
@@ -42,6 +42,32 @@ public class DocumentClient {
             log.error("Error fetching document with id: {}", documentId, e);
             throw new RuntimeException(
                     "Error fetching document: " + e.getMessage()
+            );
+        }
+    }
+
+    public String getDocumentPreviewUrl(UUID documentId){
+        try {
+            String url = restClient.get()
+                    .uri("/{documentId}/view",documentId)
+                    .header("X-Internal-Service", applicationName)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            (request, response) -> {
+                                throw new RuntimeException(
+                                        "Failed to fetch document preview URL. Status: " + response.getStatusCode() +
+                                                " Body: " + response.getBody()
+                                );
+                            }
+                    )
+                    .body(String.class);
+            log.debug("Successfully retrieved preview URL for document: {}", documentId);
+            return url;
+        }catch (Exception e){
+            log.error("Error fetching document preview URL with id: {}", documentId, e);
+            throw new RuntimeException(
+                    "Error fetching document preview URL: " + e.getMessage()
             );
         }
     }

@@ -4,6 +4,7 @@ import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
 import io.minio.errors.*;
+import io.minio.http.Method;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +65,22 @@ public class DocumentController {
         return ResponseEntity.status(HttpStatus.OK).body(documentService.findAll());
     }
 
-    @GetMapping("/{documentId}/preview")
+    @GetMapping("/{documentId}")
+    public ResponseEntity<DocumentResponse> getDocumentById(@PathVariable UUID documentId) {
+        DocumentResponse document = documentService.getDocumentById(documentId);
+        return ResponseEntity.ok(document);
+    }
+
+    @GetMapping("/{documentId}/view")
+    public ResponseEntity<String> getDocumentViewUrl(
+            @PathVariable UUID documentId
+    ) {
+        String viewUrl = documentService.generatePresignedUrl(documentId, Method.GET);
+        log.debug("Generated URL: {}", viewUrl);
+        return ResponseEntity.ok(viewUrl);
+    }
+
+    @GetMapping("/{documentId}/download")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(
             @PathVariable UUID documentId) {
@@ -74,46 +90,13 @@ public class DocumentController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, document.getContentDisposition())
                 .body(document.fileData());
     }
-    
-    @GetMapping("/{documentId}")
-    public ResponseEntity<DocumentResponse> getDocumentById(@PathVariable UUID documentId) {
-        DocumentResponse document = documentService.getDocumentById(documentId);
-        return ResponseEntity.ok(document);
-    }
 
-    @GetMapping("/user/{userId}")
-//    @PreAuthorize("isAuthenticated()")
-    public List<DocumentResponse> getDocumentsByUser(@PathVariable UUID userId) {
-        return documentService.findByUploadedBy(userId);
-    }
-
-
-    // Generate pre-signed url
-    @GetMapping("/{id}/download-url")
-    public ResponseEntity<String> getDownloadUrl(
-            @PathVariable UUID id,
-            @RequestParam(defaultValue = "5") int expiryMinutes) throws Exception {
-        String url = documentService.generatePresignedDownloadUrl(id, expiryMinutes);
-        return ResponseEntity.ok(url);
-    }
-
-    @PostMapping("/upload-url")
-    public ResponseEntity<String> getUploadUrl(
-            @RequestParam String fileName,
-            @RequestParam(defaultValue = "5") int expiryMinutes) throws Exception {
-        String url = documentService.generatePresignedUploadUrl(fileName, expiryMinutes);
-        return ResponseEntity.ok(url);
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/document-id")
     public ResponseEntity<Void> delete(
-            @PathVariable("document-id") UUID documentId,
-            HttpServletRequest request
-    ) throws ServerException, InsufficientDataException,
-            ErrorResponseException, IOException,
-            NoSuchAlgorithmException, InvalidKeyException,
-            InvalidResponseException, XmlParserException, InternalException {
+            @PathVariable("document-id") UUID documentId
+    ){
         documentService.delete(documentId);
         return ResponseEntity.noContent().build();
     }

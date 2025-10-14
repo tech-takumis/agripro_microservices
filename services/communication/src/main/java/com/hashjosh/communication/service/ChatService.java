@@ -1,5 +1,6 @@
 package com.hashjosh.communication.service;
 
+import com.hashjosh.communication.client.DocumentClient;
 import com.hashjosh.communication.dto.MessageDto;
 import com.hashjosh.communication.entity.Attachment;
 import com.hashjosh.communication.entity.Message;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -17,9 +19,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ChatService {
     private final MessageRepository messageRepository;
+    private final DocumentClient documentClient;
 
     public List<MessageDto> getAllMessagesWithAgricultureStaff(UUID farmerId) {
-        List<Message> messages = messageRepository.findMessagesBetweenFarmerAndAgricultureStaff(farmerId);
+        List<Message> messages = messageRepository.findMessagesByFarmerIdAndConversationType(farmerId);
 
         return messages.stream()
                 .map(this::toMessageDto)
@@ -27,16 +30,20 @@ public class ChatService {
     }
 
     private MessageDto toMessageDto(Message message) {
+        Set<String> attachmentUrl = getAttachmentUrls(message.getAttachments());
+
         return MessageDto.builder()
                 .senderId(message.getSenderId())
                 .receiverId(message.getReceiverId())
                 .text(message.getText())
-                .attachments(message.getAttachments().stream()
-                        .map(this::getAttachmentUrl).collect(Collectors.toSet()))
+                .attachments(attachmentUrl)
+                .sentAt(message.getCreatedAt())
                 .build();
     }
 
-    private String getAttachmentUrl(Attachment attachment) {
-        return attachment.getUrl();
+    private Set<String> getAttachmentUrls(Set<Attachment> attachments) {
+        return attachments.stream()
+                .map(attachment -> documentClient.getDocumentPreviewUrl(attachment.getDocumentId()))
+                .collect(Collectors.toSet());
     }
 }

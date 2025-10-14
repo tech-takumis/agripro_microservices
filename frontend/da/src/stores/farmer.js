@@ -12,6 +12,7 @@ export const useFarmerStore = defineStore('farmers', {
     getters: {
         // Get all farmers
         allFarmers: state => state.farmers,
+        totalFarmer: (state) => state.farmers.length,
 
         // Get farmer by ID
         getFarmerById: state => id => state.farmers.find(farmer => farmer.id === id),
