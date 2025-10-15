@@ -27,7 +27,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Add role-based authorities
         farmer.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()));
+
             // Add permission-based authorities
             role.getPermissions().forEach(permission ->
                 authorities.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()))

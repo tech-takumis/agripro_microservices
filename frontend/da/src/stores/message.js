@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import axios from '@/lib/axios'
 import { useWebSocket } from '@/composables/useWebSocket'
-import { useDocumentStore } from './document'
+import { useAuthStore } from '@/stores/auth'
 
 export const useMessageStore = defineStore('message', () => {
     // State
@@ -10,6 +10,7 @@ export const useMessageStore = defineStore('message', () => {
     const isLoadingMessages = ref(false)
     const currentSubscription = ref(null)
     const ws = useWebSocket()
+    const authStore = useAuthStore()
 
     // Getters
     const getMessagesByUser = computed(() => (userId) => {
@@ -27,14 +28,14 @@ export const useMessageStore = defineStore('message', () => {
 
             // Map all messages with required properties
             const mappedMessages = allMessages.map(msg => ({
-                id: msg.id || Date.now() + Math.random(),
+                id: msg.messageId || Date.now() + Math.random(),
                 text: msg.text,
                 senderId: msg.senderId,
                 receiverId: msg.receiverId,
                 timestamp: msg.sentAt,
                 type: msg.type,
                 isOwn: msg.senderId === currentUserId,
-                attachments: msg.attachments || []
+                attachments: msg.attachments || [] // This now contains array of { documentId, url }
             }))
 
             // If selectedUserId is provided, filter messages
@@ -56,42 +57,28 @@ export const useMessageStore = defineStore('message', () => {
 
     const sendMessage = async (messageData) => {
         try {
-            if (!ws.stompClient.value?.connected) {
+            if (!ws.stompClient.value?.active) {
                 console.log('[MessageStore] WebSocket not connected, attempting to connect...')
                 await ws.connect()
+                await ws.waitForConnection()
             }
 
-            // Get preview URLs for attachments if they exist
-            let previewUrls = []
-            if (messageData.attachments?.length > 0) {
-                try {
-                    const previewResponses = await Promise.all(
-                        messageData.attachments.map(docId =>
-                            axios.get(`/api/v1/documents/${docId}/view`)
-                        )
-                    )
-                    previewUrls = previewResponses.map(response => response.data)
-                } catch (error) {
-                    console.error('[MessageStore] Failed to fetch preview URLs:', error)
-                }
-            }
-
-            // Send message to backend with document IDs
+            // Send message to backend without senderId
             ws.stompClient.value.publish({
                 destination: '/app/private.chat',
                 body: JSON.stringify(messageData)
             })
 
-            // Add message to local state with preview URLs for display
+            // Add message to local state with attachments
             messages.value.push({
                 id: Date.now(),
                 text: messageData.text,
-                senderId: messageData.senderId,
+                senderId: authStore.userId,
                 receiverId: messageData.receiverId,
                 timestamp: messageData.sentAt,
                 type: messageData.type,
                 isOwn: true,
-                attachments: previewUrls
+                attachments: messageData.attachments
             })
 
             return true
@@ -103,8 +90,9 @@ export const useMessageStore = defineStore('message', () => {
 
     const subscribeToUserMessages = async (currentUserId, selectedUserId) => {
         try {
-            if (!ws.stompClient.value?.connected) {
+            if (!ws.stompClient.value?.active) {
                 await ws.connect()
+                await ws.waitForConnection()
             }
 
             if (currentSubscription.value) {
@@ -119,21 +107,6 @@ export const useMessageStore = defineStore('message', () => {
                         console.log('[MessageStore] Received message:', data)
 
                         if (data.senderId === selectedUserId) {
-                            // Get preview URLs for attachments if they exist
-                            let previewUrls = []
-                            if (data.attachments?.length > 0) {
-                                try {
-                                    const previewResponses = await Promise.all(
-                                        data.attachments.map(docId =>
-                                            axios.get(`/api/v1/documents/${docId}/preview`)
-                                        )
-                                    )
-                                    previewUrls = previewResponses.map(response => response.data.previewUrl)
-                                } catch (error) {
-                                    console.error('[MessageStore] Failed to fetch preview URLs:', error)
-                                }
-                            }
-
                             messages.value.push({
                                 id: Date.now(),
                                 text: data.text,
@@ -142,7 +115,7 @@ export const useMessageStore = defineStore('message', () => {
                                 timestamp: data.sentAt,
                                 type: data.type,
                                 isOwn: false,
-                                attachments: previewUrls
+                                attachments: data.attachments // Already contains { documentId, url }
                             })
                         }
                     } catch (error) {

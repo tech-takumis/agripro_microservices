@@ -5,8 +5,6 @@ import '../controllers/auth_controller.dart';
 import 'application_page.dart';
 import 'package:mobile/presentation/pages/profile_page.dart';
 import 'contact_department_page.dart';
-import 'package:mobile/data/services/websocket.dart'; // <-- import WebSocketService
-import 'package:mobile/data/services/storage_service.dart'; // <-- import StorageService for token
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,35 +17,16 @@ class _HomePageState extends State<HomePage> {
   final AuthController authController = Get.find<AuthController>();
   int _currentIndex = 0;
   late PageController _pageController;
-  final WebSocketService _webSocketService = WebSocketService();
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-
-    if (authController.isAuthenticated) {
-      final accessToken = StorageService.to.getToken();
-      // Use correct SockJS URL without /websocket
-      const wsUrl = 'http://localhost:9040/ws';  // or use 10.0.2.2 for emulator
-      _webSocketService.connect(
-        url: wsUrl,
-        accessToken: accessToken ?? '',
-        onConnect: (frame) {
-          print('WebSocket connected');
-        },
-        onError: (error) {
-          print('WebSocket error: $error');
-        },
-      );
-    }
   }
-
 
   @override
   void dispose() {
     _pageController.dispose();
-    _webSocketService.disconnect();
     super.dispose();
   }
 

@@ -49,20 +49,24 @@ String get userEmail => _userEmail.value;
       );
 
       final response = await ApiService.to.login(request);
-      if (response.success && response.accessToken != null) {
-        await StorageService.to.saveToken(response.accessToken!);
-        if (response.refreshToken != null) {
-          await StorageService.to.saveRefreshToken(response.refreshToken!);
-        }
+      if (response.success && response.credentials != null) {
+        await StorageService.to.saveToken(response.credentials!.accessToken);
+        await StorageService.to.saveRefreshToken(response.credentials!.refreshToken);
         await StorageService.to.saveRememberMe(rememberMe);
         if (rememberMe) {
           await StorageService.to.saveCredential(username, password);
         }
+        
+        // Set user information from credentials
+        _userName.value = "${response.credentials!.firstName} ${response.credentials!.lastName}";
+        _userEmail.value = response.credentials!.email;
+        await StorageService.to.saveUserCredentials(response.credentials!);
+
         _isLoggedIn.value = true;
-        Get.offAllNamed('/home'); // This should work now
+        Get.offAllNamed('/home');
         _handlePostLoginLocationCheck();
       } else {
-        _errorMessage.value = response.message;
+        _errorMessage.value = response.message ?? 'Login failed';
       }
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
@@ -114,9 +118,16 @@ String get userEmail => _userEmail.value;
 
   Future<void> logout() async {
     try {
+      // Clear tokens and preferences
       await StorageService.to.removeToken();
+      await StorageService.to.removeRefreshToken();
       await StorageService.to.saveRememberMe(false);
+
+      // Clear user information
+      _userName.value = '';
+      _userEmail.value = '';
       _isLoggedIn.value = false;
+
       Get.offAllNamed('/login');
     } catch (e) {
       print('Logout error: $e');

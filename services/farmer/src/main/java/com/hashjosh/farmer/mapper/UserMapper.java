@@ -2,6 +2,7 @@ package com.hashjosh.farmer.mapper;
 
 import com.hashjosh.farmer.dto.AuthenticatedResponse;
 import com.hashjosh.farmer.dto.RegistrationRequest;
+import com.hashjosh.farmer.dto.RoleResponse;
 import com.hashjosh.farmer.entity.Role;
 import com.hashjosh.farmer.entity.Farmer;
 import com.hashjosh.farmer.entity.FarmerProfile;
@@ -11,12 +12,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
+    private final RoleMapper roleMapper;
 
 
     public FarmerProfile toUserProfileEntity(RegistrationRequest request) {
@@ -57,25 +60,22 @@ public class UserMapper {
         return farmer;
     }
 
-    public AuthenticatedResponse toAuthenticatedResponse(Farmer farmer) {
-        Set<String> roles = new HashSet<>();
-        Set<String> permissions = new HashSet<>();
+    public AuthenticatedResponse toAuthenticatedResponse(Farmer farmer,String accessToken, String refreshToken) {
 
-        farmer.getRoles().forEach(role -> {
-            roles.add(role.getName());
-            role.getPermissions().forEach(permission -> 
-                permissions.add(permission.getName()));
-        });
+        Set<RoleResponse> roles = farmer.getRoles().stream()
+                .map(roleMapper::toRoleResponse)
+                .collect(Collectors.toSet());
 
         return AuthenticatedResponse.builder()
                 .id(farmer.getId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .username(farmer.getUsername())
                 .firstName(farmer.getFirstName())
                 .lastName(farmer.getLastName())
                 .email(farmer.getEmail())
                 .phoneNumber(farmer.getPhoneNumber())
                 .roles(roles)
-                .permissions(permissions)
                 .profile(farmer.getFarmerProfile())
                 .build();
     }

@@ -7,65 +7,90 @@ if (typeof global === 'undefined') {
     window.global = window;
 }
 
+// Singleton instance
+let instance = null;
+
 /**
- * useWebSocket composable
+ * useWebSocket composable with singleton pattern
  * Handles connection, disconnection, subscription, and event dispatch.
  */
 export function useWebSocket(url = 'http://localhost:9040/ws') {
+    if (instance) {
+        return instance;
+    }
+
     const stompClient = ref(null);
     const connected = ref(false);
     let reconnectTimeout = null;
+    let connectionPromise = null;
 
     const connect = async () => {
-        if (stompClient.value?.active) {
-            console.log('[WebSocket] Already connected');
-            return;
+        // If already connecting, return the existing promise
+        if (connectionPromise) {
+            return connectionPromise;
         }
 
-        const wsUrl = url.replace(/^http/, 'ws');
-        console.log('[WebSocket] Connecting to', wsUrl);
+        // If already connected, return immediately
+        if (stompClient.value?.active) {
+            console.log('[WebSocket] Already connected');
+            return Promise.resolve();
+        }
 
-        try {
-            const socket = new SockJS(url, null, {
-                withCredentials: true,
-            });
+        // Create new connection promise
+        connectionPromise = new Promise((resolve, reject) => {
+            try {
+                console.log('[WebSocket] Connecting to', url);
 
-            const client = new Client({
-                webSocketFactory: () => socket,
-                debug: (str) => console.log('[WebSocket Debug]', str),
-                reconnectDelay: 5000,
-                heartbeatIncoming: 10000,
-                heartbeatOutgoing: 10000,
-                onConnect: () => {
-                    connected.value = true;
-                    console.log('[WebSocket] ✅ Connected to server.');
-                },
-                onStompError: (frame) => {
-                    console.error('[WebSocket] ❌ STOMP error:', frame);
-                    connected.value = false;
-                    scheduleReconnect();
-                },
-                onDisconnect: () => {
-                    connected.value = false;
-                    console.warn('[WebSocket] 🔌 Disconnected from server.');
-                    scheduleReconnect();
-                },
-                onWebSocketClose: (event) => {
-                    connected.value = false;
-                    console.warn('[WebSocket] 🔒 Closed:', event.reason);
-                    scheduleReconnect();
-                },
-                onWebSocketError: (error) => {
-                    console.error('[WebSocket] 🚨 WebSocket error:', error);
-                    scheduleReconnect();
-                },
-            });
+                const socket = new SockJS(url, null, {
+                    withCredentials: true,
+                });
 
-            await client.activate();
-            stompClient.value = client;
-        } catch (error) {
-            console.error('[WebSocket] Connection error:', error);
-            scheduleReconnect();
+                const client = new Client({
+                    webSocketFactory: () => socket,
+                    debug: (str) => console.log('[WebSocket Debug]', str),
+                    reconnectDelay: 5000,
+                    heartbeatIncoming: 10000,
+                    heartbeatOutgoing: 10000,
+                    onConnect: () => {
+                        connected.value = true;
+                        console.log('[WebSocket] ✅ Connected to server.');
+                        connectionPromise = null;
+                        resolve();
+                    },
+                    onStompError: (frame) => {
+                        console.error('[WebSocket] ❌ STOMP error:', frame);
+                        connected.value = false;
+                        connectionPromise = null;
+                        scheduleReconnect();
+                        reject(new Error('STOMP connection error'));
+                    },
+                    onDisconnect: () => {
+                        connected.value = false;
+                        connectionPromise = null;
+                        console.warn('[WebSocket] 🔌 Disconnected from server.');
+                        scheduleReconnect();
+                    },
+                });
+
+                client.activate();
+                stompClient.value = client;
+            } catch (error) {
+                console.error('[WebSocket] Connection error:', error);
+                connectionPromise = null;
+                reject(error);
+            }
+        });
+
+        return connectionPromise;
+    };
+
+    const waitForConnection = async (timeout = 5000) => {
+        const start = Date.now();
+        while (!stompClient.value?.active) {
+            if (Date.now() - start > timeout) {
+                throw new Error('WebSocket connection timeout');
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
     };
 
@@ -98,43 +123,13 @@ export function useWebSocket(url = 'http://localhost:9040/ws') {
         }
     };
 
-    const subscribe = (topic, callback) => {
-        if (!connected.value || !stompClient.value) {
-            console.warn('[WebSocket] Not connected, cannot subscribe:', topic);
-            return null;
-        }
-        console.log('[WebSocket] Subscribing to', topic);
-        try {
-            return stompClient.value.subscribe(topic, (msg) => {
-                try {
-                    const payload = JSON.parse(msg.body);
-                    callback(payload);
-                } catch (e) {
-                    console.error('[WebSocket] Failed to parse message:', e);
-                    callback(msg.body); // Fallback to raw message
-                }
-            });
-        } catch (error) {
-            console.error('[WebSocket] Subscription error:', error);
-            return null;
-        }
-    };
-
-    const send = (destination, body) => {
-        if (!connected.value || !stompClient.value) {
-            console.error('[WebSocket] Not connected, cannot send message');
-            throw new Error('WebSocket not connected');
-        }
-
-        try {
-            stompClient.value.publish({
-                destination: destination,
-                body: typeof body === 'string' ? body : JSON.stringify(body)
-            });
-        } catch (error) {
-            console.error('[WebSocket] Failed to send message:', error);
-            throw error;
-        }
+    // Create the singleton instance
+    instance = {
+        stompClient,
+        connected,
+        connect,
+        waitForConnection,
+        disconnect
     };
 
     // Auto-connect on mount
@@ -144,15 +139,13 @@ export function useWebSocket(url = 'http://localhost:9040/ws') {
 
     // Clean up on unmount
     onUnmounted(() => {
-        disconnect();
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+        }
+        if (stompClient.value?.active) {
+            stompClient.value.deactivate();
+        }
     });
 
-    return {
-        connected,
-        connect,
-        disconnect,
-        subscribe,
-        send,
-        stompClient
-    };
+    return instance;
 }

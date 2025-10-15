@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/registration")
@@ -52,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
+    public ResponseEntity<AuthenticatedResponse> login(
             @RequestBody @Valid LoginRequest request,
             HttpServletRequest httpRequest) {
 
@@ -60,9 +59,9 @@ public class AuthController {
         String clientIp = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
 
-        LoginResponse tokens = authService.login(request, clientIp, userAgent);
+        AuthenticatedResponse response = authService.login(request, clientIp, userAgent);
 
-        return ResponseEntity.ok(tokens);
+        return ResponseEntity.ok(response);
     }
 
 
@@ -99,23 +98,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Build response directly from CustomUserDetails
-        AuthenticatedResponse response = AuthenticatedResponse.builder()
-                .id(customUserDetails.getUserId())
-                .username(customUserDetails.getUsername())
-                .email(customUserDetails.getEmail())
-                .firstName(customUserDetails.getFirstName())
-                .lastName(customUserDetails.getLastName())
-                .phoneNumber(customUserDetails.getPhoneNumber())
-                .roles( authentication.getAuthorities().stream()
-                        .filter(auth -> auth.getAuthority().startsWith("ROLE_"))
-                        .map(auth -> auth.getAuthority().substring(5)) // Remove "ROLE_" prefix
-                        .collect(Collectors.toSet()))
-                .permissions(authentication.getAuthorities().stream()
-                        .filter(auth -> !auth.getAuthority().startsWith("ROLE_"))
-                        .map(Object::toString)
-                        .collect(Collectors.toSet()))
-                .build();
+        AuthenticatedResponse response = authService.getAuthenticatedUser(customUserDetails.getFarmer().getId());
 
         return ResponseEntity.ok(response);
     }

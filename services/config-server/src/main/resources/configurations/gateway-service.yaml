@@ -56,7 +56,7 @@ spring:
             - id: communication-service
               uri: lb://communication-service
               predicates:
-                - Path=/api/v1/posts/**,/api/v1/messages/**,/ws/**,/api/v1/chat/**
+                - Path=/api/v1/posts/**,/api/v1/messages/**,/ws/**,/api/v1/chat/**,/api/v1/communication/**
               filters:
                 - PreserveHostHeader
 

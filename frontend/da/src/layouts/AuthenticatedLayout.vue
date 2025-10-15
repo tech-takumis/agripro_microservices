@@ -141,14 +141,7 @@ const authStore = useAuthStore()
 // Create WebSocket instance
 const { connected, connect, disconnect, subscribe } = useWebSocket()
 onMounted(() => {
-    connect() // or omit token if your gateway uses cookies
-
-    // Example subscription to a public topic
-    const sub = subscribe('/topic/public', (msg) => {
-        console.log('[Message received]', msg)
-        wsStore.setLastMessage(msg)
-    })
-
+    connect()
 })
 const props = defineProps({
   navigation: {

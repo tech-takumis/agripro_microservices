@@ -1,31 +1,22 @@
+import 'dart:convert';
+import '../models/user_credentials.dart';
+
 class AuthResponse {
-  final String? accessToken;
-  final String? refreshToken;
-  final String message;
   final bool success;
+  final String? message;
+  final UserCredentials? credentials;
 
   AuthResponse({
-    this.accessToken,
-    this.refreshToken,
-    required this.message,
     required this.success,
+    this.message,
+    this.credentials,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
-      message: json['message'] ?? '',
-      success: json['accessToken'] != null,
+      success: json['success'] ?? true,
+      message: json['message'],
+      credentials: json.containsKey('id') ? UserCredentials.fromJson(json) : null,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'accessToken': accessToken,
-      'refreshToken': refreshToken,
-      'message': message,
-      'success': success,
-    };
   }
 }

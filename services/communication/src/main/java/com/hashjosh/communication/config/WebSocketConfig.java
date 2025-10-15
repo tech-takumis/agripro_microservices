@@ -13,12 +13,14 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.WebSocketHandler;
@@ -28,6 +30,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -86,51 +89,105 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public  void configureClientInboundChannel(ChannelRegistration registration){
+    public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
+            private final Map<String, Authentication> sessionAuthMap = new ConcurrentHashMap<>();
+
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                String sessionId = accessor.getSessionId();
+                StompCommand command = accessor.getCommand();
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    // Extract token from session attributes (placed there by HandshakeInterceptor)
-                    String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get(TOKEN_HEADER);
-                    log.info("Received token from client inbound channel: {}", token);
+                log.info("Processing {} command for session {}", command, sessionId);
+
+                if (StompCommand.CONNECT.equals(command)) {
+                    Map<String, Object> sessionAttrs = accessor.getSessionAttributes();
+                    if (sessionAttrs == null) {
+                        log.error("Session attributes are null during CONNECT");
+                        throw new InvalidJwtException("No session attributes found");
+                    }
+
+                    String token = (String) sessionAttrs.get(TOKEN_HEADER);
+                    log.info("CONNECT - Session ID: {}, Token present: {}", sessionId, token != null);
 
                     if (token != null && jwtService.validateToken(token)) {
-                        Claims claims = jwtService.getAllClaims(token);
-                        String username = jwtService.getUsernameFromToken(token);
-                        String userId = claims.get("userId",String.class);
-                        String firstname = claims.get("firstName",String.class);
-                        String lastname = claims.get("lastName",String.class);
-                        String email = claims.get("email",String.class);
-                        String phone = claims.get("phone",String.class);
-                        List<String> claimRoles = claims.get("roles", List.class);
-                        List<String> claimPermissions = claims.get("permissions", List.class);
+                        try {
+                            Claims claims = jwtService.getAllClaims(token);
+                            String username = jwtService.getUsernameFromToken(token);
+                            String userId = claims.get("userId", String.class);
+                            String firstname = claims.get("firstName", String.class);
+                            String lastname = claims.get("lastName", String.class);
+                            String email = claims.get("email", String.class);
+                            String phone = claims.get("phone", String.class);
+                            List<String> claimRoles = claims.get("roles", List.class);
+                            List<String> claimPermissions = claims.get("permissions", List.class);
 
-                        Set<SimpleGrantedAuthority> roles = new HashSet<>();
-                        if (claimRoles != null) {
-                            claimRoles.forEach(role -> roles.add(new SimpleGrantedAuthority("ROLE_" + role)));
-                        }
-                        if (claimPermissions != null) {
-                            claimPermissions.forEach(perm -> roles.add(new SimpleGrantedAuthority(perm)));
-                        }
+                            Set<SimpleGrantedAuthority> roles = new HashSet<>();
+                            if (claimRoles != null) {
+                                claimRoles.forEach(role -> roles.add(new SimpleGrantedAuthority("ROLE_" + role)));
+                            }
+                            if (claimPermissions != null) {
+                                claimPermissions.forEach(perm -> roles.add(new SimpleGrantedAuthority(perm)));
+                            }
 
-                        CustomUserDetails userDetails = new CustomUserDetails(
-                                token, userId, username, firstname, lastname, email, phone, roles
-                        );
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, roles
-                        );
-                        accessor.setUser(auth);
-                        SecurityContextHolder.getContext().setAuthentication(auth);
+                            CustomUserDetails userDetails = new CustomUserDetails(
+                                    token, userId, username, firstname, lastname, email, phone, roles
+                            );
+                            UsernamePasswordAuthenticationToken auth =
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, roles);
+
+                            accessor.setUser(auth);
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                            sessionAuthMap.put(sessionId, auth);
+                            log.info("Successfully authenticated user {} for session {}", username, sessionId);
+                        } catch (Exception e) {
+                            log.error("Error processing token for session {}: {}", sessionId, e.getMessage());
+                            throw new InvalidJwtException("Error processing JWT token: " + e.getMessage());
+                        }
                     } else {
-                        log.error("WebSocket connection failed: Invalid or missing token.");
+                        log.error("Invalid or missing JWT token for session {}", sessionId);
                         throw new InvalidJwtException("Invalid or missing JWT token");
                     }
+                } else if (command != null) { // SEND, SUBSCRIBE, etc.
+                    Authentication existingAuth = sessionAuthMap.get(sessionId);
+                    log.info("{} - Session {}, Existing auth: {}", command, sessionId, existingAuth != null ? existingAuth.getName() : "null");
+
+                    if (existingAuth != null) {
+                        accessor.setUser(existingAuth);
+                        SecurityContextHolder.getContext().setAuthentication(existingAuth);
+                        message = MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
+                        log.info("Reattached authentication for session {} during {} command. User: {}",
+                            sessionId, command, existingAuth.getName());
+                    } else {
+                        // Try to get authentication from SecurityContext as fallback
+                        Authentication securityContextAuth = SecurityContextHolder.getContext().getAuthentication();
+                        if (securityContextAuth != null && securityContextAuth.isAuthenticated()) {
+                            accessor.setUser(securityContextAuth);
+                            sessionAuthMap.put(sessionId, securityContextAuth);
+                            message = MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
+                            log.info("Retrieved authentication from SecurityContext for session {} during {} command. User: {}",
+                                sessionId, command, securityContextAuth.getName());
+                        } else {
+                            log.error("No authentication found for session {} during {} command", sessionId, command);
+                            throw new InvalidJwtException("No authentication found for session");
+                        }
+                    }
                 }
+
                 return message;
+            }
+
+            @Override
+            public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+                    String sessionId = accessor.getSessionId();
+                    sessionAuthMap.remove(sessionId);
+                    log.info("Cleaned up session {} after disconnect", sessionId);
+                }
             }
         });
     }
+
 }

@@ -87,12 +87,10 @@ class ApiService extends getx.GetxService {
       print('✅ Login successful: ${response.statusCode}');
       final authResponse = AuthResponse.fromJson(response.data);
 
-      // Store tokens if login is successful
-      if (authResponse.success && authResponse.accessToken != null) {
-        await StorageService.to.saveToken(authResponse.accessToken!);
-      }
-      if (authResponse.success && authResponse.refreshToken != null) {
-        await StorageService.to.saveRefreshToken(authResponse.refreshToken!);
+      // Store user credentials if login is successful
+      if (authResponse.success && authResponse.credentials != null) {
+        await StorageService.to.saveUserCredentials(authResponse.credentials!);
+        print('✅ User credentials saved successfully');
       }
 
       return authResponse;
@@ -103,34 +101,34 @@ class ApiService extends getx.GetxService {
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
         return AuthResponse(
-          message: 'Connection timeout. Please check your network connection.',
           success: false,
+          message: 'Connection timeout. Please check your network connection.',
         );
       } else if (e.type == DioExceptionType.connectionError) {
         return AuthResponse(
+          success: false,
           message:
           'Cannot connect to server. Please ensure your backend is running and adb reverse is set up.',
-          success: false,
         );
       } else if (e.response?.statusCode == 401 ||
           e.response?.statusCode == 400) {
         final errorData = e.response?.data;
         return AuthResponse(
-          message: errorData['message'] ?? 'Invalid credentials',
           success: false,
+          message: errorData['message'] ?? 'Invalid credentials',
         );
       } else {
         return AuthResponse(
+          success: false,
           message:
           'Server error (${e.response?.statusCode}): ${e.response?.data}',
-          success: false,
         );
       }
     } catch (e) {
       print('❌ Unexpected login error: $e');
       return AuthResponse(
-        message: 'An unexpected error occurred: ${e.toString()}',
         success: false,
+        message: 'An unexpected error occurred: ${e.toString()}',
       );
     }
   }
@@ -395,9 +393,18 @@ class ApiService extends getx.GetxService {
   }
 
   Future<void> logout() async {
-    // Remove access and refresh tokens from storage
-    await StorageService.to.removeToken();
-    await StorageService.to.removeRefreshToken();
-    // ...add any other logout logic if needed...
+    try {
+      // Remove user credentials first
+      await StorageService.to.removeUserCredentials();
+
+      // Then remove tokens
+      await StorageService.to.removeToken();
+      await StorageService.to.removeRefreshToken();
+
+      print('✅ User logged out successfully');
+    } catch (e) {
+      print('❌ Error during logout: $e');
+      throw Exception('Failed to logout: $e');
+    }
   }
 }

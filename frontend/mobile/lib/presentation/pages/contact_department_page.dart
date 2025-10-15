@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/data/services/message_service.dart';
+import 'package:mobile/data/models/message.dart';
+import 'package:mobile/data/services/storage_service.dart';
+import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactDepartmentPage extends StatefulWidget {
   const ContactDepartmentPage({super.key});
@@ -10,60 +16,93 @@ class ContactDepartmentPage extends StatefulWidget {
 
 class _ContactDepartmentPageState extends State<ContactDepartmentPage> {
   final TextEditingController _messageController = TextEditingController();
-
-  // Simulated chat messages
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'sender': 'bot',
-      'text':
-          '👋 Hello! This is the Department of Agriculture support assistant.\nHow can we help you today?',
-      'time': DateTime.now(),
-    },
-  ];
-
+  final AuthController authController = Get.find<AuthController>();
+  final MessageService _messageService = MessageService();
+  final List<Message> _messages = [];
   bool _isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeMessaging();
+  }
+
+  void _initializeMessaging() async {
+    // Set up message received callback
+    _messageService.onMessageReceived = (message) {
+      setState(() {
+        _messages.add(message);
+      });
+    };
+
+    // Initialize message service
+    await _messageService.initializeMessageService();
+
+    // Add welcome message using dex1dxzsignated staff userId
+    final designatedStaff = _messageService.designatedStaff;
+    final welcomeMessage = Message(
+      id: const Uuid().v4(),
+      senderId: 'SYSTEM',
+      receiverId: designatedStaff?.userId ?? '',
+      text: '👋 Hello! This is the Department of Agriculture support assistant.\nHow can we help you today?',
+      type: MessageType.AGRICULTURE_PCIC,
+      sentAt: DateTime.now(),
+    );
+
+    setState(() {
+      _messages.add(welcomeMessage);
+    });
+  }
 
   void _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _messages.add({
-        'sender': 'user',
-        'text': text,
-        'time': DateTime.now(),
-      });
-      _messageController.clear();
-      _isSending = true;
-    });
+    setState(() => _isSending = true);
 
-    // Simulate bot response delay
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final designatedStaff = _messageService.designatedStaff;
+      final userId = StorageService.to.getUserId();
 
-    setState(() {
-      _messages.add({
-        'sender': 'bot',
-        'text': _generateBotResponse(text),
-        'time': DateTime.now(),
+      if (designatedStaff == null) {
+        throw Exception('No designated staff available');
+      }
+
+      if (userId == null) {
+        throw Exception('User ID not found');
+      }
+
+      final message = Message(
+        id: const Uuid().v4(),
+        senderId: userId,
+        receiverId: designatedStaff.userId,
+        text: text,
+        type: MessageType.FARMER_AGRICULTURE,
+        sentAt: DateTime.now(),
+      );
+
+      await _messageService.sendMessage(message);
+
+      setState(() {
+        _messages.add(message);
+        _messageController.clear();
       });
-      _isSending = false;
-    });
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to send message: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      setState(() => _isSending = false);
+    }
   }
 
-  String _generateBotResponse(String userMessage) {
-    userMessage = userMessage.toLowerCase();
-
-    if (userMessage.contains('hello') || userMessage.contains('hi')) {
-      return 'Hello! 👋 How can we assist you regarding your agricultural concerns today?';
-    } else if (userMessage.contains('insurance')) {
-      return 'For crop insurance inquiries, please make sure your latest application is submitted. Would you like to track its status? 🌾';
-    } else if (userMessage.contains('contact')) {
-      return '📞 You can reach our Municipal Agriculture Office directly at (02) 1234-5678 or via email: support@agriculture.gov.ph';
-    } else if (userMessage.contains('thank')) {
-      return 'You’re welcome! 😊 We’re glad to help.';
-    } else {
-      return 'Got it! Our support team will review your message soon. Please wait for a follow-up. ✅';
-    }
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -84,18 +123,18 @@ class _ContactDepartmentPageState extends State<ContactDepartmentPage> {
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
-                  final isUser = msg['sender'] == 'user';
-                  final time =
-                      DateFormat('hh:mm a').format(msg['time'] as DateTime);
+                  final userId = StorageService.to.getUserId();
+                  final isUser = userId != null && msg.senderId == userId;
+                  final time = DateFormat('hh:mm a').format(msg.sentAt);
 
                   return Align(
-                    alignment:
-                        isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       padding: const EdgeInsets.all(12),
                       constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.75),
+                        maxWidth: MediaQuery.of(context).size.width * 0.75
+                      ),
                       decoration: BoxDecoration(
                         color: isUser ? Colors.green : Colors.white,
                         borderRadius: BorderRadius.only(
@@ -120,7 +159,7 @@ class _ContactDepartmentPageState extends State<ContactDepartmentPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            msg['text'],
+                            msg.text,
                             style: TextStyle(
                               color: isUser ? Colors.white : Colors.black87,
                               fontSize: 14,
@@ -129,14 +168,26 @@ class _ContactDepartmentPageState extends State<ContactDepartmentPage> {
                           const SizedBox(height: 4),
                           Align(
                             alignment: Alignment.bottomRight,
-                            child: Text(
-                              time,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isUser
-                                    ? Colors.white70
-                                    : Colors.grey.shade500,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (msg.attachments.isNotEmpty)
+                                  const Icon(
+                                    Icons.attachment,
+                                    size: 12,
+                                    color: Colors.grey,
+                                  ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: isUser
+                                        ? Colors.white70
+                                        : Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

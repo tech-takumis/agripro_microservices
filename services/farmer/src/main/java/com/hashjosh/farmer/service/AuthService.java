@@ -10,20 +10,24 @@ import com.hashjosh.farmer.repository.*;
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final FarmerRepository farmerRepository;
@@ -34,6 +38,10 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     @Transactional
     public Farmer register(RegistrationRequest request) {
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new FarmerNotFoundException("Password cannot be empty", HttpStatus.BAD_REQUEST.value());
+        }
+
         if (farmerRepository.existsByEmail(request.getEmail())) {
             throw new FarmerNotFoundException("Email already exists", HttpStatus.BAD_REQUEST.value());
         }
@@ -45,12 +53,20 @@ public class AuthService {
         Set<Role> roles = Collections.singleton(roleRepository.findByName("FARMER")
                 .orElseThrow(() -> new FarmerNotFoundException("Role not found", HttpStatus.NOT_FOUND.value())));
 
-
         // Create and save UserProfile first
-        Farmer farmer = userMapper.toUserEntity(request,roles);
+        Farmer farmer = userMapper.toUserEntity(request, roles);
+
+        // Verify password was properly encoded
+        if (farmer.getPassword() == null || farmer.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password encoding failed");
+        }
 
         // Save user (will cascade save the profile)
         Farmer registeredFarmer = farmerRepository.save(farmer);
+
+        log.info("Farmer registered successfully. Username: {}, Has password: {}",
+                registeredFarmer.getUsername(),
+                registeredFarmer.getPassword() != null && !registeredFarmer.getPassword().isEmpty());
 
         publishUserRegistrationEvent(request, registeredFarmer);
 
@@ -73,58 +89,81 @@ public class AuthService {
         farmerProducer.publishFarmerRegistrationEvent(farmerRegistrationContract);
     }
 
-    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
-        // ✅ authenticate user
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+    public AuthenticatedResponse login(LoginRequest request, String clientIp, String userAgent) {
+        try {
+            log.info("Attempting login for user: {}", request.getUsername());
 
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        Farmer farmer = userDetails.getFarmer();
+            // Verify password in request
+            if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+                throw new RuntimeException("Password cannot be empty");
+            }
 
-        // Extract permissions first
-        Set<String> permissions = farmer.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
+            // Log the user exists and has password (without showing the password)
+            Farmer farmer = farmerRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new FarmerNotFoundException("User not found", HttpStatus.NOT_FOUND.value()));
 
-        // Convert roles to string names
-        Set<String> roleNames = farmer.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
+            log.info("Found user: {}, Has password: {}",
+                    farmer.getUsername(),
+                    farmer.getPassword() != null && !farmer.getPassword().isEmpty());
 
-        // Jwt claims for user
-        Map<String, Object> claims = Map.of(
-                "userId", farmer.getId(),
-                "firstname", farmer.getFirstName(),
-                "lastname", farmer.getLastName(),
-                "email", farmer.getEmail(),
-                "phoneNumber", farmer.getPhoneNumber(),
-                "roles", roleNames,
-                "permissions", permissions
-        );
+            // Authenticate user
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
 
-        // ✅ generate tokens (do NOT call login or authenticate again)
-        String accessToken = jwtService.generateAccessToken(
-                farmer.getUsername(),
-                claims,
-                jwtService.getAccessTokenExpiry(request.isRememberMe())
-        );
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
-        String refreshToken = jwtService.generateRefreshToken(
-                farmer.getUsername(), clientIp, userAgent,
-                jwtService.getRefreshTokenExpiry(request.isRememberMe())
-        );
+            CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+            Farmer farmerLoggedIn = userDetails.getFarmer();
 
-        return new LoginResponse(accessToken, refreshToken);
+            if (farmerLoggedIn == null) {
+                throw new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value());
+            }
+
+            // Extract permissions and roles
+            Set<String> permissions = farmerLoggedIn.getRoles().stream()
+                    .flatMap(role -> role.getPermissions().stream())
+                    .map(Permission::getName)
+                    .collect(Collectors.toSet());
+
+            Set<String> roleNames = farmerLoggedIn.getRoles().stream()
+                    .map(Role::getName)
+                    .collect(Collectors.toSet());
+
+            // Jwt claims
+            Map<String, Object> claims = Map.of(
+                    "userId", farmerLoggedIn.getId().toString(), // Ensure userId is a string
+                    "firstname", farmerLoggedIn.getFirstName(),
+                    "lastname", farmerLoggedIn.getLastName(),
+                    "email", farmerLoggedIn.getEmail(),
+                    "phoneNumber", farmerLoggedIn.getPhoneNumber(),
+                    "roles", roleNames,
+                    "permissions", permissions
+            );
+
+            // Generate tokens
+            String accessToken = jwtService.generateAccessToken(
+                    farmerLoggedIn.getUsername(),
+                    claims,
+                    jwtService.getAccessTokenExpiry(request.isRememberMe())
+            );
+
+            String refreshToken = jwtService.generateRefreshToken(
+                    farmerLoggedIn.getUsername(), clientIp, userAgent,
+                    jwtService.getRefreshTokenExpiry(request.isRememberMe())
+            );
+
+            return userMapper.toAuthenticatedResponse(farmerLoggedIn, accessToken, refreshToken);
+        } catch (Exception e) {
+            log.error("Login failed for user {}: {}", request.getUsername(), e.getMessage());
+            throw new RuntimeException("Authentication failed: " + e.getMessage());
+        }
     }
 
-    @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(Farmer request) {
+    public AuthenticatedResponse getAuthenticatedUser(UUID id) {
+        Farmer farmer = farmerRepository.findById(id)
+                .orElseThrow(() -> new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value()));
 
-        Farmer farmer = farmerRepository.findByIdWithRolesAndPermissions(request.getId())
-                .orElseThrow(() -> new FarmerNotFoundException("User not found", HttpStatus.NOT_FOUND.value()));
-
-        return userMapper.toAuthenticatedResponse(farmer);
+        return userMapper.toAuthenticatedResponse(farmer, null, null);
     }
 }

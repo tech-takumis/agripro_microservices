@@ -1,6 +1,10 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
-import '../models/saved_credential.dart';
+import 'package:mobile/data/models/saved_credential.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:mobile/data/models/user_credentials.dart';
 
 class StorageService extends GetxService {
   static const String _authBoxName = 'auth_box';
@@ -8,6 +12,8 @@ class StorageService extends GetxService {
   static const String _tokenKey = 'auth_token';
   static const String _rememberMeKey = 'remember_me';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _userIdKey = 'user_id';
+  static const String _userKey = 'user_credentials';
 
   late Box _authBox;
   late Box<SavedCredential> _credentialsBox;
@@ -64,6 +70,36 @@ class StorageService extends GetxService {
     return _authBox.get(_rememberMeKey, defaultValue: false);
   }
 
+  // User ID management
+  Future<void> saveUserId(String userId) async {
+    await _authBox.put(_userIdKey, userId);
+  }
+
+  String? getUserId() {
+    // Try to get userId from auth box
+    final userId = _authBox.get(_userIdKey);
+    if (userId != null) return userId;
+
+    // If not found, try to decode from JWT token
+    final token = getToken();
+    if (token != null) {
+      try {
+        final parts = token.split('.');
+        if (parts.length != 3) return null;
+        final payload = parts[1];
+        final normalized = base64.normalize(payload);
+        final decoded = utf8.decode(base64.decode(normalized));
+        final payloadMap = json.decode(decoded);
+        if (payloadMap is Map<String, dynamic> && payloadMap.containsKey('userId')) {
+          return payloadMap['userId'] as String;
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Credentials management
   Future<void> saveCredential(String username, String password) async {
     // Check if credential already exists
@@ -118,5 +154,25 @@ class StorageService extends GetxService {
   Future<void> clearAll() async {
     await _authBox.clear();
     await _credentialsBox.clear();
+  }
+
+  // User Credentials management
+  Future<void> saveUserCredentials(UserCredentials credentials) async {
+    await _authBox.put(_userKey, json.encode(credentials.toJson()));
+    await saveToken(credentials.accessToken);
+    await saveRefreshToken(credentials.refreshToken);
+    await saveUserId(credentials.id);
+  }
+
+  Map<String, dynamic>? getUserCredentials() {
+    final userJson = _authBox.get(_userKey);
+    if (userJson != null) {
+      return json.decode(userJson);
+    }
+    return null;
+  }
+
+  Future<void> removeUserCredentials() async {
+    await _authBox.delete(_userKey);
   }
 }

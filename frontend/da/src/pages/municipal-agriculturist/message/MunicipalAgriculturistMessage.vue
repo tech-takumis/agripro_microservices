@@ -90,12 +90,12 @@
                                     class="mt-2 flex flex-wrap gap-2">
                                     <div
                                         v-for="(attachment, index) in message.attachments"
-                                        :key="index"
-                                        @click="openAttachment(attachment)"
+                                        :key="attachment.documentId"
+                                        @click="openAttachment(attachment.url)"
                                         class="h-24 w-24 flex items-center justify-center bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors">
                                         <img
-                                            v-if="attachment"
-                                            :src="attachment"
+                                            v-if="attachment.url"
+                                            :src="attachment.url"
                                             class="h-24 w-24 object-cover rounded"
                                             :alt="'Attachment ' + (index + 1)"
                                         />
@@ -318,23 +318,19 @@ const selectedFarmerName = computed(() => {
     }`.trim()
 })
 
-// Check if the screen is mobile size
 const checkMobileView = () => {
     isMobile.value = window.innerWidth < 768
 }
 
-// Go back to the farmer list on mobile
 const backToList = () => {
     if (isMobile.value) {
         selectedFarmer.value = null
     }
 }
 
-// Update handleFileSelect to only store file metadata locally
 const handleFileSelect = async event => {
     const files = Array.from(event.target.files)
 
-    // Store files locally with preview
     for (const file of files) {
         localFiles.value.push({
             file,
@@ -344,19 +340,17 @@ const handleFileSelect = async event => {
     }
 
     if (fileInput.value) {
-        fileInput.value.value = '' // Reset file input
+        fileInput.value.value = '' 
     }
 }
 
 const removeFile = index => {
-    // Remove local file and revoke object URL
     if (localFiles.value[index]?.preview) {
         URL.revokeObjectURL(localFiles.value[index].preview)
     }
     localFiles.value.splice(index, 1)
 }
 
-// Methods
 const selectFarmer = async farmer => {
     try {
         selectedFarmer.value = farmer
@@ -385,6 +379,7 @@ const sendMessage = async () => {
         isUploading.value = true
 
         // First upload all files if any
+        let attachments = []
         if (localFiles.value.length > 0) {
             try {
                 // Upload all files
@@ -393,30 +388,25 @@ const sendMessage = async () => {
                 )
                 const uploadResults = await Promise.all(uploadPromises)
 
-                // Send message with document IDs
-                await messageStore.sendMessage({
-                    senderId: authStore.userId,
-                    receiverId: selectedFarmer.value.id,
-                    text: messageInput.value || 'File Uploaded',
-                    type: 'FARMER_AGRICULTURE',
-                    attachments: uploadResults.map(doc => doc.documentId),
-                    sentAt: new Date().toISOString()
-                })
+                // Build attachments array for backend DTO
+                attachments = uploadResults.map(doc => ({
+                    documentId: doc.documentId,
+                    url: doc.preview
+                }))
             } catch (error) {
                 console.error('Error uploading files:', error)
                 throw error
             }
-        } else {
-            // Send message without attachments
-            await messageStore.sendMessage({
-                senderId: authStore.userId,
-                receiverId: selectedFarmer.value.id,
-                text: messageInput.value,
-                type: 'FARMER_AGRICULTURE',
-                attachments: [],
-                sentAt: new Date().toISOString()
-            })
         }
+
+        // Send message with or without attachments
+        await messageStore.sendMessage({
+            receiverId: selectedFarmer.value.id,
+            text: messageInput.value || (attachments.length ? 'File Uploaded' : ''),
+            type: 'FARMER_AGRICULTURE',
+            attachments: attachments,
+            sentAt: new Date().toISOString()
+        })
 
         // Clear message and files
         messageInput.value = ''
@@ -471,7 +461,14 @@ onMounted(async () => {
     try {
         checkMobileView()
         window.addEventListener('resize', checkMobileView)
-        await Promise.all([ws.connect(), farmerStore.fetchFarmers()])
+
+        // Just wait for connection if needed, connect() is now handled by singleton
+        if (!ws.connected.value) {
+            await ws.waitForConnection()
+        }
+
+        // Then fetch farmers
+        await farmerStore.fetchFarmers()
         isInitialized.value = true
 
         if (selectedFarmer.value) {

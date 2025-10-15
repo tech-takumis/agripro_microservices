@@ -34,11 +34,9 @@ public class SecurityConfiguration {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/farmer/auth/registration",
-                                "/api/v1/farmer/auth/login",
+                                "/api/v1/farmer/auth/**",
                                 "/actuator/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/farmer/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

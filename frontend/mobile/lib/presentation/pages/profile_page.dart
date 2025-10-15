@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import 'application_tracker_page.dart'; // 👈 new page you'll create
+import 'package:mobile/data/services/websocket.dart';
+import 'application_tracker_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,6 +13,17 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final AuthController authController = Get.find<AuthController>();
+  final WebSocketService _webSocketService = WebSocketService();
+
+  void _handleLogout() {
+    // Disconnect WebSocket before logging out
+    if (_webSocketService.isConnected) {
+      print('ProfilePage: Disconnecting WebSocket before logout');
+      _webSocketService.disconnect();
+    }
+    // Proceed with normal logout
+    authController.logout();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: authController.logout,
+                onPressed: _handleLogout, // Changed from authController.logout to _handleLogout
                 icon: const Icon(Icons.logout),
                 label: const Text(
                   'Logout',

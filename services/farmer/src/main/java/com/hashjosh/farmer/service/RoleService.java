@@ -1,10 +1,14 @@
 package com.hashjosh.farmer.service;
 
 
-import com.hashjosh.farmer.dto.*;
-import com.hashjosh.farmer.entity.*;
+import com.hashjosh.farmer.dto.RoleRequest;
+import com.hashjosh.farmer.dto.RoleResponse;
+import com.hashjosh.farmer.dto.RoleUpdateRequest;
+import com.hashjosh.farmer.entity.Permission;
+import com.hashjosh.farmer.entity.Role;
 import com.hashjosh.farmer.mapper.RoleMapper;
-import com.hashjosh.farmer.repository.*;
+import com.hashjosh.farmer.repository.PermissionRepository;
+import com.hashjosh.farmer.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +23,6 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
-    private final FarmerRepository farmerRepository;
     private final RoleMapper roleMapper;
 
     @Transactional
@@ -28,7 +31,7 @@ public class RoleService {
                 ? permissionRepository.findAllById(request.getPermissionIds())
                 : List.of();
 
-        Role role = roleMapper.toRole(request,permissions);
+        Role role = roleMapper.toEntityRole(request,permissions);
         roleRepository.save(role);
         return roleMapper.toRoleResponse(role);
     }

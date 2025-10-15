@@ -13,12 +13,13 @@ import java.util.UUID;
 @Builder
 public class AuthenticatedResponse {
     private UUID id;
+    private String accessToken;
+    private String refreshToken;
     private String username;
     private String firstName;
     private String lastName;
     private String email;
     private String phoneNumber;
-    private Set<String> roles;
-    private Set<String> permissions;
+    private Set<RoleResponse> roles;
     private FarmerProfile profile;
 }
