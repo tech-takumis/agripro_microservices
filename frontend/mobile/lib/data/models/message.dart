@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 // Message type enum to match backend types
 enum MessageType {
   FARMER_AGRICULTURE,
@@ -5,17 +7,17 @@ enum MessageType {
 }
 
 class Message {
-  final String id; // UUID from backend
-  final String senderId; // UUID
-  final String receiverId; // UUID
+  final String messageId;
+  final String senderId;
+  final String receiverId;
   final String text;
   final MessageType type;
-  final List<String> attachments; // List of attachment UUIDs
+  final List<Attachment> attachments;
   final DateTime sentAt;
   final bool isRead;
 
   Message({
-    required this.id,
+    required this.messageId,
     required this.senderId,
     required this.receiverId,
     required this.text,
@@ -28,7 +30,7 @@ class Message {
   // Create from JSON
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      id: json['id'],
+      messageId: json['messageId'],
       senderId: json['senderId'],
       receiverId: json['receiverId'],
       text: json['text'],
@@ -36,7 +38,9 @@ class Message {
         (e) => e.toString().split('.').last == json['type'],
         orElse: () => MessageType.FARMER_AGRICULTURE,
       ),
-      attachments: List<String>.from(json['attachments'] ?? []),
+      attachments: (json['attachments'] as List?)
+          ?.map((attachment) => Attachment.fromJson(attachment))
+          .toList() ?? [],
       sentAt: DateTime.parse(json['sentAt']),
       isRead: json['isRead'] ?? false,
     );
@@ -45,28 +49,29 @@ class Message {
   // Convert to JSON
   Map<String, dynamic> toJson() {
     return {
+      'messageId': messageId,
       'senderId': senderId,
       'receiverId': receiverId,
       'text': text,
       'type': type.toString().split('.').last,
-      'attachments': attachments,
+      'attachments': attachments.map((attachment) => attachment.toJson()).toList(),
       'sentAt': sentAt.toIso8601String(),
     };
   }
 
   // Create a copy of the message with updated fields
   Message copyWith({
-    String? id,
+    String? messageId,
     String? senderId,
     String? receiverId,
     String? text,
     MessageType? type,
-    List<String>? attachments,
+    List<Attachment>? attachments,
     DateTime? sentAt,
     bool? isRead,
   }) {
     return Message(
-      id: id ?? this.id,
+      messageId: messageId ?? this.messageId,
       senderId: senderId ?? this.senderId,
       receiverId: receiverId ?? this.receiverId,
       text: text ?? this.text,

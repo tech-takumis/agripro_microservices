@@ -1,16 +1,14 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
 import 'package:mime/mime.dart';
 import 'package:image/image.dart' as img;
 import 'package:http_parser/http_parser.dart';
 import '../models/document_response.dart';
 import 'storage_service.dart';
+import 'package:mobile/injection_container.dart'; // For getIt
 
 /// Service for handling document uploads
-class DocumentService extends getx.GetxService {
-  static DocumentService get to => getx.Get.find();
-
+class DocumentService {
   final Dio _dio = Dio();
   final String baseUrl = 'http://localhost:9001/api/v1';
 
@@ -41,9 +39,9 @@ class DocumentService extends getx.GetxService {
     String? metaData,
   }) async {
     try {
-      // Get auth token from StorageService
-      final token = StorageService.to.getToken();
-      final refreshToken = StorageService.to.getRefreshToken();
+      // Get auth token from StorageService via getIt
+      final token = getIt<StorageService>().getAccessToken();
+      final refreshToken = getIt<StorageService>().getRefreshToken();
 
       // Detect MIME type
       final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';

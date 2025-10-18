@@ -1,44 +1,44 @@
-import 'package:get/get.dart';
 import 'package:mobile/data/models/registration_request.dart';
 import 'package:mobile/data/models/registration_response.dart';
-import 'package:mobile/data/services/api_service.dart';
+import 'package:mobile/data/services/auth_api_service.dart';
+import 'package:mobile/injection_container.dart';
 
-class RegistrationController extends GetxController {
-  final _isLoading = false.obs;
-  final _errorMessage = ''.obs;
-  final _successMessage = ''.obs;
-  final _registrationResult = Rxn<RegistrationResponse>();
+class RegistrationController {
+  bool _isLoading = false;
+  String _errorMessage = '';
+  String _successMessage = '';
+  RegistrationResponse? _registrationResult;
 
-  bool get isLoading => _isLoading.value;
-  String get errorMessage => _errorMessage.value;
-  String get successMessage => _successMessage.value;
-  RegistrationResponse? get registrationResult => _registrationResult.value;
+  bool get isLoading => _isLoading;
+  String get errorMessage => _errorMessage;
+  String get successMessage => _successMessage;
+  RegistrationResponse? get registrationResult => _registrationResult;
 
   Future<void> register(
-      String rsbsaId,
-      String firstName,
-      String lastName,
-      String password,
-      String? middleName,
-      String email,
-      String phoneNumber,
-      String dateOfBirth, // format: dd-MM-yyyy
-      String gender,
-      String civilStatus,
-      String houseNo,
-      String street,
-      String barangay,
-      String municipality,
-      String province,
-      String region,
-      String farmerType,
-      double totalFarmAreaHa,
-      ) async {
+    String rsbsaId,
+    String firstName,
+    String lastName,
+    String password,
+    String? middleName,
+    String email,
+    String phoneNumber,
+    String dateOfBirth, // format: dd-MM-yyyy
+    String gender,
+    String civilStatus,
+    String houseNo,
+    String street,
+    String barangay,
+    String municipality,
+    String province,
+    String region,
+    String farmerType,
+    double totalFarmAreaHa,
+  ) async {
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
-      _successMessage.value = '';
-      _registrationResult.value = null;
+      _isLoading = true;
+      _errorMessage = '';
+      _successMessage = '';
+      _registrationResult = null;
 
       final request = RegistrationRequest(
         rsbsaId: rsbsaId,
@@ -61,26 +61,26 @@ class RegistrationController extends GetxController {
         totalFarmAreaHa: totalFarmAreaHa,
       );
 
-      final response = await ApiService.to.register(request);
+      final response = await getIt<AuthApiService>().register(request);
 
-      _registrationResult.value = response;
+      _registrationResult = response;
 
       if (response.success) {
-        _successMessage.value = response.displayMessage;
+        _successMessage = response.displayMessage;
       } else {
-        _errorMessage.value = response.displayMessage;
+        _errorMessage = response.displayMessage;
       }
     } catch (e) {
-      _errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
+      _errorMessage = 'An unexpected error occurred: ${e.toString()}';
     } finally {
-      _isLoading.value = false;
+      _isLoading = false;
     }
   }
 
   void clearMessages() {
-    _errorMessage.value = '';
-    _successMessage.value = '';
-    _registrationResult.value = null;
+    _errorMessage = '';
+    _successMessage = '';
+    _registrationResult = null;
   }
 
   static bool isValidRsbsaId(String rsbsaNumber) {

@@ -1,23 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../data/models/application_data.dart';
 import '../../data/models/application_submission_request.dart';
 import '../../data/services/document_service.dart';
-import '../../data/services/api_service.dart';
+import '../../data/services/application_api_service.dart';
+import '../../injection_container.dart';
 
 /// Controller for multi-step application submission
 ///
 /// Handles step navigation, field values, file uploads, and submission
-class MultiStepApplicationController extends GetxController {
+class MultiStepApplicationController {
   final ApplicationContent application;
 
   MultiStepApplicationController(this.application);
 
   // Current step tracking
-  final _currentStep = 0.obs;
-  int get currentStep => _currentStep.value;
+  int _currentStep = 0;
+  int get currentStep => _currentStep;
   int get totalSteps => application.sections.length;
 
   // Form keys for each step
@@ -36,21 +36,15 @@ class MultiStepApplicationController extends GetxController {
   final Map<String, Map<String, TextEditingController>> _boundaryControllers = {};
 
   // Loading and error states
-  final _isLoading = false.obs;
-  final _errorMessage = ''.obs;
-  final _uploadProgress = 0.0.obs;
+  bool _isLoading = false;
+  String _errorMessage = '';
+  double _uploadProgress = 0.0;
 
-  bool get isLoading => _isLoading.value;
-  String get errorMessage => _errorMessage.value;
-  double get uploadProgress => _uploadProgress.value;
+  bool get isLoading => _isLoading;
+  String get errorMessage => _errorMessage;
+  double get uploadProgress => _uploadProgress;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // Ensure DocumentService is registered
-    if (!Get.isRegistered<DocumentService>()) {
-      Get.put(DocumentService());
-    }
+  void initialize() {
     _initializeFormKeys();
     _initializeControllers();
   }
@@ -58,7 +52,7 @@ class MultiStepApplicationController extends GetxController {
   void _initializeFormKeys() {
     formKeys = List.generate(
       totalSteps,
-          (index) => GlobalKey<FormState>(),
+      (index) => GlobalKey<FormState>(),
     );
   }
 
@@ -103,13 +97,11 @@ class MultiStepApplicationController extends GetxController {
 
   // Helper methods to identify special field types
   bool _isLocationField(ApplicationField field) {
-    // Check if the field key contains 'location' or if fieldType is 'LOCATION'
     return field.key.toLowerCase().contains('location') ||
         field.fieldType.toUpperCase() == 'LOCATION';
   }
 
   bool _isBoundaryField(ApplicationField field) {
-    // Check if the field key contains 'boundaries' or 'boundary'
     return field.key.toLowerCase().contains('boundaries') ||
         field.key.toLowerCase().contains('boundary') ||
         field.fieldType.toUpperCase() == 'BOUNDARY';
@@ -128,14 +120,12 @@ class MultiStepApplicationController extends GetxController {
 
   void setFileValue(String key, XFile? file) {
     _fileValues[key] = file;
-    update();
   }
 
   // Boolean field getters/setters
   bool? getBooleanValue(String key) => _booleanValues[key];
   void setBooleanValue(String key, bool? value) {
     _booleanValues[key] = value;
-    update();
   }
 
   // Location field getters/setters
@@ -148,7 +138,6 @@ class MultiStepApplicationController extends GetxController {
       _locationValues[fieldKey] = {};
     }
     _locationValues[fieldKey]![locationKey] = value;
-    update();
   }
 
   // Boundary field getters
@@ -165,13 +154,11 @@ class MultiStepApplicationController extends GetxController {
       if (field.fieldType == 'BOOLEAN' && value == null) {
         return 'This field is required';
       }
-      // Add validation for FILE and SIGNATURE fields
       if ((field.fieldType == 'FILE' || field.fieldType == 'SIGNATURE') && value == null) {
         return 'This field is required';
       }
     }
 
-    // Additional validation based on field type
     if (field.validationRegex != null && value is String && value.isNotEmpty) {
       final regex = RegExp(field.validationRegex!);
       if (!regex.hasMatch(value)) {
@@ -179,7 +166,6 @@ class MultiStepApplicationController extends GetxController {
       }
     }
 
-    // NUMBER field validation
     if (field.fieldType == 'NUMBER' && value is String && value.isNotEmpty) {
       if (num.tryParse(value) == null) {
         return 'Field must be a number value (NUMBER)';
@@ -228,49 +214,48 @@ class MultiStepApplicationController extends GetxController {
   // Step navigation
   void nextStep() {
     if (_validateCurrentStep()) {
-      if (_currentStep.value < totalSteps - 1) {
-        _currentStep.value++;
+      if (_currentStep < totalSteps - 1) {
+        _currentStep++;
       }
     }
   }
 
   void previousStep() {
-    if (_currentStep.value > 0) {
-      _currentStep.value--;
+    if (_currentStep > 0) {
+      _currentStep--;
     }
   }
 
   bool _validateCurrentStep() {
-    return formKeys[_currentStep.value].currentState?.validate() ?? false;
+    return formKeys[_currentStep].currentState?.validate() ?? false;
   }
 
   // Submission
-  Future<void> submitApplication() async {
+  Future<void> submitApplication(BuildContext context) async {
     if (!_validateCurrentStep()) {
-      _errorMessage.value = 'Please fill in all required fields';
+      _errorMessage = 'Please fill in all required fields';
       return;
     }
 
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
-      _uploadProgress.value = 0.0;
+      _isLoading = true;
+      _errorMessage = '';
+      _uploadProgress = 0.0;
 
       // Step 1: Upload all files and signatures first
       final List<String> documentIds = [];
-      final Map<String, String> fieldDocumentIds = {}; // <-- Map fieldKey to documentId
+      final Map<String, String> fieldDocumentIds = {};
       final filesToUpload = _fileValues.entries
           .where((entry) => entry.value != null)
           .toList();
 
       if (filesToUpload.isNotEmpty) {
-        Get.snackbar(
-          'Uploading Documents',
-          'Uploading ${filesToUpload.length} document(s)...',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue.withOpacity(0.8),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Uploading ${filesToUpload.length} document(s)...'),
+            backgroundColor: Colors.blue.withOpacity(0.8),
+            duration: const Duration(seconds: 2),
+          ),
         );
 
         for (var i = 0; i < filesToUpload.length; i++) {
@@ -279,15 +264,15 @@ class MultiStepApplicationController extends GetxController {
           final file = entry.value!;
 
           try {
-            final documentResponse = await DocumentService.to.uploadDocument(
+            final documentResponse = await getIt<DocumentService>().uploadDocument(
               referenceId: application.id,
               file: File(file.path),
               documentType: fieldKey,
             );
 
             documentIds.add(documentResponse.documentId);
-            fieldDocumentIds[fieldKey] = documentResponse.documentId; // <-- Save mapping
-            _uploadProgress.value = (i + 1) / filesToUpload.length;
+            fieldDocumentIds[fieldKey] = documentResponse.documentId;
+            _uploadProgress = (i + 1) / filesToUpload.length;
           } catch (e) {
             throw Exception('Failed to upload $fieldKey: $e');
           }
@@ -301,7 +286,6 @@ class MultiStepApplicationController extends GetxController {
         for (var field in section.fields) {
           final key = field.key;
 
-          // Handle location fields
           if (_isLocationField(field)) {
             final location = _locationValues[key];
             if (location != null) {
@@ -312,9 +296,7 @@ class MultiStepApplicationController extends GetxController {
                 'barangay': location['barangay'] ?? '',
               };
             }
-          }
-          // Handle boundary fields
-          else if (_isBoundaryField(field)) {
+          } else if (_isBoundaryField(field)) {
             final controllers = _boundaryControllers[key];
             if (controllers != null) {
               fieldValues[key] = {
@@ -324,13 +306,10 @@ class MultiStepApplicationController extends GetxController {
                 'west': controllers['west']?.text ?? '',
               };
             }
-          }
-          // Standard field types
-          else if (field.fieldType == 'TEXT' || field.fieldType == 'DATE') {
+          } else if (field.fieldType == 'TEXT' || field.fieldType == 'DATE') {
             fieldValues[key] = _textControllers[key]?.text ?? '';
           } else if (field.fieldType == 'NUMBER') {
             final text = _textControllers[key]?.text ?? '';
-            // Only assign number if not empty and valid
             if (text.isEmpty) {
               fieldValues[key] = null;
             } else {
@@ -340,12 +319,10 @@ class MultiStepApplicationController extends GetxController {
           } else if (field.fieldType == 'SELECT') {
             fieldValues[key] = _selectValues[key] ?? '';
           } else if (field.fieldType == 'FILE') {
-            // Use documentId if uploaded, else null
             fieldValues[key] = fieldDocumentIds.containsKey(key)
                 ? fieldDocumentIds[key]
                 : null;
           } else if (field.fieldType == 'SIGNATURE') {
-            // For signature fields, add 'signature:' prefix to the document ID
             fieldValues[key] = fieldDocumentIds.containsKey(key)
                 ? 'signature:${fieldDocumentIds[key]}'
                 : null;
@@ -362,56 +339,48 @@ class MultiStepApplicationController extends GetxController {
         documentIds: documentIds,
       );
 
-      final response = await ApiService.to.submitApplication(request);
+      final response = await getIt<ApplicationApiService>().submitApplication(request);
 
       if (response.success) {
-        Get.snackbar(
-          'Success',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.8),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.green.withOpacity(0.8),
+            duration: const Duration(seconds: 3),
+          ),
         );
-
-        // Navigate back to applications list
-        Get.back();
-        Get.back();
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
       } else {
         throw Exception(response.message);
       }
     } catch (e) {
-      _errorMessage.value = e.toString().replaceFirst('Exception: ', '');
-      Get.snackbar(
-        'Error',
-        _errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_errorMessage),
+          backgroundColor: Colors.red.withOpacity(0.8),
+          duration: const Duration(seconds: 4),
+        ),
       );
     } finally {
-      _isLoading.value = false;
-      _uploadProgress.value = 0.0;
+      _isLoading = false;
+      _uploadProgress = 0.0;
     }
   }
 
   void clearError() {
-    _errorMessage.value = '';
+    _errorMessage = '';
   }
 
-  @override
-  void onClose() {
-    // Dispose text controllers
+  void dispose() {
     for (var controller in _textControllers.values) {
       controller.dispose();
     }
-    // Dispose boundary controllers
     for (var controllers in _boundaryControllers.values) {
       for (var controller in controllers.values) {
         controller.dispose();
       }
     }
-    super.onClose();
   }
 }
