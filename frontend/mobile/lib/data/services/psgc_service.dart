@@ -1,15 +1,12 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
 import 'package:mobile/data/models/psgc_models.dart';
 
 /// Service for Philippine Standard Geographic Code (PSGC) API
 /// Provides access to regions, provinces, cities, and barangays
-class PSGCService extends getx.GetxService {
-  late Dio _dio;
+class PSGCService {
+  final Dio _dio;
   static const String baseUrl = 'https://psgc.gitlab.io/api';
-
-  static PSGCService get to => getx.Get.find();
 
   // Cache for frequently accessed data
   List<PSGCRegion>? _cachedRegions;
@@ -17,24 +14,20 @@ class PSGCService extends getx.GetxService {
   final Map<String, List<PSGCCity>> _cachedCities = {};
   final Map<String, List<PSGCBarangay>> _cachedBarangays = {};
 
-  @override
-  void onInit() {
-    super.onInit();
+  PSGCService(this._dio) {
     _initializeDio();
   }
 
   void _initializeDio() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        responseType: ResponseType.json, // ensure JSON decoding by Dio
-      ),
+    _dio.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      responseType: ResponseType.json, // ensure JSON decoding by Dio
     );
 
     _dio.interceptors.add(

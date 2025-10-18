@@ -1,46 +1,30 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
-import 'package:image_picker/image_picker.dart';
-import 'package:mobile/data/models/auth_response.dart';
+import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:mobile/data/models/login_request.dart';
-import 'package:mobile/data/models/registration_request.dart';
-import 'package:mobile/data/services/websocket.dart';
-import 'package:mobile/data/models/registration_response.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_response.dart' as response_model;
 import 'package:mobile/data/models/application_submission_request.dart';
+import 'package:mobile/data/models/application_submission_response.dart' as response_model;
+
 import 'storage_service.dart';
+import 'package:mobile/injection_container.dart'; // For getIt
 
-class ApiService extends getx.GetxService {
-  late Dio _dio;
+class ApplicationApiService {
+  final Dio _dio;
+  final String baseUrl;
 
-  // Since you're using adb reverse, localhost should work
-  static const String baseUrl = 'http://localhost:9001/api/v1';
-
-  static ApiService get to => getx.Get.find();
-
-  @override
-  void onInit() {
-    super.onInit();
-    _initializeDio();
-  }
-
-  void _initializeDio() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
+  ApplicationApiService(this._dio, {required this.baseUrl}) {
+    _dio.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
     );
 
     // Add interceptors for logging and authentication
@@ -58,8 +42,7 @@ class ApiService extends getx.GetxService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Add JWT token to requests if available
-          final token = StorageService.to.getAccessToken();
+          final token = getIt<StorageService>().getAccessToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
             print(
@@ -97,6 +80,7 @@ class ApiService extends getx.GetxService {
 
   Future<ApplicationResponse> fetchApplications() async {
     try {
+      print('🚀 [DEBUG] ApplicationApiService baseUrl: $baseUrl');
       print('🚀 Fetching applications from: $baseUrl/application/types');
       final response = await _dio.get('/application/types');
       print('✅ Applications fetched successfully: ${response.statusCode}');
@@ -180,7 +164,7 @@ class ApiService extends getx.GetxService {
     final request = http.MultipartRequest('POST', uri);
 
     // ✅ Add headers
-    final token = StorageService.to.getAccessToken();
+    final token = getIt<StorageService>().getAccessToken();
     if (token != null && token.isNotEmpty) {
       request.headers['Authorization'] = 'Bearer $token';
     }

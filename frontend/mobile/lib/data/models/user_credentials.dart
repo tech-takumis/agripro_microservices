@@ -180,10 +180,7 @@ class UserProfile {
   }
 }
 
-class UserCredentials {
-  final String id;
-  final String accessToken;
-  final String refreshToken;
+class User {
   final String username;
   final String firstName;
   final String lastName;
@@ -192,10 +189,7 @@ class UserCredentials {
   final List<Role> roles;
   final UserProfile profile;
 
-  UserCredentials({
-    required this.id,
-    required this.accessToken,
-    required this.refreshToken,
+  User({
     required this.username,
     required this.firstName,
     required this.lastName,
@@ -205,11 +199,8 @@ class UserCredentials {
     required this.profile,
   });
 
-  factory UserCredentials.fromJson(Map<String, dynamic> json) {
-    return UserCredentials(
-      id: json['id'],
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
       username: json['username'],
       firstName: json['firstName'],
       lastName: json['lastName'],
@@ -224,9 +215,6 @@ class UserCredentials {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'accessToken': accessToken,
-      'refreshToken': refreshToken,
       'username': username,
       'firstName': firstName,
       'lastName': lastName,
@@ -234,6 +222,42 @@ class UserCredentials {
       'phoneNumber': phoneNumber,
       'roles': roles.map((r) => r.toJson()).toList(),
       'profile': profile.toJson(),
+    };
+  }
+}
+
+class UserCredentials {
+  final String id;
+  final String accessToken;
+  final String refreshToken;
+  final String websocketToken;
+  final User user;
+
+  UserCredentials({
+    required this.id,
+    required this.accessToken,
+    required this.refreshToken,
+    required this.websocketToken,
+    required this.user,
+  });
+
+  factory UserCredentials.fromJson(Map<String, dynamic> json) {
+    return UserCredentials(
+      id: json['id'],
+      accessToken: json['accessToken'],
+      refreshToken: json['refreshToken'],
+      websocketToken: json['websocketToken'],
+      user: User.fromJson(json['user']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'accessToken': accessToken,
+      'refreshToken': refreshToken,
+      'websocketToken': websocketToken,
+      'user': user.toJson(),
     };
   }
 }

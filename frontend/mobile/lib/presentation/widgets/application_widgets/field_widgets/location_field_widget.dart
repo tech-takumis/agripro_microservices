@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/psgc_models.dart';
 import 'package:mobile/data/services/psgc_service.dart';
 
+import '../../../../injection_container.dart';
+
 /// Widget for location selection using PSGC
-class LocationFieldWidget extends StatefulWidget {
+class LocationFieldWidget extends ConsumerStatefulWidget {
   final ApplicationField field;
   final Map<String, String?> locationValues;
   final void Function(String key, String? value) onChanged;
@@ -19,10 +22,10 @@ class LocationFieldWidget extends StatefulWidget {
   });
 
   @override
-  State<LocationFieldWidget> createState() => _LocationFieldWidgetState();
+  ConsumerState<LocationFieldWidget> createState() => _LocationFieldWidgetState();
 }
 
-class _LocationFieldWidgetState extends State<LocationFieldWidget> {
+class _LocationFieldWidgetState extends ConsumerState<LocationFieldWidget> {
   List<PSGCRegion> _regions = [];
   List<PSGCProvince> _provinces = [];
   List<PSGCCity> _cities = [];
@@ -58,7 +61,7 @@ class _LocationFieldWidgetState extends State<LocationFieldWidget> {
     try {
       print('🔵 LocationFieldWidget: Loading regions...');
       setState(() => _isLoadingRegions = true);
-      final regions = await PSGCService.to.getRegions();
+      final regions = await getIt<PSGCService>().getRegions();
       print('🔵 LocationFieldWidget: Loaded ${regions.length} regions');
       if (mounted) {
         setState(() {
@@ -94,7 +97,7 @@ class _LocationFieldWidgetState extends State<LocationFieldWidget> {
         _selectedBarangayCode = null;
       });
 
-      final provinces = await PSGCService.to.getProvincesByRegion(regionCode);
+      final provinces = await getIt<PSGCService>().getProvincesByRegion(regionCode);
       print('🔵 LocationFieldWidget: Loaded ${provinces.length} provinces');
       if (mounted) {
         setState(() {
@@ -127,7 +130,7 @@ class _LocationFieldWidgetState extends State<LocationFieldWidget> {
         _selectedBarangayCode = null;
       });
 
-      final cities = await PSGCService.to.getCitiesByProvince(provinceCode);
+      final cities = await getIt<PSGCService>().getCitiesByProvince(provinceCode);
       print('🔵 LocationFieldWidget: Loaded ${cities.length} cities');
       if (mounted) {
         setState(() {
@@ -158,7 +161,7 @@ class _LocationFieldWidgetState extends State<LocationFieldWidget> {
         _selectedBarangayCode = null;
       });
 
-      final barangays = await PSGCService.to.getBarangaysByCity(cityCode);
+      final barangays = await getIt<PSGCService>().getBarangaysByCity(cityCode);
       print('🔵 LocationFieldWidget: Loaded ${barangays.length} barangays');
       if (mounted) {
         setState(() {

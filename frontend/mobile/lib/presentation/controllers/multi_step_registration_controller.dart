@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/models/registration_request.dart';
 import 'package:mobile/data/models/registration_response.dart';
-import 'package:mobile/data/services/api_service.dart';
-import 'package:mobile/data/services/psgc_service.dart';
+import 'package:mobile/data/services/auth_api_service.dart';
+import 'package:mobile/injection_container.dart';
 
 /// Controller for multi-step registration process
-class MultiStepRegistrationController extends GetxController {
+class MultiStepRegistrationController extends ChangeNotifier {
   // Current step tracking
-  final _currentStep = 1.obs;
-  final _totalSteps = 3;
+  int _currentStep = 1;
+  final int _totalSteps = 3;
 
   // Loading and message states
-  final _isLoading = false.obs;
-  final _errorMessage = ''.obs;
-  final _successMessage = ''.obs;
-  final _registrationResult = Rxn<RegistrationResponse>();
+  bool _isLoading = false;
+  String _errorMessage = '';
+  String _successMessage = '';
+  RegistrationResponse? _registrationResult;
 
   // Form keys for each step
   final step1FormKey = GlobalKey<FormState>();
@@ -48,15 +48,15 @@ class MultiStepRegistrationController extends GetxController {
   String selectedFarmType = '';
 
   // Getters
-  int get currentStep => _currentStep.value;
+  int get currentStep => _currentStep;
   int get totalSteps => _totalSteps;
-  bool get isLoading => _isLoading.value;
-  String get errorMessage => _errorMessage.value;
-  String get successMessage => _successMessage.value;
-  RegistrationResponse? get registrationResult => _registrationResult.value;
+  bool get isLoading => _isLoading;
+  String get errorMessage => _errorMessage;
+  String get successMessage => _successMessage;
+  RegistrationResponse? get registrationResult => _registrationResult;
 
   bool get canGoNext {
-    switch (_currentStep.value) {
+    switch (_currentStep) {
       case 1:
         return step1FormKey.currentState?.validate() ?? false;
       case 2:
@@ -68,66 +68,43 @@ class MultiStepRegistrationController extends GetxController {
     }
   }
 
-  bool get canGoPrevious => _currentStep.value > 1;
-  bool get isLastStep => _currentStep.value == _totalSteps;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // Initialize PSGC service if not already initialized
-    if (!Get.isRegistered<PSGCService>()) {
-      Get.put(PSGCService());
-    }
-  }
-
-  @override
-  void onClose() {
-    // Dispose controllers
-    rsbsaNumber.dispose();
-    firstNameController.dispose();
-    lastNameController.dispose();
-    middleNameController.dispose();
-    emailController.dispose();
-    phoneNumberController.dispose();
-    zipCodeController.dispose();
-    farmLocationController.dispose();
-    farmSizeController.dispose();
-    primaryCropController.dispose();
-    super.onClose();
-  }
+  bool get canGoPrevious => _currentStep > 1;
+  bool get isLastStep => _currentStep == _totalSteps;
 
   /// Move to next step
-  void nextStep() {
+  void nextStep(BuildContext context) {
     if (!canGoNext) {
-      Get.snackbar(
-        'Validation Error',
-        'Please fill in all required fields correctly',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fill in all required fields correctly'),
+          backgroundColor: Colors.red[100],
+        ),
       );
       return;
     }
 
-    if (_currentStep.value < _totalSteps) {
-      _currentStep.value++;
+    if (_currentStep < _totalSteps) {
+      _currentStep++;
       clearMessages();
+      notifyListeners();
     }
   }
 
   /// Move to previous step
   void previousStep() {
-    if (_currentStep.value > 1) {
-      _currentStep.value--;
+    if (_currentStep > 1) {
+      _currentStep--;
       clearMessages();
+      notifyListeners();
     }
   }
 
   /// Go to specific step
   void goToStep(int step) {
     if (step >= 1 && step <= _totalSteps) {
-      _currentStep.value = step;
+      _currentStep = step;
       clearMessages();
+      notifyListeners();
     }
   }
 
@@ -140,6 +117,7 @@ class MultiStepRegistrationController extends GetxController {
     selectedRegion = region;
     selectedProvince = province;
     selectedCity = city;
+    notifyListeners();
   }
 
   /// Update farm data from step 3 widget
@@ -149,26 +127,27 @@ class MultiStepRegistrationController extends GetxController {
   }) {
     selectedTenureStatus = tenureStatus;
     selectedFarmType = farmType;
+    notifyListeners();
   }
 
   /// Submit registration
-  Future<void> submitRegistration() async {
+  Future<void> submitRegistration(BuildContext context) async {
     if (!step3FormKey.currentState!.validate()) {
-      Get.snackbar(
-        'Validation Error',
-        'Please fill in all required fields correctly',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fill in all required fields correctly'),
+          backgroundColor: Colors.red[100],
+        ),
       );
       return;
     }
 
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
-      _successMessage.value = '';
-      _registrationResult.value = null;
+      _isLoading = true;
+      _errorMessage = '';
+      _successMessage = '';
+      _registrationResult = null;
+      notifyListeners();
 
       // Collect all required fields
       final request = RegistrationRequest(
@@ -194,31 +173,35 @@ class MultiStepRegistrationController extends GetxController {
         totalFarmAreaHa: double.tryParse(farmSizeController.text.trim()) ?? 0.0,
       );
 
-      final response = await ApiService.to.register(request);
-      _registrationResult.value = response;
+      final response = await getIt<AuthApiService>().register(request);
+      _registrationResult = response;
 
       if (response.success) {
-        _successMessage.value = response.displayMessage;
+        _successMessage = response.displayMessage;
       } else {
-        _errorMessage.value = response.displayMessage;
+        _errorMessage = response.displayMessage;
       }
+      notifyListeners();
     } catch (e) {
-      _errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
+      _errorMessage = 'An unexpected error occurred: ${e.toString()}';
+      notifyListeners();
     } finally {
-      _isLoading.value = false;
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   /// Clear messages
   void clearMessages() {
-    _errorMessage.value = '';
-    _successMessage.value = '';
-    _registrationResult.value = null;
+    _errorMessage = '';
+    _successMessage = '';
+    _registrationResult = null;
+    notifyListeners();
   }
 
   /// Reset form to start over
   void resetForm() {
-    _currentStep.value = 1;
+    _currentStep = 1;
     clearMessages();
 
     // Clear all controllers
@@ -239,6 +222,7 @@ class MultiStepRegistrationController extends GetxController {
     selectedCity = '';
     selectedTenureStatus = '';
     selectedFarmType = '';
+    notifyListeners();
   }
 
   /// Validation helpers
@@ -264,3 +248,7 @@ class MultiStepRegistrationController extends GetxController {
     'Farm Details',
   ];
 }
+
+final multiStepRegistrationProvider = ChangeNotifierProvider<MultiStepRegistrationController>((ref) {
+  return MultiStepRegistrationController();
+});

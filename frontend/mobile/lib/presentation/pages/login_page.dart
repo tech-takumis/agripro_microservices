@@ -1,72 +1,119 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mobile/data/services/storage_service.dart';
+import '../../data/services/location_service.dart';
+import '../../injection_container.dart';
 import '../controllers/auth_controller.dart';
-import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/custom_button.dart';
+import '../widgets/common/custom_text_field.dart';
 import '../widgets/credentials_modal.dart';
-import '../../data/services/storage_service.dart';
 
-class LoginPage extends StatefulWidget {
+// Use the correct provider from your AuthController file
+final authControllerProvider = authProvider;
+
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _rememberMe = false.obs;
-  final _obscurePassword = true.obs;
-
-  final AuthController _authController = Get.find<AuthController>();
+  final _rememberMe = ValueNotifier<bool>(false);
+  final _obscurePassword = ValueNotifier<bool>(true);
 
   @override
   void initState() {
     super.initState();
-    _loadRememberMeStatus();
-  }
-
-  void _loadRememberMeStatus() {
-    _rememberMe.value = StorageService.to.getRememberMe();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = ref.read(authControllerProvider);
+      if (authState.errorMessage == 'Location services required') {
+        _showLocationPromptDialog();
+      }
+    });
   }
 
   void _showCredentialsModal() {
-    final credentials = StorageService.to.getSavedCredentials();
+    final credentials = getIt<StorageService>().getUserCredentialsList();
     if (credentials.isEmpty) {
-      Get.snackbar(
-        'No Saved Accounts',
-        'Enable "Remember me" when logging in to save your credentials',
-        snackPosition: SnackPosition.BOTTOM,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No Saved Accounts. Enable "Remember me" when logging in.'),
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }
 
-    Get.bottomSheet(
-      CredentialsModal(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => CredentialsModal(
         onCredentialSelected: (username, password) {
           _usernameController.text = username;
           _passwordController.text = password;
           _rememberMe.value = true;
         },
       ),
-      isScrollControlled: true,
     );
   }
 
   void _login() {
     if (!_formKey.currentState!.validate()) return;
 
-    _authController.login(
+    // FIX: Use the notifier to call login, not the state
+    ref.read(authControllerProvider.notifier).login(
       _usernameController.text.trim(),
       _passwordController.text,
       _rememberMe.value,
     );
   }
 
+  void _showLocationPromptDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Location Services Required'),
+        content: const Text(
+          'To automatically capture GPS coordinates for your application forms, please enable location services and grant permissions for this app in your device settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(authControllerProvider.notifier).clearError();
+            },
+            child: const Text('Later'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final locationService = getIt<LocationService>();
+              bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+              if (!serviceEnabled) {
+                await locationService.openLocationSettings();
+              } else {
+                await locationService.openAppSettings();
+              }
+              ref.read(authControllerProvider.notifier).clearError();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
@@ -78,15 +125,12 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 60),
-
-                // Logo or App Title
                 Icon(
                   Icons.lock_outline,
                   size: 80,
                   color: Theme.of(context).primaryColor,
                 ),
                 const SizedBox(height: 24),
-
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -96,17 +140,12 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-
                 Text(
                   'Sign in to your account',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-
-                // Username Field with saved accounts button
                 CustomTextField(
                   controller: _usernameController,
                   label: 'Username',
@@ -124,14 +163,13 @@ class _LoginPageState extends State<LoginPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-
-                // Password Field with saved accounts button
-                Obx(
-                  () => CustomTextField(
+                ValueListenableBuilder<bool>(
+                  valueListenable: _obscurePassword,
+                  builder: (context, obscurePassword, child) => CustomTextField(
                     controller: _passwordController,
                     label: 'Password',
                     prefixIcon: Icons.lock_outline,
-                    obscureText: _obscurePassword.value,
+                    obscureText: obscurePassword,
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -142,11 +180,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         IconButton(
                           icon: Icon(
-                            _obscurePassword.value
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                            obscurePassword ? Icons.visibility : Icons.visibility_off,
                           ),
-                          onPressed: () => _obscurePassword.toggle(),
+                          onPressed: () => _obscurePassword.value = !obscurePassword,
                         ),
                       ],
                     ),
@@ -159,24 +195,22 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Remember Me Checkbox
-                Obx(
-                  () => Row(
+                ValueListenableBuilder<bool>(
+                  valueListenable: _rememberMe,
+                  builder: (context, rememberMe, child) => Row(
                     children: [
                       Checkbox(
-                        value: _rememberMe.value,
-                        onChanged:
-                            (value) => _rememberMe.value = value ?? false,
+                        value: rememberMe,
+                        onChanged: (value) => _rememberMe.value = value ?? false,
                       ),
                       const Text('Remember me'),
                       const Spacer(),
-                      if (StorageService.to.getSavedCredentials().isNotEmpty)
+                      if (getIt<StorageService>().getUserCredentialsList().isNotEmpty)
                         TextButton.icon(
                           onPressed: _showCredentialsModal,
                           icon: const Icon(Icons.account_circle, size: 16),
                           label: Text(
-                            '${StorageService.to.getSavedCredentials().length} saved',
+                            '${getIt<StorageService>().getUserCredentialsList().length} saved',
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
@@ -184,14 +218,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Error Message
-                Obx(() {
-                  if (_authController.errorMessage.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Container(
+                if (authState.errorMessage.isNotEmpty &&
+                    authState.errorMessage != 'Location services required')
+                  Container(
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
@@ -209,12 +238,12 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _authController.errorMessage,
+                            authState.errorMessage,
                             style: TextStyle(color: Colors.red[700]),
                           ),
                         ),
                         IconButton(
-                          onPressed: _authController.clearError,
+                          onPressed: () => ref.read(authControllerProvider.notifier).clearError(),
                           icon: Icon(
                             Icons.close,
                             color: Colors.red[700],
@@ -223,26 +252,19 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-                  );
-                }),
-
-                // Login Button
-                Obx(
-                  () => CustomButton(
-                    onPressed: _authController.isLoading ? null : _login,
-                    isLoading: _authController.isLoading,
-                    child: const Text(
-                      'Sign In',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                CustomButton(
+                  onPressed: authState.isLoading ? null : _login,
+                  isLoading: authState.isLoading,
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Register Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -251,7 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     GestureDetector(
-                      onTap: () => Get.toNamed('/register'),
+                      onTap: () => getIt<GoRouter>().go('/register'),
                       child: Text(
                         'Register here',
                         style: TextStyle(
@@ -274,6 +296,8 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _rememberMe.dispose();
+    _obscurePassword.dispose();
     super.dispose();
   }
 }

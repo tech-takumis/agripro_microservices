@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/saved_credential.dart';
 import '../../data/services/storage_service.dart';
+import '../../injection_container.dart';
 
-class CredentialsModal extends StatelessWidget {
+class CredentialsModal extends ConsumerWidget {
   final Function(String username, String password) onCredentialSelected;
 
   const CredentialsModal({super.key, required this.onCredentialSelected});
 
   @override
-  Widget build(BuildContext context) {
-    final credentials = StorageService.to.getSavedCredentials();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final credentials = getIt<StorageService>().getUserCredentialsList();
 
     return Container(
       decoration: const BoxDecoration(
@@ -44,7 +45,7 @@ class CredentialsModal extends StatelessWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
                 ),
               ],
@@ -106,7 +107,7 @@ class CredentialsModal extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          onPressed: () => _showDeleteConfirmation(credential),
+                          onPressed: () => _showDeleteConfirmation(context, credential),
                           icon: Icon(
                             Icons.delete_outline,
                             color: Colors.red[400],
@@ -120,7 +121,7 @@ class CredentialsModal extends StatelessWidget {
                         credential.username,
                         credential.password,
                       );
-                      Get.back();
+                      Navigator.of(context).pop();
                     },
                   );
                 },
@@ -132,7 +133,7 @@ class CredentialsModal extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20),
               child: TextButton.icon(
-                onPressed: _showClearAllConfirmation,
+                onPressed: () => _showClearAllConfirmation(context),
                 icon: const Icon(Icons.clear_all, color: Colors.red),
                 label: const Text(
                   'Clear All Saved Accounts',
@@ -163,24 +164,25 @@ class CredentialsModal extends StatelessWidget {
     }
   }
 
-  void _showDeleteConfirmation(SavedCredential credential) {
-    Get.dialog(
-      AlertDialog(
+  void _showDeleteConfirmation(BuildContext context, SavedCredential credential) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
         title: const Text('Delete Account'),
         content: Text(
           'Are you sure you want to remove "${credential.username}" from saved accounts?',
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
-              await StorageService.to.removeCredential(credential.username);
-              Get.back();
-              Get.back(); // Close modal
-              Get.snackbar(
-                'Account Removed',
-                '${credential.username} has been removed from saved accounts',
-                snackPosition: SnackPosition.BOTTOM,
+              await getIt<StorageService>().removeCredential(credential.username);
+              Navigator.of(ctx).pop(); // Close dialog
+              Navigator.of(context).pop(); // Close modal
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${credential.username} has been removed from saved accounts'),
+                ),
               );
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -190,24 +192,25 @@ class CredentialsModal extends StatelessWidget {
     );
   }
 
-  void _showClearAllConfirmation() {
-    Get.dialog(
-      AlertDialog(
+  void _showClearAllConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
         title: const Text('Clear All Accounts'),
         content: const Text(
           'Are you sure you want to remove all saved accounts? This action cannot be undone.',
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
-              await StorageService.to.clearAllCredentials();
-              Get.back();
-              Get.back(); // Close modal
-              Get.snackbar(
-                'All Accounts Cleared',
-                'All saved accounts have been removed',
-                snackPosition: SnackPosition.BOTTOM,
+              await getIt<StorageService>().clearAllCredentials();
+              Navigator.of(ctx).pop(); // Close dialog
+              Navigator.of(context).pop(); // Close modal
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All saved accounts have been removed'),
+                ),
               );
             },
             child: const Text('Clear All', style: TextStyle(color: Colors.red)),

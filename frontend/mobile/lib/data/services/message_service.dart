@@ -1,151 +1,102 @@
-import 'dart:convert';
+import 'dart:async';
+import 'package:get/get.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/services/websocket.dart';
-import 'package:mobile/data/services/storage_service.dart';
 import 'package:mobile/data/services/message_api.dart';
+import '../../injection_container.dart';
 
-class MessageService {
-  static final MessageService _instance = MessageService._internal();
-  factory MessageService() => _instance;
-  MessageService._internal();
+class MessageService extends GetxService {
+  static MessageService get to => getIt<MessageService>();
 
-  final WebSocketService _webSocketService = WebSocketService();
+  final _messages = <Message>[].obs;
+  final _controller = StreamController<List<Message>>.broadcast();
+  final WebSocketService _ws = getIt<WebSocketService>();
   final MessageApi _messageApi = MessageApi();
-  final List<Message> _messages = [];
-  Function(Message)? onMessageReceived;
+
+  String? _userId;
+  String? _receiverId;
   DesignatedResponse? _designatedStaff;
+  bool _initialized = false;
 
-  // Initialize WebSocket connection and load messages
-  Future<void> initializeMessageService() async {
-    try {
-      // First, get the designated staff
-      _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
-      print('Found designated staff: ${_designatedStaff?.userId}');
+  String? get userId => _userId;
+  String? get receiverId => _receiverId;
 
-      const wsUrl = 'http://localhost:9040/ws';
+  List<Message> get messages => _messages;
+  Stream<List<Message>> get messagesStream => _controller.stream;
 
-      // Connect to WebSocket with authentication from storage
-      _webSocketService.connect(
-        url: wsUrl,
-        onConnect: (frame) {
-          print('MessageService: WebSocket connected');
-          _subscribeToMessageTopics();
-        },
-        onError: (error) {
-          print('MessageService: WebSocket error - $error');
-        },
-      );
+  Future<MessageService> init({
+    required String token,
+    required String userId,
+  }) async {
+    if (_initialized && _userId == userId) return this;
+    _initialized = true;
+    _userId = userId;
 
-      // Load existing messages if we have a designated staff
-      if (_designatedStaff != null) {
-        final messages = await loadExistingMessages();
-        _messages.addAll(messages);
-      }
-    } catch (e) {
-      print('MessageService: Initialization error - $e');
-      rethrow;
+    print('MessageService: Initializing with userId=$_userId');
+    _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
+    _receiverId = _designatedStaff?.userId;
+
+    if (_receiverId != null && _userId!.isNotEmpty) {
+      await loadMessages();
+      _ws.addListener(_handleIncomingMessage);
     }
+
+    return this;
   }
 
-  // Load existing messages from the server
-  Future<List<Message>> loadExistingMessages() async {
+  Future<void> loadMessages() async {
+    if (_userId == null || _receiverId == null) return;
     try {
-      final farmerId = StorageService.to.getUserId();
-      if (farmerId == null) throw Exception('User ID not found');
-
-      return await _messageApi.getMessagesWithAgricultureStaff(farmerId);
+      final messages = await _messageApi.getMessagesWithAgricultureStaff(_userId!);
+      _messages.assignAll(messages);
+      _controller.add([..._messages]); // ✅ push to stream
+      print('MessageService: Loaded ${messages.length} messages');
     } catch (e) {
       print('MessageService: Error loading messages - $e');
-      rethrow;
     }
   }
 
-  // Subscribe to relevant message topics
-  void _subscribeToMessageTopics() {
-    final userId = StorageService.to.getUserId();
-    if (userId == null) {
-      print('MessageService: Cannot subscribe - user ID not found');
-      return;
-    }
-
-    // Subscribe to private messages for this user
-    // This matches Spring Boot's /user/{userId}/topic/private pattern
-    _webSocketService.subscribeToPrivateMessages(
-      userId: userId,
-      onMessage: _handleIncomingMessage,
-    );
-
-    // Subscribe to queue messages (if needed)
-    _webSocketService.subscribe(
-      destination: '/user/queue/messages',
-      onMessage: _handleIncomingMessage,
-    );
-
-    // Subscribe to broadcasts (if needed)
-    _webSocketService.subscribe(
-      destination: '/topic/broadcasts',
-      onMessage: _handleIncomingMessage,
-    );
-
-    print('MessageService: Subscribed to all message topics');
-  }
-
-  // Handle incoming WebSocket messages
-  void _handleIncomingMessage(dynamic frame) {
+  void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
-      final messageData = json.decode(frame.body);
-      final message = Message.fromJson(messageData);
-      _messages.add(message);
-      onMessageReceived?.call(message);
-      print('MessageService: Received message - ${message.text}');
+      final message = Message.fromJson(data);
+      print('💬 [MessageService] Incoming message: ${message.text}');
+      if (!_messages.any((m) => m.messageId == message.messageId)) {
+        _messages.add(message);
+        _controller.add([..._messages]); // ✅ notify listeners
+      }
     } catch (e) {
-      print('MessageService: Error handling message - $e');
+      print('❌ [MessageService] Error parsing incoming message: $e');
     }
   }
 
   Future<void> sendMessage(Message message) async {
     try {
-      if (_designatedStaff == null) {
-        throw Exception('No designated staff to send message to');
-      }
+      if (_receiverId == null) throw Exception('No designated staff to send message to');
 
-      // Use the sendPrivateMessage method that sends to /app/private.chat
-      _webSocketService.sendPrivateMessage(
-        receiverId: message.receiverId,
-        text: message.text,
-        messageId: message.id,
-        additionalData: {
-          'type': message.type.toString().split('.').last,
-          if (message.attachments.isNotEmpty)
-            'attachments': message.attachments,
-        },
-      );
+      final messageRequest = {
+        'senderId': message.senderId,
+        'receiverId': _receiverId,
+        'text': message.text,
+        'type': message.type.toString().split('.').last,
+        'attachments': [],
+        'sentAt': message.sentAt.toUtc().toIso8601String(),
+      };
 
-      print('MessageService: Message sent successfully');
+      print('📤 [MessageService] Sending message: ${message.text}');
+      _ws.sendMessage('/app/private.chat', messageRequest);
+
+      _messages.add(message);
+      _controller.add([..._messages]); // ✅ push local update
     } catch (e) {
-      print('MessageService: Error sending message - $e');
-      rethrow;
+      print('❌ [MessageService] Error sending message: $e');
     }
   }
 
-  // Get the designated staff information
-  DesignatedResponse? get designatedStaff => _designatedStaff;
-
-  // Get message history
-  List<Message> getMessageHistory() {
-    return List.from(_messages)..sort((a, b) => a.sentAt.compareTo(b.sentAt));
-  }
-
-  // Disconnect WebSocket
-  void disconnect() {
-    _webSocketService.disconnect();
-    _messages.clear();
-    _designatedStaff = null;
-  }
-
-  // Get unread messages count
-  int getUnreadMessagesCount() {
-    return _messages.where((msg) => !msg.isRead).length;
+  @override
+  void onClose() {
+    _ws.removeListener(_handleIncomingMessage);
+    _controller.close();
+    super.onClose();
   }
 }

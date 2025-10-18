@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mobile/injection_container.dart';
 import 'package:mobile/presentation/controllers/application_controller.dart';
 import 'package:mobile/presentation/widgets/application_widgets/application_card.dart';
 import 'application_detail_page.dart';
@@ -11,7 +12,7 @@ class ApplicationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ApplicationController>();
+    final controller = getIt<ApplicationController>();
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(72, 248, 248, 248),
@@ -22,10 +23,10 @@ class ApplicationPage extends StatelessWidget {
         actions: [
           Obx(
             () => IconButton(
-              onPressed: controller.isLoading || controller.isRetrying
+              onPressed: controller.isLoading.value || controller.isRetrying.value
                   ? null
                   : controller.fetchApplications,
-              icon: controller.isLoading || controller.isRetrying
+              icon: controller.isLoading.value || controller.isRetrying.value
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -42,14 +43,14 @@ class ApplicationPage extends StatelessWidget {
       ),
       body: Obx(() {
         // 🌀 Loading State
-        if (controller.isLoading) {
+        if (controller.isLoading.value) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
 
         // ❌ Error State
-        if (controller.errorMessage.isNotEmpty) {
+        if (controller.errorMessage.value.isNotEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -70,7 +71,7 @@ class ApplicationPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    controller.errorMessage,
+                    controller.errorMessage.value,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600]),
                   ),

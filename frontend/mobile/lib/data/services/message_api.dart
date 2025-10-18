@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/services/storage_service.dart';
+import 'package:mobile/injection_container.dart'; // <-- Add this import
 
 class MessageApi {
   static final MessageApi _instance = MessageApi._internal();
@@ -17,7 +18,7 @@ class MessageApi {
     // Add auth interceptor
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        final token = StorageService.to.getToken();
+        final token = getIt<StorageService>().getAccessToken(); // <-- Use getIt here
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -44,13 +45,19 @@ class MessageApi {
     try {
       final response = await _dio.get('/chat/$farmerId/messages');
 
-      print('Messages retrieved: ${response.data.length}');
+      if (response.data is! List) {
+        throw Exception('Invalid response format: expected a list of messages');
+      }
+
       return (response.data as List)
           .map((json) => Message.fromJson(json))
           .toList();
     } on DioException catch (e) {
       print('Error getting messages: ${e.message}');
       throw _handleDioError(e);
+    } catch (e) {
+      print('Error parsing messages: $e');
+      throw Exception('Failed to parse message data: $e');
     }
   }
 
