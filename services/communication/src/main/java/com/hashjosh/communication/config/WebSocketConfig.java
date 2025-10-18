@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -19,6 +21,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
+import java.net.URI;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -54,19 +57,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 "http://localhost:9040"
         };
 
-        // SockJS fallback for browsers (Vue.js)
-        registry.addEndpoint("/ws")
-//                .setAllowedOrigins(allowedOrigins)
-                .addInterceptors(new WebSocketHandshakeInterceptor(jwtService))
-                .setHandshakeHandler(new WebSocketHandshakeHandler())
-                .withSockJS()
-                .setWebSocketEnabled(true)
-                .setDisconnectDelay(30_000)
-                .setHeartbeatTime(25_000);
-
         // Raw WebSocket endpoint for Flutter / native clients
-        registry.addEndpoint("/ws/websocket")
-//                .setAllowedOrigins(allowedOrigins)
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins(allowedOrigins)
                 .addInterceptors(new WebSocketHandshakeInterceptor(jwtService))
                 .setHandshakeHandler(new WebSocketHandshakeHandler());
     }
@@ -178,47 +171,57 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         }
 
         @Override
-        public boolean beforeHandshake(
-                org.springframework.http.server.ServerHttpRequest request,
-                org.springframework.http.server.ServerHttpResponse response,
-                WebSocketHandler wsHandler,
-                Map<String, Object> attributes
-        ) {
+        public boolean beforeHandshake(ServerHttpRequest request,
+                                       ServerHttpResponse response,
+                                       WebSocketHandler wsHandler,
+                                       Map<String, Object> attributes) {
             log.info("⚡ WebSocket handshake: {}", request.getURI());
-
             try {
-                List<String> authHeaders = request.getHeaders().get(AUTHORIZATION_HEADER);
+                String token = null;
+
+                // ✅ 1. Try header (Flutter, Node, etc.)
+                List<String> authHeaders = request.getHeaders().get("Authorization");
                 if (authHeaders == null || authHeaders.isEmpty())
                     authHeaders = request.getHeaders().get("authorization");
 
-                if (authHeaders != null && !authHeaders.isEmpty()) {
-                    String authHeader = authHeaders.get(0);
-                    if (authHeader.startsWith("Bearer ")) {
-                        String token = authHeader.substring(7);
-                        if (jwtService.validateToken(token)) {
-                            var claims = jwtService.getAllClaims(token);
-                            String userId = claims.get("userId", String.class);
-                            String username = jwtService.getUsernameFromToken(token);
+                if (authHeaders != null && !authHeaders.isEmpty() && authHeaders.get(0).startsWith("Bearer ")) {
+                    token = authHeaders.get(0).substring(7);
+                    log.debug("Found token in Authorization header");
+                }
 
-                            attributes.put("authenticated", true);
-                            attributes.put("userId", userId);
-                            attributes.put("username", username);
-                            attributes.put("token", token);
-
-                            log.info("✅ Handshake authenticated user: {} ({})", username, userId);
-                        } else {
-                            attributes.put("authenticated", false);
-                            log.warn("⚠️ Invalid JWT in handshake");
-                        }
+                // ✅ 2. Try query parameter (Browser)
+                if (token == null) {
+                    URI uri = request.getURI();
+                    String query = uri.getQuery();
+                    if (query != null && query.contains("token=")) {
+                        token = query.substring(query.indexOf("token=") + 6);
+                        log.debug("Found token in ?token= query param");
                     }
                 }
+
+                if (token != null && jwtService.validateToken(token)) {
+                    var claims = jwtService.getAllClaims(token);
+                    String userId = claims.get("userId", String.class);
+                    String username = jwtService.getUsernameFromToken(token);
+
+                    attributes.put("authenticated", true);
+                    attributes.put("userId", userId);
+                    attributes.put("username", username);
+                    attributes.put("token", token);
+                    log.info("✅ Handshake authenticated user: {} ({})", username, userId);
+                } else {
+                    attributes.put("authenticated", false);
+                    log.warn("⚠️ Invalid or missing JWT during handshake");
+                }
+
             } catch (Exception e) {
-                log.error("🚫 Error processing handshake: {}", e.getMessage());
+                log.error("🚫 Error during handshake: {}", e.getMessage());
                 attributes.put("authenticated", false);
             }
 
             return true;
         }
+
 
         @Override
         public void afterHandshake(

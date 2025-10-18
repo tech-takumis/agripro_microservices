@@ -94,9 +94,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Missing or invalid access token");
         }
 
-        // 🔑 Extract access token & tenantId
-        String accessToken = authorization.substring(7);
-
         // ❌ Delete refresh token from DB (always do this)
         if (refreshToken != null && !refreshToken.isEmpty()) {
             refreshTokenService.deleteByToken(refreshToken);

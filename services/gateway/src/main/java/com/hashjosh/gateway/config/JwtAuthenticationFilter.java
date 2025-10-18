@@ -28,7 +28,9 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/ws", "/ws/", "/ws/info", "/ws/info/",
-            "/api/v1/farmer/auth", "/api/v1/agriculture/auth", "/api/v1/pcic/auth"
+            "/api/v1/farmer/auth/login","/api/v1/farmer/auth/registration",
+            "/api/v1/agriculture/auth/login","/api/v1/agriculture/auth/registration",
+            "/api/v1/pcic/auth/login","/api/v1/pcic/auth/registration"
     );
 
     @Override
