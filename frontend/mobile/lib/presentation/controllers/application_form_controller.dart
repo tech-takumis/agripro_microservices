@@ -204,7 +204,7 @@ class ApplicationFormController {
         filesToUpload,
       );
 
-      if (!response.success) {
+      if (!response!.success) {
         throw Exception(response.error ?? response.message);
       }
 

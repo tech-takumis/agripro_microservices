@@ -185,15 +185,17 @@ class AuthApiService {
   }
 
   Future<void> logout() async {
-    try {
-      await storageService.clearAll();
-      print('✅ User logged out successfully');
-      print('🔐 Token after logout: ${storageService.getAccessToken()}');
-      getIt<WebSocketService>().disconnect();
-      print('🔌 WebSocket disconnected after logout');
-    } catch (e) {
-      print('❌ Error during logout: $e');
-      throw Exception('Failed to logout: $e');
-    }
+      // Call backend logout API
+      try {
+        final response = await _dio.post(
+            '/farmer/auth/logout',
+          options: Options(responseType: ResponseType.plain)
+        );
+
+        print('✅ Backend logout response: ${response.statusCode}');
+      } catch (e) {
+        print('❌ Backend logout failed: $e');
+        // Optionally handle backend logout failure
+      }
   }
 }

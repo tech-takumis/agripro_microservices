@@ -2,7 +2,6 @@ import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/services/message_service.dart';
-import 'package:mobile/data/services/storage_service.dart';
 import 'package:mobile/injection_container.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
 

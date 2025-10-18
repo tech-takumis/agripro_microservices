@@ -21,6 +21,9 @@ Future<void> setupDependencies() async {
   // Core services
   getIt.registerSingleton<Dio>(Dio());
 
+  // Register AuthState for use in providers and controllers
+  getIt.registerSingleton<AuthState>(AuthState());
+
   // Register StorageService first (async) WITHOUT requiring AuthApiService to avoid
   // circular dependency. We'll attach AuthApiService later.
   getIt.registerSingletonAsync<StorageService>(() async {
@@ -63,9 +66,6 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<ApplicationController>(
     ApplicationController(),
   );
-
-  // Register AuthState for use in providers and controllers
-  getIt.registerSingleton<AuthState>(AuthState());
 
   // Navigation
   getIt.registerSingleton<GoRouter>(

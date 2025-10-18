@@ -4,6 +4,7 @@ import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/services/websocket.dart';
 import 'package:mobile/data/services/message_api.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../injection_container.dart';
 
 class MessageService extends GetxService {
@@ -70,7 +71,7 @@ class MessageService extends GetxService {
     }
   }
 
-  Future<void> sendMessage(Message message) async {
+  Future<void> sendMessage(Message message, {List<PlatformFile>? files}) async {
     try {
       if (_receiverId == null) throw Exception('No designated staff to send message to');
 
@@ -82,6 +83,37 @@ class MessageService extends GetxService {
         'attachments': [],
         'sentAt': message.sentAt.toUtc().toIso8601String(),
       };
+
+      // Handle file attachments (if any)
+      // Note: Need to implement actual file upload to my backend using
+      // the /api/document api this well return
+      /*
+        {
+           "documentId": "445c43a9-dd4b-4a7a-a0d1-35502f0ac748",
+            "uploadedBy": "09ae13c1-e44d-478f-b58c-90f1e1cfa2dc",
+            "fileName": "6e99b2d7-d880-4db0-9532-81a0752706e7.jpg",
+            "fileType": "image/jpeg",
+            "fileSize": null,
+            "objectKey": "459e69d7-dea6-457f-95cf-b19b719af3eb.jpg",
+            "uploadedAt": "2025-10-18T21:46:21.079470",
+            "preview": "http://localhost:9000/documents/459e69d7-dea6-457f-95cf-b19b719af3eb.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20251018%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251018T134621Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=6e24567c8b29093b398253cae2df2b92fb2ebb27f8ab47b58ce38095676ab3d3"
+      }
+
+      And create an attachment like this:
+      {
+        "documentId": "445c43a9-dd4b-4a7a-a0d1-35502f0ac748",
+        "url": "http://localhost:9000/documents/459e69d7-dea6-457f-95cf-b19b719af3eb.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20251018%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251018T134621Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=6e24567c8b29093b398253cae2df2b92fb2ebb27f8ab47b58ce38095676ab3d3"
+
+      }
+
+      If user uploade more than one attachment, list them all here.
+       Add this to the attachments list in the messageRequest
+       */
+      if (files != null && files.isNotEmpty) {
+        // You may want to upload files and add their URLs to attachments here
+        // For now, just add file names as a placeholder
+        messageRequest['attachments'] = files.map((f) => {'name': f.name}).toList();
+      }
 
       print('📤 [MessageService] Sending message: ${message.text}');
       _ws.sendMessage('/app/private.chat', messageRequest);

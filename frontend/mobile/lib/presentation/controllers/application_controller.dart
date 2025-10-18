@@ -22,7 +22,7 @@ class ApplicationController extends GetxController {
       print('🔄 Starting to fetch applications...');
       final response = await getIt<ApplicationApiService>().fetchApplications();
 
-      applications.value = response.content;
+      applications.value = response!.content;
       print('✅ Successfully loaded \\${response.content.length} applications');
     } catch (e, stack) {
       print('❌ Error fetching applications: \\${e}');
@@ -40,7 +40,7 @@ class ApplicationController extends GetxController {
 
       final response = await getIt<ApplicationApiService>().fetchApplications();
 
-      applications.value = response.content;
+      applications.value = response!.content;
       print('✅ Successfully loaded \\${response.content.length} applications on retry');
     } catch (e) {
       print('❌ Error retrying applications fetch: \\${e}');
