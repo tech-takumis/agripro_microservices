@@ -126,7 +126,7 @@
 
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { computed, ref } from 'vue'
 import { 
   User, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle 
@@ -156,8 +156,6 @@ const hasFieldError = (field) => {
     error.toLowerCase().includes(field.toLowerCase())
   )
 }
-
-const router = useRouter();
 
 const submitLogin = async () => {
   // Clear previous errors

@@ -129,20 +129,16 @@
 </template>
 
 <script setup>
-import { ref, computed , onMounted} from 'vue'
+import { ref, computed , onMounted, onBeforeUnmount} from 'vue'
 import { Menu, X, LogOut, ArrowRight } from 'lucide-vue-next'
 import {useAuthStore} from '@/stores/auth'
 import {useWebSocketStore} from '@/stores/websocket'
-import {useWebSocket} from '@/composables/useWebSocket'
 import SidebarNavigation from '@/components/layouts/SidebarNavigation.vue'
 
-const wsStore = useWebSocketStore()
 const authStore = useAuthStore()
-// Create WebSocket instance
-const { connected, connect, disconnect, subscribe } = useWebSocket()
-onMounted(() => {
-    connect()
-})
+const wsStore = useWebSocketStore()
+const { disconnect,connect } = wsStore
+
 const props = defineProps({
   navigation: {
     type: Array,
@@ -186,9 +182,25 @@ const handleHelpSupport = (action) => {
 }
 
 // Handle logout
-const handleLogout = () => {
+const handleLogout = async () => {
   // Perform logout logic, e.g., call an API, clear tokens, etc.
   console.log('Logout clicked')
+
+  // Disconnect WebSocket before logout
+  await disconnect()
+
   authStore.logout() // Assuming you have a logout action in your auth store
 }
+
+onMounted(async () => {
+    try {
+        if (!wsStore.connected) {
+            console.log('[App] 🔌 Connecting WebSocket...')
+            await wsStore.connect()
+            console.log('[App] ✅ WebSocket connected globally')
+        }
+    } catch (err) {
+        console.error('[App] ❌ Failed to connect WebSocket:', err)
+    }
+})
 </script>

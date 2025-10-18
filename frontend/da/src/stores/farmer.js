@@ -25,8 +25,13 @@ export const useFarmerStore = defineStore('farmers', () => {
         error.value = null
 
         try {
-            const response = await axios.get('/api/v1/farmer')
-            farmers.value = response.data
+            const response = await axios.get('/api/v1/communication/farmers')
+            farmers.value = response.data.map(farmer => ({
+                ...farmer,
+                name: `${farmer.firstName} ${farmer.lastName}`.trim(),
+            }))
+            console.log('Fetched farmers:', farmers.value)
+
             return { success: true, data: farmers.value }
         } catch (err) {
             error.value = err.response?.data?.message || 'Failed to fetch farmers'

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
 import { ref, computed } from 'vue';
 import { router } from '@/router';
+import { useWebSocketStore } from '@/stores/websocket'; 
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -15,6 +16,8 @@ export const useAuthStore = defineStore('auth', () => {
     const normalizedRoles = ref(new Set());
     const isAuthenticated = ref(false);
     const initializationPromise = ref(null);
+
+    const ws = useWebSocketStore();
 
     // Getters
     const userFullName = computed(() =>
@@ -125,8 +128,14 @@ export const useAuthStore = defineStore('auth', () => {
             );
 
             if (response.status === 200) {
+                // Store WebSocket token in localStorage
+                if (response.data.webSocketToken) {
+                    localStorage.setItem('webSocketToken', response.data.webSocketToken);
+                }
+
                 isAuthenticated.value = true;
-                userData.value = response.data;
+                // Update to use the new user object structure
+                userData.value = response.data.user;
                 normalizeUserData();
 
                 if (userData.value && isAuthenticated.value) {
@@ -195,6 +204,8 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
+            // Remove webSocketToken from localStorage on logout
+            localStorage.removeItem('webSocketToken');
             reset();
             await router.push({ name: 'login' });
         }

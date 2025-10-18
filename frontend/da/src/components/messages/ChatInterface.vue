@@ -25,18 +25,21 @@
 &lt;script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useMessageStore } from '@/stores/message'
+import { useAuthStore } from '@/stores/auth'
 import MessageList from './MessageList.vue'
 
 const messageStore = useMessageStore()
+const authStore = useAuthStore()
 const newMessage = ref('')
 
-// Replace these with actual user IDs from your auth system
-const currentUserId = 'YOUR_CURRENT_USER_ID'
-const selectedUserId = 'SELECTED_USER_ID'
+// Get current user ID from auth store
+const currentUserId = authStore.userId
 
 onMounted(async () => {
-  await messageStore.fetchMessages(currentUserId, selectedUserId)
-  await messageStore.subscribeToUserMessages(currentUserId, selectedUserId)
+  if (currentUserId) {
+    await messageStore.fetchMessages(currentUserId)
+    await messageStore.subscribeToUserMessages(currentUserId)
+  }
 })
 
 onUnmounted(() => {
@@ -46,12 +49,29 @@ onUnmounted(() => {
 const sendMessage = async () => {
   if (!newMessage.value.trim()) return
 
-  await messageStore.sendMessage({
-    senderId: currentUserId,
-    receiverId: selectedUserId,
-    text: newMessage.value
-  })
+  try {
+    await messageStore.sendMessage({
+      receiverId: props.selectedUserId, // This should be passed as a prop from parent
+      text: newMessage.value,
+      type: props.messageType || 'FARMER_AGRICULTURE' // This should be passed as a prop based on user roles
+    })
 
-  newMessage.value = ''
+    newMessage.value = ''
+  } catch (error) {
+    console.error('Failed to send message:', error)
+    // You might want to show an error toast here
+  }
 }
+
+// Define props for the component
+const props = defineProps({
+  selectedUserId: {
+    type: String,
+    required: true
+  },
+  messageType: {
+    type: String,
+    default: 'FARMER_AGRICULTURE'
+  }
+})
 &lt;/script>

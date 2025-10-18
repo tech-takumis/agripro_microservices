@@ -149,7 +149,7 @@
                     <!-- Message Input with file upload -->
                     <div class="bg-white border-t border-gray-200 p-3 md:p-6">
                         <form
-                            @submit.prevent="sendMessage"
+                            @submit.prevent="sendChatMessage"
                             class="flex gap-2 md:gap-3">
                             <!-- File Upload Button -->
                             <label
@@ -240,6 +240,10 @@
                                 </p>
                                 <p
                                     class="text-xs md:text-sm text-gray-500 truncate">
+                                    {{ farmer.username || 'No RSBSA' }}
+                                </p>
+                                <p
+                                    class="text-xs md:text-sm text-gray-500 truncate">
                                     {{ farmer.email || 'No email' }}
                                 </p>
                             </div>
@@ -255,7 +259,6 @@
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { Search, Send, User, ChevronLeft, Paperclip, X } from 'lucide-vue-next'
 import { useFarmerStore } from '@/stores/farmer'
-import { useWebSocket } from '@/composables/useWebSocket'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'
 import { useDocumentStore } from '@/stores/document'
@@ -266,7 +269,6 @@ const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
 const messageStore = useMessageStore()
 const documentStore = useDocumentStore()
-const ws = useWebSocket()
 
 // Use the navigation directly
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
@@ -284,7 +286,6 @@ const fileInput = ref(null)
 const messages = computed(() => messageStore.messages)
 
 // Update computed property for files
-const selectedFiles = computed(() => localFiles.value)
 
 // Add disabled state for send button
 const isSendDisabled = computed(() => {
@@ -313,9 +314,7 @@ const filteredFarmers = computed(() => {
 
 const selectedFarmerName = computed(() => {
     if (!selectedFarmer.value) return ''
-    return `${selectedFarmer.value.firstName || ''} ${
-        selectedFarmer.value.lastName || ''
-    }`.trim()
+    return `${selectedFarmer.value.firstName || ''} ${selectedFarmer.value.lastName || ''}`.trim()
 })
 
 const checkMobileView = () => {
@@ -355,13 +354,9 @@ const selectFarmer = async farmer => {
     try {
         selectedFarmer.value = farmer
 
-        if (farmer && farmer.id) {
+        if (farmer && farmer.userId) {
             await Promise.all([
-                messageStore.fetchMessages(authStore.userId, farmer.id),
-                messageStore.subscribeToUserMessages(
-                    authStore.userId,
-                    farmer.id,
-                ),
+                messageStore.fetchMessages(authStore.userId, farmer.userId),
             ])
             scrollToBottom()
         }
@@ -370,10 +365,10 @@ const selectFarmer = async farmer => {
     }
 }
 
-// Update sendMessage to handle file uploads first
-const sendMessage = async () => {
+// Update sendMessage to handle file uploads and exclude senderId
+const sendChatMessage = async () => {
     if (!messageInput.value.trim() && !localFiles.value.length) return
-    if (!selectedFarmer.value?.id) return
+    if (!selectedFarmer.value?.userId) return
 
     try {
         isUploading.value = true
@@ -382,13 +377,11 @@ const sendMessage = async () => {
         let attachments = []
         if (localFiles.value.length > 0) {
             try {
-                // Upload all files
                 const uploadPromises = localFiles.value.map(fileData =>
                     documentStore.uploadDocument(fileData.file)
                 )
                 const uploadResults = await Promise.all(uploadPromises)
 
-                // Build attachments array for backend DTO
                 attachments = uploadResults.map(doc => ({
                     documentId: doc.documentId,
                     url: doc.preview
@@ -399,9 +392,8 @@ const sendMessage = async () => {
             }
         }
 
-        // Send message with or without attachments
         await messageStore.sendMessage({
-            receiverId: selectedFarmer.value.id,
+            receiverId: selectedFarmer.value.userId,
             text: messageInput.value || (attachments.length ? 'File Uploaded' : ''),
             type: 'FARMER_AGRICULTURE',
             attachments: attachments,
@@ -462,11 +454,6 @@ onMounted(async () => {
         checkMobileView()
         window.addEventListener('resize', checkMobileView)
 
-        // Just wait for connection if needed, connect() is now handled by singleton
-        if (!ws.connected.value) {
-            await ws.waitForConnection()
-        }
-
         // Then fetch farmers
         await farmerStore.fetchFarmers()
         isInitialized.value = true
@@ -484,7 +471,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', checkMobileView)
-    messageStore.cleanup()
 })
 </script>
 
