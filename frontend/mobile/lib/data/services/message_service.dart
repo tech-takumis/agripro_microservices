@@ -86,8 +86,6 @@ class MessageService extends GetxService {
       print('📤 [MessageService] Sending message: ${message.text}');
       _ws.sendMessage('/app/private.chat', messageRequest);
 
-      _messages.add(message);
-      _controller.add([..._messages]); // ✅ push local update
     } catch (e) {
       print('❌ [MessageService] Error sending message: $e');
     }
