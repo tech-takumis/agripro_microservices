@@ -86,7 +86,7 @@ public class AuthController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<AuthenticatedResponse> getAuthenticatedUser() {
+    public ResponseEntity<AuthUserResponse> getAuthenticatedUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -98,7 +98,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        AuthenticatedResponse response = authService.getAuthenticatedUser(customUserDetails.getFarmer().getId());
+        AuthUserResponse response = authService.getAuthenticatedUser(customUserDetails.getFarmer().getId());
 
         return ResponseEntity.ok(response);
     }

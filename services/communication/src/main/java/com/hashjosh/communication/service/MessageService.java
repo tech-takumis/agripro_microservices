@@ -34,7 +34,6 @@ public class MessageService {
     private final AttachmentRepository attachmentRepository;
     private final CommunicationPublisher publisher;
     private final ConversationRepository conversationRepository;
-    private final AttachmentMapper attachmentMapper;
 
     @Transactional
     public Message saveMessage(MessageRequestDto dto, UUID senderId) {

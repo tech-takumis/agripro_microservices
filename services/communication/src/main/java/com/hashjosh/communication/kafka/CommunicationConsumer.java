@@ -44,6 +44,11 @@ public class CommunicationConsumer {
                 .orElseGet(() -> {
                     log.info("Creating new user with email {}", event.getEmail());
                     User newUser = User.builder()
+                            .userId(event.getUserId())
+                            .firstName(event.getFirstName())
+                            .lastName(event.getLastName())
+                            .phoneNumber(event.getPhoneNumber())
+                            .middleName(event.getMiddleName())
                             .serviceType(ServiceType.FARMER)
                             .username(event.getUsername())
                             .email(event.getEmail())
@@ -84,6 +89,10 @@ public class CommunicationConsumer {
                 .orElseGet(() -> {
                     log.info("Creating new user with email {}", event.getEmail());
                     User newUser = User.builder()
+                            .userId(event.getUserId())
+                            .firstName(event.getFirstName())
+                            .lastName(event.getLastName())
+                            .phoneNumber(event.getPhoneNumber())
                             .serviceType(ServiceType.AGRICULTURE)
                             .username(event.getUsername())
                             .email(event.getEmail())
@@ -96,7 +105,7 @@ public class CommunicationConsumer {
         if(designatedStaffRepository.findByServiceType(ServiceType.AGRICULTURE).isEmpty()){
             DesignatedStaff staff = new DesignatedStaff();
             staff.setServiceType(ServiceType.AGRICULTURE);
-            staff.setUserId(user.getId());
+            staff.setUserId(user.getUserId());
             staff.setCreatedAt(LocalDateTime.now());
             designatedStaffRepository.save(staff);
         }
@@ -108,6 +117,7 @@ public class CommunicationConsumer {
 
         log.info("Creating conversation between Agriculture (ID: {}) and PCIC staff (ID: {})", user.getId(), receiverId);
         Conversation conversation = Conversation.builder()
+
                 .senderId(user.getId())
                 .receiverId(receiverId)
                 .type(ConversationType.AGRICULTURE_PCIC)
@@ -134,6 +144,10 @@ public class CommunicationConsumer {
                 .orElseGet(() -> {
                     log.info("Creating new user with email {}", event.getEmail());
                     User newUser = User.builder()
+                            .userId(event.getUserId())
+                            .firstName(event.getFirstName())
+                            .lastName(event.getLastName())
+                            .phoneNumber(event.getPhoneNumber())
                             .serviceType(ServiceType.PCIC)
                             .username(event.getUsername())
                             .email(event.getEmail())
@@ -146,7 +160,7 @@ public class CommunicationConsumer {
         if(designatedStaffRepository.findByServiceType(ServiceType.PCIC).isEmpty()){
             DesignatedStaff staff = new DesignatedStaff();
             staff.setServiceType(ServiceType.PCIC);
-            staff.setUserId(user.getId());
+            staff.setUserId(user.getUserId());
             staff.setCreatedAt(LocalDateTime.now());
             designatedStaffRepository.save(staff);
         }

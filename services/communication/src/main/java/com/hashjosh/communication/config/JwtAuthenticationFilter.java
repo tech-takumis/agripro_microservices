@@ -5,7 +5,6 @@ import com.hashjosh.jwtshareable.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,62 +27,78 @@ import java.util.Set;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService   jwtService;
+    private final JwtService jwtService;
     private final TrustedProperties trustedProperties;
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        log.debug("📝 Checking path for filtering: {}", path);
+
+        // Completely bypass the filter for WebSocket paths
+        boolean isWebSocketPath = path.startsWith("/ws") ||
+                                 path.contains("/ws/") ||
+                                 path.equals("/ws") ||
+                                 path.startsWith("/ws/info");
+
+        if (isWebSocketPath) {
+            log.debug("🔓 Bypassing filter for WebSocket path: {}", path);
+        }
+
+        return isWebSocketPath;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
-        log.info("Processing request for URI: {}", uri);
+        log.debug("🔍 Processing request for URI: {}", uri);
 
-        // Skip authentication for WebSocket endpoints
+        // Special handling for WebSocket requests - we'll just let them through
         if (uri.startsWith("/ws")) {
+            log.debug("⚡ WebSocket request detected, allowing through filter");
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Check for internal service header from gateway
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
-        if(internalServiceHeader != null && trustedProperties.getInternalServiceIds().contains(internalServiceHeader) ){
-            // Allow internal service access without JWT
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            new CustomUserDetails(
-                                    null,
-                                    "internal-service"+internalServiceHeader,
-                                    internalServiceHeader,
-                                    null,null,null,null, // No firstname,lastname,email,and phone
-                                    Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
-                            ),
-                            null,
-                            Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
-                    );
+        if (internalServiceHeader != null) {
+            log.debug("🔑 Internal service request from: {}", internalServiceHeader);
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
-            return;
+            // Check if this is a trusted internal service
+            if (trustedProperties.getInternalServiceIds().contains(internalServiceHeader)) {
+                log.debug("✅ Trusted internal service authenticated: {}", internalServiceHeader);
+                authenticateInternalService(internalServiceHeader, request);
+                filterChain.doFilter(request, response);
+                return;
+            } else {
+                log.warn("⚠️ Untrusted internal service attempted access: {}", internalServiceHeader);
+            }
         }
 
-        String token = extractAccessToken(request);
-
-        if(token == null) {
+        // Regular token authentication for API requests
+        String token = extractToken(request);
+        if (token == null) {
+            log.debug("❌ No authentication token found");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"message\": \"Unauthorized - Missing or invalid Authorization header\"}"
-            );
-            response.getWriter().flush();
             return;
         }
 
+        try {
+            authenticateRequest(token, request);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("🚫 Authentication error: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed: " + e.getMessage());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private void authenticateRequest(String token, HttpServletRequest request) {
         if (!jwtService.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"message\": \"Unauthorized: invalid or expired token\"}"
-            );
-            response.getWriter().flush();
-            return;
+            throw new SecurityException("Invalid or expired token");
         }
 
         Claims claims = jwtService.getAllClaims(token);
@@ -92,69 +107,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String firstname = claims.get("firstname", String.class);
         String lastname = claims.get("lastname", String.class);
         String email = claims.get("email", String.class);
-        String phone = claims.get("phone", String.class);
+        String phone = claims.get("phoneNumber", String.class);
         List<String> claimRoles = claims.get("roles", List.class);
         List<String> claimPermission = claims.get("permissions", List.class);
 
-        Set<SimpleGrantedAuthority> roles = new HashSet<>();
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         if (claimRoles != null) {
-            for (String role : claimRoles) {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + role));
-            }
+            claimRoles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
         }
         if (claimPermission != null) {
-            for (String permission : claimPermission) {
-                roles.add(new SimpleGrantedAuthority(permission));
-            }
+            claimPermission.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission)));
         }
 
         CustomUserDetails userDetails = new CustomUserDetails(
-                token, userId, username, firstname, lastname, email, phone, roles
+                token, userId, username, firstname, lastname, email, phone, authorities
         );
 
         UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private void authenticateInternalService(String serviceId, HttpServletRequest request) {
+        log.debug("🔐 Authenticating internal service: {}", serviceId);
+        UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        userDetails, null, roles
+                        new CustomUserDetails(
+                                null,
+                                "internal-service-" + serviceId,
+                                serviceId,
+                                null, null, null, null,
+                                Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                        ),
+                        null,
+                        Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                 );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        try {
-            filterChain.doFilter(request, response);
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
-
     }
 
-    private String extractAccessToken(HttpServletRequest request) {
-        // First try Authorization header
+    private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            log.info("Extracted token from Authorization header for path: {}", request.getRequestURI());
             return bearerToken.substring(7);
         }
-
-        // Then try cookies
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("ACCESS_TOKEN".equals(cookie.getName())) {
-                    log.info("Extracted token from ACCESS_TOKEN cookie for path: {}", request.getRequestURI());
-                    return cookie.getValue();
-                }
-            }
-        }
-
-        // Finally try custom header
-        String customToken = request.getHeader("X-Auth-Token");
-        if (customToken != null) {
-            log.info("Extracted token from X-Auth-Token header for path: {}", request.getRequestURI());
-            return customToken;
-        }
-
-        log.warn("No token found in headers or cookies for path: {}", request.getRequestURI());
         return null;
     }
 }

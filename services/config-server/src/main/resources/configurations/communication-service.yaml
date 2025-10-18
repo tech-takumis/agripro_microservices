@@ -9,8 +9,8 @@ spring:
     hibernate:
       ddl-auto: update
     database: postgresql
-    show-sql: true
-    generate-ddl: true
+    show-sql: false
+    generate-ddl: false
   kafka:
     bootstrap-servers: localhost:29092
     producer:

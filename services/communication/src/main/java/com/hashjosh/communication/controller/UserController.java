@@ -1,6 +1,7 @@
 package com.hashjosh.communication.controller;
 
 import com.hashjosh.communication.dto.DesignatedResponse;
+import com.hashjosh.communication.dto.FarmerResponseDto;
 import com.hashjosh.communication.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,4 +32,12 @@ public class UserController {
         DesignatedResponse response = userService.findPCICDesignatedStaff();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/farmers")
+    public ResponseEntity<List<FarmerResponseDto>> getAllFarmers() {
+        log.info("Request to get all farmers");
+        List<FarmerResponseDto> response = userService.getAllFarmers();
+        return ResponseEntity.ok(response);
+    }
+
 }

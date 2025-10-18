@@ -48,6 +48,7 @@ token:
   accessTokenExpirationRememberMeMs: 2592000000    # 30 days
   refreshTokenExpirationMs: 86400000               # 1 day
   refreshTokenExpirationRememberMeMs: 345600000
+  webSocketExpirationMs: 900000                    # 15 mins
 
 
 trusted:

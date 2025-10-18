@@ -20,6 +20,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private UUID userId;
+    private String firstName;
+    private String lastName;
+    private String middleName;
+    private String phoneNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type", nullable = false)
     private ServiceType serviceType; // FARMER, AGRICULTURE, PCIC

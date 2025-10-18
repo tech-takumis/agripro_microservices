@@ -73,25 +73,9 @@ public class AuthController {
         httpResponse.addCookie(accessCookie);
         httpResponse.addCookie(refreshCookie);
 
-        // Get authenticated user from security context
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-
-        // Get agriculture entity with roles
-        Agriculture agriculture = authService.getAgricultureWithRoles(userDetails.getUserId());
-
-        Set<RoleResponse> roles = agriculture.getRoles().stream()
-                .map(roleService::getRole)
-                .collect(Collectors.toSet());
-
         AuthenticatedResponse response = AuthenticatedResponse.builder()
-                .id(agriculture.getId())
-                .username(agriculture.getUsername())
-                .firstName(agriculture.getFirstName())
-                .lastName(agriculture.getLastName())
-                .email(agriculture.getEmail())
-                .phoneNumber(agriculture.getPhoneNumber())
-                .roles(roles)
+                .webSocketToken(tokens.getAccessToken())
+                .user(tokens.getUser())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -129,7 +113,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<AuthenticatedResponse> getAuthenticatedUser() {
+    public ResponseEntity<AuthUser> getAuthenticatedUser() {
         CustomUserDetails userDetails = getUserDetails();
 
         // Get agriculture entity with roles
@@ -139,12 +123,12 @@ public class AuthController {
                 .map(roleService::getRole)
                 .collect(Collectors.toSet());
 
-        AuthenticatedResponse response = AuthenticatedResponse.builder()
+        AuthUser response = AuthUser.builder()
                 .id(agriculture.getId())
                 .username(agriculture.getUsername())
+                .email(agriculture.getEmail())
                 .firstName(agriculture.getFirstName())
                 .lastName(agriculture.getLastName())
-                .email(agriculture.getEmail())
                 .phoneNumber(agriculture.getPhoneNumber())
                 .roles(roles)
                 .build();

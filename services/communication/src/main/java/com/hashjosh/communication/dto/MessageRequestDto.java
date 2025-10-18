@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageRequestDto {
+    private UUID senderId;
     private UUID receiverId;
     @NotBlank(message = "Message text cannot be blank")
     private String text;

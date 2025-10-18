@@ -153,17 +153,19 @@ public class AuthService {
                     jwtService.getRefreshTokenExpiry(request.isRememberMe())
             );
 
-            return userMapper.toAuthenticatedResponse(farmerLoggedIn, accessToken, refreshToken);
+            String webSocketToken = jwtService.generateWebSocketToken(farmerLoggedIn.getUsername(),claims);
+
+            return userMapper.toAuthenticatedResponse(farmerLoggedIn, accessToken, refreshToken,webSocketToken);
         } catch (Exception e) {
             log.error("Login failed for user {}: {}", request.getUsername(), e.getMessage());
             throw new RuntimeException("Authentication failed: " + e.getMessage());
         }
     }
 
-    public AuthenticatedResponse getAuthenticatedUser(UUID id) {
+    public AuthUserResponse getAuthenticatedUser(UUID id) {
         Farmer farmer = farmerRepository.findById(id)
                 .orElseThrow(() -> new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value()));
 
-        return userMapper.toAuthenticatedResponse(farmer, null, null);
+        return userMapper.toAuthUserResponse(farmer);
     }
 }

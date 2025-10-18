@@ -12,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttachmentResponseDto {
+    private UUID attachmentId;
     private UUID documentId;
     private String url;
 }

@@ -1,5 +1,6 @@
 package com.hashjosh.farmer.mapper;
 
+import com.hashjosh.farmer.dto.AuthUserResponse;
 import com.hashjosh.farmer.dto.AuthenticatedResponse;
 import com.hashjosh.farmer.dto.RegistrationRequest;
 import com.hashjosh.farmer.dto.RoleResponse;
@@ -60,16 +61,24 @@ public class UserMapper {
         return farmer;
     }
 
-    public AuthenticatedResponse toAuthenticatedResponse(Farmer farmer,String accessToken, String refreshToken) {
+    public AuthenticatedResponse toAuthenticatedResponse(Farmer farmer,String accessToken, String refreshToken, String websocketToken) {
+
+        return AuthenticatedResponse.builder()
+                .id(farmer.getId())
+                .websocketToken(websocketToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .user(toAuthUserResponse(farmer))
+                .build();
+    }
+
+    public AuthUserResponse toAuthUserResponse(Farmer farmer) {
 
         Set<RoleResponse> roles = farmer.getRoles().stream()
                 .map(roleMapper::toRoleResponse)
                 .collect(Collectors.toSet());
 
-        return AuthenticatedResponse.builder()
-                .id(farmer.getId())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+        return AuthUserResponse.builder()
                 .username(farmer.getUsername())
                 .firstName(farmer.getFirstName())
                 .lastName(farmer.getLastName())

@@ -41,6 +41,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String requestUri = request.getRequestURI();
+
+        // Skip authentication for OPTIONS (CORS preflight) requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            log.debug("Skipping authentication for OPTIONS preflight request to {}", requestUri);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Log request headers for debugging
         log.debug("Processing request: {} with headers: {}", requestUri, getHeadersAsString(request));
 
@@ -250,3 +258,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return headers.toString();
     }
 }
+

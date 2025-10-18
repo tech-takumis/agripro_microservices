@@ -33,8 +33,7 @@ public class ApplicationClient {
                         return res.bodyTo(ApplicationResponseDto.class);
                     } else if (res.getStatusCode() == HttpStatus.NOT_FOUND) {
                         throw new ApplicationNotFoundException(
-                                "Application not found in Application Service!",
-                                HttpStatus.NOT_FOUND.value()
+                                "Application not found in Application Service!"
                         );
                     }else{
                         throw new RuntimeException("Remote Application Service error in workflow service find workflow by application id: "+ applicationId +" status"+ res.getStatusCode());

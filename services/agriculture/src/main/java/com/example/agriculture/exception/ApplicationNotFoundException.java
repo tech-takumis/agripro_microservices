@@ -1,24 +1,20 @@
 package com.example.agriculture.exception;
 
-import com.example.agriculture.dto.ExceptionResponse;
-import lombok.Getter;
-import lombok.Setter;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.time.LocalDateTime;
-
-@Getter
-@Setter
+@ResponseStatus(HttpStatus.NOT_FOUND)
 public class ApplicationNotFoundException extends RuntimeException {
-    private LocalDateTime timestamp = LocalDateTime.now();
-    private String message;
-    private int statusCode;
-    public ApplicationNotFoundException(String message, int statusCode) {
+
+    public ApplicationNotFoundException(String message) {
         super(message);
-        this.message = message;
-        this.statusCode = statusCode;
     }
 
-    public ExceptionResponse getExceptionResponse(){
-        return new ExceptionResponse(message,statusCode, timestamp);
+    public ApplicationNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ApplicationNotFoundException(Long applicationId) {
+        super("Application not found with ID: " + applicationId);
     }
 }
