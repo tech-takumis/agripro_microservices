@@ -1,5 +1,6 @@
 package com.hashjosh.communication.controller;
 
+import com.hashjosh.communication.client.DocumentClient;
 import com.hashjosh.communication.config.CustomUserDetails;
 import com.hashjosh.communication.dto.AttachmentResponseDto;
 import com.hashjosh.communication.dto.MessageRequestDto;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ public class MessageController {
     private final SimpMessagingTemplate messagingTemplate;
     private final MessageService messageService;
     private final UserService userService;
+    private final DocumentClient documentClient;
 
     /**
      * Handles public messages sent to a conversation topic.
@@ -93,6 +96,14 @@ public class MessageController {
         // Save message in DB
         Message savedMessage = messageService.saveMessage(dto, senderId);
 
+        Set<AttachmentResponseDto> attachmentResponses = savedMessage.getAttachments().stream()
+                .map(att -> AttachmentResponseDto.builder()
+                        .attachmentId(att.getId())
+                        .documentId(att.getDocumentId())
+                        .url(documentClient.getDocumentPreviewUrl(att.getDocumentId()))
+                        .build())
+                .collect(Collectors.toSet());
+
         // Build response payload
         MessageResponseDto response = MessageResponseDto.builder()
                 .messageId(savedMessage.getId())
@@ -100,12 +111,7 @@ public class MessageController {
                 .receiverId(receiverId)
                 .text(dto.getText())
                 .type(dto.getType())
-                .attachments(savedMessage.getAttachments().stream()
-                        .map(att -> AttachmentResponseDto.builder()
-                                .attachmentId(att.getId())
-                                .documentId(att.getDocumentId())
-                                .build())
-                        .collect(Collectors.toSet()))
+                .attachments(attachmentResponses)
                 .sentAt(savedMessage.getCreatedAt())
                 .build();
 
