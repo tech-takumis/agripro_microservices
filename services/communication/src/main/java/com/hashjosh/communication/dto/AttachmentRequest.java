@@ -13,6 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttachmentRequest {
-    private UUID attachmentId;
+    private UUID documentId;
     private String url;
 }

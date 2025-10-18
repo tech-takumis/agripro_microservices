@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart'; // Import geolocator
+import 'package:geolocator/geolocator.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import '../../data/models/application_data.dart';
-import '../../data/services/api_service.dart';
-import '../../data/services/location_service.dart'; // Import LocationService
+import '../../data/services/application_api_service.dart';
+import '../../data/services/location_service.dart';
+import '../../injection_container.dart';
 
-class ApplicationFormController extends GetxController {
+class ApplicationFormController {
   final ApplicationContent application;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  final _isLoading = false.obs;
-  final _errorMessage = ''.obs;
-  final _successMessage = ''.obs;
-
-  bool get isLoading => _isLoading.value;
-  String get errorMessage => _errorMessage.value;
-  String get successMessage => _successMessage.value;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
+  final ValueNotifier<String> errorMessage = ValueNotifier('');
+  final ValueNotifier<String> successMessage = ValueNotifier('');
 
   // Dynamic controllers for form fields
   final Map<String, TextEditingController> _textControllers = {};
-  final Map<String, Rx<XFile?>> _fileSelections = {};
+  final Map<String, XFile?> _fileSelections = {};
   final Map<String, GlobalKey<FormFieldState>> _formFieldKeys = {};
 
   // Coordinate field, if applicable
@@ -31,32 +27,24 @@ class ApplicationFormController extends GetxController {
   final bool _hasCoordinateField;
 
   ApplicationFormController(this.application)
-    : _hasCoordinateField = application.fields.any(
-        (field) => field.hasCoordinate,
-      ) {
+      : _hasCoordinateField = application.fields.any(
+          (field) => field.hasCoordinate,
+        ) {
     _initializeControllers();
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
     clearMessages();
   }
 
   void _initializeControllers() {
     for (var field in application.fields) {
-      // Use field ID as key if field.key is null
       final fieldKey = field.key;
-
       _formFieldKeys[fieldKey] = GlobalKey<FormFieldState>();
       if (field.fieldType == 'TEXT' || field.fieldType == 'NUMBER') {
         _textControllers[fieldKey] = TextEditingController();
-        // Set default value if available
         if (field.defaultValue != null && field.defaultValue!.isNotEmpty) {
           _textControllers[fieldKey]!.text = field.defaultValue!;
         }
       } else if (field.fieldType == 'FILE') {
-        _fileSelections[fieldKey] = Rx<XFile?>(null);
+        _fileSelections[fieldKey] = null;
       }
     }
     if (_hasCoordinateField) {
@@ -66,41 +54,39 @@ class ApplicationFormController extends GetxController {
 
   TextEditingController? getTextFieldController(String key) =>
       _textControllers[key];
-  Rx<XFile?>? getFileSelection(String key) => _fileSelections[key];
+  XFile? getFileSelection(String key) => _fileSelections[key];
   GlobalKey<FormFieldState>? getFormFieldKey(String key) => _formFieldKeys[key];
   TextEditingController get coordinateController => _coordinateController;
   GlobalKey<FormFieldState> get coordinateFieldKey => _coordinateFieldKey;
   bool get hasCoordinateField => _hasCoordinateField;
 
-  // Helper method to get field key (handles null keys)
   String getFieldKey(ApplicationField field) {
     return field.key;
   }
 
-  Future<void> pickFile(String fieldKey) async {
+  Future<void> pickFile(String fieldKey, BuildContext context) async {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.camera,
     );
 
     if (pickedFile != null) {
-      _fileSelections[fieldKey]?.value = pickedFile;
+      _fileSelections[fieldKey] = pickedFile;
       getFormFieldKey(fieldKey)?.currentState?.validate();
 
       // Get GPS coordinates using geolocator if the application has a coordinate field
       if (_hasCoordinateField) {
         try {
           bool locationReady =
-              await LocationService.to.checkAndRequestLocationReadiness();
+              await getIt<LocationService>().checkAndRequestLocationReadiness();
 
           if (locationReady) {
-            Get.snackbar(
-              'Getting Location',
-              'Fetching current GPS coordinates...',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.blue.withOpacity(0.8),
-              colorText: Colors.white,
-              duration: const Duration(seconds: 2),
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Fetching current GPS coordinates...'),
+                backgroundColor: Colors.blue.withOpacity(0.8),
+                duration: const Duration(seconds: 2),
+              ),
             );
             Position position = await Geolocator.getCurrentPosition(
               locationSettings: const LocationSettings(
@@ -111,33 +97,27 @@ class ApplicationFormController extends GetxController {
                 '${position.latitude.toStringAsFixed(6)},${position.longitude.toStringAsFixed(6)}';
             _coordinateController.text = gpsCoordinate;
             _coordinateFieldKey.currentState?.validate();
-            Get.snackbar(
-              'GPS Coordinates Captured',
-              'Coordinates: $gpsCoordinate',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.green.withOpacity(0.8),
-              colorText: Colors.white,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Coordinates: $gpsCoordinate'),
+                backgroundColor: Colors.green.withOpacity(0.8),
+              ),
             );
           } else {
             _coordinateController.clear();
             _coordinateFieldKey.currentState?.validate();
-            Get.snackbar(
-              'Location Not Available',
-              'Please enable location services and grant permissions to capture GPS coordinates.',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.orange.withOpacity(0.8),
-              colorText: Colors.white,
-              mainButton: TextButton(
-                onPressed: () {
-                  Get.back();
-                  LocationService.to.openAppSettings();
-                },
-                child: const Text(
-                  'Open Settings',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Please enable location services and grant permissions to capture GPS coordinates.',
+                ),
+                backgroundColor: Colors.orange.withOpacity(0.8),
+                action: SnackBarAction(
+                  label: 'Open Settings',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    getIt<LocationService>().openAppSettings();
+                  },
                 ),
               ),
             );
@@ -146,12 +126,11 @@ class ApplicationFormController extends GetxController {
           print('Error getting GPS data: $e');
           _coordinateController.clear();
           _coordinateFieldKey.currentState?.validate();
-          Get.snackbar(
-            'Location Error',
-            'Could not get GPS coordinates: ${e.toString()}',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.withOpacity(0.8),
-            colorText: Colors.white,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not get GPS coordinates: ${e.toString()}'),
+              backgroundColor: Colors.red.withOpacity(0.8),
+            ),
           );
         }
       }
@@ -159,7 +138,7 @@ class ApplicationFormController extends GetxController {
   }
 
   void removeFile(String fieldKey) {
-    _fileSelections[fieldKey]?.value = null;
+    _fileSelections[fieldKey] = null;
     getFormFieldKey(fieldKey)?.currentState?.validate();
     if (_hasCoordinateField) {
       _coordinateController.clear();
@@ -181,22 +160,21 @@ class ApplicationFormController extends GetxController {
     return null;
   }
 
-  Future<void> submitForm() async {
+  Future<void> submitForm(BuildContext context) async {
     if (!formKey.currentState!.validate()) {
-      _errorMessage.value =
+      errorMessage.value =
           'Please fill in all required fields and select all required files.';
       return;
     }
 
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
-      _successMessage.value = '';
+      isLoading.value = true;
+      errorMessage.value = '';
+      successMessage.value = '';
 
       final Map<String, dynamic> fieldValues = {};
       final Map<String, XFile> filesToUpload = {};
 
-      // Collect all field values, including filenames for file fields
       for (var field in application.fields) {
         final fieldKey = getFieldKey(field);
 
@@ -206,7 +184,7 @@ class ApplicationFormController extends GetxController {
           final text = _textControllers[fieldKey]?.text.trim() ?? '';
           fieldValues[fieldKey] = int.tryParse(text) ?? text;
         } else if (field.fieldType == 'FILE') {
-          final file = _fileSelections[fieldKey]?.value;
+          final file = _fileSelections[fieldKey];
           if (file != null) {
             fieldValues[fieldKey] = file.name;
             filesToUpload[fieldKey] = file;
@@ -216,13 +194,11 @@ class ApplicationFormController extends GetxController {
         }
       }
 
-      // Add coordinate field if present and has a value
       if (_hasCoordinateField && _coordinateController.text.isNotEmpty) {
         fieldValues['coordinate'] = _coordinateController.text.trim();
       }
 
-      // Submit form and check response
-      final response = await ApiService.to.submitApplicationFormHttp(
+      final response = await getIt<ApplicationApiService>().submitApplicationFormHttp(
         application.id,
         fieldValues,
         filesToUpload,
@@ -232,27 +208,27 @@ class ApplicationFormController extends GetxController {
         throw Exception(response.error ?? response.message);
       }
 
-      _successMessage.value = response.message;
+      successMessage.value = response.message;
       _clearForm();
-      _showSuccessAlert();
+      _showSuccessAlert(context);
     } catch (e) {
-      _errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
+      errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
     } finally {
-      _isLoading.value = false;
+      isLoading.value = false;
     }
   }
 
-  void _showSuccessAlert() {
+  void _showSuccessAlert(BuildContext context) {
     Alert(
-      context: Get.context!,
+      context: context,
       type: AlertType.success,
       title: "Application Submitted",
-      desc: _successMessage.value,
+      desc: successMessage.value,
       buttons: [
         DialogButton(
           onPressed: () {
-            Get.back(); // Close the alert dialog
-            Get.back(); // Go back to the applications list page
+            Navigator.of(context).pop(); // Close the alert dialog
+            Navigator.of(context).pop(); // Go back to the applications list page
           },
           width: 120,
           child: const Text(
@@ -268,24 +244,22 @@ class ApplicationFormController extends GetxController {
     for (var controller in _textControllers.values) {
       controller.clear();
     }
-    for (var rxFile in _fileSelections.values) {
-      rxFile.value = null;
+    for (var key in _fileSelections.keys) {
+      _fileSelections[key] = null;
     }
     _coordinateController.clear();
     clearMessages();
   }
 
   void clearMessages() {
-    _errorMessage.value = '';
-    _successMessage.value = '';
+    errorMessage.value = '';
+    successMessage.value = '';
   }
 
-  @override
-  void onClose() {
+  void dispose() {
     for (var controller in _textControllers.values) {
       controller.dispose();
     }
     _coordinateController.dispose();
-    super.onClose();
   }
 }

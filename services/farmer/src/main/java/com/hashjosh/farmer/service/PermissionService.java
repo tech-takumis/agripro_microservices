@@ -1,10 +1,11 @@
 package com.hashjosh.farmer.service;
 
 
-import com.hashjosh.farmer.dto.*;
-import com.hashjosh.farmer.entity.*;
-import com.hashjosh.farmer.mapper.RoleMapper;
-import com.hashjosh.farmer.repository.*;
+import com.hashjosh.farmer.dto.PermissionRequest;
+import com.hashjosh.farmer.dto.PermissionResponse;
+import com.hashjosh.farmer.entity.Permission;
+import com.hashjosh.farmer.mapper.PermissionMapper;
+import com.hashjosh.farmer.repository.PermissionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,25 +19,25 @@ import java.util.stream.Collectors;
 public class PermissionService {
 
     private final PermissionRepository permissionRepository;
-    private final RoleMapper roleMapper;
+    private final PermissionMapper permissionMapper;
 
     @Transactional
     public PermissionResponse createPermission(PermissionRequest request) {
-        Permission permission = roleMapper.toPermission(request);
+        Permission permission = permissionMapper.toPermissionEntity(request);
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public PermissionResponse getPermission(UUID permissionId) {
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new RuntimeException("Permission not found"));
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public List<PermissionResponse> getAllPermissions() {
         return permissionRepository.findAll()
                 .stream()
-                .map(roleMapper::toPermissionResponse)
+                .map(permissionMapper::toPermissionResponse)
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +50,7 @@ public class PermissionService {
         permission.setDescription(request.getDescription());
 
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     @Transactional

@@ -31,14 +31,13 @@ public class SecurityConfiguration {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/farmer/auth/registration",
-                                "/api/v1/farmer/auth/login",
+                                "/api/v1/farmer/auth/**",
                                 "/actuator/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/farmer/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

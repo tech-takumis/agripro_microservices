@@ -15,6 +15,7 @@ import java.util.UUID;
 public class CustomUserDetails implements UserDetails {
 
     private final String username;
+    private final String password;
     private final Set<SimpleGrantedAuthority> authorities;
     private final String firstName;
     private final String lastName;
@@ -25,6 +26,7 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(Farmer farmer) {
         this.username = farmer.getUsername();
+        this.password = farmer.getPassword(); // Store the password
         this.authorities = Set.of();  // Will be set separately
         this.firstName = farmer.getFirstName();
         this.lastName = farmer.getLastName();
@@ -37,6 +39,7 @@ public class CustomUserDetails implements UserDetails {
     // Constructor for JWT claims-based authentication
     public CustomUserDetails(Map<String, Object> claims, Set<SimpleGrantedAuthority> authorities) {
         this.username = claims.get("sub").toString();
+        this.password = null; // No password needed for JWT-based auth
         this.authorities = authorities;
         this.firstName = (String) claims.get("firstname");
         this.lastName = (String) claims.get("lastname");
@@ -49,6 +52,7 @@ public class CustomUserDetails implements UserDetails {
     // Constructor for internal service
     public CustomUserDetails(String serviceId, Set<SimpleGrantedAuthority> authorities) {
         this.username = serviceId;
+        this.password = null; // No password needed for internal service auth
         this.authorities = authorities;
         this.firstName = null;
         this.lastName = null;
@@ -65,7 +69,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null; // Not needed for token-based auth
+        return password;
     }
 
     @Override

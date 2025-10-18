@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Skip authentication for public endpoints
         if (PUBLIC_ENDPOINTS.contains(requestUri)) {
-            log.debug("Skipping authentication for public endpoint: {}", requestUri);
             filterChain.doFilter(request, response);
             return;
         }

@@ -40,11 +40,35 @@ public class JwtService {
 
         return token;
     }
+    /**
+     * Generate WebSocket token with claims and webSocketExpirationMs expiry
+     */
+    public String generateWebSocketToken(String subject, Map<String, Object> claims) {
+        return Jwts.builder()
+                .subject(subject)
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plusMillis(getWebSocketTokenExpiry())))
+                .claims(claims)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    /**
+     * Validate WebSocket token (checks signature and expiration)
+     */
+    public boolean validateWebSocketToken(String token) {
+        try {
+            Claims claims = getAllClaims(token);
+            // Check expiration
+            return claims.getExpiration().toInstant().isAfter(Instant.now());
+        } catch (JwtException e) {
+            return false;
+        }
+    }
 
     /**Generate Access token**/
     public String generateAccessToken(String subject,Map<String,Object> claims,
                                       long expiryMillis) {
-
 
         return Jwts.builder()
                 .subject(subject)
@@ -105,19 +129,11 @@ public class JwtService {
                 : jwtProperties.getRefreshTokenExpirationMs();
     }
 
+    public Long getWebSocketTokenExpiry(){
+        return jwtProperties.getWebSocketExpirationMs();
+    }
 // Add these new methods to your existing JwtService class
 
-/**
- * Validates if the token is valid and belongs to the given user
- */
-public boolean isTokenValid(String token, UserDetails userDetails) {
-    try {
-        final String username = getUsernameFromToken(token);
-        return username.equals(userDetails.getUsername()) && !isExpired(token);
-    } catch (JwtException e) {
-        return false;
-    }
-}
 
 /**
  * Extracts expiration date from token
@@ -138,17 +154,6 @@ public long getRemainingTimeInMillis(String token) {
     }
 }
 
-/**
- * Checks if token needs to be refreshed based on refresh threshold
- */
-public boolean shouldTokenBeRefreshed(String token, long refreshThresholdMs) {
-    try {
-        final long remainingTime = getRemainingTimeInMillis(token);
-        return remainingTime > 0 && remainingTime < refreshThresholdMs;
-    } catch (JwtException e) {
-        return false;
-    }
-}
 
 /**
  * Validates refresh token against the store
@@ -168,4 +173,6 @@ public void invalidateRefreshToken(String refreshToken) {
         refreshTokenStore.remove(refreshToken);
     }
 }
+
+
 }

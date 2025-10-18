@@ -29,18 +29,19 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable) // ✅ Enable CORS
+                .cors(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/agriculture/auth/registration",
                                 "/api/v1/agriculture/auth/login", "/actuator/**").permitAll()
-                        .requestMatchers("/api/v1/agriculture/auth/me","/api/v1/agriculture/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/agriculture/auth/me","/api/v1/agriculture/auth/logout",
+                                "/api/v1/dashboard/**", "/api/v1/agriculture/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -63,3 +64,4 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 }
+

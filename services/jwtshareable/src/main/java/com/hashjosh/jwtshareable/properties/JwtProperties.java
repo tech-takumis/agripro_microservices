@@ -11,6 +11,7 @@ public class JwtProperties {
     private long accessTokenExpirationRememberMeMs;
     private long refreshTokenExpirationMs;
     private long refreshTokenExpirationRememberMeMs;
+    private long webSocketExpirationMs;
 
 }
 

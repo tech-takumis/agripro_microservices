@@ -11,10 +11,6 @@ public class LoginRequest {
     @Size(max = 100, message = "Username must not exceed up to 100 character")
     private String username;
     @NotBlank(message = "Password is required")
-    @Pattern(
-            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+=-]).{8,}$",
-            message = "Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character"
-    )
     private String password;
     private boolean rememberMe;
 }

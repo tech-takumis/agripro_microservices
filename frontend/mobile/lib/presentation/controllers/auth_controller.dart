@@ -1,129 +1,189 @@
-import 'package:flutter/material.dart'; // Import for AlertDialog
-import 'package:geolocator/geolocator.dart';
-import 'package:get/get.dart';
-import '../../data/models/login_request.dart';
-import '../../data/services/api_service.dart';
-import '../../data/services/storage_service.dart';
-import '../../data/services/location_service.dart'; // Import LocationService
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:mobile/data/models/login_request.dart';
+import 'package:mobile/data/services/auth_api_service.dart';
+import 'package:mobile/data/services/location_service.dart';
+import 'package:mobile/data/services/message_service.dart';
+import 'package:mobile/data/services/storage_service.dart';
+import 'package:mobile/features/messages/providers/message_provider.dart';
 
-class AuthController extends GetxController {
-  final _isLoading = false.obs;
-  final _isLoggedIn = false.obs;
-  final _errorMessage = ''.obs;
-  // Add at the top (below the other observables)
-final RxString _userName = ''.obs;
-final RxString _userEmail = ''.obs;
+import '../../data/services/websocket.dart';
+import '../../injection_container.dart';
 
-// Public getters
-String get userName => _userName.value;
-String get userEmail => _userEmail.value;
+class AuthState {
+  final bool isLoading;
+  final bool isLoggedIn;
+  final String errorMessage;
+  final String userName;
+  final String userEmail;
+  final String? token;
+  final String? userId;
 
+  AuthState({
+    this.isLoading = false,
+    this.isLoggedIn = false,
+    this.errorMessage = '',
+    this.userName = '',
+    this.userEmail = '',
+    this.token,
+    this.userId,
+  });
 
-  bool get isLoading => _isLoading.value;
-  bool get isLoggedIn => _isLoggedIn.value;
-  String get errorMessage => _errorMessage.value;
-  bool get isAuthenticated => isLoggedIn; // Add this line
+  AuthState copyWith({
+    bool? isLoading,
+    bool? isLoggedIn,
+    String? errorMessage,
+    String? userName,
+    String? userEmail,
+    String? token,
+    String? userId,
+  }) {
+    return AuthState(
+      isLoading: isLoading ?? this.isLoading,
+      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+      errorMessage: errorMessage ?? this.errorMessage,
+      userName: userName ?? this.userName,
+      userEmail: userEmail ?? this.userEmail,
+      token: token ?? this.token,
+      userId: userId ?? this.userId,
+    );
+  }
+}
 
-  @override
-  void onInit() {
-    super.onInit();
+class AuthNotifier extends StateNotifier<AuthState> {
+  final Ref ref;
+  final AuthApiService authApiService;
+  final StorageService storageService;
+  final MessageService messageService;
+  final LocationService locationService;
+  final WebSocketService webSocketService;
+
+  AuthNotifier({
+    required this.ref,
+    required this.authApiService,
+    required this.storageService,
+    required this.messageService,
+    required this.locationService,
+    required this.webSocketService,
+  }) : super(AuthState()) {
     _checkLoginStatus();
-    // Initialize LocationService
-    Get.put(LocationService());
   }
 
   void _checkLoginStatus() {
-    final token = StorageService.to.getToken();
-    _isLoggedIn.value = token != null && token.isNotEmpty;
+    final token = storageService.getAccessToken();
+    print('🧩 Token on startup: $token');
+    if (token != null && token.isNotEmpty && !JwtDecoder.isExpired(token)) {
+      final credentials = storageService.getUserCredentials();
+      state = state.copyWith(
+        isLoggedIn: true,
+        userName: credentials != null
+            ? "${credentials.user.firstName} ${credentials.user.lastName}"
+            : '',
+        userEmail: credentials?.user.email ?? '',
+        token: token,
+        userId: credentials?.id,
+      );
+    } else {
+      state = state.copyWith(isLoggedIn: false);
+    }
   }
 
   Future<void> login(String username, String password, bool rememberMe) async {
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
-
+      state = state.copyWith(isLoading: true, errorMessage: '');
       final request = LoginRequest(
         username: username,
         password: password,
         rememberMe: rememberMe,
       );
 
-      final response = await ApiService.to.login(request);
-      if (response.success && response.accessToken != null) {
-        await StorageService.to.saveToken(response.accessToken!);
-        if (response.refreshToken != null) {
-          await StorageService.to.saveRefreshToken(response.refreshToken!);
-        }
-        await StorageService.to.saveRememberMe(rememberMe);
+      final credentials = await authApiService.login(request);
+      print("Login user credentials response: $credentials");
+      if (credentials != null) {
+        // Save credentials once (fixes redundant saves)
+        await storageService.saveUserCredentials(credentials);
+
+        // Handle "remember me" functionality
         if (rememberMe) {
-          await StorageService.to.saveCredential(username, password);
+          await storageService.saveCredential(username, password);
+          print('✅ Saved username and password for autofill');
         }
-        _isLoggedIn.value = true;
-        Get.offAllNamed('/home'); // This should work now
-        _handlePostLoginLocationCheck();
+
+        // Initialize message service
+        await messageService.init(
+          token: credentials.accessToken,
+          userId: credentials.id,
+        );
+
+        // Invalidate the provider so widgets get the updated MessageService
+        ref.invalidate(messageServiceProvider);
+
+        state = state.copyWith(
+          isLoading: false,
+          isLoggedIn: true,
+          userName: "${credentials.user.firstName} ${credentials.user.lastName}",
+          userEmail: credentials.user.email,
+          token: credentials.accessToken,
+          userId: credentials.id,
+        );
+
+        // Navigate to home (use GoRouter or similar, not GetX)
+        getIt<GoRouter>().go('/home');
+        await _handlePostLoginLocationCheck();
       } else {
-        _errorMessage.value = response.message;
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'Login failed',
+        );
       }
     } catch (e) {
-      _errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
-    } finally {
-      _isLoading.value = false;
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'An unexpected error occurred: {e.toString()}',
+      );
     }
   }
 
   Future<void> _handlePostLoginLocationCheck() async {
-    final locationReady =
-        await LocationService.to.checkAndRequestLocationReadiness();
+    final locationReady = await locationService.checkAndRequestLocationReadiness();
     if (!locationReady) {
-      _showLocationPromptDialog();
+      // Trigger dialog via state or UI (handled in LoginPage)
+      state = state.copyWith(errorMessage: 'Location services required');
     }
-  }
-
-  void _showLocationPromptDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Location Services Required'),
-        content: const Text(
-          'To automatically capture GPS coordinates for your application forms, please enable location services and grant permissions for this app in your device settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back(); // Close dialog
-            },
-            child: const Text('Later'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Get.back(); // Close dialog
-              // Attempt to open location settings or app settings
-              bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-              if (!serviceEnabled) {
-                await LocationService.to.openLocationSettings();
-              } else {
-                await LocationService.to.openAppSettings();
-              }
-            },
-            child: const Text('Open Settings'),
-          ),
-        ],
-      ),
-      barrierDismissible: false, // User must interact with the dialog
-    );
   }
 
   Future<void> logout() async {
     try {
-      await StorageService.to.removeToken();
-      await StorageService.to.saveRememberMe(false);
-      _isLoggedIn.value = false;
-      Get.offAllNamed('/login');
+      webSocketService.disconnect();
+      await storageService.clearAll();
+      state = state.copyWith(
+        isLoggedIn: false,
+        userName: '',
+        userEmail: '',
+        token: null,
+        userId: null,
+        errorMessage: '',
+      );
+      getIt<GoRouter>().go('/login');
     } catch (e) {
       print('Logout error: $e');
+      state = state.copyWith(errorMessage: 'Logout failed: $e');
     }
   }
 
   void clearError() {
-    _errorMessage.value = '';
+    state = state.copyWith(errorMessage: '');
   }
 }
+
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(
+    ref: ref,
+    authApiService: getIt<AuthApiService>(),
+    storageService: getIt<StorageService>(),
+    messageService: getIt<MessageService>(),
+    locationService: getIt<LocationService>(),
+    webSocketService: getIt<WebSocketService>(),
+  );
+});

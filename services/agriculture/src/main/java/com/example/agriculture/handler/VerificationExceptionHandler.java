@@ -2,7 +2,6 @@ package com.example.agriculture.handler;
 
 import com.example.agriculture.dto.ErrorResponse;
 import com.example.agriculture.dto.ExceptionResponse;
-import com.example.agriculture.exception.ApplicationNotFoundException;
 import com.example.agriculture.exception.BatchException;
 import com.example.agriculture.exception.TokenNotFoundException;
 import com.example.agriculture.exception.VerificationException;
@@ -20,10 +19,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class VerificationExceptionHandler {
 
-    @ExceptionHandler(ApplicationNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> applicationNotFound(ApplicationNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getExceptionResponse());
-    }
 
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<ExceptionResponse> tokenNotFound(TokenNotFoundException e) {

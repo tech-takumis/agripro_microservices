@@ -1,5 +1,6 @@
 package com.hashjosh.communication.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,8 +17,9 @@ import java.util.UUID;
 public class MessageRequestDto {
     private UUID senderId;
     private UUID receiverId;
+    @NotBlank(message = "Message text cannot be blank")
     private String text;
     private String type; // FARMER_AGRICULTURE, AGRICULTURE_PCIC
-    private Set<UUID> attachments;
+    private Set<AttachmentRequest> attachments;
     private LocalDateTime sentAt;
 }

@@ -1,45 +1,30 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
-import 'package:image_picker/image_picker.dart';
-import 'package:mobile/data/models/auth_response.dart';
+import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:mobile/data/models/login_request.dart';
-import 'package:mobile/data/models/registration_request.dart';
-import 'package:mobile/data/models/registration_response.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_response.dart' as response_model;
 import 'package:mobile/data/models/application_submission_request.dart';
+import 'package:mobile/data/models/application_submission_response.dart' as response_model;
+
 import 'storage_service.dart';
+import 'package:mobile/injection_container.dart'; // For getIt
 
-class ApiService extends getx.GetxService {
-  late Dio _dio;
+class ApplicationApiService {
+  final Dio _dio;
+  final String baseUrl;
 
-  // Since you're using adb reverse, localhost should work
-  static const String baseUrl = 'http://localhost:9001/api/v1';
-
-  static ApiService get to => getx.Get.find();
-
-  @override
-  void onInit() {
-    super.onInit();
-    _initializeDio();
-  }
-
-  void _initializeDio() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
+  ApplicationApiService(this._dio, {required this.baseUrl}) {
+    _dio.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
     );
 
     // Add interceptors for logging and authentication
@@ -57,8 +42,7 @@ class ApiService extends getx.GetxService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Add JWT token to requests if available
-          final token = StorageService.to.getToken();
+          final token = getIt<StorageService>().getAccessToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
             print(
@@ -76,117 +60,6 @@ class ApiService extends getx.GetxService {
         },
       ),
     );
-  }
-
-  Future<AuthResponse> login(LoginRequest request) async {
-    try {
-      print('🚀 Attempting login to: $baseUrl/farmer/auth/login');
-
-      final response = await _dio.post('/farmer/auth/login', data: request.toJson());
-
-      print('✅ Login successful: ${response.statusCode}');
-      final authResponse = AuthResponse.fromJson(response.data);
-
-      // Store tokens if login is successful
-      if (authResponse.success && authResponse.accessToken != null) {
-        await StorageService.to.saveToken(authResponse.accessToken!);
-      }
-      if (authResponse.success && authResponse.refreshToken != null) {
-        await StorageService.to.saveRefreshToken(authResponse.refreshToken!);
-      }
-
-      return authResponse;
-    } on DioException catch (e) {
-      print('❌ Login failed: ${e.message}');
-
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.sendTimeout) {
-        return AuthResponse(
-          message: 'Connection timeout. Please check your network connection.',
-          success: false,
-        );
-      } else if (e.type == DioExceptionType.connectionError) {
-        return AuthResponse(
-          message:
-          'Cannot connect to server. Please ensure your backend is running and adb reverse is set up.',
-          success: false,
-        );
-      } else if (e.response?.statusCode == 401 ||
-          e.response?.statusCode == 400) {
-        final errorData = e.response?.data;
-        return AuthResponse(
-          message: errorData['message'] ?? 'Invalid credentials',
-          success: false,
-        );
-      } else {
-        return AuthResponse(
-          message:
-          'Server error (${e.response?.statusCode}): ${e.response?.data}',
-          success: false,
-        );
-      }
-    } catch (e) {
-      print('❌ Unexpected login error: $e');
-      return AuthResponse(
-        message: 'An unexpected error occurred: ${e.toString()}',
-        success: false,
-      );
-    }
-  }
-
-  Future<RegistrationResponse> register(RegistrationRequest request) async {
-    try {
-      print('🚀 Attempting registration to: $baseUrl/farmers');
-
-      final response = await _dio.post(
-        '/farmer/auth/registration',
-        data: request.toJson(),
-      );
-
-      print('✅ Registration successful: ${response.statusCode}');
-      return RegistrationResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('❌ Registration failed: ${e.message}');
-
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.sendTimeout) {
-        return RegistrationResponse(
-          success: false,
-          error: 'Timeout Error',
-          message: 'Connection timeout. Please try again.',
-        );
-      } else if (e.type == DioExceptionType.connectionError) {
-        return RegistrationResponse(
-          success: false,
-          error: 'Connection Error',
-          message:
-          'Cannot connect to server. Please ensure your backend is running and adb reverse is set up correctly.',
-        );
-      } else if (e.response?.statusCode == 400) {
-        final errorData = e.response?.data;
-        return RegistrationResponse.fromJson(errorData);
-      } else {
-        return RegistrationResponse(
-          success: false,
-          error: 'Server Error',
-          message: 'Server error (${e.response?.statusCode})',
-        );
-      }
-    } catch (e) {
-      print('❌ Unexpected registration error: $e');
-      return RegistrationResponse(
-        success: false,
-        error: 'Unexpected Error',
-        message: 'An unexpected error occurred: ${e.toString()}',
-      );
-    }
-  }
-
-  // Add this method to get auth token
-  String? getAuthToken() {
-    return StorageService.to.getToken();
   }
 
   // Method to fetch application data - updated to handle direct array response
@@ -207,6 +80,7 @@ class ApiService extends getx.GetxService {
 
   Future<ApplicationResponse> fetchApplications() async {
     try {
+      print('🚀 [DEBUG] ApplicationApiService baseUrl: $baseUrl');
       print('🚀 Fetching applications from: $baseUrl/application/types');
       final response = await _dio.get('/application/types');
       print('✅ Applications fetched successfully: ${response.statusCode}');
@@ -290,7 +164,7 @@ class ApiService extends getx.GetxService {
     final request = http.MultipartRequest('POST', uri);
 
     // ✅ Add headers
-    final token = StorageService.to.getToken();
+    final token = getIt<StorageService>().getAccessToken();
     if (token != null && token.isNotEmpty) {
       request.headers['Authorization'] = 'Bearer $token';
     }
@@ -392,12 +266,5 @@ class ApiService extends getx.GetxService {
         message: 'An unexpected error occurred: ${e.toString()}',
       );
     }
-  }
-
-  Future<void> logout() async {
-    // Remove access and refresh tokens from storage
-    await StorageService.to.removeToken();
-    await StorageService.to.removeRefreshToken();
-    // ...add any other logout logic if needed...
   }
 }

@@ -1,24 +1,20 @@
 package com.hashjosh.farmer.dto;
 
 import com.hashjosh.farmer.entity.FarmerProfile;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AuthenticatedResponse {
     private UUID id;
-    private String username;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phoneNumber;
-    private Set<String> roles;
-    private Set<String> permissions;
-    private FarmerProfile profile;
+    private String accessToken;
+    private String refreshToken;
+    private String websocketToken;
+    private AuthUserResponse user;
 }

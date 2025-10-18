@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'data/services/storage_service.dart';
-import 'data/services/api_service.dart';
-import 'data/services/psgc_service.dart';
-import 'presentation/controllers/auth_controller.dart';
-import 'presentation/controllers/application_controller.dart';
-import 'presentation/pages/login_page.dart';
-import 'presentation/pages/home_page.dart';
-import 'presentation/pages/application_page.dart';
-import 'package:mobile/presentation/pages/multi_step_register_page.dart';
-
-// Remember to run `flutter pub get` and
-//`flutter pub run build_runner build --delete-conflicting-outputs`
-//after these changes to generate the Hive adapter and fetch new packages.
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:mobile/data/models/saved_credential.dart';
+import 'package:mobile/injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await setupDependencies();
 
-  // Initialize services
-  await Get.putAsync(() => StorageService().init());
-  Get.put(ApiService());
-  Get.put(PSGCService());
-  Get.put(AuthController());
-  Get.put(ApplicationController());
+  // Initialize Hive
+  await Hive.initFlutter();
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(SavedCredentialAdapter());
+  }
 
-  runApp(const MyApp());
+  // Initialize dependencies
+
+  // Run the app
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -32,35 +27,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Login App',
+    final goRouter = getIt<GoRouter>();
+
+    return MaterialApp.router(
+      routerConfig: goRouter,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
       ),
-      initialRoute: _getInitialRoute(),
-      getPages: [
-        GetPage(name: '/login', page: () => const LoginPage()),
-        GetPage(name: '/register', page: () => const MultiStepRegisterPage()),
-        GetPage(name: '/home', page: () => const HomePage()),
-        GetPage(
-          name: '/applications',
-          page: () => const ApplicationPage(),
-        ), // New route
-      ],
       debugShowCheckedModeBanner: false,
     );
-  }
-
-  String _getInitialRoute() {
-    final authController = Get.find<AuthController>();
-    return authController.isLoggedIn ? '/home' : '/login';
   }
 }

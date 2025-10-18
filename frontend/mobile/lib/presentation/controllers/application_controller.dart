@@ -1,63 +1,56 @@
 import 'package:get/get.dart';
+
 import '../../data/models/application_data.dart';
-import '../../data/services/api_service.dart';
+import '../../data/services/application_api_service.dart';
+import '../../injection_container.dart';
 
 class ApplicationController extends GetxController {
-  final _applications = <ApplicationContent>[].obs;
-  final _isLoading = true.obs;
-  final _errorMessage = ''.obs;
-  final _isRetrying = false.obs;
+  var applications = <ApplicationContent>[].obs;
+  var isLoading = true.obs;
+  var errorMessage = ''.obs;
+  var isRetrying = false.obs;
 
-  List<ApplicationContent> get applications => _applications;
-  bool get isLoading => _isLoading.value;
-  bool get isRetrying => _isRetrying.value;
-  String get errorMessage => _errorMessage.value;
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchApplications();
+  ApplicationController({bool autoFetch = true}) {
+    if (autoFetch) fetchApplications();
   }
 
   Future<void> fetchApplications() async {
     try {
-      _isLoading.value = true;
-      _errorMessage.value = '';
+      isLoading.value = true;
+      errorMessage.value = '';
 
       print('🔄 Starting to fetch applications...');
-      final response = await ApiService.to.fetchApplications();
+      final response = await getIt<ApplicationApiService>().fetchApplications();
 
-      _applications.value = response.content;
-      print('✅ Successfully loaded ${response.content.length} applications');
+      applications.value = response.content;
+      print('✅ Successfully loaded \\${response.content.length} applications');
     } catch (e, stack) {
-      print('❌ Error fetching applications: $e');
-      print('❌ Stack: $stack');
-      _errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      print('❌ Error fetching applications: \\${e}');
+      print('❌ Stack: \\${stack}');
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
     } finally {
-      _isLoading.value = false;
+      isLoading.value = false;
     }
   }
 
   Future<void> retryFetchApplications() async {
     try {
-      _isRetrying.value = true;
-      _errorMessage.value = '';
+      isRetrying.value = true;
+      errorMessage.value = '';
 
-      final response = await ApiService.to.fetchApplications();
+      final response = await getIt<ApplicationApiService>().fetchApplications();
 
-      _applications.value = response.content;
-      print(
-        '✅ Successfully loaded ${response.content.length} applications on retry',
-      );
+      applications.value = response.content;
+      print('✅ Successfully loaded \\${response.content.length} applications on retry');
     } catch (e) {
-      print('❌ Error retrying applications fetch: $e');
-      _errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      print('❌ Error retrying applications fetch: \\${e}');
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
     } finally {
-      _isRetrying.value = false;
+      isRetrying.value = false;
     }
   }
 
   void clearError() {
-    _errorMessage.value = '';
+    errorMessage.value = '';
   }
 }

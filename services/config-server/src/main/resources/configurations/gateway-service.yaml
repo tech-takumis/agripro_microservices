@@ -1,17 +1,33 @@
 spring:
   cloud:
     gateway:
+      default-filters:
+        - PreserveHostHeader
       server:
         webflux:
+          httpclient:
+            wiretap: true
           discovery:
             locator:
               enabled: true
               lower-case-service-id: true
           routes:
+            # General WebSocket route
+            - id: ws_route
+              uri: lb://communication-service
+              predicates:
+                - Path=/ws/**
+              filters:
+                - PreserveHostHeader
+                - RemoveRequestHeader=Cookie
+                - AddRequestHeader=X-Internal-Service, gateway-service
+                - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_FIRST
+
+            # Other service routes
             - id: agriculture-service
               uri: lb://agriculture-service
               predicates:
-                - Path=/api/v1/agriculture/auth/**,/api/v1/agriculture/**,/api/v1/agriculture/beneficiaries/**,/api/v1/dashboard/**,/api/v1/agriculture/permissions/**,/api/v1/agriculture/programs/**,/api/v1/agriculture/roles/**,/api/v1/agriculture/transactions/**,/api/v1/agriculture/verification/**
+                - Path=/api/v1/dashboard/**,/api/v1/agriculture/**
 
             - id: farmer-service
               uri: lb://farmer-service
@@ -56,9 +72,13 @@ spring:
             - id: communication-service
               uri: lb://communication-service
               predicates:
-                - Path=/api/v1/posts/**,/api/v1/messages/**,/ws/**,/api/v1/chat/**
+                - Path=/api/v1/posts/**,/api/v1/messages/**,/api/v1/chat/**,/api/v1/communication/**
               filters:
                 - PreserveHostHeader
+
+      filter:
+        remove-hop-by-hop-headers: false
+      sensitive-headers: [] # ✅ Allow Authorization header to pass through
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
@@ -74,11 +94,11 @@ eureka:
   instance:
     prefer-ip-address: true
 
-logger:
+logging:
   level:
-    org.springframework.web: TRACE
-    org.springframework.cloud.gateway: TRACE
-    reactor.netty: TRACE
+    org.springframework.web: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
 
 server:
   port: 9001

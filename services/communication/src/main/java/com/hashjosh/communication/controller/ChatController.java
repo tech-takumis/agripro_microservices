@@ -1,6 +1,7 @@
 package com.hashjosh.communication.controller;
 
 import com.hashjosh.communication.dto.MessageDto;
+import com.hashjosh.communication.dto.MessageResponseDto;
 import com.hashjosh.communication.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ public class ChatController {
     private final ChatService chatService;
 
     @GetMapping("/{farmerId}/messages")
-    public ResponseEntity<List<MessageDto>> getMessagesWithAgricultureStaff(
+    public ResponseEntity<List<MessageResponseDto>> getMessagesWithAgricultureStaff(
             @PathVariable UUID farmerId
     ) {
         log.info("Fetching messages for farmer with ID: {}", farmerId);
