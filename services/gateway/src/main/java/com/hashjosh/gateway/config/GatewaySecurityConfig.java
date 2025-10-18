@@ -22,11 +22,33 @@ public class GatewaySecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // disable popup
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         // SockJS & raw WS handshake endpoints — permit all (gateway will forward)
                         .pathMatchers("/ws", "/ws/**", "/ws/info", "/ws/info/**").permitAll()
+                        .pathMatchers(
+                                // Farmer
+                                "/api/v1/farmer/auth/login",
+                                "/api/v1/farmer/auth/registration",
+                                // Agriculture
+                                "/api/v1/agriculture/auth/login",
+                                "/api/v1/agriculture/auth/registration",
+                                // Pcic
+                                "/api/v1/pcic/auth/login",
+                                "/api/v1/pcic/auth/registration",
+                                "/ws/**"
+                        ).permitAll()
+                        .pathMatchers(
+                                // Farmer
+                                "/api/v1/farmer/auth/me",
+                                "/api/v1/farmer/auth/logout",
+                                // Agriculture
+                                "/api/v1/agriculture/auth/me",
+                                "/api/v1/agriculture/auth/logout",
+                                // PCIC
+                                "/api/v1/pcic/auth/me",
+                                "/api/v1/pcic/auth/logout").authenticated()
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyExchange().authenticated()
                 );

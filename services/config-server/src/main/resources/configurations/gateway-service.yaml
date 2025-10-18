@@ -19,8 +19,7 @@ spring:
                 - Path=/ws/**
               filters:
                 - PreserveHostHeader
-                - RemoveRequestHeader=Cookie
-                - AddRequestHeader=X-Internal-Service, gateway-service
+                - RemoveRequestHeader=Cookie,Sec-WebSocket-Protocol
                 - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_FIRST
 
             # Other service routes

@@ -56,19 +56,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
         // SockJS fallback for browsers (Vue.js)
         registry.addEndpoint("/ws")
-//                .setAllowedOrigins(allowedOrigins)
-                .addInterceptors(new WebSocketHandshakeInterceptor(jwtService))
-                .setHandshakeHandler(new WebSocketHandshakeHandler())
-                .withSockJS()
-                .setWebSocketEnabled(true)
-                .setDisconnectDelay(30_000)
-                .setHeartbeatTime(25_000);
-
-        // Raw WebSocket endpoint for Flutter / native clients
-        registry.addEndpoint("/ws/websocket")
-//                .setAllowedOrigins(allowedOrigins)
+                .setAllowedOrigins(allowedOrigins)
                 .addInterceptors(new WebSocketHandshakeInterceptor(jwtService))
                 .setHandshakeHandler(new WebSocketHandshakeHandler());
+
     }
 
     // ------------------------------------------------------------------------
