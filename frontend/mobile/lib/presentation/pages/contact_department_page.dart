@@ -4,6 +4,7 @@ import 'package:mobile/features/messages/providers/message_provider.dart';
 import 'package:mobile/presentation/widgets/message_bubble.dart';
 import 'package:mobile/presentation/widgets/message_input_field.dart';
 import 'package:mobile/data/models/message.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ContactDepartmentPage extends ConsumerStatefulWidget {
   final String serviceType;
@@ -16,6 +17,9 @@ class ContactDepartmentPage extends ConsumerStatefulWidget {
 class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
   final ScrollController _scrollController = ScrollController();
 
+  // Holds uploaded files (max 5)
+  final List<PlatformFile> _uploadedFiles = [];
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -26,6 +30,18 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
         );
       });
     }
+  }
+
+  void _handleFileSend(PlatformFile file) {
+    if (_uploadedFiles.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can upload up to 5 files only.')),
+      );
+      return;
+    }
+    setState(() {
+      _uploadedFiles.add(file);
+    });
   }
 
   @override
@@ -66,6 +82,29 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
               ),
             ),
           ),
+          // Show uploaded files preview
+          if (_uploadedFiles.isNotEmpty)
+            SizedBox(
+              height: 60,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _uploadedFiles.length,
+                itemBuilder: (context, index) {
+                  final file = _uploadedFiles[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Chip(
+                      label: Text(file.name),
+                      onDeleted: () {
+                        setState(() {
+                          _uploadedFiles.removeAt(index);
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
           MessageInputField(
             onSend: (text) {
               final message = Message(
@@ -78,9 +117,13 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
                 sentAt: DateTime.now(),
                 isRead: false,
               );
-              messageService.sendMessage(message);
+              messageService.sendMessage(message, files: List<PlatformFile>.from(_uploadedFiles));
+              setState(() {
+                _uploadedFiles.clear();
+              });
               _scrollToBottom();
             },
+            onFileSend: _handleFileSend,
           ),
         ],
       ),

@@ -341,10 +341,10 @@ class MultiStepApplicationController {
 
       final response = await getIt<ApplicationApiService>().submitApplication(request);
 
-      if (response.success) {
+      if (response!.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.message),
+            content: Text(response!.message),
             backgroundColor: Colors.green.withOpacity(0.8),
             duration: const Duration(seconds: 3),
           ),

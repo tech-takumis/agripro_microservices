@@ -158,6 +158,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
           userId: credentials.id,
         );
 
+        // Connect WebSocket after login
+        await webSocketService.connect();
+
         // Navigate to home (use GoRouter or similar, not GetX)
         getIt<GoRouter>().go('/home');
         await _handlePostLoginLocationCheck();
@@ -189,6 +192,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     try {
+      await authApiService.logout(); // Call backend logout API
       webSocketService.disconnect();
       await storageService.clearAll();
       print('🚨 Setting isLoggedIn: false in logout');
