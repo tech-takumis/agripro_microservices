@@ -2,19 +2,13 @@ import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/services/message_service.dart';
-import 'package:mobile/data/services/websocket.dart';
+import 'package:mobile/data/services/storage_service.dart';
 import 'package:mobile/injection_container.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
 
 import 'application_page.dart';
 import 'contact_department_page.dart';
 import 'profile_page.dart';
-
-// Riverpod provider for AuthController (replace with your actual provider)
-final authControllerProvider = Provider<AuthState>((ref) {
-  // You may want to use getIt or your own logic here
-  return getIt<AuthState>();
-});
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -26,7 +20,6 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
   late PageController _pageController;
-  bool _webSocketListenerSet = false;
 
   @override
   void initState() {
@@ -40,25 +33,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  Future<void> _initWebSocketConnection(String token, String userId) async {
-    final webSocketService = getIt<WebSocketService>();
-    print('🔌 [HomePage] Connecting WebSocket for user: $userId');
-    await webSocketService.connect();
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    // Set up the listener only once
-    if (!_webSocketListenerSet) {
-      _webSocketListenerSet = true;
-      ref.listen<AuthState>(authProvider, (previous, next) {
-        if (next.token != null && next.userId != null) {
-          _initWebSocketConnection(next.token!, next.userId!);
-        }
-      });
-    }
 
     return Scaffold(
       extendBody: true,

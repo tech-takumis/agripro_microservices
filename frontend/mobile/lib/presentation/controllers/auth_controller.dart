@@ -8,6 +8,7 @@ import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/data/services/storage_service.dart';
 import 'package:mobile/features/messages/providers/message_provider.dart';
 
+import '../../data/models/user_credentials.dart';
 import '../../data/services/websocket.dart';
 import '../../injection_container.dart';
 
@@ -67,27 +68,56 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required this.locationService,
     required this.webSocketService,
   }) : super(AuthState()) {
-    _checkLoginStatus();
+    _init();
   }
 
-  void _checkLoginStatus() {
+  Future<void> _init() async {
+    await _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    state = state.copyWith(isLoading: true);
     final token = storageService.getAccessToken();
     print('🧩 Token on startup: $token');
     if (token != null && token.isNotEmpty && !JwtDecoder.isExpired(token)) {
-      final credentials = storageService.getUserCredentials();
+      var credentials = storageService.getUserCredentials();
+      if (credentials == null) {
+        // Optionally decode token to get user info if credentials are missing
+        final decoded = JwtDecoder.decode(token);
+        credentials = UserCredentials(
+          id: decoded['userId'] ?? '',
+          accessToken: token,
+          refreshToken: storageService.getRefreshToken() ?? '',
+          websocketToken: storageService.getWebSocketToken() ?? '',
+          user: User(
+            username: decoded['username'] ?? '',
+            firstName: decoded['firstName'] ?? '',
+            lastName: decoded['lastName'] ?? '',
+            email: decoded['email'] ?? '',
+            phoneNumber: decoded['phoneNumber'] ?? '',
+            roles: [], profile: UserProfile.fromJson({}), // Simplified; adjust as needed
+            )
+          );
+      }
       state = state.copyWith(
+        isLoading: false,
         isLoggedIn: true,
-        userName: credentials != null
-            ? "${credentials.user.firstName} ${credentials.user.lastName}"
-            : '',
-        userEmail: credentials?.user.email ?? '',
+        userName: "${credentials.user.firstName} ${credentials.user.lastName}",
+        userEmail: credentials.user.email,
         token: token,
-        userId: credentials?.id,
+        userId: credentials.id,
       );
+      // Connect WebSocket if token is valid
+      final wsToken = storageService.getWebSocketToken();
+      if (wsToken != null && wsToken.isNotEmpty) {
+        await webSocketService.connect();
+      }
     } else {
-      state = state.copyWith(isLoggedIn: false);
+      print('🚨 Setting isLoggedIn: false in _checkLoginStatus (token missing or expired)');
+      state = state.copyWith(isLoading: false, isLoggedIn: false);
     }
   }
+
 
   Future<void> login(String username, String password, bool rememberMe) async {
     try {
@@ -132,15 +162,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
         getIt<GoRouter>().go('/home');
         await _handlePostLoginLocationCheck();
       } else {
+        print('🚨 Setting isLoggedIn: false in login (credentials null)');
         state = state.copyWith(
           isLoading: false,
           errorMessage: 'Login failed',
+          isLoggedIn: false,
         );
       }
     } catch (e) {
+      print('🚨 Setting isLoggedIn: false in login (exception: $e)');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: {e.toString()}',
+        errorMessage: 'An unexpected error occurred: ���{e.toString()}',
+        isLoggedIn: false,
       );
     }
   }
@@ -157,6 +191,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       webSocketService.disconnect();
       await storageService.clearAll();
+      print('🚨 Setting isLoggedIn: false in logout');
       state = state.copyWith(
         isLoggedIn: false,
         userName: '',
