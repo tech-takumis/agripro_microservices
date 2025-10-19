@@ -61,8 +61,8 @@ Future<void> setupDependencies() async {
   // Other services
   getIt.registerSingleton<LocationService>(LocationService());
   getIt.registerSingleton<WebSocketService>(WebSocketService());
-  getIt.registerSingleton<MessageService>(MessageService());
   getIt.registerLazySingleton<DocumentService>(() => DocumentService());
+  getIt.registerLazySingleton<MessageService>(() => MessageService());
 
   // Controllers
   getIt.registerSingleton<ApplicationController>(

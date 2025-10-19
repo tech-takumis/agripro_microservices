@@ -229,14 +229,14 @@ class ApplicationApiService {
     }
   }
 
-  Future<response_model.ApplicationSubmissionResponse?> submitApplication(
+  Future<ApplicationSubmissionResponse> submitApplication(
       AuthState authState,
       ApplicationSubmissionRequest request,
       ) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
-        return null;
+        return ApplicationSubmissionResponse(success: false, message: 'User not logged in');
       }
       print('🚀 Submitting application for type: ${request.applicationTypeId}');
       print('📋 Field values: ${request.fieldValues}');
@@ -254,7 +254,7 @@ class ApplicationApiService {
       );
 
       print('✅ Application submitted successfully: ${response.statusCode}');
-      return response_model.ApplicationSubmissionResponse.fromJson(response.data);
+      return ApplicationSubmissionResponse.fromJson(response.data);
     } on DioException catch (e) {
       print('❌ Application submission failed: ${e.message}');
       print('❌ Response data: ${e.response?.data}');
@@ -262,31 +262,31 @@ class ApplicationApiService {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        return response_model.ApplicationSubmissionResponse(
+        return ApplicationSubmissionResponse(
           success: false,
           message: 'Connection timeout. Please try again.',
         );
       } else if (e.type == DioExceptionType.connectionError) {
-        return response_model.ApplicationSubmissionResponse(
+        return ApplicationSubmissionResponse(
           success: false,
           message: 'Cannot connect to server. Please check your connection.',
         );
       } else if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
-        return response_model.ApplicationSubmissionResponse(
+        return ApplicationSubmissionResponse(
           success: false,
           message: errorData['message'] ?? 'Invalid application data',
-          error: errorData['errors'],
+          errors: errorData['errors'],
         );
       } else {
-        return response_model.ApplicationSubmissionResponse(
+        return ApplicationSubmissionResponse(
           success: false,
           message: 'Server error (${e.response?.statusCode})',
         );
       }
     } catch (e) {
       print('❌ Unexpected error: $e');
-      return response_model.ApplicationSubmissionResponse(
+      return ApplicationSubmissionResponse(
         success: false,
         message: 'An unexpected error occurred: ${e.toString()}',
       );

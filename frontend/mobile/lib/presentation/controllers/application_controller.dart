@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/application_data.dart';
 import '../../data/services/application_api_service.dart';

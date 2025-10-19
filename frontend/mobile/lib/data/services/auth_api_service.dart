@@ -4,15 +4,12 @@ import 'package:mobile/data/models/login_request.dart';
 import 'package:mobile/data/models/registration_request.dart';
 import 'package:mobile/data/models/registration_response.dart';
 import 'package:mobile/data/services/storage_service.dart';
-import 'package:mobile/data/services/websocket.dart';
-
-import '../../injection_container.dart';
 import 'package:mobile/data/models/user_credentials.dart';
 
 class AuthApiService {
   final Dio _dio;
   final String baseUrl;
-  final StorageService storageService; // Injected via get_it
+  final StorageService storageService; 
 
   AuthApiService(this._dio, {required this.baseUrl, required this.storageService}) {
     _initializeDio();

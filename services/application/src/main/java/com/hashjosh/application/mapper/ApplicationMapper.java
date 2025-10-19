@@ -33,7 +33,7 @@ public class ApplicationMapper {
         dto.setVersion(entity.getVersion());
 
         List<String> generatedUrl = new ArrayList<>();
-        entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.getDocumentPreviewUrl(document)));
+        entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document,30)));
         dto.setFileUploads(generatedUrl);
         // map JsonNode into typed DTO
         if (entity.getDynamicFields() != null) {
@@ -47,6 +47,7 @@ public class ApplicationMapper {
         }
         return dto;
     }
+
 
     public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, String userId) {
         ObjectMapper objectMapper = new ObjectMapper();

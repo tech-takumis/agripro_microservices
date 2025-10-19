@@ -204,3 +204,11 @@ onMounted(async () => {
     }
 })
 </script>
+<style>
+@media print {
+    .authenticated-layout,
+    .page-content {
+        display: block !important;
+    }
+}
+</style>

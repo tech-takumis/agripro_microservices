@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../models/user_credentials.dart';
 
 class AuthResponse {

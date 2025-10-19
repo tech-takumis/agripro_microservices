@@ -4,6 +4,7 @@ import 'package:mobile/presentation/pages/home_page.dart';
 
 import '../../../presentation/controllers/auth_controller.dart';
 import '../../../presentation/pages/login_page.dart';
+import  'package:mobile/presentation/pages/profile_page.dart';
 // Import other pages as needed
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -29,7 +30,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (context, state) => const HomePage(),
       ),
-      // Add other routes here
+      GoRoute(
+        path: '/profile',
+         builder: (context, state) => const ProfilePage()
+         ),
     ],
   );
 });

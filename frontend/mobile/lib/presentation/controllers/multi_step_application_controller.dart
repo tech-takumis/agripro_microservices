@@ -232,10 +232,10 @@ class MultiStepApplicationController {
   }
 
   // Submission
-  Future<void> submitApplication(BuildContext context, AuthState authState) async {
+  Future<ApplicationSubmissionResponse> submitApplication(BuildContext context, AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
-      return;
+      return ApplicationSubmissionResponse(success: false, message: _errorMessage);
     }
 
     try {
@@ -266,10 +266,8 @@ class MultiStepApplicationController {
 
           try {
             final documentResponse = await getIt<DocumentService>().uploadDocument(
-              authState: authState, // Pass authState here
-              referenceId: application.id,
+              authState: authState,
               file: File(file.path),
-              documentType: fieldKey,
             );
 
             documentIds.add(documentResponse.documentId);
@@ -359,19 +357,7 @@ class MultiStepApplicationController {
 
       final response = await getIt<ApplicationApiService>().submitApplication(authState,request);
 
-      if (response!.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response!.message),
-            backgroundColor: Colors.green.withOpacity(0.8),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
-      } else {
-        throw Exception(response.message);
-      }
+      return response;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -381,6 +367,10 @@ class MultiStepApplicationController {
           duration: const Duration(seconds: 4),
         ),
       );
+      return ApplicationSubmissionResponse(
+      success: false,
+      message: _errorMessage,
+    );
     } finally {
       _isLoading = false;
       _uploadProgress = 0.0;

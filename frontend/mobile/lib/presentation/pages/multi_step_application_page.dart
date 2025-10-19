@@ -25,6 +25,34 @@ class MultiStepApplicationPage extends ConsumerStatefulWidget {
 }
 
 class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationPage> {
+  Future<void> _submitApplication(BuildContext context, AuthState authState) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    final response = await controller.submitApplication(context, authState);
+
+    if(!mounted) return;
+
+    if(response.success){
+      scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: const Text('Application submitted successfully'),
+        backgroundColor: const Color.fromARGB(0, 36, 225, 43).withAlpha(204), // 80% opacity of Material Green 500 (0x4CAF50)        duration: const Duration(seconds: 4),
+      ),
+        );
+         navigator.pop(); // use navigator safely
+    }
+    else{
+      scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(response.message),
+        backgroundColor: const Color.fromARGB(0, 179, 13, 13).withAlpha(204),
+        duration: const Duration(seconds: 4),
+      ),
+        );
+    }
+  }
+
   late final MultiStepApplicationController controller;
 
   @override
@@ -86,7 +114,7 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: const Color.fromARGB(0, 0, 0, 0).withAlpha(204),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -125,8 +153,7 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
                       onPressed: controller.isLoading
                           ? null
                           : (controller.currentStep == controller.totalSteps - 1
-                              // Pass both context and authState to submitApplication
-                              ? () => controller.submitApplication(context, authState)
+                              ? () => _submitApplication(context, authState)
                               : () {
                                   setState(() {
                                     controller.nextStep();

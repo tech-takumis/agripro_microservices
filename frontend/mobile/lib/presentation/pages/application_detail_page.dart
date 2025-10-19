@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../../data/models/application_data.dart';
 import 'multi_step_application_page.dart';
 

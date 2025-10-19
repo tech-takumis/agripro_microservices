@@ -41,6 +41,13 @@ public class DocumentServiceClient {
             return false;
         }
     }
+    public String generatePresignedUrl(UUID documentId, int expiry) {
+        return restClient.get()
+                .uri("/{id}/download-url?expiryMinutes={expiry}", documentId, expiry)
+                .header("X-Internal-Service", applicationName)
+                .retrieve()
+                .body(String.class);
+    }
 
     public String getDocumentPreviewUrl(UUID documentId){
         try {

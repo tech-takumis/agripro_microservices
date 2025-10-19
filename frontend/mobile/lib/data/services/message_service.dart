@@ -1,10 +1,16 @@
 import 'dart:async';
-import 'package:get/get.dart';
-import 'package:mobile/data/models/message.dart';
-import 'package:mobile/data/models/designated_response.dart';
-import 'package:mobile/data/services/websocket.dart';
-import 'package:mobile/data/services/message_api.dart';
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:get/get.dart';
+import 'package:mobile/data/models/attachment.dart';
+import 'package:mobile/data/models/designated_response.dart';
+import 'package:mobile/data/models/message.dart';
+import 'package:mobile/data/services/document_service.dart';
+import 'package:mobile/data/services/message_api.dart';
+import 'package:mobile/data/services/websocket.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart';
+
 import '../../injection_container.dart';
 
 class MessageService extends GetxService {
@@ -14,6 +20,7 @@ class MessageService extends GetxService {
   final _controller = StreamController<List<Message>>.broadcast();
   final WebSocketService _ws = getIt<WebSocketService>();
   final MessageApi _messageApi = MessageApi();
+  final DocumentService _documentService = getIt<DocumentService>();
 
   String? _userId;
   String? _receiverId;
@@ -61,62 +68,55 @@ class MessageService extends GetxService {
   void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
       final message = Message.fromJson(data);
-      print('💬 [MessageService] Incoming message: ${message.text}');
       if (!_messages.any((m) => m.messageId == message.messageId)) {
         _messages.add(message);
         _controller.add([..._messages]); // ✅ notify listeners
+      } else {
       }
     } catch (e) {
       print('❌ [MessageService] Error parsing incoming message: $e');
     }
   }
 
-  Future<void> sendMessage(Message message, {List<PlatformFile>? files}) async {
+  Future<void> sendMessage(Message message, {required AuthState authState, List<PlatformFile>? files}) async {
     try {
       if (_receiverId == null) throw Exception('No designated staff to send message to');
+
+      List<Attachment> attachmentUploaded = [];
+      if (files != null && files.isNotEmpty) {
+        for (PlatformFile platformFile in files) {
+          if (platformFile.path != null) {
+            final file = File(platformFile.path!);
+            final docResponse = await _documentService.uploadDocument(
+              authState: authState,
+              file: file,
+            );
+
+            final attachment = Attachment(
+              documentId: docResponse.documentId,
+              url: docResponse.preview, // Use 'preview' as per DocumentResponse
+            );
+
+            attachmentUploaded.add(attachment);
+          } else {
+            print('❌ [MessageService] File path is null for file: ${platformFile.name}');
+          }
+        }
+      }
 
       final messageRequest = {
         'senderId': message.senderId,
         'receiverId': _receiverId,
         'text': message.text,
         'type': message.type.toString().split('.').last,
-        'attachments': [],
+        'attachments': attachmentUploaded,
         'sentAt': message.sentAt.toUtc().toIso8601String(),
       };
 
-      // Handle file attachments (if any)
-      // Note: Need to implement actual file upload to my backend using
-      // the /api/document api this well return
-      /*
-        {
-           "documentId": "445c43a9-dd4b-4a7a-a0d1-35502f0ac748",
-            "uploadedBy": "09ae13c1-e44d-478f-b58c-90f1e1cfa2dc",
-            "fileName": "6e99b2d7-d880-4db0-9532-81a0752706e7.jpg",
-            "fileType": "image/jpeg",
-            "fileSize": null,
-            "objectKey": "459e69d7-dea6-457f-95cf-b19b719af3eb.jpg",
-            "uploadedAt": "2025-10-18T21:46:21.079470",
-            "preview": "http://localhost:9000/documents/459e69d7-dea6-457f-95cf-b19b719af3eb.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20251018%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251018T134621Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=6e24567c8b29093b398253cae2df2b92fb2ebb27f8ab47b58ce38095676ab3d3"
-      }
-
-      And create an attachment like this:
-      {
-        "documentId": "445c43a9-dd4b-4a7a-a0d1-35502f0ac748",
-        "url": "http://localhost:9000/documents/459e69d7-dea6-457f-95cf-b19b719af3eb.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20251018%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251018T134621Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=6e24567c8b29093b398253cae2df2b92fb2ebb27f8ab47b58ce38095676ab3d3"
-
-      }
-
-      If user uploade more than one attachment, list them all here.
-       Add this to the attachments list in the messageRequest
-       */
-      if (files != null && files.isNotEmpty) {
-        // You may want to upload files and add their URLs to attachments here
-        // For now, just add file names as a placeholder
-        messageRequest['attachments'] = files.map((f) => {'name': f.name}).toList();
-      }
-
+      print("[Message Service] Sending message request: $messageRequest");
       print('📤 [MessageService] Sending message: ${message.text}');
       _ws.sendMessage('/app/private.chat', messageRequest);
+      print("[MessageService] After send, current messages count: \\${_messages.length}");
 
     } catch (e) {
       print('❌ [MessageService] Error sending message: $e');
