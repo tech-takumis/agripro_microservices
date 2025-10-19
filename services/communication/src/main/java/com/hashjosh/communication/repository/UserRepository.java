@@ -15,5 +15,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByUserId(UUID userId);
 
+    Optional<User> findByUserId(UUID userId);
+
     List<User> findByServiceType(ServiceType serviceType);
 }

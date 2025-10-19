@@ -37,10 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("📝 Checking path for filtering: {}", path);
 
         // Completely bypass the filter for WebSocket paths
-        boolean isWebSocketPath = path.startsWith("/ws") ||
-                                 path.contains("/ws/") ||
-                                 path.equals("/ws") ||
-                                 path.startsWith("/ws/info");
+        boolean isWebSocketPath = path.startsWith("/ws") || path.contains("/ws/") || path.startsWith("/ws/info");
 
         if (isWebSocketPath) {
             log.debug("🔓 Bypassing filter for WebSocket path: {}", path);

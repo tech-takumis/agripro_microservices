@@ -73,4 +73,8 @@ public class AgricultureService {
         agricultureRepository.deleteById(id);
     }
 
+    public String getAgricultureName(UUID id) {
+        Agriculture agri = getUserById(id);
+        return agri.getFirstName() + " " + agri.getLastName();
+    }
 }

@@ -29,6 +29,7 @@ public class AgricultureController {
         return ResponseEntity.ok().build();
     }
 
+
     @GetMapping
     public ResponseEntity<Page<AgricultureResponseDto>> getAll(
             @RequestParam(required = false) String search,
@@ -47,6 +48,12 @@ public class AgricultureController {
     @GetMapping("/{id}")
     public ResponseEntity<AgricultureResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(agricultureService.getById(id));
+    }
+
+    @GetMapping("/{id}/name")
+    public ResponseEntity<String> getAgricultureName(@PathVariable UUID id) {
+        String name = agricultureService.getAgricultureName(id);
+        return ResponseEntity.ok(name);
     }
 
 
