@@ -1,5 +1,7 @@
 package com.hashjosh.communication.service;
 
+import com.hashjosh.communication.config.CustomUserDetails;
+import com.hashjosh.communication.dto.PostPageResponse;
 import com.hashjosh.communication.dto.PostRequest;
 import com.hashjosh.communication.dto.PostResponse;
 import com.hashjosh.communication.entity.Post;
@@ -9,8 +11,11 @@ import com.hashjosh.communication.repository.PostRepository;
 import com.hashjosh.communication.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,7 +27,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final PostMapper mapper;
+    private final PostMapper postMapper;
 
     public PostResponse createPost(PostRequest request) {
         Post post = new Post();
@@ -31,24 +36,28 @@ public class PostService {
         post.setDocumentIds(request.getDocumentIds());
 
         // Fetch author entity
-        User author = userRepository.findById(request.getAuthorId())
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        User author = userRepository.findByUserId(UUID.fromString(userDetails.getUserId()))
                 .orElseThrow(() -> new RuntimeException("Author not found"));
         post.setAuthor(author);
 
-        return mapToResponse(postRepository.save(post));
+        return postMapper.toPostResponse(postRepository.save(post));
     }
 
     public PostResponse getPostById(UUID id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        return mapToResponse(post);
+        return postMapper.toPostResponse(post);
     }
 
-    public List<PostResponse> getAllPosts() {
-        return postRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public PostPageResponse getAllPosts(PageRequest pageRequest) {
+        List<PostResponse> posts = postRepository.findByOrderByIdDesc(pageRequest).stream()
+                .map(postMapper::toPostResponse)
+                .toList();
+        return postMapper.toPostPageResponse(posts);
     }
 
     public PostResponse updatePost(UUID id, PostRequest request) {
@@ -66,7 +75,7 @@ public class PostService {
             post.setAuthor(author);
         }
 
-        return mapToResponse(postRepository.save(post));
+        return postMapper.toPostResponse(postRepository.save(post));
     }
 
     public void deletePost(UUID id) {
@@ -75,24 +84,23 @@ public class PostService {
         }
         postRepository.deleteById(id);
     }
+    public PostPageResponse findByCursor(UUID cursor, PageRequest page) {
+        List<PostResponse> posts = postRepository.findByCreatedAtBeforeOrderByCreatedAtDesc(
+                        postRepository.findById(cursor).map(Post::getCreatedAt).orElseThrow(),
+                        page
+                ).stream()
+                .map(postMapper::toPostResponse)
+                .toList();
 
-    // Helper
-    private PostResponse mapToResponse(Post post) {
+        return PostPageResponse.builder()
+                .posts(posts)
+                .build();
+    }
 
-        List<String> strDocuments = post.getDocumentIds().stream()
-                .map(
-                    String::valueOf
-                ).toList();
-
-        PostResponse response = new PostResponse();
-        response.setId(post.getId());
-        response.setTitle(post.getTitle());
-        response.setContent(post.getContent());
-        response.setAuthorId(String.valueOf(post.getAuthor().getId()));
-        response.setDocumentIds(strDocuments);
-        response.setCreatedAt(post.getCreatedAt());
-        response.setUpdatedAt(post.getUpdatedAt());
-        return response;
+    public List<PostResponse> getPostsByAuthor(UUID authorId) {
+        return postRepository.findByAuthorId(authorId).stream()
+                .map(postMapper::toPostResponse)
+                .collect(Collectors.toList());
     }
 }
 

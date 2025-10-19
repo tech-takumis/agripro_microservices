@@ -50,11 +50,4 @@ public class Post {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public void addDocument(UUID docId) {
-        documentIds.add(docId);
-    }
-
-    public void removeDocument(UUID docId) {
-        documentIds.remove(docId);
-    }
 }
