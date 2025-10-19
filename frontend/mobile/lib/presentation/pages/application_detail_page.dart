@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../../data/models/application_data.dart';
 import 'multi_step_application_page.dart';
 
@@ -124,9 +123,9 @@ class ApplicationDetailPage extends StatelessWidget {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.to(
-                          () => MultiStepApplicationPage(
-                        application: application,
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MultiStepApplicationPage(application: application),
                       ),
                     );
                   },

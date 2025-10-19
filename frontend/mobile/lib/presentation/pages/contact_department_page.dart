@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/features/messages/providers/message_provider.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart';
 import 'package:mobile/presentation/widgets/message_bubble.dart';
 import 'package:mobile/presentation/widgets/message_input_field.dart';
 import 'package:mobile/data/models/message.dart';
@@ -17,7 +18,7 @@ class ContactDepartmentPage extends ConsumerStatefulWidget {
 class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
   final ScrollController _scrollController = ScrollController();
 
-  // Holds uploaded files (max 5)
+  
   final List<PlatformFile> _uploadedFiles = [];
 
   void _scrollToBottom() {
@@ -48,6 +49,7 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesProvider);
     final messageService = ref.read(messageServiceProvider);
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,6 +60,7 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
           Expanded(
             child: messagesAsync.when(
               data: (messages) {
+
                 final sortedMessages = List<Message>.from(messages)
                   ..sort((a, b) => a.sentAt.compareTo(b.sentAt)); // oldest → newest
 
@@ -110,14 +113,17 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
               final message = Message(
                 messageId: UniqueKey().toString(),
                 senderId: messageService.userId ?? '',
-                receiverId: '', // your backend determines the receiver
+                receiverId: '', 
                 text: text,
                 type: MessageType.FARMER_AGRICULTURE,
                 attachments: [],
                 sentAt: DateTime.now(),
                 isRead: false,
               );
-              messageService.sendMessage(message, files: List<PlatformFile>.from(_uploadedFiles));
+              messageService.sendMessage(
+                  message,
+                  authState: authState,
+                  files: List<PlatformFile>.from(_uploadedFiles));
               setState(() {
                 _uploadedFiles.clear();
               });

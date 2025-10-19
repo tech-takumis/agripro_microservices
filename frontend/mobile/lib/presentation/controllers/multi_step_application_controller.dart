@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 import '../../data/models/application_data.dart';
 import '../../data/models/application_submission_request.dart';
 import '../../data/services/document_service.dart';
@@ -231,10 +232,10 @@ class MultiStepApplicationController {
   }
 
   // Submission
-  Future<void> submitApplication(BuildContext context) async {
+  Future<ApplicationSubmissionResponse> submitApplication(BuildContext context, AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
-      return;
+      return ApplicationSubmissionResponse(success: false, message: _errorMessage);
     }
 
     try {
@@ -265,9 +266,8 @@ class MultiStepApplicationController {
 
           try {
             final documentResponse = await getIt<DocumentService>().uploadDocument(
-              referenceId: application.id,
+              authState: authState,
               file: File(file.path),
-              documentType: fieldKey,
             );
 
             documentIds.add(documentResponse.documentId);
@@ -306,8 +306,24 @@ class MultiStepApplicationController {
                 'west': controllers['west']?.text ?? '',
               };
             }
-          } else if (field.fieldType == 'TEXT' || field.fieldType == 'DATE') {
+          } else if (field.fieldType == 'TEXT') {
             fieldValues[key] = _textControllers[key]?.text ?? '';
+          } else if (field.fieldType == 'DATE') {
+            final rawDate = _textControllers[key]?.text ?? '';
+            if (rawDate.isEmpty) {
+              fieldValues[key] = '';
+            } else {
+              try {
+                // Try to parse and format as ISO date (YYYY-MM-DD)
+                final parsedDate = DateTime.parse(rawDate);
+                fieldValues[key] = "${parsedDate.year.toString().padLeft(4, '0')}-"
+                                   "${parsedDate.month.toString().padLeft(2, '0')}-"
+                                   "${parsedDate.day.toString().padLeft(2, '0')}";
+              } catch (e) {
+                // If parsing fails, send as is (backend will reject)
+                fieldValues[key] = rawDate;
+              }
+            }
           } else if (field.fieldType == 'NUMBER') {
             final text = _textControllers[key]?.text ?? '';
             if (text.isEmpty) {
@@ -339,21 +355,9 @@ class MultiStepApplicationController {
         documentIds: documentIds,
       );
 
-      final response = await getIt<ApplicationApiService>().submitApplication(request);
+      final response = await getIt<ApplicationApiService>().submitApplication(authState,request);
 
-      if (response!.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response!.message),
-            backgroundColor: Colors.green.withOpacity(0.8),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
-      } else {
-        throw Exception(response.message);
-      }
+      return response;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -363,6 +367,10 @@ class MultiStepApplicationController {
           duration: const Duration(seconds: 4),
         ),
       );
+      return ApplicationSubmissionResponse(
+      success: false,
+      message: _errorMessage,
+    );
     } finally {
       _isLoading = false;
       _uploadProgress = 0.0;

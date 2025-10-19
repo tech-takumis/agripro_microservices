@@ -187,4 +187,44 @@ public class DocumentService {
             );
         }
     }
+
+    public String generatePresignedDownloadUrl(UUID documentId, int expiryMinutes)
+            throws ServerException, InsufficientDataException, ErrorResponseException,
+            IOException, NoSuchAlgorithmException, InvalidKeyException,
+            InvalidResponseException, XmlParserException, InternalException {
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new DocumentNotFoundException(
+                        "Document not found with id: " + documentId,
+                        HttpStatus.NOT_FOUND.value()
+                ));
+
+        return generatePresignedUrl(document.getObjectKey(),expiryMinutes,Method.GET);
+    }
+
+    public String generatePresignedUrl(String objectKey, int expiryMin, Method method)
+            throws IOException, NoSuchAlgorithmException, InvalidKeyException,
+            io.minio.errors.ServerException, io.minio.errors.ErrorResponseException,
+            io.minio.errors.InsufficientDataException, io.minio.errors.InternalException,
+            io.minio.errors.InvalidResponseException, io.minio.errors.XmlParserException {
+
+        String presigned = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(method)
+                        .bucket(minioProperties.bucket())
+                        .object(objectKey)
+                        .expiry(expiryMin, TimeUnit.MINUTES)
+                        .build()
+        );
+
+        // Automatically rewrite internal to external url for client-safe access
+        if(!minioProperties.urlInternal().equals(minioProperties.urlExternal())){
+            presigned = presigned.replace(
+                    minioProperties.urlInternal(),
+                    minioProperties.urlExternal()
+            );
+        }
+        log.debug("Generated presigned URL: {}", presigned);
+        return presigned;
+    }
 }

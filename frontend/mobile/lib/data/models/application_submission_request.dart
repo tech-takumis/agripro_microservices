@@ -1,3 +1,4 @@
+
 /// Model for application submission request
 class ApplicationSubmissionRequest {
   final String applicationTypeId;

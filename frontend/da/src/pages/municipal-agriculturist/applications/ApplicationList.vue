@@ -1,3 +1,4 @@
+
 <template>
     <AuthenticatedLayout
         :navigation="navigation"
@@ -11,15 +12,15 @@
                     <!-- Action buttons (shown when checkboxes are selected) -->
                     <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
                         <button
-                            @click="handleUpdate"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            @click="handleUpdate"
                         >
                             <Edit class="h-4 w-4 mr-2" />
                             Update
                         </button>
                         <button
-                            @click="handleDelete"
                             class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            @click="handleDelete"
                         >
                             <Trash2 class="h-4 w-4 mr-2" />
                             Delete ({{ selectedApplications.length }})
@@ -28,8 +29,8 @@
 
                     <!-- Print button -->
                     <button
-                        @click="handlePrint"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        @click="handlePrint"
                     >
                         <Printer class="h-4 w-4 mr-2" />
                         Print
@@ -37,8 +38,8 @@
 
                     <!-- Filter button -->
                     <button
-                        @click="showFilterModal = true"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        @click="showFilterModal = true"
                     >
                         <Filter class="h-4 w-4 mr-2" />
                         Filter
@@ -67,8 +68,8 @@
                             <input
                                 type="checkbox"
                                 :checked="isAllSelected"
-                                @change="toggleSelectAll"
                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                @change="toggleSelectAll"
                             />
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -95,15 +96,15 @@
                     <tr
                         v-for="application in filteredApplications"
                         :key="application.id"
-                        @click="handleRowClick(application.id, $event)"
                         class="hover:bg-gray-50 cursor-pointer transition-colors"
+                        @click="handleRowClick(application.id, $event)"
                     >
                         <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                             <input
                                 type="checkbox"
                                 :checked="isSelected(application.id)"
-                                @change="toggleSelection(application.id)"
                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                @change="toggleSelection(application.id)"
                             />
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -143,13 +144,13 @@
         <ApplicationFilterModal
             v-model:show="showFilterModal"
             :filters="filters"
+            class="print:hidden"
             @apply-filters="applyFilters"
             @reset-filters="resetFilters"
-            class="print:hidden"
         />
 
         <!-- Print Layout (hidden, only visible when printing) -->
-        <div id="print-layout" class="hidden print:block">
+        <div id="print-layout">
             <div v-for="(chunk, chunkIndex) in farmerChunks" :key="chunkIndex">
                 <!-- PAGE 1: APPLICATION DETAILS -->
                 <div class="pcic-page">
@@ -294,72 +295,72 @@
                     </table>
 
                     <!-- Certifications, Legends, and Premium -->
-                    <div class="grid grid-cols-12 gap-2 text-xs mb-1">
+                    <div class="grid grid-cols-12 gap-0.5 text-xs mb-1">
                         <!-- Column 1: Certifications and Legends (10 cols) -->
                         <div class="col-span-10 flex flex-col h-full">
                             <!-- Top: Certifications (equal height split) -->
-                            <div class="grid grid-cols-2 gap-2 flex-1">
+                            <div class="grid grid-cols-2 gap-0.5 flex-1" style="max-height: 110px;">
                                 <!-- Technologist's Certification -->
-                                <div class="border border-black p-1 flex flex-col justify-between">
-                                    <div>
-                                        <p class="font-bold text-center mb-1">TECHNOLOGIST'S CERTIFICATION</p>
-                                        <p class="leading-tight mb-2">
+                                <div class="border border-black p-0.5 flex flex-col justify-between overflow-hidden">
+                                    <div class="flex-1 overflow-hidden">
+                                        <p class="font-bold text-center mb-0.5 text-xs">TECHNOLOGIST'S CERTIFICATION</p>
+                                        <p class="leading-tight mb-1 text-xs">
                                             I hereby certify that the above farmer-applicants have<br />
                                             for crop already planted/to be planted. (Encircle). NO RISK INSURED<br />
                                             against has occurred.
                                         </p>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1 mt-auto">
-                                        <div class="text-center border-t border-black pt-0.5">
+                                    <div class="grid grid-cols-3 gap-1 mt-auto pt-0.5 border-t border-black">
+                                        <div class="text-center text-xs leading-tight">
                                             Signature Over Printed Name
                                         </div>
-                                        <div class="text-center border-t border-black pt-0.5">Office</div>
-                                        <div class="text-center border-t border-black pt-0.5">Date</div>
+                                        <div class="text-center text-xs leading-tight">Office</div>
+                                        <div class="text-center text-xs leading-tight">Date</div>
                                     </div>
                                 </div>
 
                                 <!-- Certification -->
-                                <div class="border border-black p-1 flex flex-col justify-between">
-                                    <div>
-                                        <p class="font-bold text-center mb-1">CERTIFICATION</p>
-                                        <p class="leading-tight mb-2">
+                                <div class="border border-black p-0.5 flex flex-col justify-between overflow-hidden">
+                                    <div class="flex-1 overflow-hidden">
+                                        <p class="font-bold text-center mb-0.5 text-xs">CERTIFICATION</p>
+                                        <p class="leading-tight mb-1 text-xs">
                                             I hereby certify that the above information are true and correct<br />
                                             to the best of my knowledge.
                                         </p>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-1 mt-auto">
-                                        <div class="text-center border-t border-black pt-0.5">
+                                    <div class="grid grid-cols-2 gap-1 mt-auto pt-0.5 border-t border-black">
+                                        <div class="text-center text-xs leading-tight">
                                             Signature Over Printed Name
                                         </div>
-                                        <div class="text-center border-t border-black pt-0.5">Date</div>
+                                        <div class="text-center text-xs leading-tight">Date</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Bottom: Legends (takes remaining height proportionally) -->
-                            <div class="border border-black p-1 mt-1 flex items-center h-[60px]">
-                                <p class="font-bold mr-2">LEGENDS:</p>
-                                <span>
-        FO - Farmers' Organization | PA - Farmers' Association | COOP - Cooperative | IA - Irrigation Association
-      </span>
+                            <!-- Bottom: Legends (constrained height) -->
+                            <div class="border border-black p-0.5 mt-0.5 legends-section" style="max-height: 50px;">
+                                <p class="font-bold mr-2 text-xs inline">LEGENDS:</p>
+                                <span class="text-xs leading-tight">
+                                    FO - Farmers' Organization | PA - Farmers' Association | COOP - Cooperative | IA - Irrigation Association
+                                </span>
                             </div>
                         </div>
 
                         <!-- Column 2: Premium Computation (2 cols) -->
                         <div class="col-span-2">
-                            <div class="border border-black p-1 h-full flex flex-col justify-between">
-                                <div>
-                                    <p class="font-bold text-center mb-1">
-                                        PREMIUM COMPUTATION (FOR PCIC ONLY)
-                                    </p>
-                                    <p class="leading-tight">Premium Rate: ___________</p>
-                                    <p class="leading-tight">Sum Insured: ___________</p>
-                                    <p class="leading-tight">Gov't Premium Subsidy(GPS): ___________</p>
-                                    <p class="leading-tight">Gross Premium: ___________</p>
-                                    <p class="leading-tight">Less: GPS: ___________</p>
-                                    <p class="leading-tight">Farmer's share (less outstanding): ___________</p>
-                                    <p class="leading-tight">Total: ___________</p>
-                                    <p class="leading-tight">Net Premium Due to PCIC: ___________</p>
+                            <div class="border border-black p-0.5 overflow-hidden" style="max-height: 140px;">
+                                <p class="font-bold text-center mb-0.5 text-xs">
+                                    PREMIUM COMPUTATION (FOR PCIC ONLY)
+                                </p>
+                                <div class="text-xs leading-tight space-y-0.5">
+                                    <p>Premium Rate: ___________</p>
+                                    <p>Sum Insured: ___________</p>
+                                    <p>Gov't Premium Subsidy(GPS): ___________</p>
+                                    <p>Gross Premium: ___________</p>
+                                    <p>Less: GPS: ___________</p>
+                                    <p>Farmer's share (less outstanding): ___________</p>
+                                    <p>Total: ___________</p>
+                                    <p>Net Premium Due to PCIC: ___________</p>
                                 </div>
                             </div>
                         </div>
@@ -443,30 +444,30 @@
                     </table>
 
                     <!-- Legends -->
-                    <div class="text-xs border border-black p-1">
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <p class="font-bold">LAND CATEGORY/SOIL TYPE:</p>
-                                <p class="mt-0.5"><strong>For Rice Crop (Land Category):</strong></p>
-                                <p class="leading-tight">(1) Irrigated - Irrigated</p>
-                                <p class="leading-tight">(2) Irrigated - Pump Well Pump/Shallow Tube Well (STW)</p>
-                                <p class="leading-tight">(3) Irrigated - Open Source (Swlp, Creek, River)</p>
-                                <p class="leading-tight">(4) Rainfed</p>
-                            </div>
-                            <div>
-                                <p class="font-bold">&nbsp;</p>
-                                <p class="mt-0.5"><strong>For Corn Crop (Soil Type/Topography):</strong></p>
-                                <p class="leading-tight">(A) Broad Plain - Clay Loam</p>
-                                <p class="leading-tight">(B) Broad Plain - Silty Clay Loam</p>
-                                <p class="leading-tight">(C) Broad Plain - Silty Loam</p>
-                                <p class="leading-tight">(E) Rolling/Upland</p>
-                            </div>
-                            <div>
-                                <p class="font-bold">TENURAL STATUS:</p>
-                                <p class="mt-0.5 leading-tight">(1) Landowner (2) Lessee (3) Other (please specify)</p>
-                            </div>
+                    <div class="text-xs border border-black p-1 legends-section">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <p class="font-bold">LAND CATEGORY/SOIL TYPE:</p>
+                            <p class="mt-0.5"><strong>For Rice Crop (Land Category):</strong></p>
+                            <p class="leading-tight">(1) Irrigated - Irrigated</p>
+                            <p class="leading-tight">(2) Irrigated - Pump Well Pump/Shallow Tube Well (STW)</p>
+                            <p class="leading-tight">(3) Irrigated - Open Source (Swlp, Creek, River)</p>
+                            <p class="leading-tight">(4) Rainfed</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">&nbsp;</p>
+                            <p class="mt-0.5"><strong>For Corn Crop (Soil Type/Topography):</strong></p>
+                            <p class="leading-tight">(A) Broad Plain - Clay Loam</p>
+                            <p class="leading-tight">(B) Broad Plain - Silty Clay Loam</p>
+                            <p class="leading-tight">(C) Broad Plain - Silty Loam</p>
+                            <p class="leading-tight">(E) Rolling/Upland</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">TENURAL STATUS:</p>
+                            <p class="mt-0.5 leading-tight">(1) Landowner (2) Lessee (3) Other (please specify)</p>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <!-- Page break after each chunk except the last one -->
@@ -519,7 +520,7 @@ const navigation = computed(() => {
 })
 
 const roleTitle = computed(() => {
-    const role = authStore.userData?.roles?.[0]
+    const role = authStore.userData?.roles?.[0].name
     return role || 'Staff Portal'
 })
 
@@ -749,84 +750,22 @@ onMounted(() => {
     fetchApplications()
 })
 </script>
-
-<style scoped>
-/* Improved print CSS to properly hide UI elements and fix layout */
-/* Print-specific styles */
+<style>
 @media print {
-    /* Hide everything except print layout */
-    body * {
-        visibility: hidden;
-    }
-
-    #print-layout,
-    #print-layout * {
-        visibility: visible;
-    }
-
-    #print-layout {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-
-    /* Page setup for landscape letter paper (8.5" x 11") */
     @page {
         size: letter landscape;
         margin: 0.4in;
     }
 
+    /* Ensure all pages break properly, not just first two */
     .pcic-page {
-        width: 100%;
-        font-family: Arial, sans-serif;
-        font-size: 7pt;
-        line-height: 1.1;
-    }
-
-    .pcic-header {
-        margin-bottom: 4px;
-    }
-
-    .pcic-table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    .pcic-table th,
-    .pcic-table td {
-        border: 1px solid black;
-        padding: 2px 5px;
-        font-size: 7pt;
-        line-height: 1.1;
-        vertical-align: top;
-    }
-
-    .pcic-table th {
-        background-color: #f3f4f6;
-        font-weight: bold;
-    }
-
-    .pcic-table th:nth-child(11),
-    .pcic-table td:nth-child(11) {
-        width: 80px; /* same as your div width */
-        text-align: center;
-    }
-
-    /* Page break after each page */
-    .page-break {
         page-break-after: always;
-        break-after: page;
     }
 
-    /* Ensure tables don't break across pages */
-    table {
+    /* Remove overflow hidden from legends to ensure visibility */
+    .legends-section {
+        overflow: visible;
         page-break-inside: avoid;
-    }
-
-    /* Ensure proper text sizing */
-    .text-xs {
-        font-size: 7pt !important;
     }
 }
 
@@ -837,7 +776,9 @@ onMounted(() => {
 
 @media print {
     #print-layout {
-        display: block;
+        display: block !important;
     }
 }
 </style>
+
+

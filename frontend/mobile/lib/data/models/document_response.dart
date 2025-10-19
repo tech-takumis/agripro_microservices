@@ -8,7 +8,7 @@ class DocumentResponse {
   final String objectKey;
   final Map<String, dynamic>? metaData;
   final String uploadedAt;
-  final String downloadUrl;
+  final String preview;
 
   DocumentResponse({
     required this.documentId,
@@ -20,7 +20,7 @@ class DocumentResponse {
     required this.objectKey,
     this.metaData,
     required this.uploadedAt,
-    required this.downloadUrl,
+    required this.preview,
   });
 
   factory DocumentResponse.fromJson(Map<String, dynamic> json) {
@@ -34,7 +34,7 @@ class DocumentResponse {
       objectKey: json['objectKey'] ?? '',
       metaData: json['metaData'] as Map<String, dynamic>?,
       uploadedAt: json['uploadedAt'] ?? '',
-      downloadUrl: json['downloadUrl'] ?? '',
+      preview: json['preview'] ?? '',
     );
   }
 }

@@ -80,6 +80,15 @@ public class DocumentController {
         return ResponseEntity.ok(viewUrl);
     }
 
+    @GetMapping("/{id}/download-url")
+    public ResponseEntity<String> getDownloadUrl(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "5") int expiryMinutes) throws Exception {
+        String url = documentService.generatePresignedDownloadUrl(id, expiryMinutes);
+        return ResponseEntity.ok(url);
+    }
+
+
     @GetMapping("/{documentId}/download")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(

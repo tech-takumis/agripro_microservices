@@ -37,10 +37,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
 
     final userName = _userCredentials != null
-        ? "${_userCredentials!.user.firstName ?? ''} ${_userCredentials!.user.lastName ?? ''}".trim()
+        ? "${_userCredentials!.user.firstName} ${_userCredentials!.user.lastName}".trim()
         : '';
     final userEmail = _userCredentials?.user.email ?? '';
 

@@ -6,8 +6,6 @@ import 'package:mobile/presentation/widgets/common/custom_button.dart';
 import 'package:mobile/presentation/widgets/registration/registration_step_one.dart';
 import 'package:mobile/presentation/widgets/registration/registration_step_two.dart';
 import 'package:mobile/presentation/widgets/registration/registration_step_three.dart';
-import '../controllers/auth_controller.dart';
-import '../../injection_container.dart';
 
 /// Multi-step registration page with improved UX
 class MultiStepRegisterPage extends ConsumerStatefulWidget {
@@ -107,7 +105,6 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
     final controller = ref.watch(multiStepRegistrationProvider);
 
     return Scaffold(

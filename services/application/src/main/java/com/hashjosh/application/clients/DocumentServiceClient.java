@@ -26,33 +26,7 @@ public class DocumentServiceClient {
     }
 
 
-    public DocumentResponse getDocument(UUID documentId) {
-        try {
-            return restClient.get()
-                    .uri("/{documentId}", documentId)
-                    .header("X-Internal-Service", applicationName)
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is4xxClientError() || status.is5xxServerError(),
-                            (request, response) -> {
-                                throw new FileUploadException(
-                                        "Failed to fetch document. Status: " + response.getStatusCode() +
-                                                " Body: " + response.getBody(),
-                                        response.getStatusCode().value(),
-                                        "/api/v1/documents/" + documentId + "/info"
-                                );
-                            }
-                    )
-                    .body(DocumentResponse.class);
-        } catch (Exception ex) {
-            log.error("Error fetching document with id: {}", documentId, ex);
-            throw new FileUploadException(
-                    "Error fetching document: " + ex.getMessage(),
-                    500,
-                    "/api/v1/documents/" + documentId + "/info"
-            );
-        }
-    }
+
 
     public boolean documentExists(UUID documentId) {
         try {
@@ -67,12 +41,37 @@ public class DocumentServiceClient {
             return false;
         }
     }
-
     public String generatePresignedUrl(UUID documentId, int expiry) {
         return restClient.get()
                 .uri("/{id}/download-url?expiryMinutes={expiry}", documentId, expiry)
                 .header("X-Internal-Service", applicationName)
                 .retrieve()
                 .body(String.class);
+    }
+
+    public String getDocumentPreviewUrl(UUID documentId){
+        try {
+            String url = restClient.get()
+                    .uri("/{documentId}/view",documentId)
+                    .header("X-Internal-Service", applicationName)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            (request, response) -> {
+                                throw new RuntimeException(
+                                        "Failed to fetch document preview URL. Status: " + response.getStatusCode() +
+                                                " Body: " + response.getBody()
+                                );
+                            }
+                    )
+                    .body(String.class);
+            log.debug("Successfully retrieved preview URL for document: {}", documentId);
+            return url;
+        }catch (Exception e){
+            log.error("Error fetching document preview URL with id: {}", documentId, e);
+            throw new RuntimeException(
+                    "Error fetching document preview URL: " + e.getMessage()
+            );
+        }
     }
 }

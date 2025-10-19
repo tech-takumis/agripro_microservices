@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:image/image.dart' as img;
 import 'package:http_parser/http_parser.dart';
 import '../models/document_response.dart';
 import 'storage_service.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
+import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 
 /// Service for handling document uploads
 class DocumentService {
@@ -33,14 +35,12 @@ class DocumentService {
 
   /// Upload a document file
   Future<DocumentResponse> uploadDocument({
-    required String referenceId,
+    required AuthState authState,
     required File file,
-    required String documentType,
-    String? metaData,
   }) async {
     try {
-      // Get auth token from StorageService via getIt
-      final token = getIt<StorageService>().getAccessToken();
+      // Use token from authState
+      final token = authState.token;
       final refreshToken = getIt<StorageService>().getRefreshToken();
 
       // Detect MIME type
@@ -55,11 +55,8 @@ class DocumentService {
       }
 
       print('Uploading document:');
-      print('  referenceId: $referenceId');
       print('  file: ${fileToUpload.path}');
-      print('  documentType: $documentType');
       print('  mimeType: $mimeType');
-      print('  metaData: $metaData');
 
       // Prepare multipart form data
       final multipartFile = await MultipartFile.fromFile(
@@ -73,16 +70,15 @@ class DocumentService {
       print('  contentType: $mimeType');
 
       final formData = FormData();
-      formData.fields.add(MapEntry('referenceId', referenceId));
-      formData.fields.add(MapEntry('documentType', documentType));
-      if (metaData != null) {
-        formData.fields.add(MapEntry('metaData', metaData));
-      }
       formData.files.add(MapEntry('file', multipartFile));
 
       print('FormData fields after construction:');
-      formData.fields.forEach((f) => print('  ${f.key}: ${f.value}'));
-      formData.files.forEach((f) => print('  file: ${f.key}, filename: ${f.value.filename}'));
+      for (final field in formData.fields) {
+        print('  ${field.key}: ${field.value}');
+      }
+      for (final file in formData.files) {
+        print('  file: ${file.key}, filename: ${file.value.filename}');
+      }
 
       // Make the upload request
       final response = await _dio.post(
@@ -121,28 +117,5 @@ class DocumentService {
       print('Unexpected error during upload: $e');
       throw Exception('Unexpected error during upload: $e');
     }
-  }
-
-  /// Upload multiple documents
-  Future<List<DocumentResponse>> uploadMultipleDocuments({
-    required String referenceId,
-    required Map<String, File> files,
-  }) async {
-    final List<DocumentResponse> uploadedDocuments = [];
-
-    for (final entry in files.entries) {
-      final documentType = entry.key;
-      final file = entry.value;
-
-      final response = await uploadDocument(
-        referenceId: referenceId,
-        file: file,
-        documentType: documentType,
-      );
-
-      uploadedDocuments.add(response);
-    }
-
-    return uploadedDocuments;
   }
 }

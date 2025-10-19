@@ -48,6 +48,7 @@ public class ApplicationMapper {
         return dto;
     }
 
+
     public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, String userId) {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode dynamicFieldsNode = objectMapper.valueToTree(submission.getFieldValues());
