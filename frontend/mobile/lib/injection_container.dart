@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/services/application_api_service.dart';
 import 'package:mobile/data/services/auth_api_service.dart';
+import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/data/services/location_service.dart';
 import 'package:mobile/data/services/psgc_service.dart';
 import 'package:mobile/data/services/storage_service.dart';
@@ -61,6 +62,7 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<LocationService>(LocationService());
   getIt.registerSingleton<WebSocketService>(WebSocketService());
   getIt.registerSingleton<MessageService>(MessageService());
+  getIt.registerLazySingleton<DocumentService>(() => DocumentService());
 
   // Controllers
   getIt.registerSingleton<ApplicationController>(

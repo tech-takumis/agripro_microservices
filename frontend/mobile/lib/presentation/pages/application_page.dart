@@ -4,15 +4,30 @@ import 'package:mobile/injection_container.dart';
 import 'package:mobile/presentation/controllers/application_controller.dart';
 import 'package:mobile/presentation/widgets/application_widgets/application_card.dart';
 import 'application_detail_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart';
 
 /// 🌿 Main Application Page
 /// Displays all available application types in card format.
-class ApplicationPage extends StatelessWidget {
+class ApplicationPage extends ConsumerWidget {
   const ApplicationPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final controller = getIt<ApplicationController>();
+    final authState = ref.watch(authProvider);
+
+    // Ensure applications are fetched if already logged in and still loading
+    if (authState.isLoggedIn && controller.isLoading.value && controller.applications.isEmpty) {
+      controller.fetchApplications(authState);
+    }
+
+    // Listen for login state changes and fetch applications after login
+    ref.listen<AuthState>(authProvider, (prev, next) {
+      if (next.isLoggedIn && prev?.isLoggedIn != true) {
+        controller.fetchApplications(next);
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(72, 248, 248, 248),
@@ -25,7 +40,7 @@ class ApplicationPage extends StatelessWidget {
             () => IconButton(
               onPressed: controller.isLoading.value || controller.isRetrying.value
                   ? null
-                  : controller.fetchApplications,
+                  : () => controller.fetchApplications(authState),
               icon: controller.isLoading.value || controller.isRetrying.value
                   ? const SizedBox(
                       width: 20,
@@ -77,7 +92,7 @@ class ApplicationPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: controller.fetchApplications,
+                    onPressed: () => controller.retryFetchApplications(authState),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Try Again'),
                   ),
@@ -125,9 +140,9 @@ class ApplicationPage extends StatelessWidget {
             return ApplicationCard(
               application: application,
               onTap: () {
-                Get.to(
-                  () => ApplicationDetailPage(
-                    application: application,
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ApplicationDetailPage(application: application),
                   ),
                 );
               },

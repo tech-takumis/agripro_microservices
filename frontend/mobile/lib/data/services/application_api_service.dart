@@ -64,13 +64,12 @@ class ApplicationApiService {
   }
 
   // Method to fetch application data - updated to handle direct array response
-  Future<ApplicationContent?> fetchApplicationById(String id) async {
+  Future<ApplicationContent?> fetchApplicationById(String id,AuthState authState) async {
+    if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
+      print('User not logged in, skipping fetchApplications');
+      return null;
+    }
     try {
-      final authState = getIt<AuthState>();
-      if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
-        print('User not logged in, skipping fetchApplications');
-        return null;
-      }
       print('🚀 Fetching application type: $id');
       final response = await _dio.get('/application/types/$id');
       print('✅ Application type fetched successfully: ${response.statusCode}');
@@ -84,9 +83,8 @@ class ApplicationApiService {
     }
   }
 
-  Future<ApplicationResponse?> fetchApplications() async {
+  Future<ApplicationResponse?> fetchApplications(AuthState authState) async {
     try {
-      final authState = getIt<AuthState>();
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping fetchApplications');
         return null;
@@ -232,10 +230,10 @@ class ApplicationApiService {
   }
 
   Future<response_model.ApplicationSubmissionResponse?> submitApplication(
+      AuthState authState,
       ApplicationSubmissionRequest request,
       ) async {
     try {
-      final authState = getIt<AuthState>();
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
         return null;

@@ -124,9 +124,9 @@ class ApplicationDetailPage extends StatelessWidget {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.to(
-                          () => MultiStepApplicationPage(
-                        application: application,
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MultiStepApplicationPage(application: application),
                       ),
                     );
                   },

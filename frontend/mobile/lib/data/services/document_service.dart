@@ -6,6 +6,7 @@ import 'package:http_parser/http_parser.dart';
 import '../models/document_response.dart';
 import 'storage_service.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
+import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 
 /// Service for handling document uploads
 class DocumentService {
@@ -33,14 +34,15 @@ class DocumentService {
 
   /// Upload a document file
   Future<DocumentResponse> uploadDocument({
+    required AuthState authState,
     required String referenceId,
     required File file,
     required String documentType,
     String? metaData,
   }) async {
     try {
-      // Get auth token from StorageService via getIt
-      final token = getIt<StorageService>().getAccessToken();
+      // Use token from authState
+      final token = authState.token;
       final refreshToken = getIt<StorageService>().getRefreshToken();
 
       // Detect MIME type
@@ -125,6 +127,7 @@ class DocumentService {
 
   /// Upload multiple documents
   Future<List<DocumentResponse>> uploadMultipleDocuments({
+    required AuthState authState, // Add this parameter
     required String referenceId,
     required Map<String, File> files,
   }) async {
@@ -135,6 +138,7 @@ class DocumentService {
       final file = entry.value;
 
       final response = await uploadDocument(
+        authState: authState, // Pass authState
         referenceId: referenceId,
         file: file,
         documentType: documentType,

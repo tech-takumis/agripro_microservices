@@ -1,3 +1,5 @@
+import 'package:mobile/presentation/controllers/auth_controller.dart';
+
 /// Model for application submission request
 class ApplicationSubmissionRequest {
   final String applicationTypeId;

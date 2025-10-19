@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 import '../../data/models/application_data.dart';
 import '../../data/models/application_submission_request.dart';
 import '../../data/services/document_service.dart';
@@ -231,7 +232,7 @@ class MultiStepApplicationController {
   }
 
   // Submission
-  Future<void> submitApplication(BuildContext context) async {
+  Future<void> submitApplication(BuildContext context, AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
       return;
@@ -265,6 +266,7 @@ class MultiStepApplicationController {
 
           try {
             final documentResponse = await getIt<DocumentService>().uploadDocument(
+              authState: authState, // Pass authState here
               referenceId: application.id,
               file: File(file.path),
               documentType: fieldKey,
@@ -306,8 +308,24 @@ class MultiStepApplicationController {
                 'west': controllers['west']?.text ?? '',
               };
             }
-          } else if (field.fieldType == 'TEXT' || field.fieldType == 'DATE') {
+          } else if (field.fieldType == 'TEXT') {
             fieldValues[key] = _textControllers[key]?.text ?? '';
+          } else if (field.fieldType == 'DATE') {
+            final rawDate = _textControllers[key]?.text ?? '';
+            if (rawDate.isEmpty) {
+              fieldValues[key] = '';
+            } else {
+              try {
+                // Try to parse and format as ISO date (YYYY-MM-DD)
+                final parsedDate = DateTime.parse(rawDate);
+                fieldValues[key] = "${parsedDate.year.toString().padLeft(4, '0')}-"
+                                   "${parsedDate.month.toString().padLeft(2, '0')}-"
+                                   "${parsedDate.day.toString().padLeft(2, '0')}";
+              } catch (e) {
+                // If parsing fails, send as is (backend will reject)
+                fieldValues[key] = rawDate;
+              }
+            }
           } else if (field.fieldType == 'NUMBER') {
             final text = _textControllers[key]?.text ?? '';
             if (text.isEmpty) {
@@ -339,7 +357,7 @@ class MultiStepApplicationController {
         documentIds: documentIds,
       );
 
-      final response = await getIt<ApplicationApiService>().submitApplication(request);
+      final response = await getIt<ApplicationApiService>().submitApplication(authState,request);
 
       if (response!.success) {
         ScaffoldMessenger.of(context).showSnackBar(

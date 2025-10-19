@@ -26,10 +26,12 @@
                         </button>
                     </div>
 
-                    <!-- Print button -->
+                    <!-- Print button (disabled if no data or loading) -->
                     <button
                         @click="handlePrint"
+                        :disabled="loading || filteredApplications.length === 0"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        :class="{ 'opacity-50 cursor-not-allowed': loading || filteredApplications.length === 0 }"
                     >
                         <Printer class="h-4 w-4 mr-2" />
                         Print
@@ -148,8 +150,8 @@
             class="print:hidden"
         />
 
-        <!-- Print Layout (hidden, only visible when printing) -->
-        <div id="print-layout" class="hidden print:block">
+        <!-- Print Layout (temporary block for debugging, revert to hidden print:block after testing) -->
+        <div :key="printKey" id="print-layout" class="block">
             <div v-for="(chunk, chunkIndex) in farmerChunks" :key="chunkIndex">
                 <!-- PAGE 1: APPLICATION DETAILS -->
                 <div class="pcic-page">
@@ -190,7 +192,6 @@
                                 <p class="border-b border-black mt-4">{{ chunk[0]?.dynamicFields.mailing_address }}</p>
                             </div>
                         </div>
-
 
                         <!-- Column 3: FOR PCIC ONLY and RC-UPI-07 (3 cols) -->
                         <div class="col-span-3">
@@ -236,180 +237,40 @@
                             <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Bank name/<br/>Bank no.</th>
                             <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Amount<br/>of Cover</th>
                             <th class="border border-black px-0.5 py-0.5 text-xs" colspan="3">Planting Calendar</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Variety</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Farmer's Signature</th>
                         </tr>
                         <tr class="bg-gray-100">
-                            <th class="border border-black px-0.5 py-0.5 text-xs">Last Name</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">First Name</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">Middle Name</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">Sowing/DS</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">TP/Planting</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs">Last</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs">First</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs">Middle</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs">Sowing</th>
+                            <th class="border border-black px-0.5 py-0.5 text-xs">Planting</th>
                             <th class="border border-black px-0.5 py-0.5 text-xs">Harvest</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <!-- Display actual farmers from chunk -->
-                        <tr v-for="(app, index) in chunk" :key="app.id">
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + index + 1 }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.last_name }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.first_name }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.middle_name || 'N/A' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.suffix || 'N/A' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ getCivilStatusShort(app.dynamicFields.civil_status) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ getGenderShort(app.dynamicFields.sex) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ getBarangay(app.dynamicFields.lot_1_location) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.cell_phone_number }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.spouse_name || '' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.primary_beneficiary }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs"></td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">₱{{ formatAmount(app.dynamicFields.amount_of_cover) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_sowing) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_planting) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_harvest) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_variety }}</td>
-                        </tr>
-                        <!-- Fill empty rows if less than 10 farmers -->
-                        <tr v-for="n in (10 - chunk.length)" :key="`empty-${n}`">
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + chunk.length + n }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
-                        </tr>
-                        <tr class="font-bold">
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs" colspan="17">TOTAL</td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Certifications, Legends, and Premium -->
-                    <div class="grid grid-cols-12 gap-2 text-xs mb-1">
-                        <!-- Column 1: Certifications and Legends (10 cols) -->
-                        <div class="col-span-10 flex flex-col h-full">
-                            <!-- Top: Certifications (equal height split) -->
-                            <div class="grid grid-cols-2 gap-2 flex-1">
-                                <!-- Technologist's Certification -->
-                                <div class="border border-black p-1 flex flex-col justify-between">
-                                    <div>
-                                        <p class="font-bold text-center mb-1">TECHNOLOGIST'S CERTIFICATION</p>
-                                        <p class="leading-tight mb-2">
-                                            I hereby certify that the above farmer-applicants have<br />
-                                            for crop already planted/to be planted. (Encircle). NO RISK INSURED<br />
-                                            against has occurred.
-                                        </p>
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-1 mt-auto">
-                                        <div class="text-center border-t border-black pt-0.5">
-                                            Signature Over Printed Name
-                                        </div>
-                                        <div class="text-center border-t border-black pt-0.5">Office</div>
-                                        <div class="text-center border-t border-black pt-0.5">Date</div>
-                                    </div>
-                                </div>
-
-                                <!-- Certification -->
-                                <div class="border border-black p-1 flex flex-col justify-between">
-                                    <div>
-                                        <p class="font-bold text-center mb-1">CERTIFICATION</p>
-                                        <p class="leading-tight mb-2">
-                                            I hereby certify that the above information are true and correct<br />
-                                            to the best of my knowledge.
-                                        </p>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-1 mt-auto">
-                                        <div class="text-center border-t border-black pt-0.5">
-                                            Signature Over Printed Name
-                                        </div>
-                                        <div class="text-center border-t border-black pt-0.5">Date</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bottom: Legends (takes remaining height proportionally) -->
-                            <div class="border border-black p-1 mt-1 flex items-center h-[60px]">
-                                <p class="font-bold mr-2">LEGENDS:</p>
-                                <span>
-        FO - Farmers' Organization | PA - Farmers' Association | COOP - Cooperative | IA - Irrigation Association
-      </span>
-                            </div>
-                        </div>
-
-                        <!-- Column 2: Premium Computation (2 cols) -->
-                        <div class="col-span-2">
-                            <div class="border border-black p-1 h-full flex flex-col justify-between">
-                                <div>
-                                    <p class="font-bold text-center mb-1">
-                                        PREMIUM COMPUTATION (FOR PCIC ONLY)
-                                    </p>
-                                    <p class="leading-tight">Premium Rate: ___________</p>
-                                    <p class="leading-tight">Sum Insured: ___________</p>
-                                    <p class="leading-tight">Gov't Premium Subsidy(GPS): ___________</p>
-                                    <p class="leading-tight">Gross Premium: ___________</p>
-                                    <p class="leading-tight">Less: GPS: ___________</p>
-                                    <p class="leading-tight">Farmer's share (less outstanding): ___________</p>
-                                    <p class="leading-tight">Total: ___________</p>
-                                    <p class="leading-tight">Net Premium Due to PCIC: ___________</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- PAGE 2: APPLICATION INSURANCE -->
-                <div class="pcic-page page-break">
-                    <!-- Insurance Table -->
-                    <table class="pcic-table w-full border-collapse border border-black mb-1">
-                        <thead>
-                        <tr class="bg-gray-100">
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">No.</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Name of the Farmers<br/>(Follow the order on page1)</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Farm Location</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Area<br/>(ha)</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Land Category<br/>/ Soil Type</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Tenural<br/>Status</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" colspan="4">Adjacent Lot Owners</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs" rowspan="2">Signature</th>
-                        </tr>
-                        <tr class="bg-gray-100">
-                            <th class="border border-black px-0.5 py-0.5 text-xs">North</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">South</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">East</th>
-                            <th class="border border-black px-0.5 py-0.5 text-xs">West</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <!-- Display actual farmers from chunk -->
                         <tr v-for="(app, index) in chunk" :key="app.id">
                             <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ chunkIndex * 10 + index + 1 }}</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">
-                                <div>{{ getFullName(app.dynamicFields) }}</div>
-                                <div class="mt-0.5">
-                                    IP <input type="checkbox" :checked="app.dynamicFields.indigenous_people" class="align-middle" />
-                                    Tribe: {{ app.dynamicFields.tribe }}
-                                </div>
+                                <div>{{ app.dynamicFields.last_name }}</div>
+                                <div class="mt-0.5">IP <input type="checkbox" :checked="app.dynamicFields.indigenous_people" disabled class="align-middle" /> Tribe: {{ app.dynamicFields.tribe || 'N/A' }}</div>
                             </td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ getLocation(app.dynamicFields.lot_1_location) }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.lot_1_area }} ha</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_land_category }}<br/>{{ app.dynamicFields.lot_1_soil_type }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-center text-xs">{{ app.dynamicFields.lot_1_tenurial_status }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.north || 'N/A' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.south || 'N/A' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.east || 'N/A' }}</td>
-                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.lot_1_boundaries?.west || 'N/A' }}</td>
-                            <td class="border border-black p-0 text-center align-middle text-xs">
-                                <div class="w-[75px] h-[50px] overflow-hidden mx-auto">
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.first_name }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.middle_name || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.suffix || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ getCivilStatusShort(app.dynamicFields.civil_status) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ getGenderShort(app.dynamicFields.sex) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ getShortLocation(app.dynamicFields.lot_1_location) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.cell_phone_number || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.spouse_name || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.primary_beneficiary || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ app.dynamicFields.bank_name || 'N/A' }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ formatAmount(app.dynamicFields.amount_of_cover) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_sowing) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_planting) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">{{ formatShortDate(app.dynamicFields.lot_1_date_harvest) }}</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">
+                                <div class="w-[80px] h-[30px] overflow-hidden">
                                     <img
                                         :src="app.fileUploads[0]"
                                         alt="Farmer Signature"
@@ -426,6 +287,11 @@
                                 <div>&nbsp;</div>
                                 <div class="mt-0.5">IP <input type="checkbox" class="align-middle" /> Tribe: ___________</div>
                             </td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
@@ -477,7 +343,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationStore } from '@/stores/application'
 import { useAuthStore } from '@/stores/auth'
@@ -490,15 +356,15 @@ import {
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
 
+// State
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
-
-// State
-const loading = ref(false)
+const loading = ref(true) // Start as true to ensure initial load
 const error = ref(null)
 const selectedApplications = ref([])
 const showFilterModal = ref(false)
+const printKey = ref(0)
 const filters = ref({
     cropType: '',
     coverType: '',
@@ -520,11 +386,12 @@ const navigation = computed(() => {
 
 const roleTitle = computed(() => {
     const role = authStore.userData?.roles?.[0]
-    return role || 'Staff Portal'
+    return typeof role === 'string' ? role : 'Staff Portal' // Ensure string fallback
 })
 
 const filteredApplications = computed(() => {
     let apps = applicationStore.applications
+    console.log('Filtered Applications:', apps, 'Length:', apps.length) // Detailed logging
 
     // Apply filters
     if (filters.value.cropType) {
@@ -552,17 +419,20 @@ const filteredApplications = computed(() => {
         apps = apps.filter(app => app.dynamicFields.amount_of_cover <= parseFloat(filters.value.amountMax))
     }
 
+    console.log('Filtered Applications after filters:', apps, 'Length:', apps.length)
     return apps
 })
 
 const farmerChunks = computed(() => {
     const chunks = []
     const apps = filteredApplications.value
+    console.log('Farmer Chunks Input:', apps, 'Length:', apps.length)
 
     for (let i = 0; i < apps.length; i += 10) {
         chunks.push(apps.slice(i, i + 10))
     }
 
+    console.log('Farmer Chunks Output:', chunks, 'Length:', chunks.length)
     return chunks
 })
 
@@ -576,13 +446,19 @@ const fetchApplications = async () => {
     loading.value = true
     error.value = null
 
-    const result = await applicationStore.fetchAgricultureApplications()
+    try {
+        const result = await applicationStore.fetchAgricultureApplications()
+        console.log('Fetched Applications:', applicationStore.applications, 'Length:', applicationStore.applications.length)
 
-    if (!result.success) {
-        error.value = result.error?.message || 'Failed to fetch applications'
+        if (!result.success) {
+            error.value = result.error?.message || 'Failed to fetch applications'
+        }
+    } catch (err) {
+        error.value = err.message || 'An error occurred while fetching applications'
+        console.error('Fetch Error:', err)
+    } finally {
+        loading.value = false
     }
-
-    loading.value = false
 }
 
 const getFullName = (fields) => {
@@ -674,9 +550,7 @@ const toggleSelectAll = () => {
 }
 
 const handleRowClick = (id, event) => {
-    // Don't navigate if clicking on checkbox
     if (event.target.type === 'checkbox') return
-
     router.push({ name: 'municipal-agriculturist-submit-crop-data-detail', params: { id } })
 }
 
@@ -702,6 +576,7 @@ const handleDelete = async () => {
 }
 
 const applyFilters = (newFilters) => {
+    console.log('Applying Filters:', newFilters)
     filters.value = { ...newFilters }
     showFilterModal.value = false
 }
@@ -720,7 +595,9 @@ const resetFilters = () => {
 }
 
 const handlePrint = () => {
-    window.print()
+    if (loading.value || filteredApplications.value.length === 0) return
+    printKey.value++
+    setTimeout(() => window.print(), 500)
 }
 
 const getShortLocation = (location) => {
@@ -747,6 +624,10 @@ const handleImageError = (event) => {
 
 onMounted(() => {
     fetchApplications()
+})
+
+watch(filteredApplications, (newVal) => {
+    console.log('Filtered Applications Updated:', newVal, 'Length:', newVal.length)
 })
 </script>
 
@@ -832,12 +713,16 @@ onMounted(() => {
 
 /* Hide print layout on screen */
 #print-layout {
-    display: none;
+    display: none; /* Temporary block for debugging, revert to none */
 }
 
 @media print {
     #print-layout {
         display: block;
     }
+}
+
+button:disabled {
+    cursor: not-allowed;
 }
 </style>

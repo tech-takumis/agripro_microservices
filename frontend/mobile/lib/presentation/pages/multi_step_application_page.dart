@@ -12,7 +12,7 @@ import '../controllers/auth_controller.dart';
 ///
 /// Displays application form in steps based on sections
 /// Handles navigation between steps and final submission
-class MultiStepApplicationPage extends ConsumerWidget {
+class MultiStepApplicationPage extends ConsumerStatefulWidget {
   final ApplicationContent application;
 
   const MultiStepApplicationPage({
@@ -21,16 +21,28 @@ class MultiStepApplicationPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final controller = MultiStepApplicationController(application);
+  ConsumerState<MultiStepApplicationPage> createState() => _MultiStepApplicationPageState();
+}
+
+class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationPage> {
+  late final MultiStepApplicationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = MultiStepApplicationController(widget.application);
     controller.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(application.name),
+        title: Text(widget.application.name),
         backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -44,7 +56,7 @@ class MultiStepApplicationPage extends ConsumerWidget {
             child: StepIndicator(
               currentStep: controller.currentStep + 1,
               totalSteps: controller.totalSteps,
-              stepTitles: application.sections
+              stepTitles: widget.application.sections
                   .map((section) => section.title)
                   .toList(),
             ),
@@ -54,7 +66,7 @@ class MultiStepApplicationPage extends ConsumerWidget {
           Expanded(
             child: IndexedStack(
               index: controller.currentStep,
-              children: application.sections.asMap().entries.map((entry) {
+              children: widget.application.sections.asMap().entries.map((entry) {
                 final index = entry.key;
                 final section = entry.value;
 
@@ -89,7 +101,11 @@ class MultiStepApplicationPage extends ConsumerWidget {
                       child: OutlinedButton(
                         onPressed: controller.isLoading
                             ? null
-                            : controller.previousStep,
+                            : () {
+                                setState(() {
+                                  controller.previousStep();
+                                });
+                              },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -109,8 +125,13 @@ class MultiStepApplicationPage extends ConsumerWidget {
                       onPressed: controller.isLoading
                           ? null
                           : (controller.currentStep == controller.totalSteps - 1
-                          ? () => controller.submitApplication(context)
-                          : controller.nextStep),
+                              // Pass both context and authState to submitApplication
+                              ? () => controller.submitApplication(context, authState)
+                              : () {
+                                  setState(() {
+                                    controller.nextStep();
+                                  });
+                                }),
                       isLoading: controller.isLoading,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
