@@ -45,7 +45,8 @@ export const usePostStore = defineStore("post", () => {
         error.value = null
 
         try {
-            const response = await axios.post("/api/v1/posts", postData)
+            const response = await axios.post("/api/v1/posts",
+                postData)
             posts.value.unshift(response.data)
             return response.data
         } catch (err) {

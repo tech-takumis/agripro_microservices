@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,8 +21,12 @@ public class PostController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@RequestBody PostRequest request) {
-        return ResponseEntity.ok(postService.createPost(request));
+    public ResponseEntity<PostResponse> createPost(
+            @RequestPart("files") List<MultipartFile> files,
+            @RequestPart("title") String title,
+            @RequestPart("content") String content
+    ) {
+        return ResponseEntity.ok(postService.createPost(title,content,files));
     }
 
     // READ (single post)

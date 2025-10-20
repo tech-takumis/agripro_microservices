@@ -110,3 +110,15 @@ management:
   endpoint:
     health:
       show-details: always
+
+trusted:
+  internal-service-ids:
+    - agriculture-service
+    - notification-service
+    - farmer-service
+    - communication-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service

@@ -11,12 +11,19 @@
 
             <!-- Post Creation Input -->
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <textarea
-            v-model="newPostContent"
-            placeholder="Share your thoughts or updates..."
-            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            rows="3"
-        ></textarea>
+                <!-- Title Input -->
+                <input
+                    v-model="newTitle"
+                    placeholder="Title"
+                    class="w-full mb-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                />
+
+                <textarea
+                    v-model="newPostContent"
+                    placeholder="Share your thoughts or updates..."
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows="3"
+                ></textarea>
 
                 <div class="mt-3 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
@@ -25,22 +32,26 @@
                                 type="file"
                                 accept="image/*,video/*"
                                 class="hidden"
+                                multiple
                                 @change="handleFileUpload"
                             />
                             <Paperclip class="h-5 w-5 text-gray-600 hover:text-blue-600" />
                         </label>
-                        <span v-if="selectedFile" class="text-xs text-gray-600">{{ selectedFile.name }}</span>
+                        <!-- Show all selected files -->
+                        <span v-if="selectedFile.length" class="text-xs text-gray-600">
+                            <template v-for="file in selectedFile" :key="file.name">{{ file.name }} </template>
+                        </span>
                     </div>
                     <button
                         class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        :disabled="!newPostContent.trim() || creatingPost"
-                        @click="createPost"
+                        :disabled="!newPostContent.trim() || !newTitle.trim() || creatingPost"
+                        @click="onCreatePost"
                     >
                         <span v-if="!creatingPost">Post</span>
                         <span v-else class="flex items-center space-x-2">
-              <Loader2 class="h-4 w-4 animate-spin" />
-              <span>Posting...</span>
-            </span>
+                            <Loader2 class="h-4 w-4 animate-spin" />
+                            <span>Posting...</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -116,8 +127,9 @@ import { FileText, Paperclip, Loader2, User, MoreVertical, Heart, MessageCircle,
 
 const postStore = usePostStore()
 const loadTrigger = ref(null)
+const newTitle = ref('')
 const newPostContent = ref('')
-const selectedFile = ref(null)
+const selectedFile = ref([])
 const creatingPost = ref(false)
 
 const props = defineProps({
@@ -130,24 +142,43 @@ const props = defineProps({
 const loading = computed(() => postStore.loading)
 const hasMore = computed(() => postStore.hasMore)
 
-const handleFileUpload = (event) => {
-    selectedFile.value = event.target.files[0]
+const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files || [])
+    if (!files.length) return
+    selectedFile.value = files
+}
+
+// Use a wrapper to ensure console.log works and await createPost
+const onCreatePost = async () => {
+    await createPost()
 }
 
 const createPost = async () => {
-    if (!newPostContent.value.trim()) return
+    if (!(newPostContent.value.trim() && newTitle.value.trim())) return
 
     creatingPost.value = true
     try {
         const formData = new FormData()
+        formData.append('title', newTitle.value)
         formData.append('content', newPostContent.value)
-        if (selectedFile.value) {
-            formData.append('file', selectedFile.value)
+        // Append all selected files
+        if (selectedFile.value && selectedFile.value.length) {
+            selectedFile.value.forEach(file => {
+                formData.append('files', file)
+            })
         }
 
+        for(const [key,value] of formData.entries()) {
+            if(value instanceof File){
+                console.log(`[POST CARD][FORM DATA] ${key}: File - name=${value.name}, size=${value.size}`)
+            } else {
+                console.log(`[POST CARD][FORM DATA] ${key}: ${value}`)
+            }
+        }
         await postStore.createPost(formData)
         newPostContent.value = ''
-        selectedFile.value = null
+        newTitle.value = ''
+        selectedFile.value = []
     } catch (error) {
         console.error('Error creating post:', error)
     } finally {
