@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
+    private final TrustedConfig trustedConfig;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/ws", "/ws/", "/ws/info", "/ws/info/",
@@ -42,6 +43,19 @@ public class JwtAuthenticationFilter implements WebFilter {
         if (path.startsWith("/ws") || request.getMethod().matches("OPTIONS")) {
             log.debug("🔓 Skipping JWT auth for WebSocket or OPTIONS request: {}", path);
             return chain.filter(exchange);
+        }
+
+        // ✅ Bypass for trusted internal services
+        String internalServiceHeader = request.getHeaders().getFirst("X-Internal-Service");
+        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+            log.debug("🔐 Trusted internal service access granted: {}", internalServiceHeader);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    "internal-service-" + internalServiceHeader,
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+            );
+            return chain.filter(exchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
         }
 
         // ✅ Bypass for public authentication endpoints

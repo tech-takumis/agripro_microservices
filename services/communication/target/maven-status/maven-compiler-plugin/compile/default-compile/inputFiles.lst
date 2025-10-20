@@ -1,3 +1,4 @@
+D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\client\AgricultureClient.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\client\DocumentClient.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\CommunicationApplication.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\config\ActiveUserLogger.java
@@ -18,6 +19,7 @@ D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\m
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\MessageDto.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\MessageRequestDto.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\MessageResponseDto.java
+D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\PostPageResponse.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\PostRequest.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\dto\PostResponse.java
 D:\Courses\Springboot\Projects\thesis_microservices\services\communication\src\main\java\com\hashjosh\communication\entity\Attachment.java

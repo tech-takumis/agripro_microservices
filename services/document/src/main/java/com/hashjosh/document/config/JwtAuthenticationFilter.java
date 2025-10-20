@@ -25,16 +25,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TrustedConfig trustedConfig;
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private static final String USERID_HEADER = "X-User-Id";
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        String userIdHeader = request.getHeader(USERID_HEADER);
         if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
             // Allow internal service access without JWT
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserDetails(
                                     null, // No token
-                                    "internal-service-" + internalServiceHeader, // Unique userId
+                                    userIdHeader,// Unique userId
                                     internalServiceHeader, // Use service ID as username
                                     null, null, null, null, // No firstname, lastname, email, phone
                                     Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
