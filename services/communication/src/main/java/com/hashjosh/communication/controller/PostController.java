@@ -22,7 +22,7 @@ public class PostController {
     // CREATE
     @PostMapping
     public ResponseEntity<PostResponse> createPost(
-            @RequestPart("files") List<MultipartFile> files,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @RequestPart("title") String title,
             @RequestPart("content") String content
     ) {

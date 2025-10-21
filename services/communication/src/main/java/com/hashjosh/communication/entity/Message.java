@@ -6,9 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "messages")
@@ -32,20 +30,17 @@ public class Message {
     private String text;
 
     @OneToMany(mappedBy = "message")
-    private Set<Attachment> attachments = new HashSet<>();
+    private List<Attachment> attachments = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    // Helper method to add attachment
-    public void addAttachment(Attachment attachment) {
-        attachments.add(attachment);
-        attachment.setMessage(this);
-    }
 
-    // Helper method to remove attachment
-    public void removeAttachment(Attachment attachment) {
-        attachments.remove(attachment);
-        attachment.setMessage(null);
+    public List<Attachment> getAttachments() {
+        // Ensure never returns null
+        if (attachments == null) {
+            attachments = new ArrayList<>();
+        }
+        return attachments;
     }
 }

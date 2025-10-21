@@ -48,11 +48,13 @@ public class PostService {
         post.setAuthor(author);
 
         List<UUID> documentIds = new ArrayList<>();
-        for(MultipartFile file : files){
-            log.info("Received file: {}", file.getOriginalFilename());
-            DocumentResponse response = documentClient.uploadDocument(file,userDetails.getUserId());
-            log.info("Uploaded document ID: {}", response.getDocumentId());
-            documentIds.add(response.getDocumentId());
+        if (files != null) {
+            for(MultipartFile file : files){
+                log.info("Received file: {}", file.getOriginalFilename());
+                DocumentResponse response = documentClient.uploadDocument(file,userDetails.getUserId());
+                log.info("Uploaded document ID: {}", response.getDocumentId());
+                documentIds.add(response.getDocumentId());
+            }
         }
         post.setDocumentIds(documentIds);
         // Fetch author entity
@@ -116,4 +118,3 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 }
-

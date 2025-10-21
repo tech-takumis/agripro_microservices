@@ -1,4 +1,5 @@
-package com.hashjosh.communication.dto;
+package com.hashjosh.constant.communication;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +12,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AttachmentResponseDto {
-    private UUID attachmentId;
+public class AttachmentRequest {
     private UUID documentId;
     private String url;
 }

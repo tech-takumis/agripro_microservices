@@ -48,7 +48,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
       const client = new Client({
         brokerURL: `ws://localhost:9001/ws?token=${token}`,
-        connectHeaders: { },
+          connectHeaders: {},
         debug: (str) => {
           if (str.includes('ERROR') || str.includes('CONNECT')) console.log('[WebSocket Debug]', str)
         },

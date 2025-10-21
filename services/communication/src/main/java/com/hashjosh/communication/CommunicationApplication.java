@@ -14,7 +14,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 @SpringBootApplication
 @Import({JwtConfig.class})
 @EnableConfigurationProperties({JwtProperties.class, TrustedProperties.class})
-@EnableWebSocket
 @EnableDiscoveryClient
 @EnableKafka
 public class CommunicationApplication {

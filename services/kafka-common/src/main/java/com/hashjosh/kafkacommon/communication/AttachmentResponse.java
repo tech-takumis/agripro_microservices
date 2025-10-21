@@ -1,5 +1,4 @@
-package com.hashjosh.communication.dto;
-
+package com.hashjosh.kafkacommon.communication;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +11,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AttachmentRequest {
+public class AttachmentResponse {
+    private UUID attachmentId;
     private UUID documentId;
     private String url;
 }

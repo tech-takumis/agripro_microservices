@@ -49,14 +49,28 @@ export const useMessageStore = defineStore('message', () => {
             const msg = {
                 senderId: auth.userId,
                 receiverId: messageData.receiverId,
+                conversationId: messageData.conversationId || null,
                 text: messageData.text,
                 type: messageData.type || 'FARMER_AGRICULTURE',
-                attachments: messageData.attachments || [],
-                sentAt: new Date().toISOString()
+                sentAt: messageData.sentAt || new Date().toISOString()
             }
+
+            const formData = new FormData()
+            formData.append('message', new Blob([JSON.stringify(msg)], { type: 'application/json' }))
+
+            // Attach files if provided
+            if (messageData.files && messageData.files.length > 0) {
+                messageData.files.forEach(file => {
+                    formData.append('attachments', file)
+                })
+            }
+
+            const { data } = await axios.post('/api/v1/chat', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            })
+
             console.log('[MessageStore] Sending message:', msg)
-            ws.sendMessage('/app/private.chat', msg)
-            console.log('[MessageStore] ✅ Message sent successfully')
+            console.log('[MessageStore] ✅ Message sent successfully', data)
         } catch (err) {
             console.error('[MessageStore] Failed to send message:', err)
         }

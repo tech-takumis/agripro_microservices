@@ -9,7 +9,7 @@ import java.security.Principal;
 import java.util.Collection;
 import java.util.Set;
 @Data
-public class CustomUserDetails implements UserDetails, Principal {
+public class CustomUserDetails implements UserDetails {
 
     private final String token;
     private final String userId;
@@ -31,11 +31,6 @@ public class CustomUserDetails implements UserDetails, Principal {
         this.email = email;
         this.phone = phone;
         this.authorities = authorities;
-    }
-
-    @Override
-    public String getName() {
-        return userId; // Ensure we use userId for WebSocket user destination resolution
     }
 
     @Override
