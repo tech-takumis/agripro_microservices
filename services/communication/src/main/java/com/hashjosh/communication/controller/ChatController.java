@@ -1,16 +1,14 @@
 package com.hashjosh.communication.controller;
 
-import com.hashjosh.communication.dto.MessageDto;
-import com.hashjosh.communication.dto.MessageResponseDto;
+import com.hashjosh.constant.communication.MessageRequestDto;
+import com.hashjosh.constant.communication.MessageResponseDto;
 import com.hashjosh.communication.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,4 +27,16 @@ public class ChatController {
         log.info("Fetching messages for farmer with ID: {}", farmerId);
         return new ResponseEntity<>(chatService.getAllMessagesWithAgricultureStaff(farmerId), HttpStatus.OK);
     }
+
+    @PostMapping(consumes = {"multipart/form-data"})
+//    @PostMapping("/api/v1/chat")
+    public ResponseEntity<MessageResponseDto> createMessage(
+            @RequestPart("message") MessageRequestDto messageRequestDto,
+            @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
+    ){
+        log.info("Creating new message: {}", messageRequestDto);
+        MessageResponseDto createdMessage = chatService.createMessage(messageRequestDto,attachments);
+        return new ResponseEntity<>(createdMessage, HttpStatus.CREATED);
+    }
+
 }

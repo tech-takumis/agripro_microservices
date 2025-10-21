@@ -1,4 +1,4 @@
-package com.hashjosh.communication.config;
+package com.hashjosh.realtimegatewayservice.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import lombok.RequiredArgsConstructor;

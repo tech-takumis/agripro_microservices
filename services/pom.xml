@@ -25,6 +25,7 @@
         <module>kafka-common</module>
         <module>rsbsa</module>
         <module>program</module>
+        <module>realtime-gateway-service</module>
     </modules>
 
     <properties>

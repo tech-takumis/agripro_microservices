@@ -373,34 +373,20 @@ const sendChatMessage = async () => {
     try {
         isUploading.value = true
 
-        // First upload all files if any
-        let attachments = []
+        // Upload files and collect file objects
+        let files = []
         if (localFiles.value.length > 0) {
-            try {
-                const uploadPromises = localFiles.value.map(fileData =>
-                    documentStore.uploadDocument(fileData.file)
-                )
-                const uploadResults = await Promise.all(uploadPromises)
-
-                attachments = uploadResults.map(doc => ({
-                    documentId: doc.documentId,
-                    url: doc.preview
-                }))
-            } catch (error) {
-                console.error('Error uploading files:', error)
-                throw error
-            }
+            files = localFiles.value.map(f => f.file)
         }
 
         await messageStore.sendMessage({
             receiverId: selectedFarmer.value.userId,
-            text: messageInput.value || (attachments.length ? 'File Uploaded' : ''),
+            text: messageInput.value || (files.length ? 'File Uploaded' : ''),
             type: 'FARMER_AGRICULTURE',
-            attachments: attachments,
+            files: files,
             sentAt: new Date().toISOString()
         })
 
-        // Clear message and files
         messageInput.value = ''
         localFiles.value = []
         scrollToBottom()

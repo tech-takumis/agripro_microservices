@@ -30,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TrustedProperties trustedProperties;
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private static final String UserIdHeader = "X-User-Id";
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -51,12 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         log.debug("🔍 Processing request for URI: {}", uri);
 
-        // Special handling for WebSocket requests - we'll just let them through
-        if (uri.startsWith("/ws")) {
-            log.debug("⚡ WebSocket request detected, allowing through filter");
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         // Check for internal service header from gateway
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
@@ -128,11 +123,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void authenticateInternalService(String serviceId, HttpServletRequest request) {
         log.debug("🔐 Authenticating internal service: {}", serviceId);
+        String userId = request.getHeader(UserIdHeader);
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         new CustomUserDetails(
                                 null,
-                                "internal-service-" + serviceId,
+                                userId,
                                 serviceId,
                                 null, null, null, null,
                                 Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))

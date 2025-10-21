@@ -1,8 +1,10 @@
 package com.hashjosh.communication.mapper;
 
-import com.hashjosh.communication.dto.MessageResponseDto;
+import com.hashjosh.constant.communication.MessageRequestDto;
+import com.hashjosh.constant.communication.MessageResponseDto;
 import com.hashjosh.communication.entity.Message;
-import com.hashjosh.communication.dto.AttachmentResponseDto;
+import com.hashjosh.constant.communication.AttachmentResponseDto;
+import com.hashjosh.kafkacommon.communication.AttachmentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,4 +34,12 @@ public class MessageMapper {
                 .build();
     }
 
+    public Message toMessageEntity(MessageRequestDto messageRequestDto) {
+        return Message.builder()
+                .receiverId(messageRequestDto.getReceiverId())
+                .senderId(messageRequestDto.getSenderId())
+                .conversationId(messageRequestDto.getConversationId())
+                .text(messageRequestDto.getText())
+                .build();
+    }
 }

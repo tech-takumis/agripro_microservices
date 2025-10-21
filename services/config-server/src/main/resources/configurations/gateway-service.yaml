@@ -9,12 +9,12 @@ spring:
             wiretap: true
           discovery:
             locator:
-              enabled: true
+              enabled: false
               lower-case-service-id: true
           routes:
             # General WebSocket route
             - id: ws_route
-              uri: lb://communication-service
+              uri: lb://realtime-service
               predicates:
                 - Path=/ws/**
               filters:
@@ -106,7 +106,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,gateway
   endpoint:
     health:
       show-details: always

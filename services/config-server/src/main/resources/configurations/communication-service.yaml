@@ -62,4 +62,4 @@ trusted:
     - program-service
 
 server:
-  port: 9040
+  port: 9999

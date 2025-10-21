@@ -1,6 +1,7 @@
 package com.hashjosh.communication.dto;
 
 
+import com.hashjosh.constant.communication.AttachmentRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

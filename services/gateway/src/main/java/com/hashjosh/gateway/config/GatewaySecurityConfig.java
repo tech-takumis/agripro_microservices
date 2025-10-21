@@ -93,7 +93,7 @@ public class GatewaySecurityConfig {
                 .route("ws_route", r -> r
                         .path("/ws/**", "/ws", "/ws/info", "/ws/info/**")
                         .filters(GatewayFilterSpec::preserveHostHeader)
-                        .uri("lb://communication-service"))
+                        .uri("lb://realtime-service"))
                 .build();
     }
 
