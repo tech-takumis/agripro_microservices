@@ -224,24 +224,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue'
-import { Sprout, CreditCard, TrendingUp, Users, ChevronDown, User, Settings, Sliders, ArrowUpRight, ArrowDownRight, Bell, Briefcase } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import {
+    ArrowDownRight,
+    ArrowUpRight,
+    Bell,
+    Briefcase,
+    ChevronDown,
+    Settings,
+    Sliders,
+    Sprout,
+    TrendingUp,
+    User,
+    Users
+} from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import PermissionGuard from '@/components/others/PermissionGuard.vue'
 import PostCard from '@/components/cards/PostCard.vue'
 import FinancialCard from '@/components/cards/FinancialCard.vue'
 import ProgramCard from '@/components/cards/ProgramCard.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 import { useAuthStore } from '@/stores/auth'
-import { useDashboardStore } from '@/stores/dashboard'
-import {usePostStore} from '@/stores/post'
+import { usePostStore } from '@/stores/post'
+import { useProgramStore } from '@/stores/program'
+import  {useScheduleStore} from '@/stores/schedule'
 
 
 const postStore = usePostStore();
 const posts = computed(() => postStore.posts)
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
 const authStore = useAuthStore()
-const dashboardStore = useDashboardStore()
+const program = useProgramStore();
+const schedule = useScheduleStore();
 
 // Profile and notification states
 const showProfileDropdown = ref(false)

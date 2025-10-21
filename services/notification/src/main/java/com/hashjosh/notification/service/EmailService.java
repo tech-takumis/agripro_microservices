@@ -2,7 +2,6 @@ package com.hashjosh.notification.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.repository.NotificationRepository;
 import com.hashjosh.notification.utils.NotificationUtils;

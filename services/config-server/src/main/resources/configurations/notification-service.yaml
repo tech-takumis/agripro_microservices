@@ -26,14 +26,10 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
         spring.json.type.mapping: >
-          farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
-          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
-          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
           verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
           applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
           applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent,
-          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
           inspectionScheduledEvent:com.hashjosh.kafkacommon.application.InspectionScheduledEvent,
           inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
           policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,

@@ -1,5 +1,0 @@
-spring:
-  application:
-    name: pcic-service
-  profiles:
-    active: local

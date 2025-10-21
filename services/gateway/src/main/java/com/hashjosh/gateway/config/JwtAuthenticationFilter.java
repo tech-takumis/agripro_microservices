@@ -29,43 +29,32 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/ws", "/ws/", "/ws/info", "/ws/info/",
-            "/api/v1/farmer/auth/login","/api/v1/farmer/auth/registration",
-            "/api/v1/agriculture/auth/login","/api/v1/agriculture/auth/registration",
-            "/api/v1/pcic/auth/login","/api/v1/pcic/auth/registration"
+            "/api/v1/users/auth/login","/api/v1/users/auth/registration"
     );
+
+    private static final String INTERNALSERVICE_HEADER = "X-Internal-Service";
+    private static final String USERID_HEADER = "X-User-Id";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        String path = request.getURI().getPath();
 
-        // ✅ Bypass for WebSocket, SockJS info, and OPTIONS preflight
-        if (path.startsWith("/ws") || request.getMethod().matches("OPTIONS")) {
-            log.debug("🔓 Skipping JWT auth for WebSocket or OPTIONS request: {}", path);
-            return chain.filter(exchange);
-        }
-
-        // ✅ Bypass for trusted internal services
-        String internalServiceHeader = request.getHeaders().getFirst("X-Internal-Service");
-        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
-            log.debug("🔐 Trusted internal service access granted: {}", internalServiceHeader);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    "internal-service-" + internalServiceHeader,
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
-            );
-            return chain.filter(exchange)
-                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
-        }
-
-        // ✅ Bypass for public authentication endpoints
-        if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
-            log.debug("🟢 Public route, skipping authentication: {}", path);
-            return chain.filter(exchange);
+        // Use maintainable shouldNotFilter logic
+        BypassDecision bypass = shouldNotFilter(request);
+        if (bypass.isBypass()) {
+            log.debug(bypass.getLogMessage(), request.getURI().getPath());
+            if (bypass.getAuthentication() != null) {
+                // Internal service trust
+                return chain.filter(exchange)
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(bypass.getAuthentication()));
+            } else {
+                return chain.filter(exchange);
+            }
         }
 
         // 🧩 Extract token
         String token = extractAccessToken(request);
+        String path = request.getURI().getPath();
         if (token == null) {
             log.warn("❌ No access token found for request: {}", path);
             return this.unauthorized(exchange, "Missing token");
@@ -98,6 +87,66 @@ public class JwtAuthenticationFilter implements WebFilter {
             log.error("💥 JWT auth failed: {}", e.getMessage());
             return this.unauthorized(exchange, "Authentication failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * Result class for shouldNotFilter decision.
+     */
+    private static class BypassDecision {
+        private final boolean bypass;
+        private final String logMessage;
+        private final Authentication authentication;
+
+        public BypassDecision(boolean bypass, String logMessage, Authentication authentication) {
+            this.bypass = bypass;
+            this.logMessage = logMessage;
+            this.authentication = authentication;
+        }
+
+        public boolean isBypass() { return bypass; }
+        public String getLogMessage() { return logMessage; }
+        public Authentication getAuthentication() { return authentication; }
+
+        public static BypassDecision skip(String logMsg) {
+            return new BypassDecision(true, logMsg, null);
+        }
+        public static BypassDecision skipWithAuth(String logMsg, Authentication authentication) {
+            return new BypassDecision(true, logMsg, authentication);
+        }
+        public static BypassDecision never() {
+            return new BypassDecision(false, null, null);
+        }
+    }
+
+    /**
+     * Determines if filtering for the request should be bypassed, and for what reason.
+     */
+    private BypassDecision shouldNotFilter(ServerHttpRequest request) {
+        String path = request.getURI().getPath();
+
+        // Skip WebSocket and OPTIONS
+        if (path.startsWith("/ws") || "OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
+            return BypassDecision.skip("🔓 Skipping JWT auth for WebSocket or OPTIONS request: {}");
+        }
+
+        // Trusted internal service header bypass
+        String internalServiceHeader = request.getHeaders().getFirst(INTERNALSERVICE_HEADER);
+        String userIdHeader = request.getHeaders().getFirst(USERID_HEADER);
+        if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userIdHeader,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+            );
+            return BypassDecision.skipWithAuth("🔐 Trusted internal service access granted: {}", authentication);
+        }
+
+        // Public auth endpoints bypass
+        if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
+            return BypassDecision.skip("🟢 Public route, skipping authentication: {}");
+        }
+
+        return BypassDecision.never();
     }
 
     private List<SimpleGrantedAuthority> extractAuthorities(Claims claims) {

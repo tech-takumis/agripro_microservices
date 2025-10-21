@@ -24,9 +24,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private User author;
+    private UUID authorId;
 
     @Column(name = "title", nullable = false)
     private String title;

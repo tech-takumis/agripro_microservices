@@ -13,6 +13,11 @@ spring:
               lower-case-service-id: true
           routes:
             # General WebSocket route
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/v1/users/**,/api/v1/roles/**,/api/v1/permissions/**
+
             - id: ws_route
               uri: lb://realtime-service
               predicates:
@@ -21,22 +26,6 @@ spring:
                 - PreserveHostHeader
                 - RemoveRequestHeader=Cookie,Sec-WebSocket-Protocol
                 - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_FIRST
-
-            # Other service routes
-            - id: agriculture-service
-              uri: lb://agriculture-service
-              predicates:
-                - Path=/api/v1/dashboard/**,/api/v1/agriculture/**
-
-            - id: farmer-service
-              uri: lb://farmer-service
-              predicates:
-                - Path=/api/v1/farmer/auth/**,/api/v1/farmer/**
-
-            - id: pcic-service
-              uri: lb://pcic-service
-              predicates:
-                - Path=/api/v1/pcic/auth/**,/api/v1/pcic/**
 
             - id: application-service
               uri: lb://application-service

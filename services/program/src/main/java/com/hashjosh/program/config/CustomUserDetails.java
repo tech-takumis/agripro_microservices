@@ -12,7 +12,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
-    private final String token;
     private final String userId;
     private final String username;
     private final String firstname;

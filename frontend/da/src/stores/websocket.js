@@ -39,7 +39,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     if (stompClient.value?.active && connected.value) return Promise.resolve()
 
     connectionPromise = new Promise((resolve, reject) => {
-      const token = localStorage.getItem('webSocketToken')
+      const token = localStorage.getItem('websocketToken')
       if (!token) {
         console.error('[WebSocket] 🚫 Missing webSocketToken')
         reject('Token missing')
