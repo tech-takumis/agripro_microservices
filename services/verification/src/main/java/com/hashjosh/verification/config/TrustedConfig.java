@@ -1,4 +1,4 @@
-package com.hashjosh.transaction.config;
+package com.hashjosh.verification.config;
 
 import lombok.Getter;
 import lombok.Setter;

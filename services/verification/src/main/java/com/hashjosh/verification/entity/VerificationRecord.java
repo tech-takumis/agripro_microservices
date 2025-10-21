@@ -1,5 +1,6 @@
 package com.hashjosh.verification.entity;
 
+import com.hashjosh.verification.enums.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,7 +35,7 @@ public class VerificationRecord {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private com.hashjosh.verification.enums.VerificationStatus status; // PENDING, COMPLETED, REJECTED
+    private VerificationStatus status; // PENDING, COMPLETED, REJECTED
 
     @Column(name = "rejection_reason", length = 255)
     private String rejectionReason;
