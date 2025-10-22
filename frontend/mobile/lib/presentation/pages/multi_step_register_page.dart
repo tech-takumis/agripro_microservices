@@ -166,11 +166,10 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
                     child: RegistrationStepOne(
                       formKey: controller.step1FormKey,
                       rsbsaNumberController: controller.rsbsaNumber,
-                      firstNameController: controller.firstNameController,
-                      lastNameController: controller.lastNameController,
-                      middleNameController: controller.middleNameController,
-                      emailController: controller.emailController,
-                      phoneNumberController: controller.phoneNumberController,
+                      barangayController: controller.barangayController,
+                      isLoading: controller.isLoading,
+                      rsbsaFound: controller.rsbsaFound,
+                      onCheckRsbsa: () => controller.checkRsbsaId(context),
                     ),
                   ),
 

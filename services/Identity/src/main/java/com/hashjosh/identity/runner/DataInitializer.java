@@ -66,24 +66,24 @@ public class DataInitializer implements CommandLineRunner {
         ));
 
         // 3️⃣ Ensure Roles exist and have correct permissions
-        upsertRole(tenants.get("AGRICULTURE"), "Municipal Agriculturist", Set.of(
+        upsertRole(tenants.get("AGRICULTURE"), "Municipal Agriculturist", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_CONDUCT_BRIEFINGS"),
                 permissions.get("CAN_INSPECT_FIELD")
-        ), "/municipal-agriculturist/dashboard");
+        )), "/municipal-agriculturist/dashboard");
 
-        upsertRole(tenants.get("AGRICULTURE"), "Agricultural Extension Worker", Set.of(
+        upsertRole(tenants.get("AGRICULTURE"), "Agricultural Extension Worker", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_FACILITATE_APPLICATIONS"),
                 permissions.get("CAN_RECEIVE_CLAIMS_ON_SITE")
-        ), "/agriculture/extension-worker/dashboard");
+        )), "/agriculture/extension-worker/dashboard");
 
-        upsertRole(tenants.get("FARMER"), "Farmer", Set.of(
+        upsertRole(tenants.get("FARMER"), "Farmer", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_POLICY"),
                 permissions.get("CAN_FACILITATE_APPLICATIONS")
-        ), "/farmer/dashboard");
+        )), "/farmer/dashboard");
 
-        upsertRole(tenants.get("PCIC"), "UNDERWRITER", Set.of(
+        upsertRole(tenants.get("PCIC"), "UNDERWRITER", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_ISSUE_POLICY"),
                 permissions.get("CAN_ASSESS_RISK"),
@@ -91,9 +91,9 @@ public class DataInitializer implements CommandLineRunner {
                 permissions.get("CAN_COMPUTE_PREMIUM"),
                 permissions.get("CAN_CONDUCT_BRIEFINGS"),
                 permissions.get("CAN_INSPECT_FIELD")
-        ), "/underwriter/dashboard");
+        )), "/underwriter/dashboard");
 
-        upsertRole(tenants.get("PCIC"), "CLAIMS_ADJUSTMENT_STAFF", Set.of(
+        upsertRole(tenants.get("PCIC"), "CLAIMS_ADJUSTMENT_STAFF", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_PROCESS_CLAIM"),
                 permissions.get("CAN_VERIFY_CLAIM"),
@@ -101,31 +101,31 @@ public class DataInitializer implements CommandLineRunner {
                 permissions.get("CAN_INSPECT_FIELD"),
                 permissions.get("CAN_PROCESS_INDEMNITY"),
                 permissions.get("CAN_NOTIFY_DENIAL")
-        ), "/claims-adjustment-staff/dashboard");
+        )), "/claims-adjustment-staff/dashboard");
 
-        upsertRole(tenants.get("PCIC"), "ADMINISTRATIVE_STAFF", Set.of(
+        upsertRole(tenants.get("PCIC"), "ADMINISTRATIVE_STAFF", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_PROCESS_LEAVE"),
                 permissions.get("CAN_MANAGE_CASH_ADVANCE"),
                 permissions.get("CAN_ISSUE_CERTIFICATE"),
                 permissions.get("CAN_MANAGE_PERSONNEL_RECORDS")
-        ), "/administrative-staff/dashboard");
+        )), "/administrative-staff/dashboard");
 
-        upsertRole(tenants.get("PCIC"), "SUPPORT_STAFF", Set.of(
+        upsertRole(tenants.get("PCIC"), "SUPPORT_STAFF", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_MANAGE_SUPPLIES"),
                 permissions.get("CAN_HANDLE_REPAIRS"),
                 permissions.get("CAN_PROVIDE_TRANSPORT"),
                 permissions.get("CAN_ISSUE_RECEIPT")
-        ), "/support-staff/dashboard");
+        )), "/support-staff/dashboard");
 
-        upsertRole(tenants.get("PCIC"), "EXTENSION_FIELD_STAFF", Set.of(
+        upsertRole(tenants.get("PCIC"), "EXTENSION_FIELD_STAFF", new HashSet<>(Arrays.asList(
                 permissions.get("CAN_VIEW_USER"),
                 permissions.get("CAN_FACILITATE_APPLICATIONS"),
                 permissions.get("CAN_RECEIVE_CLAIMS_ON_SITE"),
                 permissions.get("CAN_INSPECT_FIELD"),
                 permissions.get("CAN_ENCODE_CLAIM")
-        ), "/extension-field-staff/dashboard");
+        )), "/extension-field-staff/dashboard");
 
         log.info("✅ Data initialization completed successfully.");
     }
