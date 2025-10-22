@@ -5,14 +5,16 @@ import com.hashjosh.identity.entity.Tenant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.lang.ScopedValue;
 import java.util.Optional;
 import java.util.UUID;
 
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, UUID> {
-    Optional<Role> findByNameAndTenant(String name, Tenant tenant);
+    Optional<Role> findByTenantAndNameContainingIgnoreCase(Tenant tenant, String name);
 
-    Optional<Role> findByTenantIdAndName(UUID tenantId, String name);
     Optional<Role> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    Optional<Role> findByNameAndTenant(String governmentAdmin, Tenant govTenant);
 }

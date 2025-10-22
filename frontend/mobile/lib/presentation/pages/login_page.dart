@@ -272,13 +272,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       "Don't have an account? ",
                       style: TextStyle(color: Colors.grey[600]),
                     ),
-                    GestureDetector(
-                      onTap: () => getIt<GoRouter>().go('/register'),
-                      child: Text(
-                        'Register here',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w600,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => context.go('/register'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                          child: Text(
+                            'Register here',
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),

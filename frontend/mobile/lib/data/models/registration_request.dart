@@ -1,19 +1,47 @@
 class RegistrationRequest {
   // User
   final String rsbsaId;
+  final String username;
+  final String password;
   final String firstName;
   final String lastName;
-  final String password;
   final String? middleName;
   final String email;
   final String phoneNumber;
+  final UserProfile userProfile;
 
+  RegistrationRequest({
+    required this.rsbsaId,
+    required this.username,
+    required this.password,
+    required this.firstName,
+    required this.lastName,
+    this.middleName,
+    required this.email,
+    required this.phoneNumber,
+    required this.userProfile
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'rsbsaId': rsbsaId,
+      'username': username,
+      'password': password,
+      'firstName': firstName,
+      'lastName': lastName,
+      'middleName': middleName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'userProfile': userProfile.toJson(),
+    };
+  }
+}
+
+class UserProfile {
   // User Profile
-  final String dateOfBirth; // format: dd-MM-yyyy
   final String gender;
   final String civilStatus;
 
-  final String houseNo;
   final String street;
   final String barangay;
   final String municipality;
@@ -23,18 +51,9 @@ class RegistrationRequest {
   final String farmerType;
   final double totalFarmAreaHa;
 
-  RegistrationRequest({
-    required this.rsbsaId,
-    required this.firstName,
-    required this.lastName,
-    required this.password,
-    this.middleName,
-    required this.email,
-    required this.phoneNumber,
-    required this.dateOfBirth,
+  UserProfile({
     required this.gender,
     required this.civilStatus,
-    required this.houseNo,
     required this.street,
     required this.barangay,
     required this.municipality,
@@ -46,17 +65,8 @@ class RegistrationRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      'rsbsaId': rsbsaId,
-      'firstName': firstName,
-      'lastName': lastName,
-      'password': password,
-      'middleName': middleName,
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'dateOfBirth': dateOfBirth,
       'gender': gender,
       'civilStatus': civilStatus,
-      'houseNo': houseNo,
       'street': street,
       'barangay': barangay,
       'municipality': municipality,
@@ -66,4 +76,5 @@ class RegistrationRequest {
       'totalFarmAreaHa': totalFarmAreaHa,
     };
   }
+
 }

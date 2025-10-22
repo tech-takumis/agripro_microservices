@@ -5,6 +5,7 @@ import 'package:mobile/presentation/pages/home_page.dart';
 import '../../../presentation/controllers/auth_controller.dart';
 import '../../../presentation/pages/login_page.dart';
 import  'package:mobile/presentation/pages/profile_page.dart';
+import 'package:mobile/presentation/pages/multi_step_register_page.dart';
 // Import other pages as needed
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -12,8 +13,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: authState.isLoggedIn ? '/home' : '/login',
     redirect: (context, state) {
-      if (authState.isLoading) return null; // Don't redirect while loading
-      if (!authState.isLoggedIn && state.uri.toString() != '/login') {
+      if (authState.isLoading) return null;
+      // Allow unauthenticated users to access /login and /register
+      final allowedUnauthenticated = ['/login', '/register'];
+      if (!authState.isLoggedIn && !allowedUnauthenticated.contains(state.uri.toString())) {
         return '/login';
       }
       if (authState.isLoggedIn && state.uri.toString() == '/login') {
@@ -33,7 +36,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
          builder: (context, state) => const ProfilePage()
-         ),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const MultiStepRegisterPage(),
+      ),
     ],
   );
 });
