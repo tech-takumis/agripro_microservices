@@ -1,4 +1,4 @@
-package com.hashjosh.transaction.exception;
+package com.hashjosh.program.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

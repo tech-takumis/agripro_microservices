@@ -1,10 +1,10 @@
-package com.hashjosh.transaction.service;
+package com.hashjosh.program.service;
 
-import com.hashjosh.transaction.dto.ProgramDto;
-import com.hashjosh.transaction.entity.Program;
-import com.hashjosh.transaction.exception.ApiException;
-import com.hashjosh.transaction.mapper.ProgramMapper;
-import com.hashjosh.transaction.repository.ProgramRepository;
+import com.hashjosh.program.dto.ProgramDto;
+import com.hashjosh.program.entity.Program;
+import com.hashjosh.program.exception.ApiException;
+import com.hashjosh.program.mapper.ProgramMapper;
+import com.hashjosh.program.repository.ProgramRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

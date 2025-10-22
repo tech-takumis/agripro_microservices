@@ -10,9 +10,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ApplicationReceivedByPcicEvent {
+public class ApplicationReceivedEvent {
     private UUID submissionId;
-    private UUID userId;
-    private String verificationStatus; // COMPLETED, REJECTED
+    private UUID uploadedBY;
+    private String verificationStatus;
+    private String detials;
     private LocalDateTime receivedAt;
 }

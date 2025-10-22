@@ -4,7 +4,7 @@ import com.hashjosh.application.dto.ApplicationFieldsRequestDto;
 import com.hashjosh.application.dto.ApplicationSectionRequestDto;
 import com.hashjosh.application.dto.ApplicationTypeRequestDto;
 import com.hashjosh.application.dto.ApplicationTypeResponseDto;
-import com.hashjosh.application.exceptions.ApplicationNotFoundException;
+import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.mapper.ApplicationTypeMapper;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationSection;
@@ -59,21 +59,8 @@ public class ApplicationTypeService {
                     .collect(Collectors.toList());
     }
 
-    public ApplicationType getApplicationTypeById(UUID id) {
-
-        return applicationTypeRepository.findById(id).orElseThrow(
-                () -> new ApplicationNotFoundException(
-                        "Application type does not found",
-                        HttpStatus.NOT_FOUND.value()
-                )
-        );
-    };
-
     public ApplicationTypeResponseDto findById(UUID id) {
         return applicationTypeMapper.toApplicationResponse(applicationTypeRepository.findById(id)
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application type does not found",
-                        HttpStatus.NOT_FOUND.value()
-                )));
+                .orElseThrow(() -> ApiException.notFound("This type of application does not exists")));
     }
 }

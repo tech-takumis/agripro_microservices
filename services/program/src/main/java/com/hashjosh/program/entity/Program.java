@@ -1,4 +1,4 @@
-package com.hashjosh.transaction.entity;
+package com.hashjosh.program.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

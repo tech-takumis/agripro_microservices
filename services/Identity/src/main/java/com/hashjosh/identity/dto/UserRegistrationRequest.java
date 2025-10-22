@@ -9,12 +9,12 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class UserRegistrationRequest {
-    private String tenantKey; // "farmer", "agriculture", or "pcic"
+    private String tenantKey;
     private String username;
     private String password;
     private String firstName;
     private String lastName;
     private String email;
-    private String roleId;
+    private String roleName;
     private Map<String, Object> profile;
 }

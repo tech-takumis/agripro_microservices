@@ -1,9 +1,9 @@
 
-package com.hashjosh.transaction.mapper;
+package com.hashjosh.program.mapper;
 
-import com.hashjosh.transaction.dto.BeneficiaryDto;
-import com.hashjosh.transaction.entity.Beneficiary;
-import com.hashjosh.transaction.repository.ProgramRepository;
+import com.hashjosh.program.dto.BeneficiaryDto;
+import com.hashjosh.program.entity.Beneficiary;
+import com.hashjosh.program.repository.ProgramRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

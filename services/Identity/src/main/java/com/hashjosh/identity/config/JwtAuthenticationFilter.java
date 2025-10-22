@@ -8,6 +8,7 @@ import com.hashjosh.identity.service.RefreshTokenService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -162,6 +163,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claim = jwtService.getAllClaims(accessToken);
                 String userId = claim.get("userId", String.class);
 
+                // Use eager fetch to avoid LazyInitializationException
                 User user = userRepository.findById(UUID.fromString(userId))
                         .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
@@ -221,12 +223,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        var accessCookie = new jakarta.servlet.http.Cookie("ACCESS_TOKEN", accessToken);
+        var accessCookie = new Cookie("ACCESS_TOKEN", accessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setPath("/");
         response.addCookie(accessCookie);
 
-        var refreshCookie = new jakarta.servlet.http.Cookie("REFRESH_TOKEN", refreshToken);
+        var refreshCookie = new Cookie("REFRESH_TOKEN", refreshToken);
         refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/");
         response.addCookie(refreshCookie);

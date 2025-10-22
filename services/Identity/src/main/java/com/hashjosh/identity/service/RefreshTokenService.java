@@ -17,9 +17,6 @@ import java.util.Optional;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-
-
-
     @Transactional
     public void deleteByToken(String token) {
         log.debug("Deleting refresh token: {}", token);

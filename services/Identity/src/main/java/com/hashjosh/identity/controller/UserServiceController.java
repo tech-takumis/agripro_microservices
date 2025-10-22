@@ -2,34 +2,33 @@ package com.hashjosh.identity.controller;
 
 
 import com.hashjosh.constant.user.UserResponseDTO;
-import com.hashjosh.identity.service.IdentityService;
+import com.hashjosh.identity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 public class UserServiceController {
 
-    private final IdentityService identityService;
+    private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> listUsers() {
-        return ResponseEntity.ok(identityService.findAll());
+    public ResponseEntity<List<UserResponseDTO>> listUsers(
+            @RequestPart(required = false) String tenantKey
+    ) {
+        return ResponseEntity.ok(userService.findAll(tenantKey));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(
-            @PathVariable("id") String id
+            @PathVariable("id") UUID id
     ) {
-        // Implementation for getting user by ID
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(userService.findById(id));
     }
+
 }

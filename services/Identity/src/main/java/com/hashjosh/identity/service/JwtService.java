@@ -1,5 +1,7 @@
 package com.hashjosh.identity.service;
 
+import com.hashjosh.identity.entity.Permission;
+import com.hashjosh.identity.entity.Role;
 import com.hashjosh.identity.entity.User;
 import com.hashjosh.identity.properties.JwtProperties;
 import com.hashjosh.identity.repository.RefreshTokenRepository;
@@ -39,12 +41,8 @@ public class JwtService {
         claims.put("username", user.getUsername());
         claims.put("tenantId", user.getTenant().getId().toString());
         claims.put("email", user.getEmail());
-        claims.put("roles", user.getRoles().stream().map(
-                userRole -> userRole.getRole().getName()
-        ).toList());
-        claims.put("permissions", user.getPermissions().stream().map(
-                userPermission -> userPermission.getPermission().getName()
-        ).toList());
+        claims.put("roles", user.getRoles().stream().map(Role::getName).toList());
+        claims.put("permissions", user.getPermissions().stream().map(Permission::getName).toList());
 
 
         return Jwts.builder()

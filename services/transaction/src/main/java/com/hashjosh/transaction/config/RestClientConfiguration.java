@@ -1,4 +1,4 @@
-package com.hashjosh.program.config;
+package com.hashjosh.transaction.config;
 
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;

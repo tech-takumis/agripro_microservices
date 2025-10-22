@@ -6,9 +6,10 @@ import lombok.*;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -41,11 +42,48 @@ public class User {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserAttribute> attributes = new ArrayList<>();
+    private Set<UserAttribute> attributes = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserRole> roles = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserPermission> permissions = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_permission",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private Set<Permission> permissions;
+
+    public Set<String> getEffectivePermissions() {
+        Set<String> permissionFromRoles = roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        Set<String> directPermissions = permissions.stream()
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        permissionFromRoles.addAll(directPermissions);
+
+        return permissionFromRoles;
+    }
+
+    // Method to assign direct permission with a check to avoid duplicates
+    public void assignDirectPermission(Permission permission){
+        Set<String> effectivePermissions = getEffectivePermissions();
+        if(effectivePermissions.contains(permission.getName())){
+            throw  new IllegalArgumentException("Permission "+permission.getName()+" already assigned directly or via role");
+        }
+
+        permissions.add(permission);
+    }
+
+
 }

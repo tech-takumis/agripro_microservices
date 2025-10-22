@@ -34,17 +34,17 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private static final String INTERNALSERVICE_HEADER = "X-Internal-Service";
     private static final String USERID_HEADER = "X-User-Id";
+    private static final String REFRESH_TOKEN_COOKIE = "REFRESH_TOKEN";
+    private static final String REFRESH_TOKEN_HEADER = "X-Refresh-Token";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 
-        // Use maintainable shouldNotFilter logic
         BypassDecision bypass = shouldNotFilter(request);
         if (bypass.isBypass()) {
             log.debug(bypass.getLogMessage(), request.getURI().getPath());
             if (bypass.getAuthentication() != null) {
-                // Internal service trust
                 return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(bypass.getAuthentication()));
             } else {
@@ -52,35 +52,44 @@ public class JwtAuthenticationFilter implements WebFilter {
             }
         }
 
-        // 🧩 Extract token
-        String token = extractAccessToken(request);
+        String accessToken = extractAccessToken(request);
+        String refreshToken = extractRefreshToken(request);
         String path = request.getURI().getPath();
-        if (token == null) {
+
+        if (accessToken == null) {
             log.warn("❌ No access token found for request: {}", path);
             return this.unauthorized(exchange, "Missing token");
         }
 
         try {
-            if (!jwtService.validateToken(token)) {
+            if (!jwtService.validateToken(accessToken)) {
                 log.warn("🚫 Invalid or expired JWT for path: {}", path);
                 return this.unauthorized(exchange, "Invalid or expired token");
             }
 
-            String username = jwtService.getUsernameFromToken(token);
-            Claims claims = jwtService.getAllClaims(token);
+            String username = jwtService.getUsernameFromToken(accessToken);
+            Claims claims = jwtService.getAllClaims(accessToken);
+            String userId = claims.get("userId", String.class);
             List<SimpleGrantedAuthority> authorities = extractAuthorities(claims);
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
 
             log.debug("✅ Authenticated user '{}' with {} authorities", username, authorities.size());
 
-            // Mutate headers for downstream
-            ServerHttpRequest mutated = request.mutate()
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .header("X-User-Username", username)
-                    .build();
+            // Build mutated request with both access and refresh tokens
+            ServerHttpRequest.Builder mutatedBuilder = request.mutate()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .header("X-User-Id", userId );
 
-            return chain.filter(exchange.mutate().request(mutated).build())
+            // Add refresh token if present
+            if (refreshToken != null) {
+                mutatedBuilder.header(REFRESH_TOKEN_HEADER, refreshToken);
+                log.debug("🔄 Forwarding refresh token for user: {}", username);
+            }
+
+            ServerHttpRequest mutatedRequest = mutatedBuilder.build();
+
+            return chain.filter(exchange.mutate().request(mutatedRequest).build())
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
 
         } catch (Exception e) {
@@ -88,6 +97,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             return this.unauthorized(exchange, "Authentication failed: " + e.getMessage());
         }
     }
+
 
     /**
      * Result class for shouldNotFilter decision.
@@ -174,6 +184,24 @@ public class JwtAuthenticationFilter implements WebFilter {
         return null;
     }
 
+    private String extractRefreshToken(ServerHttpRequest request) {
+        // Try to get from cookie first
+        List<HttpCookie> cookies = request.getCookies().get(REFRESH_TOKEN_COOKIE);
+        if (cookies != null && !cookies.isEmpty()) {
+            return cookies.get(0).getValue();
+        }
+
+        // Then try from header
+        String header = request.getHeaders().getFirst(REFRESH_TOKEN_HEADER);
+        if (header != null) {
+            if (header.startsWith("Bearer ")) {
+                return header.substring(7);
+            }
+            return header;
+        }
+
+        return null;
+    }
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
         log.warn("Unauthorized: {} -> {}", exchange.getRequest().getURI().getPath(), message);
         exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);

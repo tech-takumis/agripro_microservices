@@ -1,4 +1,4 @@
-package com.hashjosh.transaction.exception;
+package com.hashjosh.program.exception;
 
 import lombok.*;
 

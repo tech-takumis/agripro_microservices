@@ -4,13 +4,10 @@ import com.hashjosh.constant.user.UserResponseDTO;
 import com.hashjosh.identity.dto.UserRegistrationRequest;
 import com.hashjosh.identity.entity.Tenant;
 import com.hashjosh.identity.entity.User;
-import com.hashjosh.identity.entity.UserAttribute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -43,8 +40,8 @@ public class UserMapper {
                 .tenant(user.getTenant().getKey())
                 .active(user.isActive())
                 .roles(user.getRoles().stream()
-                                    .map( userRole -> roleMapper.toRoleResponseDto(userRole.getRole()))
-                        .collect(Collectors.toList()))
+                                    .map(roleMapper::toRoleResponseDto)
+                        .toList())
                 .build();
     }
 

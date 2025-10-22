@@ -11,9 +11,9 @@
 
     <modules>
         <module>verification</module>
+        <module>transaction</module>
         <module>identity</module>
         <module>inspection</module>
-        <module>transaction</module>
         <module>claim</module>
         <module>policy</module>
         <module>schedule</module>

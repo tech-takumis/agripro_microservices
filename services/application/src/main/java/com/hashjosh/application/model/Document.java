@@ -13,7 +13,7 @@ import java.util.UUID;
 @Builder
 @Getter
 @Setter
-public class Documents {
+public class Document {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,7 +24,7 @@ public class Documents {
 
     @Column(name = "uploaded_by", nullable = false)
     private UUID uploadedBy;
-    
+
 
     private LocalDateTime uploadedAt;
 }

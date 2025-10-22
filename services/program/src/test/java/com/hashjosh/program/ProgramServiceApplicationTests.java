@@ -1,10 +1,10 @@
-package com.hashjosh.transaction;
+package com.hashjosh.program;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TransactionServiceApplicationTests {
+class ProgramServiceApplicationTests {
 
     @Test
     void contextLoads() {

@@ -1,7 +1,7 @@
-package com.hashjosh.transaction.controller;
+package com.hashjosh.program.controller;
 
-import com.hashjosh.transaction.dto.ProgramDto;
-import com.hashjosh.transaction.service.ProgramService;
+import com.hashjosh.program.dto.ProgramDto;
+import com.hashjosh.program.service.ProgramService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

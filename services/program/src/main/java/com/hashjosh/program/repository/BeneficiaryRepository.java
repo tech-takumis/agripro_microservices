@@ -1,6 +1,6 @@
-package com.hashjosh.transaction.repository;
+package com.hashjosh.program.repository;
 
-import com.hashjosh.transaction.entity.Beneficiary;
+import com.hashjosh.program.entity.Beneficiary;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

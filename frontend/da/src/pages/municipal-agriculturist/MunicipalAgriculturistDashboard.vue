@@ -2,7 +2,7 @@
     <AuthenticatedLayout :navigation="navigation" role-title="Municipal Agriculturist" :page-title="'Municipal Dashboard'">
         <!-- Navbar -->
         <nav class="w-full bg-transparent border-0 shadow-none px-6 py-3 mb-6 flex items-center justify-between">
-            <h4 class="text-3xl font-bold text-black-700">Dzashboard</h4>
+            <h4 class="text-3xl font-bold text-black-700">Dashboard</h4>
             <!-- Right Side: Notifications + Profile -->
             <div class="flex items-center space-x-6">
 
@@ -246,23 +246,27 @@ import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 import { useAuthStore } from '@/stores/auth'
 import { usePostStore } from '@/stores/post'
 import { useProgramStore } from '@/stores/program'
-import  {useScheduleStore} from '@/stores/schedule'
+import { useTransactionStore } from '@/stores/transcation'
+import {useNotificationStore} from '@/stores/notification'
 
 
+// Stores
 const postStore = usePostStore();
-const posts = computed(() => postStore.posts)
-const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
+const notificationStore = useNotificationStore();
 const authStore = useAuthStore()
 const program = useProgramStore();
-const schedule = useScheduleStore();
+const transaction = useTransactionStore();
 
-// Profile and notification states
+const posts = computed(() => postStore.posts)
+const notifications = computed(() => notificationStore.allNotifications || [])
+
+const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
 const showProfileDropdown = ref(false)
 const showFiltersDropdown = ref(false)
 const showNotificationsDropdown = ref(false)
 const notificationCount = ref(3)
 
-// User data from auth store
+
 const userFullName = computed(() => authStore.userFullName)
 const userEmail = computed(() => authStore.userEmail)
 const userInitials = computed(() => {
@@ -273,76 +277,33 @@ const userInitials = computed(() => {
 // Dashboard data
 const stats = computed(() => ({
     localFarmers: 1250, // This could come from another API endpoint if needed
-    disbursements: dashboardStore.formatCurrency(
-        dashboardStore.municipalDashboard.transactions
-            ?.filter(t => t.type === 'EXPENSE')
-            ?.reduce((sum, t) => sum + t.amount, 0) || 0
-    ),
-    activePrograms: dashboardStore.municipalDashboard.activePrograms || 0
+    disbursements:
+        formatCurrency(
+            (transaction.allTransactions || [])
+                .filter(t => t.type === 'EXPENSE')
+                .reduce((sum, t) => sum + (t.amount || 0), 0)
+        ),
+    activePrograms: program.activePrograms.length
 }))
+
+function formatCurrency(amount) {
+    // Returns amount in thousands, rounded, no decimals
+    return Math.round(amount / 1000)
+}
 
 // Trend calculations (you might want to fetch historical data from API if needed)
 const farmersTrend = ref([900, 920, 915, 930, 945, 950, 960, 980, 990, 1005, 1010, 1025])
 const disbursementsTrend = computed(() => {
-    const transactions = dashboardStore.municipalDashboard.transactions || []
-    return transactions.map(t => t.amount / 1000)
+    const txs = transaction.allTransactions || []
+    return txs
+        .filter(t => t.type === 'EXPENSE')
+        .map(t => (t.amount || 0) / 1000)
 })
 const programsTrend = computed(() => {
-    const count = dashboardStore.municipalDashboard.activePrograms
+    // Example: last 12 months active programs count
+    const count = program.activePrograms.length
     return Array(12).fill(count)
 })
-
-// Notifications data
-const notifications = ref([
-    {
-        id: 1,
-        title: 'New Claim Submitted',
-        message: 'Farmer Juan Dela Cruz submitted a new insurance claim for rice crop damage',
-        time: '2 minutes ago',
-        read: false
-    },
-    {
-        id: 2,
-        title: 'Program Update',
-        message: 'Seed Distribution Program has reached 75% completion',
-        time: '1 hour ago',
-        read: false
-    },
-    {
-        id: 3,
-        title: 'Budget Alert',
-        message: 'Fertilizer Subsidy budget is running low (15% remaining)',
-        time: '3 hours ago',
-        read: true
-    }
-])
-
-const getTransactionStatusClass = (status) => {
-    switch (status) {
-        case 'Completed':
-            return 'bg-green-100 text-green-800'
-        case 'Pending':
-            return 'bg-yellow-100 text-yellow-800'
-        case 'Processing':
-            return 'bg-blue-100 text-blue-800'
-        default:
-            return 'bg-gray-100 text-gray-800'
-    }
-}
-
-// Profile dropdown methods
-const toggleProfileDropdown = () => {
-    showProfileDropdown.value = !showProfileDropdown.value
-}
-
-// Filters dropdown methods
-const toggleFiltersDropdown = () => {
-    showFiltersDropdown.value = !showFiltersDropdown.value
-    // Close notifications when opening filters
-    if (showFiltersDropdown.value) {
-        showNotificationsDropdown.value = false
-    }
-}
 
 // Notifications dropdown methods
 const toggleNotificationsDropdown = () => {
@@ -398,10 +359,14 @@ onMounted(async () => {
     // Add click outside listener
     document.addEventListener('click', handleClickOutside)
 
+    await  notificationStore.fetchNotifications()
     // Load dashboard data
     try {
-        await dashboardStore.fetchMunicipalDashboard()
-        await postStore.fetchPosts();
+        await Promise.all([
+            postStore.fetchPosts(),
+            program.fetchPrograms(),
+            transaction.fetchTransactions()
+        ])
     } catch (error) {
         console.error('Failed to load dashboard data:', error)
     }
@@ -412,8 +377,6 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-// ----- Trends & Sparklines -----
-// Example trend data for the last 12 periods (e.g., weeks)
 
 const computePercentChange = (arr) => {
     if (!arr || arr.length < 2) return 0
@@ -426,21 +389,4 @@ const computePercentChange = (arr) => {
 const farmersChange = computed(() => computePercentChange(farmersTrend.value))
 const disbursementsChange = computed(() => computePercentChange(disbursementsTrend.value))
 const programsChange = computed(() => computePercentChange(programsTrend.value))
-
-// Generate polyline points for a 120x32 viewBox sparkline
-const generateSparklinePoints = (arr) => {
-    if (!arr || arr.length === 0) return ''
-    const width = 120
-    const height = 32
-    const max = Math.max(...arr)
-    const min = Math.min(...arr)
-    const range = max - min || 1
-    const stepX = width / Math.max(1, arr.length - 1)
-    const points = arr.map((v, i) => {
-        const x = Math.round(i * stepX)
-        const y = Math.round(height - ((v - min) / range) * height)
-        return `${x},${y}`
-    })
-    return points.join(' ')
-}
 </script>

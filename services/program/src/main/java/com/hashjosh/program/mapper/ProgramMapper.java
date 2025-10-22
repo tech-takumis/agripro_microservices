@@ -1,7 +1,7 @@
-package com.hashjosh.transaction.mapper;
+package com.hashjosh.program.mapper;
 
-import com.hashjosh.transaction.dto.ProgramDto;
-import com.hashjosh.transaction.entity.Program;
+import com.hashjosh.program.dto.ProgramDto;
+import com.hashjosh.program.entity.Program;
 import org.springframework.stereotype.Component;
 
 @Component

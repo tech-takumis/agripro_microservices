@@ -23,10 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +35,7 @@ public class AuthService {
     private final TenantProfileFieldRepository tenantProfileFieldRepository;
     private final UserAttributeRepository userAttributeRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
-
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties  jwtProperties;
@@ -53,23 +48,18 @@ public class AuthService {
         Tenant tenant = getOrCreateTenant(request.getTenantKey());
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
+
+        Set<Role> userRoles = new HashSet<>();
         // Get the role of the user using tenant per role
         // So we check role requested by user belongs to the tenant
-        Role role = roleRepository.findByIdAndTenantId(UUID.fromString(request.getRoleId()), tenant.getId())
-                .orElseThrow(() -> ApiException.notFound("Role not found: " + request.getRoleId() +" for tenant: " + tenant.getName()));
+        Role role = roleRepository.findByTenantKeyIgnoreCaseAndNameIgnoreCase(request.getTenantKey(), request.getRoleName())
+                .orElseThrow(() -> ApiException.badRequest("Role not found: " + request.getRoleName() + " for tenant: " + request.getTenantKey()));
 
+        userRoles.add(role);
         // 3️⃣ Create User
         User user = userMapper.toUserEntity(request, tenant, passwordHash);
+        user.setRoles(userRoles);
         userRepository.save(user);
-
-        // Assign role to user
-        UserRole userRole = UserRole.builder()
-                .user(user)
-                .role(role)
-                .assignedAt(LocalDateTime.now())
-                .build();
-        // Save user role
-        userRoleRepository.save(userRole);
 
         // 4️⃣ Get tenant’s field definitions
         List<TenantProfileField> tenantFields =
@@ -112,6 +102,9 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> ApiException.notFound("User not found with username: " + request.getUsername()));
 
+        if(!userRepository.existsByTenantKeyIgnoreCaseAndId(request.getTenantKey(),user.getId())){
+            throw ApiException.badRequest("Invalid tenant key for user: " + request.getUsername());
+        }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw ApiException.badRequest("Invalid username or password");
 
@@ -250,8 +243,8 @@ public class AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
                 .getContext().getAuthentication().getPrincipal();
 
-        User user = userRepository.findById(userDetails.getUser().getId())
-                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userDetails.getUser()));
+        User user = userRepository.findById(userDetails.getUserId())
+                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userDetails.getUserId()));
 
         return userMapper.toUserResponseDto(user);
     }

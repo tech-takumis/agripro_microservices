@@ -19,7 +19,6 @@ public class DataInitializer implements CommandLineRunner {
     private final TenantProfileFieldRepository tenantProfileFieldRepository;
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
-    private final RolePermissionRepository rolePermissionRepository;
 
     @Override
     @Transactional
@@ -32,11 +31,10 @@ public class DataInitializer implements CommandLineRunner {
         long tenantCount = tenantRepository.count();
         long permissionCount = permissionRepository.count();
         long roleCount = roleRepository.count();
-        long rolePermissionCount = rolePermissionRepository.count();
 
-        if (tenantCount > 0 || permissionCount > 0 || roleCount > 0 || rolePermissionCount > 0) {
-            log.warn("⚠️ Skipping Data Initialization — existing data detected (tenants={}, permissions={}, roles={}, rolePermissions={})",
-                    tenantCount, permissionCount, roleCount, rolePermissionCount);
+        if (tenantCount > 0 || permissionCount > 0 || roleCount > 0) {
+            log.warn("⚠️ Skipping Data Initialization — existing data detected (tenants={}, permissions={}, roles={})",
+                    tenantCount, permissionCount, roleCount);
             return;
         }
 
@@ -57,9 +55,13 @@ public class DataInitializer implements CommandLineRunner {
                 newField("office_location", "Office Location", TenantProfileField.DataType.TEXT, true)
         ));
         createTenantProfileFields(farmer, List.of(
+                newField("rsbsa_id", "RSBSA ID", TenantProfileField.DataType.TEXT, true),
+                newField("region", "Region", TenantProfileField.DataType.TEXT, true),
+                newField("province", "Province", TenantProfileField.DataType.TEXT, true),
+                newField("city_municipality", "City/Municipality", TenantProfileField.DataType.TEXT, true),
+                newField("barangay", "Barangay", TenantProfileField.DataType.TEXT, true),
                 newField("farm_size", "Farm Size (ha)", TenantProfileField.DataType.NUMBER, true),
-                newField("education", "Education", TenantProfileField.DataType.TEXT, false),
-                newField("farming_type", "Farming Type", TenantProfileField.DataType.TEXT, true)
+                newField("education", "Education", TenantProfileField.DataType.TEXT, false)
         ));
         createTenantProfileFields(pcic, List.of(
                 newField("department", "Department", TenantProfileField.DataType.TEXT, true),
@@ -123,7 +125,7 @@ public class DataInitializer implements CommandLineRunner {
         ), "/farmer/dashboard");
 
         // 🏦 PCIC Tenant Roles
-        createRole(pcic, "UNDERWRITER", Set.of(
+        createRole(pcic, "UNDERWRITER", new HashSet<>(Arrays.asList(
                 permMap.get("CAN_VIEW_USER"),
                 permMap.get("CAN_ISSUE_POLICY"),
                 permMap.get("CAN_ASSESS_RISK"),
@@ -131,9 +133,9 @@ public class DataInitializer implements CommandLineRunner {
                 permMap.get("CAN_COMPUTE_PREMIUM"),
                 permMap.get("CAN_CONDUCT_BRIEFINGS"),
                 permMap.get("CAN_INSPECT_FIELD")
-        ), "/underwriter/dashboard");
+        )), "/underwriter/dashboard");
 
-        createRole(pcic, "CLAIMS_ADJUSTMENT_STAFF", Set.of(
+        createRole(pcic, "CLAIMS_ADJUSTMENT_STAFF", new HashSet<>(Arrays.asList(
                 permMap.get("CAN_VIEW_USER"),
                 permMap.get("CAN_PROCESS_CLAIM"),
                 permMap.get("CAN_VERIFY_CLAIM"),
@@ -141,31 +143,50 @@ public class DataInitializer implements CommandLineRunner {
                 permMap.get("CAN_INSPECT_FIELD"),
                 permMap.get("CAN_PROCESS_INDEMNITY"),
                 permMap.get("CAN_NOTIFY_DENIAL")
-        ), "/claims-adjustment-staff/dashboard");
+        )), "/claims-adjustment-staff/dashboard");
 
-        createRole(pcic, "ADMINISTRATIVE_STAFF", Set.of(
+        createRole(pcic, "ADMINISTRATIVE_STAFF", new HashSet<>(Arrays.asList(
                 permMap.get("CAN_VIEW_USER"),
                 permMap.get("CAN_PROCESS_LEAVE"),
                 permMap.get("CAN_MANAGE_CASH_ADVANCE"),
                 permMap.get("CAN_ISSUE_CERTIFICATE"),
                 permMap.get("CAN_MANAGE_PERSONNEL_RECORDS")
-        ), "/administrative-staff/dashboard");
+        )), "/administrative-staff/dashboard");
 
-        createRole(pcic, "SUPPORT_STAFF", Set.of(
+        createRole(pcic, "SUPPORT_STAFF", new HashSet<>(Arrays.asList(
                 permMap.get("CAN_VIEW_USER"),
                 permMap.get("CAN_MANAGE_SUPPLIES"),
                 permMap.get("CAN_HANDLE_REPAIRS"),
                 permMap.get("CAN_PROVIDE_TRANSPORT"),
                 permMap.get("CAN_ISSUE_RECEIPT")
-        ), "/support-staff/dashboard");
+        )), "/support-staff/dashboard");
 
-        createRole(pcic, "EXTENSION_FIELD_STAFF", Set.of(
+        createRole(pcic, "EXTENSION_FIELD_STAFF", new HashSet<>(Arrays.asList(
                 permMap.get("CAN_VIEW_USER"),
                 permMap.get("CAN_FACILITATE_APPLICATIONS"),
                 permMap.get("CAN_RECEIVE_CLAIMS_ON_SITE"),
                 permMap.get("CAN_INSPECT_FIELD"),
                 permMap.get("CAN_ENCODE_CLAIM")
-        ), "/extension-field-staff/dashboard");
+        )), "/extension-field-staff/dashboard");
+
+        // Fix: Use HashSet to avoid duplicate element error in Set.of()
+        createRole(null, "ROLE_INTERNAL_SERVICE", new HashSet<>(Arrays.asList(
+                permMap.get("CAN_VIEW_USER"),
+                permMap.get("CAN_FACILITATE_APPLICATIONS"),
+                permMap.get("CAN_RECEIVE_CLAIMS_ON_SITE"),
+                permMap.get("CAN_INSPECT_FIELD"),
+                permMap.get("CAN_ENCODE_CLAIM"),
+                permMap.get("CAN_MANAGE_SUPPLIES"),
+                permMap.get("CAN_HANDLE_REPAIRS"),
+                permMap.get("CAN_PROVIDE_TRANSPORT"),
+                permMap.get("CAN_ISSUE_RECEIPT"),
+                permMap.get("CAN_PROCESS_CLAIM"),
+                permMap.get("CAN_VERIFY_CLAIM"),
+                permMap.get("CAN_ADJUST_CLAIMS"),
+                permMap.get("CAN_INSPECT_FIELD"), // <-- duplicate, will be ignored by HashSet
+                permMap.get("CAN_PROCESS_INDEMNITY"),
+                permMap.get("CAN_NOTIFY_DENIAL")
+        )), null);
 
         log.info("✅ Data initialization completed.");
     }
@@ -227,14 +248,9 @@ public class DataInitializer implements CommandLineRunner {
             return roleRepository.save(r);
         });
 
-        for (Permission p : permissions) {
-            if (!rolePermissionRepository.existsByRoleAndPermission(role, p)) {
-                RolePermission rp = new RolePermission();
-                rp.setRole(role);
-                rp.setPermission(p);
-                rolePermissionRepository.save(rp);
-            }
-        }
+        // Convert to mutable set to avoid UnsupportedOperationException
+        role.setPermissions(new HashSet<>(permissions));
+        roleRepository.save(role);
     }
 
     private static <K, V> Map.Entry<K, V> entry(K k, V v) {

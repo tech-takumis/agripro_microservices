@@ -1,11 +1,11 @@
 
-package com.hashjosh.transaction.service;
+package com.hashjosh.program.service;
 
-import com.hashjosh.transaction.dto.BeneficiaryDto;
-import com.hashjosh.transaction.entity.Beneficiary;
-import com.hashjosh.transaction.exception.ApiException;
-import com.hashjosh.transaction.mapper.BeneficiaryMapper;
-import com.hashjosh.transaction.repository.BeneficiaryRepository;
+import com.hashjosh.program.dto.BeneficiaryDto;
+import com.hashjosh.program.entity.Beneficiary;
+import com.hashjosh.program.exception.ApiException;
+import com.hashjosh.program.mapper.BeneficiaryMapper;
+import com.hashjosh.program.repository.BeneficiaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -21,7 +21,7 @@ export const useTransactionStore = defineStore('transaction', () =>  {
         error.value = null
 
         try {
-            const response = await axios.get('/api/v1/transactions')
+            const response = await axios.get('/api/v1/transaction')
             transactions.value = response.data
             console.log('Fetched transactions:', transactions.value)
             return { success: true, data: transactions.value }
@@ -35,4 +35,13 @@ export const useTransactionStore = defineStore('transaction', () =>  {
 
     }
 
+    return {
+        transactions,
+        loading,
+        error,
+        allTransactions,
+        isLoading,
+        getError,
+        fetchTransactions
+    }
 })

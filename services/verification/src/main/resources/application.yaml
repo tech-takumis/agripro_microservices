@@ -1,1 +1,5 @@
-spring.application.name=verification
+spring:
+  profiles:
+    active: dev
+  application:
+    name: verification-service

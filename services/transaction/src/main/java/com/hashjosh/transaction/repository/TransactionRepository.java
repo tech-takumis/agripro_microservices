@@ -1,4 +1,11 @@
 package com.hashjosh.transaction.repository;
 
-public class TransactionRepository {
+import com.hashjosh.transaction.entity.Transaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 }

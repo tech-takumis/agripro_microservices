@@ -1,4 +1,4 @@
-package com.hashjosh.program.config;
+package com.hashjosh.transaction.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

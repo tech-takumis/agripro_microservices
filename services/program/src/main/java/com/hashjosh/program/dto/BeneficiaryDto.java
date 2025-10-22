@@ -1,4 +1,4 @@
-package com.hashjosh.transaction.dto;
+package com.hashjosh.program.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

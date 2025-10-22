@@ -53,14 +53,14 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useDashboardStore } from '@/stores/dashboard'
+import {useProgramStore} from '@/stores/program'
 import { Briefcase, ClipboardList, Settings, Users, Wallet } from 'lucide-vue-next'
 import PermissionGuard from '@/components/others/PermissionGuard.vue'
 
-const dashboardStore = useDashboardStore()
+const programStore = useProgramStore()
 
 const latestPrograms = computed(() =>
-    (dashboardStore.municipalDashboard.programs || [])
+    (programStore.programs || [])
         .map(p => ({
             id: p.programId,
             name: p.programName,
