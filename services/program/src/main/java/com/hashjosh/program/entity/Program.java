@@ -1,55 +1,57 @@
-package com.hashjosh.program.entity;
+package com.hashjosh.transaction.entity;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.hashjosh.constant.program.enums.ProgramStatus;
-import com.hashjosh.constant.program.enums.ProgramType;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.Getter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Getter
 @Table(name = "programs")
+@Getter
 @Setter
-@RequiredArgsConstructor
+@ToString(exclude = "beneficiaries")
+@EqualsAndHashCode(exclude = "beneficiaries")
 @AllArgsConstructor
-@ToString
+@NoArgsConstructor
 @Builder
 public class Program {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Column(nullable = false, length = 100, name = "name")
     private String name;
+    private String description;
+    private float budget;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, name = "type")
-    private ProgramType type;
+    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Beneficiary> beneficiaries;
 
-    @Column(nullable = false,name = "status")
-    @Enumerated(EnumType.STRING)
-    private ProgramStatus status;
+    private int completedPercentage;
+    private String status; // planned, ongoing, completed
 
-    @Column(nullable = false, name = "completion")
-    private int completion;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 
-    @Column(name = "extra_fields", nullable = false, columnDefinition = "jsonb")
-    @Type(JsonBinaryType.class)
-    private JsonNode extraFields;
+    public void addBeneficiary(Beneficiary beneficiary) {
+        if (beneficiaries == null) {
+            beneficiaries = new ArrayList<>();
+        }
+        beneficiaries.add(beneficiary);
+        beneficiary.setProgram(this);
+    }
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public void removeBeneficiary(Beneficiary beneficiary) {
+        if (beneficiaries != null) {
+            beneficiaries.remove(beneficiary);
+            beneficiary.setProgram(null);
+        }
+    }
 }

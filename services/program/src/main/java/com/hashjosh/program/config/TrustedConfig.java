@@ -1,5 +1,4 @@
-package com.hashjosh.program.config;
-
+package com.hashjosh.transaction.config;
 
 import lombok.Getter;
 import lombok.Setter;
