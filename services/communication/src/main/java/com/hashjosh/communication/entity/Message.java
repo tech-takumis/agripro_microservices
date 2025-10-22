@@ -20,8 +20,6 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID conversationId;
-
     private UUID senderId;
 
     private UUID receiverId;

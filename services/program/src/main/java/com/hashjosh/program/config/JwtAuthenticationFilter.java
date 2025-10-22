@@ -22,22 +22,27 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtService jwtService;
     private final TrustedConfig trustedConfig;
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private  static final String USERID_HEADER = "X-User-Id";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        // Check for internal service header
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        String userIdHeader = request.getHeader(USERID_HEADER);
         if (internalServiceHeader != null && trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
             // Allow internal service access without JWT
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserDetails(
-                                    null, // No token
-                                    "internal-service-" + internalServiceHeader, // Unique userId
-                                    internalServiceHeader, // Use service ID as username
-                                    null, null, null, null, // No firstname, lastname, email, phone
+                                    userIdHeader,
+                                    "internal-service-" + internalServiceHeader,
+                                    internalServiceHeader,
+                                    null, null,
                                     Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                             ),
                             null,
@@ -48,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         // JWT validation for non-internal requests
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -87,7 +93,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String firstname = claims.get("firstname", String.class);
         String lastname = claims.get("lastname", String.class);
         String email = claims.get("email", String.class);
-        String phone = claims.get("phone", String.class);
         List<String> claimRoles = claims.get("roles", List.class);
         List<String> claimPermission = claims.get("permissions", List.class);
 
@@ -104,7 +109,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         CustomUserDetails userDetails = new CustomUserDetails(
-                token, userId, username, firstname, lastname, email, phone, roles
+                 userId, username, firstname, lastname, email,roles
         );
 
         UsernamePasswordAuthenticationToken authentication =

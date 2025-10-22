@@ -6,10 +6,8 @@ import com.hashjosh.communication.dto.PostPageResponse;
 import com.hashjosh.communication.dto.PostRequest;
 import com.hashjosh.communication.dto.PostResponse;
 import com.hashjosh.communication.entity.Post;
-import com.hashjosh.communication.entity.User;
 import com.hashjosh.communication.mapper.PostMapper;
 import com.hashjosh.communication.repository.PostRepository;
-import com.hashjosh.communication.repository.UserRepository;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +27,6 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
     private final PostMapper postMapper;
     private final DocumentClient documentClient;
 
@@ -43,9 +39,7 @@ public class PostService {
                 .getAuthentication()
                 .getPrincipal();
 
-        User author = userRepository.findByUserId(UUID.fromString(userDetails.getUserId()))
-                .orElseThrow(() -> new RuntimeException("Author not found"));
-        post.setAuthor(author);
+        post.setAuthorId(UUID.fromString(userDetails.getUserId()));
 
         List<UUID> documentIds = new ArrayList<>();
         if (files != null) {
@@ -73,24 +67,6 @@ public class PostService {
                 .map(postMapper::toPostResponse)
                 .toList();
         return postMapper.toPostPageResponse(posts);
-    }
-
-    public PostResponse updatePost(UUID id, PostRequest request) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-
-        post.setTitle(request.getTitle());
-        post.setContent(request.getContent());
-        post.setDocumentIds(request.getDocumentIds());
-
-        // Update author if changed
-        if (!post.getAuthor().getId().equals(request.getAuthorId())) {
-            User author = userRepository.findById(request.getAuthorId())
-                    .orElseThrow(() -> new RuntimeException("Author not found"));
-            post.setAuthor(author);
-        }
-
-        return postMapper.toPostResponse(postRepository.save(post));
     }
 
     public void deletePost(UUID id) {

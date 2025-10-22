@@ -68,14 +68,7 @@ public class PostController {
         fetch.setHasMore(hasMore);
         return ResponseEntity.ok(fetch);
     }
-
-    // UPDATE
-    @PutMapping("/{id}")
-    public ResponseEntity<PostResponse> updatePost(
-            @PathVariable UUID id,
-            @RequestBody PostRequest request) {
-        return ResponseEntity.ok(postService.updatePost(id, request));
-    }
+    
 
     // DELETE
     @DeleteMapping("/{id}")

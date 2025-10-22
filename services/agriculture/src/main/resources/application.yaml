@@ -1,7 +1,0 @@
-spring:
-  liquibase:
-    enabled: false
-  application:
-    name: agriculture
-  profiles:
-    active: local

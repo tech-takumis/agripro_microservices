@@ -10,10 +10,14 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>farmer</module>
-        <module>agriculture</module>
+        <module>verification</module>
+        <module>transaction</module>
+        <module>identity</module>
+        <module>inspection</module>
+        <module>claim</module>
+        <module>policy</module>
+        <module>schedule</module>
         <module>communication</module>
-        <module>pcic</module>
         <module>constant</module>
         <module>notification</module>
         <module>application</module>

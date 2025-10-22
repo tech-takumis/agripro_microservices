@@ -15,7 +15,6 @@ import java.util.UUID;
 @Builder
 public class NewMessageEvent {
     private UUID messageId;
-    private UUID conversationId;
     private UUID senderId;
     private UUID receiverId;
     private String text;

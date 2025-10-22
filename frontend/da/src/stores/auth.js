@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function fetchCurrentUser() {
         try {
-            const response = await axios.get('/api/v1/agriculture/auth/me');
+            const response = await axios.get('/api/v1/users/auth/me');
             userData.value = response.data;
             normalizeUserData();
             isAuthenticated.value = true;
@@ -116,7 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
             loading.value = true;
             error.value = null;
 
-            const response = await axios.post('/api/v1/agriculture/auth/login',
+            const response = await axios.post('/api/v1/users/auth/login',
                 credentials.value,
                 {
                     headers: {
@@ -129,8 +129,8 @@ export const useAuthStore = defineStore('auth', () => {
 
             if (response.status === 200) {
                 // Store WebSocket token in localStorage
-                if (response.data.webSocketToken) {
-                    localStorage.setItem('webSocketToken', response.data.webSocketToken);
+                if (response.data.websocketToken) {
+                    localStorage.setItem('websocketToken', response.data.websocketToken);
                 }
 
                 isAuthenticated.value = true;

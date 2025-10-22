@@ -17,9 +17,7 @@ import java.util.UUID;
 public class MessageRequestDto {
     private UUID senderId;
     private UUID receiverId;
-    private UUID conversationId;
     @NotBlank(message = "Message text cannot be blank")
     private String text;
-    private String type; // FARMER_AGRICULTURE, AGRICULTURE_PCIC
     private LocalDateTime sentAt;
 }

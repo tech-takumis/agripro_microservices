@@ -57,14 +57,14 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useDashboardStore } from '@/stores/dashboard'
+import { useTransactionStore } from '@/stores/transcation'
 import { CreditCard, Plus, ArrowDownCircle, ArrowUpCircle } from 'lucide-vue-next'
 import PermissionGuard from '@/components/others/PermissionGuard.vue'
 
-const dashboardStore = useDashboardStore()
+const transactionStore = useTransactionStore()
 
 const latestTransactions = computed(() =>
-    (dashboardStore.municipalDashboard.transactions || [])
+    (transactionStore.transactions || [])
         .map(t => ({
             id: t.transactionId,
             description: t.name || (t.type === 'INCOME' ? 'Budget Allocation' : 'Program Disbursement'),

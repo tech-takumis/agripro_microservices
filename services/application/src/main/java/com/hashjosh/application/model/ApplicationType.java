@@ -1,5 +1,6 @@
 package com.hashjosh.application.model;
 
+import com.hashjosh.constant.application.RecipientType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,6 +22,10 @@ public class ApplicationType {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private UUID id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recipient_type", length = 50)
+    private RecipientType recipientType;
 
     @Column(name = "description", length = 255)
     private String description;

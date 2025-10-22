@@ -3,6 +3,7 @@ package com.hashjosh.application.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.hashjosh.constant.application.RecipientType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -28,7 +31,7 @@ public class Application implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     @JsonProperty("id")
-    private UUID id; // Unique per submission, serves as submissionId
+    private UUID id;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,13 +40,19 @@ public class Application implements Serializable {
     @JsonProperty("applicationTypeId")
     private ApplicationType applicationType;
 
-    @Column(name = "user_id", nullable = false)
-    @JsonProperty("userId")
-    private UUID userId;
+    @Column(name = "uploaded_by", nullable = false)
+    @JsonProperty("uploadedBy")
+    private UUID uploadedBy;
 
-    @Column(name = "document_id", nullable = true)
-    @JsonProperty("documentId")
-    private List<UUID> documentId;
+    @JsonProperty("documentsUploaded")
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "application_documents",
+            joinColumns = @JoinColumn(name = "application_id"),
+            inverseJoinColumns = @JoinColumn(name = "document_id")
+    )
+    @Column(name = "documents_uploaded", nullable = true)
+    private Set<Document> documentsUploaded = new HashSet<>();
 
     @Type(JsonBinaryType.class)
     @Column(name = "dynamic_fields", columnDefinition = "jsonb", nullable = false)
