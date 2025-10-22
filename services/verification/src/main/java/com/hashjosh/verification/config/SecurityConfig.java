@@ -1,6 +1,5 @@
 package com.hashjosh.verification.config;
 
-import com.hashjosh.transaction.config.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

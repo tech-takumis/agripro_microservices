@@ -16,7 +16,7 @@ spring:
             - id: user-service
               uri: lb://user-service
               predicates:
-                - Path=/api/v1/users/**,/api/v1/roles/**,/api/v1/permissions/**
+                - Path=/api/v1/users/**,/api/v1/roles/**,/api/v1/permissions/**,/api/v1/designated/**
 
             - id: ws_route
               uri: lb://realtime-service
@@ -37,20 +37,16 @@ spring:
               predicates:
                 - Path=/api/v1/documents/**
 
-            - id: insurance-service
-              uri: lb://insurance-service
-              predicates:
-                - Path=/api/v1/insurance/**
 
             - id: verification-service
               uri: lb://verification-service
               predicates:
-                - Path=/api/v1/verify/**
+                - Path=/api/v1/verifications/**
 
             - id: program-service
               uri: lb://program-service
               predicates:
-                - Path=/api/v1/programs/**,/api/v1/schedules/**
+                - Path=/api/v1/program/**,/api/v1/beneficiary/**
 
             - id: rsbsa-service
               uri: lb://rsbsa-service
@@ -63,6 +59,11 @@ spring:
                 - Path=/api/v1/posts/**,/api/v1/messages/**,/api/v1/chat/**,/api/v1/communication/**
               filters:
                 - PreserveHostHeader
+
+            - id: transaction-service
+              uri: lb://transaction-service
+              predicates:
+                - Path=/api/v1/transaction/**,/api/v1/payments/**,/api/v1/payment-gateways/**
 
       filter:
         remove-hop-by-hop-headers: false

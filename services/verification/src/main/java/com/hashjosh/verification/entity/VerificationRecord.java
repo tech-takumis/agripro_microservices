@@ -28,7 +28,8 @@ public class VerificationRecord {
     private UUID uploadedBy;
 
     @Column(name = "verification_type", length = 50)
-    private String verificationType; // e.g., "Application Verification"
+    private String verificationType;
+
 
     @Column(name = "report", length = 255)
     private String report;

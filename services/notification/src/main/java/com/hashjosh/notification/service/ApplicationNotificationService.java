@@ -69,11 +69,10 @@ public class ApplicationNotificationService {
     private String getNotificationSubject(Object event) {
         return switch (event) {
             case ApplicationSubmittedEvent e -> "Application Received";
+            case ApplicationReceivedEvent e -> e.getVerificationStatus();
             case VerificationStartedEvent e -> "Verification Started";
-            case ApplicationUnderReviewEvent e -> "Application Under Review";
             case VerificationCompletedEvent e -> "Verification " + e.getStatus();
-            case ApplicationSentToPcicEvent e -> "Application Sent to PCIC";
-            case ApplicationReceivedByPcicEvent e -> "Application Received by PCIC";
+            case ApplicationUnderReviewEvent e -> "Application Under Review";
             case InspectionScheduledEvent e -> "Inspection Scheduled";
             case InspectionCompletedEvent e -> "Inspection Completed";
             case PolicyIssuedEvent e -> "Policy Issued: #" + e.getPolicyNumber();
@@ -85,11 +84,10 @@ public class ApplicationNotificationService {
     private String getNotificationTemplate(Object event) {
         return switch (event) {
             case ApplicationSubmittedEvent e -> "email/application-submitted";
+            case ApplicationReceivedEvent e -> "email/application-received";
             case VerificationStartedEvent e -> "email/verification-started";
-            case ApplicationUnderReviewEvent e -> "email/application-under-review";
             case VerificationCompletedEvent e -> "email/verification-completed";
-            case ApplicationSentToPcicEvent e -> "email/application-sent-to-pcic";
-            case ApplicationReceivedByPcicEvent e -> "email/application-received-by-pcic";
+            case ApplicationUnderReviewEvent e -> "email/application-under-review";
             case InspectionScheduledEvent e -> "email/inspection-scheduled";
             case InspectionCompletedEvent e -> "email/inspection-completed";
             case PolicyIssuedEvent e -> "email/policy-issued";
@@ -108,12 +106,11 @@ public class ApplicationNotificationService {
 
     private UUID getUserIdFromEvent(Object event) {
         return switch (event) {
-            case ApplicationSubmittedEvent e -> e.getUserId();
+            case ApplicationSubmittedEvent e -> e.getUploadedBY();
+            case ApplicationReceivedEvent e -> e.getUploadedBY();
             case VerificationStartedEvent e -> e.getUserId();
-            case ApplicationUnderReviewEvent e -> e.getUserId();
             case VerificationCompletedEvent e -> e.getUserId();
-            case ApplicationSentToPcicEvent e -> e.getUserId();
-            case ApplicationReceivedByPcicEvent e -> e.getUserId();
+            case ApplicationUnderReviewEvent e -> e.getUserId();
             case InspectionScheduledEvent e -> e.getUserId();
             case InspectionCompletedEvent e -> e.getUserId();
             case PolicyIssuedEvent e -> e.getUserId();

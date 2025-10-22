@@ -382,7 +382,6 @@ const sendChatMessage = async () => {
         await messageStore.sendMessage({
             receiverId: selectedFarmer.value.userId,
             text: messageInput.value || (files.length ? 'File Uploaded' : ''),
-            type: 'FARMER_AGRICULTURE',
             files: files,
             sentAt: new Date().toISOString()
         })

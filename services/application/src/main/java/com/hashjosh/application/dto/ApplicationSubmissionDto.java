@@ -19,16 +19,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ApplicationSubmissionDto {
         private UUID applicationTypeId;
+        private UUID uploadedBy;
         private Map<String, Object> fieldValues = new HashMap<>();
-        private List<UUID> documentIds;
-
         @JsonAnyGetter
         public Map<String, Object> getFieldValues() {
                 return fieldValues;
-        }
-
-        @JsonAnySetter
-        public void setFieldValue(String key, Object value) {
-                this.fieldValues.put(key, value);
         }
 }

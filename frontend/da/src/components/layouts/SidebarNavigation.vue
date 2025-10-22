@@ -129,16 +129,27 @@ const isActive = (to) => {
 // Get navigation items based on user's role
 const filteredNavigation = computed(() => {
   const roles = auth.userRoles
-  if (roles.includes('ADMIN')) return ADMIN_NAVIGATION
-  if (roles.includes('MUNICIPAL AGRICULTURISTS')) return MUNICIPAL_AGRICULTURIST_NAVIGATION
-  if (roles.includes('AGRICULTURAL EXTENSION WORKERS')) return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
+  // Normalize role strings and check for common variants to be resilient to pluralization/formatting
+  const normalized = roles.map(r => r.toUpperCase())
+  if (normalized.includes('ADMIN') || normalized.includes('ADMINISTRATOR')) return ADMIN_NAVIGATION
+  if (
+    normalized.includes('MUNICIPAL AGRICULTURIST') ||
+    normalized.includes('MUNICIPAL_AGRICULTURIST') ||
+    normalized.some(r => r.includes('MUNICIPAL'))
+  ) return MUNICIPAL_AGRICULTURIST_NAVIGATION
+  if (
+    normalized.includes('AGRICULTURAL EXTENSION WORKER') ||
+    normalized.includes('AGRICULTURAL_EXTENSION_WORKER') ||
+    normalized.some(r => r.includes('EXTENSION'))
+  ) return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
   return []
 })
 
 // Get formatted role title for display
 const roleTitle = computed(() => {
   if (!auth.userData.roles || auth.userData.roles.length === 0) return ''
-  return auth.userData.roles[0].name.split('_').map(word =>
+  // Support role names with spaces or underscores
+  return auth.userData.roles[0].name.split(/[_\s]+/).map(word =>
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
   ).join(' ')
 })
@@ -147,9 +158,15 @@ onMounted(() => {
   // Only expand the current active group if it exists
   const currentPath = route.path
   filteredNavigation.value.forEach(item => {
-    if (item.children && item.children.some(child => child.to.path === currentPath)) {
-      expandedGroups.value.push(item.title)
-    }
+    if (!item.children) return
+    // child.to may be { name: 'route-name' } or { path: '/some-path' }
+    const match = item.children.some(child => {
+      if (!child.to) return false
+      if (child.to.name && route.name) return child.to.name === route.name
+      if (child.to.path) return route.path.startsWith(child.to.path)
+      return false
+    })
+    if (match) expandedGroups.value.push(item.title)
   })
 })
 </script>

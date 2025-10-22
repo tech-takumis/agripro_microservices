@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ValidationErrors;
-import com.hashjosh.application.exceptions.FileUploadException;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +75,7 @@ public class FileValidator implements ValidatorStrategy {
                     field.getKey(),
                     String.format("Document with ID '%s' not found", documentIdStr)
                 ));
-            } catch (FileUploadException e) {
+            } catch (Exception e) {
                 log.error("Error validating document with ID: " + documentIdStr, e);
                 errors.add(new ValidationErrors(
                     field.getKey(),
@@ -91,15 +90,6 @@ public class FileValidator implements ValidatorStrategy {
         }
 
         return errors;
-    }
-    
-    private String getCurrentToken() {
-        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .map(Authentication::getPrincipal)
-                .filter(principal -> principal instanceof CustomUserDetails)
-                .map(CustomUserDetails.class::cast)
-                .map(CustomUserDetails::getToken)
-                .orElseThrow(() -> new SecurityException("No authentication token found in security context"));
     }
 }
 

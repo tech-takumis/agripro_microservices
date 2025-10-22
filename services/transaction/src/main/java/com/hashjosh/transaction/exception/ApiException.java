@@ -1,6 +1,5 @@
 package com.hashjosh.transaction.exception;
 
-
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

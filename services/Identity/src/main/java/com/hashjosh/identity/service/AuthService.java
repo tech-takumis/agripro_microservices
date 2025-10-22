@@ -17,6 +17,7 @@ import com.hashjosh.kafkacommon.user.RequestPasswordResetEvent;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,18 +38,13 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RoleRepository roleRepository;
     private final ObjectMapper objectMapper;
+    private final UserRegistrationValidator registrationValidator;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties  jwtProperties;
     private final JwtService jwtService;
     private final KafkaPublisher kafkaPublisher;
-    private final UserRegistrationValidator registrationValidator;
 
-
-    private Tenant getOrCreateTenant(String tenantCode) {
-        return tenantRepository.findByKeyIgnoreCase(tenantCode)
-                .orElseThrow(() -> ApiException.notFound("Tenant not found with key: " + tenantCode));
-    }
 
     @Transactional
     public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
@@ -215,7 +211,6 @@ public class AuthService {
         // Create and save user
         User user = createUser(request, tenant, roles);
 
-        log.debug("Registration successful for user: {}", user.getUsername());
     }
 
     private Tenant getTenantForRegistration(String tenantKey) {
