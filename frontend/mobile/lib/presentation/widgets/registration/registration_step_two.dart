@@ -5,6 +5,7 @@ import 'package:mobile/presentation/widgets/common/custom_text_field.dart';
 import 'package:mobile/presentation/widgets/common/custom_dropdown.dart';
 import 'package:mobile/data/models/psgc_models.dart';
 import 'package:mobile/data/services/psgc_service.dart';
+import 'package:mobile/injection_container.dart';
 
 /// Second step of registration: Geographic Information
 class RegistrationStepTwo extends StatefulWidget {
@@ -22,7 +23,7 @@ class RegistrationStepTwo extends StatefulWidget {
 }
 
 class RegistrationStepTwoState extends State<RegistrationStepTwo> with AutomaticKeepAliveClientMixin {
-  final PSGCService _psgcService = Get.find<PSGCService>();
+  final PSGCService _psgcService = getIt<PSGCService>();
 
   // Geographic data
   List<PSGCRegion> _regions = [];

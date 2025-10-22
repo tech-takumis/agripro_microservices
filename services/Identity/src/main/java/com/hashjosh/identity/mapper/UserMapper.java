@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -40,8 +42,8 @@ public class UserMapper {
                 .tenant(user.getTenant().getKey())
                 .active(user.isActive())
                 .roles(user.getRoles().stream()
-                                    .map(roleMapper::toRoleResponseDto)
-                        .toList())
+                                    .map( userRole -> roleMapper.toRoleResponseDto(userRole.getRole()))
+                        .collect(Collectors.toList()))
                 .build();
     }
 

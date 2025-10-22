@@ -29,8 +29,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         agriculture.getRoles().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
             // Add permission-based authorities
-            role.getPermissions().forEach(permission ->
-                    authorities.add(new SimpleGrantedAuthority(permission.getName()))
+            role.getPermissions().forEach(rolePermission ->
+                    authorities.add(new SimpleGrantedAuthority(rolePermission.getName()))
             );
         });
 

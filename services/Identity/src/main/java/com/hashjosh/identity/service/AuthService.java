@@ -1,20 +1,23 @@
 package com.hashjosh.identity.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.constant.user.UserResponseDTO;
 import com.hashjosh.identity.config.CustomUserDetails;
 import com.hashjosh.identity.dto.LoginRequest;
 import com.hashjosh.identity.dto.LoginResponse;
-import com.hashjosh.identity.dto.UserRegistrationRequest;
+import com.hashjosh.identity.dto.RegistrationRequest;
 import com.hashjosh.identity.entity.*;
 import com.hashjosh.identity.exception.ApiException;
 import com.hashjosh.identity.kafka.KafkaPublisher;
 import com.hashjosh.identity.mapper.UserMapper;
 import com.hashjosh.identity.properties.JwtProperties;
 import com.hashjosh.identity.repository.*;
+import com.hashjosh.identity.validator.UserRegistrationValidator;
 import com.hashjosh.kafkacommon.user.RequestPasswordResetEvent;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,79 +35,22 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final TenantProfileFieldRepository tenantProfileFieldRepository;
-    private final UserAttributeRepository userAttributeRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RoleRepository roleRepository;
+    private final ObjectMapper objectMapper;
+    private final UserRegistrationValidator registrationValidator;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties  jwtProperties;
     private final JwtService jwtService;
     private final KafkaPublisher kafkaPublisher;
 
-    @Transactional
-    public User registerUser(UserRegistrationRequest request) {
-        // 1️⃣ Find Tenant by Code
-        Tenant tenant = getOrCreateTenant(request.getTenantKey());
-        String passwordHash = passwordEncoder.encode(request.getPassword());
-
-
-        Set<Role> userRoles = new HashSet<>();
-        // Get the role of the user using tenant per role
-        // So we check role requested by user belongs to the tenant
-        Role role = roleRepository.findByTenantKeyIgnoreCaseAndNameIgnoreCase(request.getTenantKey(), request.getRoleName())
-                .orElseThrow(() -> ApiException.badRequest("Role not found: " + request.getRoleName() + " for tenant: " + request.getTenantKey()));
-
-        userRoles.add(role);
-        // 3️⃣ Create User
-        User user = userMapper.toUserEntity(request, tenant, passwordHash);
-        user.setRoles(userRoles);
-        userRepository.save(user);
-
-        // 4️⃣ Get tenant’s field definitions
-        List<TenantProfileField> tenantFields =
-                tenantProfileFieldRepository.findByTenantId(tenant.getId());
-
-        // 5️⃣ Validate + store attributes
-        if (request.getProfile() != null) {
-            for (Map.Entry<String, Object> entry : request.getProfile().entrySet()) {
-                String key = entry.getKey();
-                Object value = entry.getValue();
-
-                // ensure key exists in tenant’s schema
-                Optional<TenantProfileField> fieldDef = tenantFields.stream()
-                        .filter(f -> f.getFieldKey().equalsIgnoreCase(key))
-                        .findFirst();
-
-                if (fieldDef.isEmpty()) {
-                    throw ApiException.badRequest("Invalid profile field for tenant: " + key);
-                }
-
-                UserAttribute attr = UserAttribute.builder()
-                        .user(user)
-                        .fieldKey(key)
-                        .fieldValue(value != null ? value.toString() : null)
-                        .build();
-                userAttributeRepository.save(attr);
-            }
-        }
-
-        return user;
-    }
-
-    private Tenant getOrCreateTenant(String tenantCode) {
-        return tenantRepository.findByKeyIgnoreCase(tenantCode)
-                .orElseThrow(() -> ApiException.notFound("Tenant not found with key: " + tenantCode));
-    }
 
     @Transactional
     public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> ApiException.notFound("User not found with username: " + request.getUsername()));
 
-        if(!userRepository.existsByTenantKeyIgnoreCaseAndId(request.getTenantKey(),user.getId())){
-            throw ApiException.badRequest("Invalid tenant key for user: " + request.getUsername());
-        }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw ApiException.badRequest("Invalid username or password");
 
@@ -243,9 +189,72 @@ public class AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
                 .getContext().getAuthentication().getPrincipal();
 
-        User user = userRepository.findById(userDetails.getUserId())
-                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userDetails.getUserId()));
+        User user = userRepository.findById(userDetails.getUser().getId())
+                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userDetails.getUser()));
 
         return userMapper.toUserResponseDto(user);
     }
+
+    @Transactional
+    public void register(RegistrationRequest request) {
+        log.debug("Processing registration request for tenant: {}", request.getTenantKey());
+
+        // Validate registration request
+        registrationValidator.validate(request);
+
+        // Get or validate tenant
+        Tenant tenant = getTenantForRegistration(request.getTenantKey());
+
+        // Get roles for the user
+        Set<Role> roles = getRolesForRegistration(tenant, request.getRoles());
+
+        // Create and save user
+        User user = createUser(request, tenant, roles);
+
+    }
+
+    private Tenant getTenantForRegistration(String tenantKey) {
+        return tenantRepository.findByKeyIgnoreCase(tenantKey)
+                .orElseThrow(() -> ApiException.notFound("Tenant not found: " + tenantKey));
+    }
+
+    private Set<Role> getRolesForRegistration(Tenant tenant, List<String> roleNames) {
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            Role role = roleRepository.findByTenantAndNameContainingIgnoreCase(tenant, roleName)
+                    .orElseThrow(() -> ApiException.notFound(
+                            String.format("Role '%s' not found for tenant: %s", roleName, tenant.getName())
+                    ));
+            roles.add(role);
+        }
+        return roles;
+    }
+
+    private User createUser(RegistrationRequest request, Tenant tenant, Set<Role> roles) {
+        // Check if username or email already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw ApiException.conflict("Username already exists");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw ApiException.conflict("Email already exists");
+        }
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .tenant(tenant)
+                .roles(roles)
+                .active(true)
+                .emailVerified(false)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .profileData(objectMapper.valueToTree(request.getProfile()))
+                .build();
+
+        return userRepository.save(user);
+    }
+
 }

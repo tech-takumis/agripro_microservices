@@ -2,7 +2,6 @@ package com.hashjosh.identity.controller;
 
 import com.hashjosh.identity.dto.DesignatedRequestDTO;
 import com.hashjosh.identity.dto.DesignatedResponseDTO;
-import com.hashjosh.identity.service.DesignatedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,5 @@
 package com.hashjosh.realtimegatewayservice.kafka;
 
-import com.hashjosh.constant.communication.MessageResponseDto;
 import com.hashjosh.kafkacommon.communication.NewMessageEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
