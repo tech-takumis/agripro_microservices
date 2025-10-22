@@ -19,8 +19,7 @@ public class RoleMapper {
                 .description(role.getDescription())
                 .defaultRoute(role.getDefaultRoute())
                 .permissions(role.getPermissions().stream()
-                        .map(rolePermission ->
-                                permissionMapper.toPermissionResponse(rolePermission.getPermission()))
+                        .map(permissionMapper::toPermissionResponse)
                         .toList())
                 .build();
     }

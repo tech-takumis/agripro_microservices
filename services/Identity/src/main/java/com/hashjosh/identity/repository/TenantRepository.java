@@ -12,4 +12,6 @@ public interface TenantRepository  extends JpaRepository<Tenant, UUID> {
     Optional<Tenant> findByNameIgnoreCase(String name);
 
     Optional<Tenant> findByKeyIgnoreCase(String key);
+
+    Optional<Tenant> findByKey(String key);
 }

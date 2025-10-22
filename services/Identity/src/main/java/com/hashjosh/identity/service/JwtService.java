@@ -1,5 +1,7 @@
 package com.hashjosh.identity.service;
 
+import com.hashjosh.identity.entity.Permission;
+import com.hashjosh.identity.entity.Role;
 import com.hashjosh.identity.entity.User;
 import com.hashjosh.identity.properties.JwtProperties;
 import com.hashjosh.identity.repository.RefreshTokenRepository;
@@ -25,6 +27,7 @@ public class JwtService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecretKey secretKey;
 
+
     public JwtService(JwtProperties jwtProperties, RefreshTokenRepository refreshTokenRepository) {
         this.jwtProperties = jwtProperties;
         this.secretKey = Keys.hmacShaKeyFor(
@@ -40,10 +43,10 @@ public class JwtService {
         claims.put("tenantId", user.getTenant().getId().toString());
         claims.put("email", user.getEmail());
         claims.put("roles", user.getRoles().stream().map(
-                userRole -> userRole.getRole().getName()
+                Role::getName
         ).toList());
         claims.put("permissions", user.getPermissions().stream().map(
-                userPermission -> userPermission.getPermission().getName()
+                Permission::getName
         ).toList());
 
 

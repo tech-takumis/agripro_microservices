@@ -1,57 +1,58 @@
 class RegistrationRequest {
   // User
-  final String rsbsaId;
+  final String tenantKey;
   final String username;
-  final String password;
   final String firstName;
   final String lastName;
-  final String? middleName;
   final String email;
-  final String phoneNumber;
-  final UserProfile userProfile;
+  final String password;
+  final List<String> roles;
+  final UserProfile profile;
 
   RegistrationRequest({
-    required this.rsbsaId,
+    required this.tenantKey,
     required this.username,
-    required this.password,
     required this.firstName,
     required this.lastName,
-    this.middleName,
     required this.email,
-    required this.phoneNumber,
-    required this.userProfile
+    required this.password,
+    required this.roles,
+    required this.profile,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'rsbsaId': rsbsaId,
+      'tenantKey': "Farmer",
       'username': username,
-      'password': password,
       'firstName': firstName,
       'lastName': lastName,
-      'middleName': middleName,
       'email': email,
-      'phoneNumber': phoneNumber,
-      'userProfile': userProfile.toJson(),
+      'password': password,
+      'roles': "Farmer",
+      'profile': profile.toJson(),
     };
   }
 }
 
 class UserProfile {
   // User Profile
+  final String rsbsaId;
+  final String? middleName;
+  final String phoneNumber;
   final String gender;
   final String civilStatus;
-
   final String street;
   final String barangay;
   final String municipality;
   final String province;
   final String region;
-
   final String farmerType;
   final double totalFarmAreaHa;
 
   UserProfile({
+    required this.rsbsaId,
+    this.middleName,
+    required this.phoneNumber,
     required this.gender,
     required this.civilStatus,
     required this.street,
@@ -65,6 +66,8 @@ class UserProfile {
 
   Map<String, dynamic> toJson() {
     return {
+      'rsbsaId': rsbsaId,
+      'middleName': middleName,
       'gender': gender,
       'civilStatus': civilStatus,
       'street': street,
