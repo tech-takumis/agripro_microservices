@@ -1,6 +1,7 @@
 package com.hashjosh.communication.entity;
 
 
+import com.hashjosh.constant.communication.enums.ConversationType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -20,11 +21,14 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID conversationId;
 
     private UUID senderId;
 
     private UUID receiverId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,name = "conversation_type")
+    private ConversationType type;
 
     @Column(columnDefinition = "TEXT")
     private String text;

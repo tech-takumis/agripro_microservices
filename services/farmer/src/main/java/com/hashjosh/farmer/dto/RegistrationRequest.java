@@ -15,9 +15,9 @@ import java.util.UUID;
 public class RegistrationRequest {
     // User
     private String rsbsaId;
+    private String password;
     private String firstName;
     private String lastName;
-    private String password;
     private String middleName;
     private String email;
     private String phoneNumber;
@@ -28,7 +28,6 @@ public class RegistrationRequest {
     private String gender;
     private String civilStatus;
 
-    private String houseNo;
     private String street;
     private String barangay;
     private String municipality;

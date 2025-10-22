@@ -42,8 +42,14 @@ class MessageService extends GetxService {
     _userId = userId;
 
     print('MessageService: Initializing with userId=$_userId');
-    _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
-    _receiverId = _designatedStaff?.userId;
+    try {
+      _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
+      _receiverId = _designatedStaff?.userId;
+    } catch (e) {
+      print('MessageService: Error finding designated staff: $e');
+      _receiverId = null;
+      // Optionally, you can notify the user or UI here if needed
+    }
 
     if (_receiverId != null && _userId!.isNotEmpty) {
       await loadMessages();

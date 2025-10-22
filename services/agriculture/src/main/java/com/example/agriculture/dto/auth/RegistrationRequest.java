@@ -12,6 +12,7 @@ import java.util.UUID;
 @Setter
 @Builder
 public class RegistrationRequest {
+
     @NotBlank(message = "Firstname is required")
     @Size(max = 100,message = "Firstname cannot be exceed 100 character")
     private String firstName;
@@ -32,7 +33,7 @@ public class RegistrationRequest {
     private String address;
 
     @NotEmpty(message = "Agriculture must have at least one role associated to it")
-    private Set<UUID> rolesId;
+    private Set<String> roleNames;
 
     // Profile
     @NotBlank(message = "Head quarter address is required")

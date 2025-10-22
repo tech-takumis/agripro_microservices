@@ -47,8 +47,8 @@ public class AuthService {
         }
 
         Set<Role> roles = new HashSet<>();
-        request.getRolesId().forEach(roleId -> {
-            Role role = roleRepository.findById(roleId)
+        request.getRoleNames().forEach(roleName -> {
+            Role role = roleRepository.findByName(roleName)
                     .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
             roles.add(role);
         });

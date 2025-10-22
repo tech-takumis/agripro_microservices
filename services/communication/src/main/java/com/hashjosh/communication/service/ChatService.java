@@ -3,17 +3,15 @@ package com.hashjosh.communication.service;
 import com.hashjosh.communication.client.DocumentClient;
 import com.hashjosh.communication.config.CustomUserDetails;
 import com.hashjosh.communication.entity.Attachment;
-import com.hashjosh.communication.entity.Conversation;
+import com.hashjosh.communication.entity.Message;
 import com.hashjosh.communication.kafka.CommunicationPublisher;
 import com.hashjosh.communication.mapper.AttachmentMapper;
+import com.hashjosh.communication.mapper.MessageMapper;
 import com.hashjosh.communication.repository.AttachmentRepository;
-import com.hashjosh.communication.repository.ConversationRepository;
+import com.hashjosh.communication.repository.MessageRepository;
 import com.hashjosh.constant.communication.AttachmentResponseDto;
 import com.hashjosh.constant.communication.MessageRequestDto;
 import com.hashjosh.constant.communication.MessageResponseDto;
-import com.hashjosh.communication.entity.Message;
-import com.hashjosh.communication.mapper.MessageMapper;
-import com.hashjosh.communication.repository.MessageRepository;
 import com.hashjosh.constant.communication.enums.ConversationType;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.kafkacommon.communication.AttachmentResponse;
@@ -32,23 +30,12 @@ import java.util.*;
 @Slf4j
 public class ChatService {
     private final MessageRepository messageRepository;
-    private final ConversationRepository conversationRepository;
     private final MessageMapper messageMapper;
     private final AttachmentMapper attachmentMapper;
     private final CommunicationPublisher publisher;
     private final DocumentClient documentClient;
     private final AttachmentRepository attachmentRepository;
 
-    private Conversation getConversationBetweenUsers(UUID senderId, UUID receiverId) {
-        return conversationRepository.findBySenderIdAndReceiverId(senderId, receiverId)
-                .orElseGet(() -> {
-                    Conversation newConversation = Conversation.builder()
-                            .senderId(senderId)
-                            .receiverId(receiverId)
-                            .build();
-                    return conversationRepository.save(newConversation);
-                });
-    }
 
     public List<MessageResponseDto> getAllMessagesWithAgricultureStaff(UUID farmerId) {
         List<Message> messages = messageRepository.findMessagesByFarmerIdAndConversationType(farmerId);
@@ -66,14 +53,6 @@ public class ChatService {
                 .getAuthentication().getPrincipal();
 
         messageRequestDto.setSenderId(messageRequestDto.getSenderId());
-
-        // Find or create conversation
-        Conversation conversation = getOrCreateConversation(
-                messageRequestDto
-        );
-
-        // Set conversation ID in message DTO
-        messageRequestDto.setConversationId(conversation.getId());
 
         // Save message
         Message message =  messageRepository.save(
@@ -111,7 +90,7 @@ public class ChatService {
 
         NewMessageEvent messageEvent = NewMessageEvent.builder()
                 .messageId(responseDto.getMessageId())
-                .conversationId(conversation.getId())
+                .conversationType(messageRequestDto.getType())
                 .senderId(responseDto.getSenderId())
                 .receiverId(responseDto.getReceiverId())
                 .text(responseDto.getText())
@@ -128,17 +107,5 @@ public class ChatService {
         publisher.publishEvent("messages-lifecycle", messageEvent);
 
         return responseDto;
-    }
-
-    private Conversation getOrCreateConversation(MessageRequestDto dto) {
-        return conversationRepository.findBySenderIdAndReceiverId(dto.getSenderId(), dto.getReceiverId())
-                .orElseGet(() -> {
-                    Conversation newConversation = Conversation.builder()
-                            .senderId(dto.getSenderId())
-                            .receiverId(dto.getReceiverId())
-                            .type(ConversationType.valueOf(dto.getType()))
-                            .build();
-                    return conversationRepository.save(newConversation);
-                });
     }
 }

@@ -1,6 +1,7 @@
 package com.hashjosh.communication.controller;
 
-import com.hashjosh.communication.dto.*;
+import com.hashjosh.communication.dto.PostPageResponse;
+import com.hashjosh.communication.dto.PostResponse;
 import com.hashjosh.communication.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -69,13 +70,6 @@ public class PostController {
         return ResponseEntity.ok(fetch);
     }
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public ResponseEntity<PostResponse> updatePost(
-            @PathVariable UUID id,
-            @RequestBody PostRequest request) {
-        return ResponseEntity.ok(postService.updatePost(id, request));
-    }
 
     // DELETE
     @DeleteMapping("/{id}")

@@ -273,7 +273,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     GestureDetector(
-                      onTap: () => getIt<GoRouter>().go('/register'),
+                      onTap: () => context.go('/register'),
                       child: Text(
                         'Register here',
                         style: TextStyle(

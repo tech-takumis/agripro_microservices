@@ -6,9 +6,6 @@ import com.hashjosh.farmer.dto.*;
 import com.hashjosh.farmer.entity.Farmer;
 import com.hashjosh.farmer.service.AuthService;
 import com.hashjosh.farmer.service.RefreshTokenService;
-import com.hashjosh.jwtshareable.service.JwtService;
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor

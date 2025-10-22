@@ -29,9 +29,15 @@ class MultiStepRegistrationController extends ChangeNotifier {
   final middleNameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneNumberController = TextEditingController();
+  final passwordController = TextEditingController();
+  final dateOfBirthController = TextEditingController();
+  final genderController = TextEditingController();
+  final civilStatusController = TextEditingController();
 
   // Step 2: Geographic Information Controllers
   final zipCodeController = TextEditingController();
+  final streetController = TextEditingController();
+  final barangayController = TextEditingController();
   // Geographic selections will be handled by the step widget
 
   // Step 3: Farm Information Controllers
@@ -154,18 +160,18 @@ class MultiStepRegistrationController extends ChangeNotifier {
         rsbsaId: rsbsaNumber.text.trim(),
         firstName: firstNameController.text.trim(),
         lastName: lastNameController.text.trim(),
-        password: 'password123', // TODO: Replace with actual password input
+        password: passwordController.text.trim(),
         middleName: middleNameController.text.trim().isEmpty
             ? null
             : middleNameController.text.trim(),
         email: emailController.text.trim(),
         phoneNumber: phoneNumberController.text.trim(),
-        dateOfBirth: '01-01-2000', // TODO: Replace with actual date picker value
-        gender: 'Male', // TODO: Replace with actual gender selection
-        civilStatus: 'Single', // TODO: Replace with actual civil status selection
+        dateOfBirth: dateOfBirthController.text.trim(),
+        gender: genderController.text.trim(),
+        civilStatus: civilStatusController.text.trim(),
         houseNo: '123', // TODO: Replace with actual houseNo input
-        street: 'Sample Street', // TODO: Replace with actual street input
-        barangay: 'Sample Barangay', // TODO: Replace with actual barangay input
+        street: streetController.text.trim(),
+        barangay: barangayController.text.trim(),
         municipality: selectedCity,
         province: selectedProvince,
         region: selectedRegion,

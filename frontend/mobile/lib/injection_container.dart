@@ -69,24 +69,4 @@ Future<void> setupDependencies() async {
     ApplicationController(),
   );
 
-  // Navigation
-  getIt.registerSingleton<GoRouter>(
-    GoRouter(
-      initialLocation: '/login',
-      routes: [
-        GoRoute(
-          path: '/login',
-          builder: (context, state) => const LoginPage(),
-        ),
-        GoRoute(
-          path: '/home',
-          builder: (context, state) => const HomePage(),
-        ),
-        GoRoute(
-          path: '/register',
-          builder: (context, state) => const MultiStepRegisterPage(),
-        ),
-      ],
-    ),
-  );
 }

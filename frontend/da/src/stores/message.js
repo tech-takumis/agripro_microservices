@@ -44,35 +44,107 @@ export const useMessageStore = defineStore('message', () => {
     }
 
     const sendMessage = async (messageData) => {
+        console.log('[MessageStore] sendMessage called with data:', {
+            ...messageData,
+            files: messageData.files ? `Array(${messageData.files.length})` : 'none',
+            textLength: messageData.text?.length || 0
+        })
+        
         try {
             const auth = useAuthStore()
+            console.log('[MessageStore] Auth store user ID:', auth.userId)
+            
             const msg = {
                 senderId: auth.userId,
                 receiverId: messageData.receiverId,
                 conversationId: messageData.conversationId || null,
                 text: messageData.text,
-                type: messageData.type || 'FARMER_AGRICULTURE',
+                type: 'FARMER_AGRICULTURE',
                 sentAt: messageData.sentAt || new Date().toISOString()
             }
+            console.log('[MessageStore] Prepared message object:', { ...msg, text: msg.text?.substring(0, 50) + (msg.text?.length > 50 ? '...' : '') })
 
             const formData = new FormData()
-            formData.append('message', new Blob([JSON.stringify(msg)], { type: 'application/json' }))
-
-            // Attach files if provided
+            
+            // 1. Append the message as a JSON string
+            const messageBlob = new Blob([JSON.stringify(msg)], { type: 'application/json' })
+            formData.append('message', messageBlob)
+            
+            // 2. Append conversationType as a string (not as a Blob)
+            formData.append('conversationType', 'FARMER_AGRICULTURE')
+            
+            // 3. Append files if any
             if (messageData.files && messageData.files.length > 0) {
-                messageData.files.forEach(file => {
+                console.log(`[MessageStore] Attaching ${messageData.files.length} files`)
+                messageData.files.forEach((file, index) => {
                     formData.append('attachments', file)
+                    console.log(`[MessageStore] Added file ${index + 1}:`, file.name, `(${file.size} bytes, ${file.type})`)
                 })
             }
-
-            const { data } = await axios.post('/api/v1/chat', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            
+            // Log FormData contents for debugging
+            console.log('[MessageStore] FormData entries:')
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof Blob) {
+                    console.log(`  ${key}: Blob(${value.size} bytes, ${value.type})`)
+                } else {
+                    console.log(`  ${key}:`, value)
+                }
+            }
+            
+            const config = {
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                withCredentials: true 
+            }
+            
+            console.log('[MessageStore] Sending message with config:', config)
+            console.log('[MessageStore] Request payload:', {
+                message: msg,
+                conversationType: 'FARMER_AGRICULTURE',
+                hasFiles: messageData.files && messageData.files.length > 0
             })
-
-            console.log('[MessageStore] Sending message:', msg)
-            console.log('[MessageStore] ✅ Message sent successfully', data)
+            
+            try {
+                const response = await axios.post('/api/v1/chat', formData, config)
+                console.log('[MessageStore] ✅ Message sent successfully', response.data)
+                return response.data
+            } catch (error) {
+                console.error('[MessageStore] Detailed error:', {
+                    message: error.message,
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    request: {
+                        method: error.config?.method,
+                        url: error.config?.url,
+                        headers: error.config?.headers,
+                        data: error.config?.data
+                    }
+                })
+                throw error
+            }
         } catch (err) {
-            console.error('[MessageStore] Failed to send message:', err)
+            console.error('[MessageStore] Failed to send message:', {
+                message: err.message,
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data,
+                headers: err.response?.headers
+            })
+            
+            // If 403, the user might need to re-authenticate
+            if (err.response?.status === 403) {
+                const authStore = useAuthStore()
+                console.warn('[MessageStore] Access denied. User might need to re-authenticate.')
+                // Optionally trigger a re-authentication flow
+                // await authStore.logout()
+            }
+            
+            // Re-throw the error to be handled by the component
+            throw err
         }
     }
 

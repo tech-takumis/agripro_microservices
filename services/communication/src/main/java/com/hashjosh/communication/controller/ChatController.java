@@ -1,8 +1,10 @@
 package com.hashjosh.communication.controller;
 
+import com.hashjosh.communication.service.ChatService;
 import com.hashjosh.constant.communication.MessageRequestDto;
 import com.hashjosh.constant.communication.MessageResponseDto;
-import com.hashjosh.communication.service.ChatService;
+import com.hashjosh.constant.communication.enums.ConversationType;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,14 +31,14 @@ public class ChatController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
-//    @PostMapping("/api/v1/chat")
     public ResponseEntity<MessageResponseDto> createMessage(
-            @RequestPart("message") MessageRequestDto messageRequestDto,
+            @RequestPart("message") @Valid  MessageRequestDto messageRequestDto,
             @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
     ){
         log.info("Creating new message: {}", messageRequestDto);
         MessageResponseDto createdMessage = chatService.createMessage(messageRequestDto,attachments);
         return new ResponseEntity<>(createdMessage, HttpStatus.CREATED);
     }
+
 
 }

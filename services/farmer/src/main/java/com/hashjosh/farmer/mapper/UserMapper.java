@@ -29,7 +29,6 @@ public class UserMapper {
                 .dateOfBirth(request.getDateOfBirth())
                 .gender(request.getGender())
                 .civilStatus(request.getCivilStatus())
-                .houseNo(request.getHouseNo())
                 .street(request.getStreet())
                 .barangay(request.getBarangay())
                 .municipality(request.getMunicipality())
