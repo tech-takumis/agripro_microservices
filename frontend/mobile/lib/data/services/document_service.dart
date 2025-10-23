@@ -7,6 +7,7 @@ import '../models/document_response.dart';
 import 'storage_service.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
 import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
+import 'package:file_picker/file_picker.dart';
 
 /// Service for handling document uploads
 class DocumentService {
@@ -35,21 +36,35 @@ class DocumentService {
   /// Upload a document file
   Future<DocumentResponse> uploadDocument({
     required AuthState authState,
-    required File file,
+    required PlatformFile file,
   }) async {
     try {
       // Use token from authState
       final token = authState.token;
       final refreshToken = getIt<StorageService>().getRefreshToken();
 
+      // Prepare a File object from PlatformFile
+      File fileObj;
+      if (file.path != null) {
+        fileObj = File(file.path!);
+      } else if (file.bytes != null) {
+        // Write bytes to a temp file
+        final tempDir = Directory.systemTemp;
+        final tempFile = await File('${tempDir.path}/${file.name}').create();
+        await tempFile.writeAsBytes(file.bytes!);
+        fileObj = tempFile;
+      } else {
+        throw Exception('PlatformFile must have either a path or bytes');
+      }
+
       // Detect MIME type
-      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      final mimeType = lookupMimeType(fileObj.path) ?? 'application/octet-stream';
 
       // ✅ Compress only if it's an image
-      File fileToUpload = file;
+      File fileToUpload = fileObj;
       if (mimeType.startsWith('image/')) {
-        print('Compressing image: ${file.path}');
-        fileToUpload = await compressImage(file);
+        print('Compressing image: ${fileObj.path}');
+        fileToUpload = await compressImage(fileObj);
         print('Compressed image path: ${fileToUpload.path}');
       }
 

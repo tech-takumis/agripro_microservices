@@ -42,14 +42,11 @@ public class ApplicationService {
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
-    private final ApplicationProducer applicationProducer;
-    private final DocumentServiceClient documentServiceClient;
     private final AgricultureHttpClient agricultureHttpClient;
 
 
     public void processSubmission(
-            ApplicationSubmissionDto submission,
-            List<MultipartFile> files) {
+            ApplicationSubmissionDto submission) {
 
         try {
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
@@ -67,33 +64,11 @@ public class ApplicationService {
             // 4. Validate fields
             List<ValidationError> validationErrors = validateSubmission(submission, fields);
 
-
-            List<DocumentResponse> uploadedDocuments = new ArrayList<>();
-            if(files != null && !files.isEmpty()){
-                // 1. Upload documents if any
-                for (MultipartFile file : files) {
-                    DocumentResponse documentResponse = documentServiceClient
-                            .uploadDocument(file, userDetails.getUserId());
-                    uploadedDocuments.add(documentResponse);
-                }
-            }
-
-
-            List<UUID> documentIds = uploadedDocuments.stream()
-                    .map(DocumentResponse::getDocumentId)
-                    .collect(Collectors.toList());
-
-            if (submission.getDocumentIds() != null) {
-                submission.getDocumentIds().addAll(documentIds);
-            } else {
-                submission.setDocumentIds(documentIds);
-            }
+            submission.setDocumentIds(submission.getDocumentIds());
 
             if (!validationErrors.isEmpty()) {
                 throw ApiException.badRequest("Validation failed: " + validationErrors);
             }
-
-
 
             Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
             Application savedApplication = applicationRepository.save(application);

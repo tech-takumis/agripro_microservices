@@ -1,16 +1,12 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 import 'package:mobile/data/services/storage_service.dart';
-import 'package:mime/mime.dart';
-import 'package:http_parser/http_parser.dart';
 
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/application_submission_request.dart';
 import 'package:mobile/data/services/application_api_service.dart';
+import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/injection_container.dart';
 
 
@@ -276,10 +272,10 @@ class MultiStepApplicationController {
   }
 
   // Submission
-  Future<ApplicationSubmissionResponse> submitApplication(BuildContext context, AuthState authState) async {
+  Future<String> submitApplication(BuildContext context, AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
-      return ApplicationSubmissionResponse(success: false, message: _errorMessage);
+      return _errorMessage;
     }
 
     try {
@@ -287,67 +283,37 @@ class MultiStepApplicationController {
       _errorMessage = '';
       _uploadProgress = 0.0;
 
-      // Step 1: Collect files (do not upload here)
-      final filesToSend = <Map<String, dynamic>>[];
-      _fileValues.entries.where((entry) => entry.value != null).forEach((entry) {
+      // Step 1: Upload files and signatures, collect document IDs and field-to-documentId mapping
+      final documentIds = <String>[];
+      final documentService = getIt<DocumentService>();
+      final fileEntries = _fileValues.entries.where((entry) => entry.value != null);
+      final Map<String, String> fileFieldDocumentIds = {};
+      for (final entry in fileEntries) {
         final file = entry.value!;
-        final fileName = file.name;
-        String? mimeType = lookupMimeType(file.path ?? file.name);
-
-        // Improved fallback: use extension to guess type if lookupMimeType fails
-        if (mimeType == null) {
-          final ext = fileName.split('.').last.toLowerCase();
-          if (ext == 'png') {
-            mimeType = 'image/png';
-          } else if (ext == 'jpg' || ext == 'jpeg') {
-            mimeType = 'image/jpeg';
-          } else if (ext == 'gif') {
-            mimeType = 'image/gif';
-          } else if (ext == 'bmp') {
-            mimeType = 'image/bmp';
-          } else if (ext == 'webp') {
-            mimeType = 'image/webp';
-          } else if (ext == 'pdf') {
-            mimeType = 'application/pdf';
-          } else if (ext == 'doc' || ext == 'docx') {
-            mimeType = 'application/msword';
-          } else if (ext == 'xls' || ext == 'xlsx') {
-            mimeType = 'application/vnd.ms-excel';
-          } else if (ext == 'txt') {
-            mimeType = 'text/plain';
-          } else {
-            // If still unknown, skip the file (do not use application/octet-stream)
-            print('⚠️ Skipping file $fileName due to unsupported MIME type.');
-            return;
-          }
-        }
-
-        // Only add file if not octet-stream (backend does not accept it)
-        if (mimeType != 'application/octet-stream') {
-          filesToSend.add({
-            'file': file,
-            'fileName': fileName,
-            'mimeType': mimeType,
-          });
-        } else {
-          // Show error to user if a file is skipped due to unsupported MIME type
+        try {
+          final response = await documentService.uploadDocument(
+            authState: authState,
+            file: file,
+          );
+          documentIds.add(response.documentId);
+          fileFieldDocumentIds[entry.key] = response.documentId;
+        } catch (e) {
+          final fileName = file.name;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('File "$fileName" is not supported and was not submitted.'),
+              content: Text('Failed to upload file "$fileName".'),
               backgroundColor: Colors.red,
             ),
           );
-          print('⚠️ Skipping file $fileName due to unsupported MIME type.');
+          print('⚠️ Failed to upload file $fileName: $e');
         }
-      });
+      }
 
       // Step 2: Prepare field values
       final Map<String, dynamic> fieldValues = {};
-
       for (var section in application.sections) {
         for (var field in section.fields) {
           final key = field.key;
-
           if (_isLocationField(field)) {
             final location = _locationValues[key];
             if (location != null) {
@@ -395,46 +361,54 @@ class MultiStepApplicationController {
           } else if (field.fieldType == 'SELECT') {
             fieldValues[key] = _selectValues[key] ?? '';
           } else if (field.fieldType == 'FILE') {
-            // Do not set documentId, backend will handle file mapping
-            fieldValues[key] = null;
+            fieldValues[key] = fileFieldDocumentIds[key] ?? null;
           } else if (field.fieldType == 'SIGNATURE') {
-            fieldValues[key] = null;
+            fieldValues[key] = fileFieldDocumentIds[key] != null ? 'signature:${fileFieldDocumentIds[key]}' : null;
           } else if (field.fieldType == 'BOOLEAN') {
             fieldValues[key] = _booleanValues[key] ?? false;
           }
         }
       }
 
-      // Step 3: Submit application as multipart/form-data
+      // Validate required SIGNATURE fields
+      for (var section in application.sections) {
+        for (var field in section.fields) {
+          if (field.fieldType == 'SIGNATURE' && field.required) {
+            if (fieldValues[field.key] == null) {
+              _errorMessage = "Signature field '${field.fieldName ?? field.key}' is required.";
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(_errorMessage),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              _isLoading = false;
+              return _errorMessage;
+            }
+          }
+        }
+      }
+
+      // Step 3: Submit application
       final request = ApplicationSubmissionRequest(
         applicationTypeId: application.id,
         fieldValues: fieldValues,
-        documentIds: [],
+        documentIds: documentIds,
       );
 
-      final response = await getIt<ApplicationApiService>().submitApplication(
+      final responseMessage = await getIt<ApplicationApiService>().submitApplication(
         authState,
         request,
-        files: filesToSend,
       );
 
-      return response;
+      return responseMessage;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_errorMessage),
-          backgroundColor: Colors.red.withOpacity(0.8),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-      return ApplicationSubmissionResponse(
-        success: false,
-        message: _errorMessage,
-      );
+      _isLoading = false;
+      _errorMessage = 'Failed to submit application: $e';
+      print('❌ Failed to submit application: $e');
+      return _errorMessage;
     } finally {
       _isLoading = false;
-      _uploadProgress = 0.0;
     }
   }
 

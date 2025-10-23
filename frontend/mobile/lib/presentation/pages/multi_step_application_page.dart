@@ -28,23 +28,25 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
 
     if(!mounted) return;
 
-    if(response.success){
+    // Since response is now a String, treat any response containing 'successfully' as success
+    if(response.toLowerCase().contains('success')){
       scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: const Text('Application submitted successfully'),
-        backgroundColor: const Color.fromARGB(0, 36, 225, 43).withAlpha(204), // 80% opacity of Material Green 500 (0x4CAF50)        duration: const Duration(seconds: 4),
-      ),
-        );
-         navigator.pop();
+        SnackBar(
+          content: const Text('Application submitted successfully'),
+          backgroundColor: const Color.fromARGB(0, 36, 225, 43).withAlpha(204),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      navigator.pop();
     }
     else{
       scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(response.message),
-        backgroundColor: const Color.fromARGB(0, 179, 13, 13).withAlpha(204),
-        duration: const Duration(seconds: 4),
-      ),
-        );
+        SnackBar(
+          content: Text(response),
+          backgroundColor: const Color.fromARGB(0, 179, 13, 13).withAlpha(204),
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 

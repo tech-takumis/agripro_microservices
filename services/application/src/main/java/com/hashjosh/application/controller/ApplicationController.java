@@ -22,12 +22,11 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping(value = "/submit", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/submit")
     public ResponseEntity<String> submitApplication(
-            @Valid @RequestPart ApplicationSubmissionDto submission,
-            @RequestPart(value = "files",required = false) List<MultipartFile> files
+            @Valid @RequestBody ApplicationSubmissionDto submission
     ) {
-        applicationService.processSubmission(submission, files);
+        applicationService.processSubmission(submission);
         return ResponseEntity.ok("Application submitted successfully");
     }
 

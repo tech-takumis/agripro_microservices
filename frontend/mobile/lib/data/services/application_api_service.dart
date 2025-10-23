@@ -104,117 +104,57 @@ class ApplicationApiService {
     }
   }
 
-  Future<ApplicationSubmissionResponse> submitApplication(
+  Future<String> submitApplication(
       AuthState authState,
-      ApplicationSubmissionRequest request, {
-      List<Map<String, dynamic>>? files,
-      }) async {
+      ApplicationSubmissionRequest request) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
-        return ApplicationSubmissionResponse(success: false, message: 'User not logged in');
+        return 'User not logged in';
       }
       print('🚀 Submitting application for type: ${request.applicationTypeId}');
       print('📋 Field values: ${request.fieldValues}');
       print('📎 Document IDs: ${request.documentIds}');
-      print('📁 Files: ${files?.length ?? 0}');
 
-      // Prepare multipart form data
-      final formData = FormData();
-
-      // Add the submission part as JSON string
-      formData.fields.add(MapEntry(
-        'submission',
-        jsonEncode({
-          'applicationTypeId': request.applicationTypeId,
-          'fieldValues': request.fieldValues,
-          'documentIds': [],
-        }),
-      ));
-
-      // Add files if any, with correct content type
-      if (files != null && files.isNotEmpty) {
-        for (final fileMap in files) {
-          final file = fileMap['file'] as PlatformFile;
-          final fileName = fileMap['fileName'] as String;
-          final mimeType = fileMap['mimeType'] as String;
-          final mediaType = MediaType.parse(mimeType);
-
-          MultipartFile multipartFile;
-          if (file.path != null) {
-            multipartFile = await MultipartFile.fromFile(
-              file.path!,
-              filename: fileName,
-              contentType: mediaType,
-            );
-          } else if (file.bytes != null) {
-            multipartFile = MultipartFile.fromBytes(
-              file.bytes!,
-              filename: fileName,
-              contentType: mediaType,
-            );
-          } else {
-            print('⚠️ Skipping file $fileName: no path or bytes.');
-            continue;
-          }
-
-          // Only add file if not octet-stream (backend does not accept it)
-          if (mimeType != 'application/octet-stream') {
-            formData.files.add(MapEntry('files', multipartFile));
-          } else {
-            print('⚠️ Skipping file $fileName due to unsupported MIME type.');
-          }
-        }
-      }
-
+      // Send as application/json
       final response = await _dio.post(
         '/applications/submit',
-        data: formData,
+        data: request.toJson(),
         options: Options(
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
         ),
       );
 
       print('✅ Application submitted successfully: ${response.statusCode}');
-      return ApplicationSubmissionResponse.fromJson(response.data);
+      // Expecting a plain string response
+      return response.data is String ? response.data : response.data.toString();
     } on DioException catch (e) {
       print('❌ Application submission failed: ${e.message}');
       print('❌ Response data: ${e.response?.data}');
-
+      if (e.response?.data is String) {
+        return e.response?.data;
+      }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Connection timeout. Please try again.',
-        );
+        return 'Connection timeout. Please try again.';
       } else if (e.type == DioExceptionType.connectionError) {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Cannot connect to server. Please check your connection.',
-        );
+        return 'Cannot connect to server. Please check your connection.';
       } else if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: errorData['message'] ?? 'Invalid application data',
-          errors: errorData['errors'],
-        );
+        if (errorData is Map && errorData['message'] != null) {
+          return errorData['message'];
+        }
+        return 'Invalid application data';
       } else {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Server error (${e.response?.statusCode})',
-        );
+        return 'Server error (${e.response?.statusCode})';
       }
     } catch (e) {
       print('❌ Unexpected error: $e');
-      return ApplicationSubmissionResponse(
-        success: false,
-        message: 'An unexpected error occurred: ${e.toString()}',
-      );
+      return 'An unexpected error occurred: ${e.toString()}';
     }
   }
 }
