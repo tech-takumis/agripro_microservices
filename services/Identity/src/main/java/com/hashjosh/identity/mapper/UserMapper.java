@@ -1,0 +1,32 @@
+package com.hashjosh.identity.mapper;
+
+import com.hashjosh.constant.user.UserResponseDTO;
+import com.hashjosh.identity.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class UserMapper {
+
+    private final RoleMapper roleMapper;
+
+
+    public UserResponseDTO toUserResponseDto(User user) {
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .tenant(user.getTenant().getKey())
+                .active(user.isActive())
+                .roles(user.getRoles().stream()
+                                    .map(roleMapper::toRoleResponseDto)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+}

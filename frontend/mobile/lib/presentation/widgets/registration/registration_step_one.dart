@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/presentation/widgets/common/custom_text_field.dart';
+import 'package:mobile/presentation/widgets/common/custom_dropdown.dart';
 
 /// First step of registration: Basic Information
 class RegistrationStepOne extends StatelessWidget {
@@ -15,6 +16,13 @@ class RegistrationStepOne extends StatelessWidget {
   final TextEditingController middleNameController;
   final TextEditingController emailController;
   final TextEditingController phoneNumberController;
+  final TextEditingController barangayController;
+  final String? selectedGender;
+  final String? selectedCivilStatus;
+  final List<String> genderOptions;
+  final List<String> civilStatusOptions;
+  final void Function(String?) onGenderChanged;
+  final void Function(String?) onCivilStatusChanged;
 
   const RegistrationStepOne({
     super.key,
@@ -29,6 +37,13 @@ class RegistrationStepOne extends StatelessWidget {
     required this.middleNameController,
     required this.emailController,
     required this.phoneNumberController,
+    required this.barangayController,
+    required this.selectedGender,
+    required this.selectedCivilStatus,
+    required this.genderOptions,
+    required this.civilStatusOptions,
+    required this.onGenderChanged,
+    required this.onCivilStatusChanged,
   });
 
   @override
@@ -100,30 +115,10 @@ class RegistrationStepOne extends StatelessWidget {
             label: 'RSBSA Reference Number *',
             prefixIcon: Icons.badge_outlined,
             keyboardType: TextInputType.text,
-            // inputFormatters: [
-            //   // FilteringTextInputFormatter.allow(RegExp(r'[\d-]')),
-            //   // LengthLimitingTextInputFormatter(15),
-            // ],
-            // onChanged: (value) {
-            //   if (value.length >= 3 &&
-            //       !value.contains('-') &&
-            //       value.length <= 6) {
-            //     final formatted = RegistrationController.formatRsbsaId(value);
-            //     if (formatted != value) {
-            //       referenceNumberController.value = TextEditingValue(
-            //         text: formatted,
-            //         selection: TextSelection.collapsed(offset: formatted.length),
-            //       );
-            //     }
-            //   }
-            // },
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your RSBSA Reference Number';
               }
-              // if (!RegistrationController.isValidRsbsaId(value)) {
-              //   return 'Please enter a valid RSBSA Reference Number';
-              // }
               return null;
             },
           ),
@@ -282,6 +277,57 @@ class RegistrationStepOne extends StatelessWidget {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
             ],
+          ),
+          const SizedBox(height: 20),
+
+          // Gender Dropdown
+          CustomDropdown<String>(
+            label: 'Gender *',
+            value: selectedGender,
+            items: genderOptions,
+            displayText: (g) => g,
+            hint: 'Select gender',
+            prefixIcon: Icons.wc_outlined,
+            onChanged: onGenderChanged,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your gender';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Civil Status Dropdown
+          CustomDropdown<String>(
+            label: 'Civil Status *',
+            value: selectedCivilStatus,
+            items: civilStatusOptions,
+            displayText: (c) => c,
+            hint: 'Select civil status',
+            prefixIcon: Icons.people_outline,
+            onChanged: onCivilStatusChanged,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your civil status';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Barangay
+          CustomTextField(
+            controller: barangayController,
+            label: 'Barangay *',
+            prefixIcon: Icons.home_outlined,
+            keyboardType: TextInputType.text,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your barangay';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 20),
 

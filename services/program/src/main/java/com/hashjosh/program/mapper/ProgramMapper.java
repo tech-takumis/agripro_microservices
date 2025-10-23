@@ -1,35 +1,39 @@
 package com.hashjosh.program.mapper;
 
-import com.hashjosh.constant.program.dto.ProgramCreateRequestDto;
-import com.hashjosh.constant.program.dto.ProgramResponseDto;
+import com.hashjosh.program.dto.ProgramDto;
 import com.hashjosh.program.entity.Program;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
-@Service
+@Component
 public class ProgramMapper {
-    public ProgramResponseDto toDto(Program program) {
-        return ProgramResponseDto.builder()
+    
+    public ProgramDto toDto(Program program) {
+        if (program == null) return null;
+        
+        return ProgramDto.builder()
                 .id(program.getId())
                 .name(program.getName())
-                .type(program.getType())
+                .description(program.getDescription())
+                .budget(program.getBudget())
+                .completedPercentage(program.getCompletedPercentage())
                 .status(program.getStatus())
-                .completion(program.getCompletion())
-                .extraFields(program.getExtraFields())
-                .createdAt(program.getCreatedAt())
-                .updatedAt(program.getUpdatedAt())
+                .startDate(program.getStartDate())
+                .endDate(program.getEndDate())
                 .build();
     }
 
-    public Program toEntity(ProgramCreateRequestDto dto) {
+    public Program toEntity(ProgramDto dto) {
+        if (dto == null) return null;
+        
         return Program.builder()
+                .id(dto.getId())
                 .name(dto.getName())
-                .type(dto.getType())
+                .description(dto.getDescription())
+                .budget(dto.getBudget())
+                .completedPercentage(dto.getCompletedPercentage())
                 .status(dto.getStatus())
-                .completion(dto.getCompletion())
-                .extraFields(dto.getExtraFields())
-                .createdAt(LocalDateTime.now())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
                 .build();
     }
 }

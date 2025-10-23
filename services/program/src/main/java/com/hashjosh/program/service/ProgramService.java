@@ -1,12 +1,14 @@
 package com.hashjosh.program.service;
 
-import com.hashjosh.constant.program.dto.ProgramCreateRequestDto;
-import com.hashjosh.constant.program.dto.ProgramResponseDto;
-import com.hashjosh.constant.program.dto.ProgramUpdateRequestDto;
+import com.hashjosh.program.dto.ProgramDto;
+import com.hashjosh.program.entity.Program;
+import com.hashjosh.program.exception.ApiException;
 import com.hashjosh.program.mapper.ProgramMapper;
 import com.hashjosh.program.repository.ProgramRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,38 +16,48 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProgramService {
 
-    private final ProgramRepository repository;
-    private final ProgramMapper mapper;
+    private final ProgramRepository programRepository;
+    private final ProgramMapper programMapper;
 
-
-    public List<ProgramResponseDto> getAll() {
-        return repository.findAll()
-                .stream().map(mapper::toDto).collect(Collectors.toList());
+    public List<ProgramDto> getAllPrograms() {
+        return programRepository.findAll().stream()
+                .map(programMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public ProgramResponseDto getById(UUID id) {
-        return mapper.toDto(repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Program not found")));
+    public ProgramDto getProgramById(UUID id) {
+        return programRepository.findById(id)
+                .map(programMapper::toDto)
+                .orElseThrow(() -> ApiException.notFound("Program not found with id: " + id));
     }
 
-    public ProgramResponseDto create(ProgramCreateRequestDto dto) {
-        return mapper.toDto(repository.save(mapper.toEntity(dto)));
+    @Transactional
+    public ProgramDto createProgram(ProgramDto programDto) {
+        Program program = programMapper.toEntity(programDto);
+        program.setId(null); // Ensure new entity creation
+        return programMapper.toDto(programRepository.save(program));
     }
 
-    public ProgramResponseDto update(UUID id, ProgramUpdateRequestDto dto) {
-        var existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Program not found"));
-        existing.setName(dto.getName());
-        existing.setType(dto.getType());
-        existing.setStatus(dto.getStatus());
-        existing.setCompletion(dto.getCompletion());
-        existing.setExtraFields(dto.getExtraFields());
-        return mapper.toDto(repository.save(existing));
+    @Transactional
+    public ProgramDto updateProgram(UUID id, ProgramDto programDto) {
+        Program existingProgram = programRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Program not found with id: " + id));
+
+        Program updatedProgram = programMapper.toEntity(programDto);
+        updatedProgram.setId(id);
+        updatedProgram.setBeneficiaries(existingProgram.getBeneficiaries());
+        
+        return programMapper.toDto(programRepository.save(updatedProgram));
     }
 
-    public void delete(UUID id) {
-        repository.deleteById(id);
+    @Transactional
+    public void deleteProgram(UUID id) {
+        if (!programRepository.existsById(id)) {
+            throw ApiException.notFound("Program not found with id: " + id);
+        }
+        programRepository.deleteById(id);
     }
 }
