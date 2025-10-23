@@ -64,7 +64,7 @@ export const useProgramStore = defineStore('program', () => {
         error.value = null
 
         try {
-            const response = await axios.get('/api/v1/programs')
+            const response = await axios.get('/api/v1/program')
             programs.value = response.data
         } catch (err) {
             error.value = err.response?.data?.message || err.message || 'Failed to fetch programs'

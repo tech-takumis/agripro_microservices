@@ -48,6 +48,19 @@ eureka:
   instance:
     prefer-ip-address: true
 
+trusted:
+  internal-service-ids:
+    - user-service
+    - transaction-service
+    - schedule-service
+    - notification-service
+    - communication-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service
+
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
   accessTokenExpirationMs: 14400000                # 4 hours

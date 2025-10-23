@@ -22,12 +22,12 @@ import java.util.UUID;
 public class ChatController {
     private final ChatService chatService;
 
-    @GetMapping("/{farmerId}/messages")
+    @GetMapping("/{userId}/messages")
     public ResponseEntity<List<MessageResponseDto>> getMessagesWithAgricultureStaff(
-            @PathVariable UUID farmerId
+            @PathVariable UUID userId
     ) {
-        log.info("Fetching messages for farmer with ID: {}", farmerId);
-        return new ResponseEntity<>(chatService.getAllMessagesWithAgricultureStaff(farmerId), HttpStatus.OK);
+        log.info("Fetching messages for farmer with ID: {}", userId);
+        return new ResponseEntity<>(chatService.getAllMessagesWithAttachment(userId), HttpStatus.OK);
     }
 
     @PostMapping(consumes = {"multipart/form-data"})

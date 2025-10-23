@@ -3,6 +3,7 @@ package com.hashjosh.kafkacommon.application;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.hashjosh.constant.application.RecipientType;
 import com.hashjosh.kafkacommon.ApplicationDomainEvent;
 import lombok.*;
 
@@ -16,10 +17,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ApplicationSubmittedEvent  {
     @JsonProperty("submissionId")
-    private UUID submissionId;
+    private UUID submissionId; // application id
 
-    @JsonProperty("userId")
-    private UUID userId;
+    @JsonProperty("recipientType")
+    private RecipientType recipientType;
+
+    @JsonProperty("uploadedBy")
+    private UUID uploadedBY;
 
     @JsonProperty("submittedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
