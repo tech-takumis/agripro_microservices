@@ -38,6 +38,7 @@ public class MessageMapper {
         return Message.builder()
                 .receiverId(messageRequestDto.getReceiverId())
                 .senderId(messageRequestDto.getSenderId())
+                .type(messageRequestDto.getType())
                 .text(messageRequestDto.getText())
                 .build();
     }

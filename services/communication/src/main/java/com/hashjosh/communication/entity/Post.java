@@ -24,6 +24,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @JoinColumn(name = "author_id", nullable = false)
     private UUID authorId;
 
     @Column(name = "title", nullable = false)

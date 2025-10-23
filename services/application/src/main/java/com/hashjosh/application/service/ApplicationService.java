@@ -2,6 +2,7 @@ package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.clients.AgricultureHttpClient;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.*;
@@ -11,22 +12,24 @@ import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.model.Document;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.document.dto.DocumentResponse;
+import com.hashjosh.constant.verification.VerificationRequestDto;
 import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,97 +43,84 @@ public class ApplicationService {
     private final ApplicationMapper applicationMapper;
     private final ApplicationProducer applicationProducer;
     private final DocumentServiceClient documentServiceClient;
+    private final AgricultureHttpClient agricultureHttpClient;
+
 
     public ApplicationSubmissionResponse processSubmission(
             ApplicationSubmissionDto submission,
-            List<MultipartFile> files
-    ) {
-        CustomUserDetails userDetails = getCurrentUser();
-        submission.setUploadedBy(UUID.fromString(userDetails.getUserId()));
+            List<MultipartFile> files) {
 
-        try {
-            ApplicationType applicationType = validateAndGetApplicationType(submission);
-            List<ApplicationField> fields = extractApplicationFields(applicationType);
 
-            // Validate submission fields
-            List<ValidationError> validationErrors = validateSubmission(submission, fields);
-            if (!validationErrors.isEmpty()) {
-                // Throw runtime exception if validation errors exist
-                throw new ApiException("Validation failed", validationErrors, HttpStatus.BAD_REQUEST);
-            }
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
 
-            // Process documents
-            Set<Document> documents = processDocuments(files, userDetails);
 
-            // Save application
-            Application savedApplication = saveApplication(submission, applicationType, documents);
+        ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Application type not found: " + submission.getApplicationTypeId()));
 
-            applicationProducer.publishEvent("application-lifecycle",
-                    ApplicationSubmittedEvent.builder()
-                            .submissionId(savedApplication.getId())
-                            .recipientType(savedApplication.getApplicationType().getRecipientType())
-                            .uploadedBY(UUID.fromString(userDetails.getUserId()))
-                            .applicationTypeId(savedApplication.getApplicationType().getId())
-                            .dynamicFields(savedApplication.getDynamicFields())
-                            .documentIds(savedApplication.getDocumentsUploaded().stream().map(Document::getId).toList())
-                            .submittedAt(LocalDateTime.now())
-                            .build()
-            );
 
-            // Return success response with applicationId only (other fields will be set in controller)
-            return ApplicationSubmissionResponse.builder()
-                    .success(true)
-                    .message("Application submitted successfully")
-                    .applicationId(savedApplication.getId())
-                    .build();
 
-        } catch (Exception e) {
-            log.error("Error processing application submission", e);
-            throw ApiException.internalError("Failed to process application submission");
-        }
-    }
-
-    private CustomUserDetails getCurrentUser() {
-        return (CustomUserDetails) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-    }
-
-    private ApplicationType validateAndGetApplicationType(ApplicationSubmissionDto submission) {
-        return applicationTypeRepository.findById(submission.getApplicationTypeId())
-                .orElseThrow(() -> ApiException.notFound("This type of application does not exist"));
-    }
-
-    private List<ApplicationField> extractApplicationFields(ApplicationType applicationType) {
-        return applicationType.getSections().stream()
+        List<ApplicationField> fields = applicationType.getSections().stream()
                 .flatMap(section -> section.getFields().stream())
                 .collect(Collectors.toList());
-    }
 
-    private Set<Document> processDocuments(List<MultipartFile> files, CustomUserDetails userDetails) {
-        return files.stream()
-                .map(file -> processDocument(file, userDetails))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-    }
 
-    private Document processDocument(MultipartFile file, CustomUserDetails userDetails) {
-        try {
-            DocumentResponse response = documentServiceClient.uploadDocument(file, userDetails.getUserId());
-            return applicationMapper.toDocumentEntity(response);
-        } catch (Exception e) {
-            log.error("Failed to process document: {}", file.getOriginalFilename(), e);
-            return null;
+
+        // 4. Validate fields
+        List<ValidationError> validationErrors = validateSubmission(submission, fields);
+
+
+        List<DocumentResponse> uploadedDocuments = new ArrayList<>();
+        if(files != null && !files.isEmpty()){
+            // 1. Upload documents if any
+            for (MultipartFile file : files) {
+                DocumentResponse documentResponse = documentServiceClient
+                        .uploadDocument(file, userDetails.getUserId());
+                uploadedDocuments.add(documentResponse);
+            }
         }
-    }
 
-    private Application saveApplication(
-            ApplicationSubmissionDto submission,
-            ApplicationType applicationType,
-            Set<Document> documents
-    ) {
-        Application application = applicationMapper.toEntity(submission, applicationType, documents);
-        return applicationRepository.save(application);
+
+        List<UUID> documentIds = uploadedDocuments.stream()
+                .map(DocumentResponse::getDocumentId)
+                .collect(Collectors.toList());
+
+        if (submission.getDocumentIds() != null) {
+            submission.getDocumentIds().addAll(documentIds);
+        } else {
+            submission.setDocumentIds(documentIds);
+        }
+
+        if (!validationErrors.isEmpty()) {
+            return ApplicationSubmissionResponse.builder()
+                    .success(false)
+                    .message("Validation failed")
+                    .errors(validationErrors)
+                    .build();
+        }
+
+
+        // Submit the application for verification
+
+
+
+        Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
+        Application savedApplication = applicationRepository.save(application);
+        agricultureHttpClient.submitApplication(
+                VerificationRequestDto.builder()
+                        .submissionId(savedApplication.getId())
+                        .uploadedBy(UUID.fromString(userDetails.getUserId()))
+                        .report("Application submitted for verification")
+                        .build(),
+                userDetails.getUserId()
+        );
+
+        return ApplicationSubmissionResponse.builder()
+                .success(true)
+                .message("Application submitted successfully")
+                .applicationId(savedApplication.getId())
+                .build();
     }
 
     private List<ValidationError> validateSubmission(
@@ -180,18 +170,13 @@ public class ApplicationService {
                     });
         });
 
-        if (!errors.isEmpty()) {
-            // Throw runtime exception if validation errors exist
-            throw new RuntimeException("Validation failed: " + errors);
-        }
-
         return errors;
     }
 
 
     public ApplicationResponseDto getApplicationById(UUID applicationId) {
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> ApiException.notFound("Application not found"));
+                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
         return applicationMapper.toApplicationResponseDto(application);
     }
 
@@ -201,17 +186,22 @@ public class ApplicationService {
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 
-
-    public List<ApplicationResponseDto> findApplicationByType(UUID applicationTypeId) {
+    public List<ApplicationResponseDto> findApplicationbyType(UUID applicationTypeId) {
         return applicationRepository.findByApplicationTypeId(applicationTypeId)
                 .stream().map(applicationMapper::toApplicationResponseDto)
                 .collect(Collectors.toList());
     }
 
+    private Application findApplicationById(UUID applicationId) {
+        return  applicationRepository.findById(applicationId)
+                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
+    }
+
     public List<ApplicationResponseDto> findAllAgricultureApplication() {
         ApplicationType type = applicationTypeRepository.findByNameContains("Crop Insurance Application")
-                .orElseThrow(() -> ApiException.notFound("Agriculture application type not found"));
+                .orElseThrow(() -> ApiException.notFound("Application type not found with name Crop Insurance Application"));
         List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
+
 
         return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }

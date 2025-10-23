@@ -39,9 +39,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget build(BuildContext context) {
 
     final userName = _userCredentials != null
-        ? "${_userCredentials!.user.firstName} ${_userCredentials!.user.lastName}".trim()
+        ? "${_userCredentials?.user?.firstName ?? ''} ${_userCredentials?.user?.lastName ?? ''}".trim()
         : '';
-    final userEmail = _userCredentials?.user.email ?? '';
+    final userEmail = _userCredentials?.user?.email ?? '';
 
     return SafeArea(
       child: SingleChildScrollView(

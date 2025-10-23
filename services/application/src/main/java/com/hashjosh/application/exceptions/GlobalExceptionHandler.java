@@ -26,6 +26,7 @@ public class GlobalExceptionHandler {
                         .timestamp(Instant.now())
                         .build());
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);

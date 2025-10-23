@@ -7,6 +7,10 @@ import 'package:mobile/presentation/widgets/common/custom_dropdown.dart';
 class RegistrationStepOne extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController rsbsaNumberController;
+  final TextEditingController passwordController;
+  final TextEditingController dateOfBirthController;
+  final TextEditingController genderController;
+  final TextEditingController civilStatusController;
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController middleNameController;
@@ -24,6 +28,10 @@ class RegistrationStepOne extends StatelessWidget {
     super.key,
     required this.formKey,
     required this.rsbsaNumberController,
+    required this.passwordController,
+    required this.dateOfBirthController,
+    required this.genderController,
+    required this.civilStatusController,
     required this.firstNameController,
     required this.lastNameController,
     required this.middleNameController,
@@ -110,6 +118,108 @@ class RegistrationStepOne extends StatelessWidget {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your RSBSA Reference Number';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Password
+          CustomTextField(
+            controller: passwordController,
+            label: 'Password *',
+            prefixIcon: Icons.lock_outline,
+            keyboardType: TextInputType.visiblePassword,
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a password';
+              }
+              if (value.length < 6) {
+                return 'Password must be at least 6 characters';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          // Date of Birth
+          GestureDetector(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime(2000, 1, 1),
+                firstDate: DateTime(1900),
+                lastDate: DateTime(DateTime.now().year - 18, 12, 31),
+              );
+              if (picked != null) {
+                dateOfBirthController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}' ;
+              }
+            },
+            child: AbsorbPointer(
+              child: CustomTextField(
+                controller: dateOfBirthController,
+                label: 'Date of Birth *',
+                prefixIcon: Icons.cake_outlined,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select your date of birth';
+                  }
+                  // Simple date format check
+                  final regex = RegExp(r'^\d{4}-\d{2}-\d{2}');
+                  if (!regex.hasMatch(value)) {
+                    return 'Enter date as YYYY-MM-DD';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Gender Dropdown
+          DropdownButtonFormField<String>(
+            value: genderController.text.isNotEmpty ? genderController.text : null,
+            decoration: const InputDecoration(
+              labelText: 'Gender *',
+              prefixIcon: Icon(Icons.wc),
+              border: OutlineInputBorder(),
+            ),
+            items: ['Male', 'Female', 'Other']
+                .map((gender) => DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              genderController.text = value ?? '';
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your gender';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          // Civil Status Dropdown
+          DropdownButtonFormField<String>(
+            value: civilStatusController.text.isNotEmpty ? civilStatusController.text : null,
+            decoration: const InputDecoration(
+              labelText: 'Civil Status *',
+              prefixIcon: Icon(Icons.family_restroom),
+              border: OutlineInputBorder(),
+            ),
+            items: ['Single', 'Married', 'Widowed', 'Separated', 'Divorced']
+                .map((status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(status),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              civilStatusController.text = value ?? '';
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your civil status';
               }
               return null;
             },

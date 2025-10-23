@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:dio/dio.dart' as dio;
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
-import 'package:mobile/data/models/attachment.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/models/message.dart';
+import 'package:mobile/data/models/message_request_dto.dart';
 import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/data/services/message_api.dart';
 import 'package:mobile/data/services/websocket.dart';
@@ -42,8 +44,14 @@ class MessageService extends GetxService {
     _userId = userId;
 
     print('MessageService: Initializing with userId=$_userId');
-    _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
-    _receiverId = _designatedStaff?.userId;
+    try {
+      _designatedStaff = await _messageApi.findAgricultureDesignatedStaff();
+      _receiverId = _designatedStaff?.userId;
+    } catch (e) {
+      print('MessageService: Error finding designated staff: $e');
+      _receiverId = null;
+      // Optionally, you can notify the user or UI here if needed
+    }
 
     if (_receiverId != null && _userId!.isNotEmpty) {
       await loadMessages();
@@ -66,60 +74,56 @@ class MessageService extends GetxService {
   }
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
-    try {
-      final message = Message.fromJson(data);
-      if (!_messages.any((m) => m.messageId == message.messageId)) {
-        _messages.add(message);
-        _controller.add([..._messages]); // ✅ notify listeners
-      } else {
+    // Only process if it looks like a chat message
+    if (data.containsKey('messageId') && data.containsKey('senderId') && data.containsKey('receiverId')) {
+      try {
+        final message = Message.fromJson(data);
+        if (!_messages.any((m) => m.messageId == message.messageId)) {
+          _messages.add(message);
+          _controller.add([..._messages]); // ✅ notify listeners
+        }
+      } catch (e) {
+        print('❌ [MessageService] Error parsing incoming message: $e');
       }
-    } catch (e) {
-      print('❌ [MessageService] Error parsing incoming message: $e');
+    } else {
+      // Not a chat message, ignore or handle as needed
+      print('ℹ️ [MessageService] Ignored non-chat message: $data');
     }
   }
 
-  Future<void> sendMessage(Message message, {required AuthState authState, List<PlatformFile>? files}) async {
+  Future<void> sendMessage({
+    required MessageRequestDto messageRequest,
+    required AuthState authState,
+    List<PlatformFile>? files,
+  }) async {
     try {
       if (_receiverId == null) throw Exception('No designated staff to send message to');
 
-      List<Attachment> attachmentUploaded = [];
+      List<dio.MultipartFile> dioFiles = [];
       if (files != null && files.isNotEmpty) {
         for (PlatformFile platformFile in files) {
           if (platformFile.path != null) {
-            final file = File(platformFile.path!);
-            final docResponse = await _documentService.uploadDocument(
-              authState: authState,
-              file: file,
-            );
-
-            final attachment = Attachment(
-              documentId: docResponse.documentId,
-              url: docResponse.preview, // Use 'preview' as per DocumentResponse
-            );
-
-            attachmentUploaded.add(attachment);
+            final mimeType = lookupMimeType(platformFile.path!);
+            dioFiles.add(await dio.MultipartFile.fromFile(
+              platformFile.path!,
+              filename: platformFile.name,
+              contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+            ));
           } else {
-            print('❌ [MessageService] File path is null for file: ${platformFile.name}');
+            print('❌ [MessageService] File path is null for file: \\${platformFile.name}');
           }
         }
       }
 
-      final messageRequest = {
-        'senderId': message.senderId,
-        'receiverId': _receiverId,
-        'text': message.text,
-        'type': message.type.toString().split('.').last,
-        'attachments': attachmentUploaded,
-        'sentAt': message.sentAt.toUtc().toIso8601String(),
-      };
-
-      print("[Message Service] Sending message request: $messageRequest");
-      print('📤 [MessageService] Sending message: ${message.text}');
-      _ws.sendMessage('/app/private.chat', messageRequest);
-      print("[MessageService] After send, current messages count: \\${_messages.length}");
-
+      final createdMessage = await _messageApi.createMessage(
+        messageRequest: messageRequest,
+        attachments: dioFiles,
+      );
+      _messages.add(createdMessage);
+      _controller.add([..._messages]);
+      print('📤 [MessageService] Sent message via API: \\${createdMessage.text}');
     } catch (e) {
-      print('❌ [MessageService] Error sending message: $e');
+      print('❌ [MessageService] Error sending message via API: $e');
     }
   }
 

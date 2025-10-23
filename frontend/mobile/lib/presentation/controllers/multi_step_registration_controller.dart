@@ -29,26 +29,15 @@ class MultiStepRegistrationController extends ChangeNotifier {
   final middleNameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneNumberController = TextEditingController();
-  final barangayController = TextEditingController();
-
-  // Step 1: Account Credentials
-  final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-
-  // Gender and Civil Status
-  String? selectedGender;
-  String? selectedCivilStatus;
-  final List<String> genderOptions = ['Male', 'Female', 'Other'];
-  final List<String> civilStatusOptions = [
-    'Single',
-    'Married',
-    'Widowed',
-    'Separated',
-    'Divorced'
-  ];
+  final dateOfBirthController = TextEditingController();
+  final genderController = TextEditingController();
+  final civilStatusController = TextEditingController();
 
   // Step 2: Geographic Information Controllers
   final zipCodeController = TextEditingController();
+  final streetController = TextEditingController();
+  final barangayController = TextEditingController();
   // Geographic selections will be handled by the step widget
 
   // Step 3: Farm Information Controllers
@@ -137,6 +126,7 @@ class MultiStepRegistrationController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update farm data from step 3 widget
   void updateFarmData({
     required String tenureStatus,
     required String farmType,
@@ -146,7 +136,7 @@ class MultiStepRegistrationController extends ChangeNotifier {
     notifyListeners();
   }
 
-
+  /// Submit registration
   Future<void> submitRegistration(BuildContext context) async {
     if (!step3FormKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,34 +155,28 @@ class MultiStepRegistrationController extends ChangeNotifier {
       _registrationResult = null;
       notifyListeners();
 
-      // Build UserProfile object with all extra fields
-      final userProfile = UserProfile(
+      // Collect all required fields
+      final request = RegistrationRequest(
         rsbsaId: rsbsaNumber.text.trim(),
+        firstName: firstNameController.text.trim(),
+        lastName: lastNameController.text.trim(),
+        password: passwordController.text.trim(),
         middleName: middleNameController.text.trim().isEmpty
             ? null
             : middleNameController.text.trim(),
+        email: emailController.text.trim(),
         phoneNumber: phoneNumberController.text.trim(),
-        gender: selectedGender ?? '',
-        civilStatus: selectedCivilStatus ?? '',
-        street: farmLocationController.text.trim(),
+        dateOfBirth: dateOfBirthController.text.trim(),
+        gender: genderController.text.trim(),
+        civilStatus: civilStatusController.text.trim(),
+        houseNo: '123', // TODO: Replace with actual houseNo input
+        street: streetController.text.trim(),
         barangay: barangayController.text.trim(),
         municipality: selectedCity,
         province: selectedProvince,
         region: selectedRegion,
         farmerType: selectedFarmType,
         totalFarmAreaHa: double.tryParse(farmSizeController.text.trim()) ?? 0.0,
-      );
-
-      // Build RegistrationRequest object as required by backend
-      final request = RegistrationRequest(
-        tenantKey: 'farmer',
-        username: usernameController.text.trim(),
-        firstName: firstNameController.text.trim(),
-        lastName: lastNameController.text.trim(),
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-        roles: ['farmer'],
-        profile: userProfile,
       );
 
       final response = await getIt<AuthApiService>().register(request);
@@ -237,7 +221,6 @@ class MultiStepRegistrationController extends ChangeNotifier {
     farmLocationController.clear();
     farmSizeController.clear();
     primaryCropController.clear();
-    barangayController.clear();
 
     // Clear selections
     selectedRegion = '';
@@ -245,8 +228,6 @@ class MultiStepRegistrationController extends ChangeNotifier {
     selectedCity = '';
     selectedTenureStatus = '';
     selectedFarmType = '';
-    selectedGender = null;
-    selectedCivilStatus = null;
     notifyListeners();
   }
 

@@ -25,7 +25,7 @@ export const useFarmerStore = defineStore('farmers', () => {
         error.value = null
 
         try {
-            const response = await axios.get('/api/v1/communication/farmers')
+            const response = await axios.get('/api/v1/farmer')
             farmers.value = response.data.map(farmer => ({
                 ...farmer,
                 name: `${farmer.firstName} ${farmer.lastName}`.trim(),

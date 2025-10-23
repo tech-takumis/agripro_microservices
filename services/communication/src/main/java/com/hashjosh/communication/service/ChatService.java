@@ -3,15 +3,15 @@ package com.hashjosh.communication.service;
 import com.hashjosh.communication.client.DocumentClient;
 import com.hashjosh.communication.config.CustomUserDetails;
 import com.hashjosh.communication.entity.Attachment;
+import com.hashjosh.communication.entity.Message;
 import com.hashjosh.communication.kafka.CommunicationPublisher;
 import com.hashjosh.communication.mapper.AttachmentMapper;
+import com.hashjosh.communication.mapper.MessageMapper;
 import com.hashjosh.communication.repository.AttachmentRepository;
+import com.hashjosh.communication.repository.MessageRepository;
 import com.hashjosh.constant.communication.AttachmentResponseDto;
 import com.hashjosh.constant.communication.MessageRequestDto;
 import com.hashjosh.constant.communication.MessageResponseDto;
-import com.hashjosh.communication.entity.Message;
-import com.hashjosh.communication.mapper.MessageMapper;
-import com.hashjosh.communication.repository.MessageRepository;
 import com.hashjosh.constant.communication.enums.ConversationType;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.kafkacommon.communication.AttachmentResponse;
@@ -36,9 +36,9 @@ public class ChatService {
     private final DocumentClient documentClient;
     private final AttachmentRepository attachmentRepository;
 
-    public List<MessageResponseDto> getAllMessagesWithAttachment(UUID farmerId) {
-        List<Message> messages = messageRepository
-                .findMessageBySenderIdOrReceiverIdAndAttachments(farmerId);
+
+    public List<MessageResponseDto> getAllMessagesWithAgricultureStaff(UUID farmerId) {
+        List<Message> messages = messageRepository.findMessagesByFarmerIdAndConversationType(farmerId);
 
         return messages.stream()
                 .map(messageMapper::toMessageResponseDto)
@@ -52,7 +52,7 @@ public class ChatService {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
 
-        messageRequestDto.setSenderId(messageRequestDto.getSenderId());
+        messageRequestDto.setSenderId(UUID.fromString(userDetails.getUserId()));
 
         // Save message
         Message message =  messageRepository.save(
@@ -90,8 +90,9 @@ public class ChatService {
 
         NewMessageEvent messageEvent = NewMessageEvent.builder()
                 .messageId(responseDto.getMessageId())
-                .senderId(responseDto.getSenderId())
-                .receiverId(responseDto.getReceiverId())
+                .conversationType(messageRequestDto.getType())
+                .senderId(messageRequestDto.getSenderId())
+                .receiverId(messageRequestDto.getReceiverId())
                 .text(responseDto.getText())
                 .attachmentResponses(responseDto.getAttachments().stream().map(attachment ->
                         AttachmentResponse.builder()
@@ -107,5 +108,4 @@ public class ChatService {
 
         return responseDto;
     }
-
 }

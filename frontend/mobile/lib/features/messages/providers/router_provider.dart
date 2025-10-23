@@ -6,14 +6,13 @@ import '../../../presentation/controllers/auth_controller.dart';
 import '../../../presentation/pages/login_page.dart';
 import  'package:mobile/presentation/pages/profile_page.dart';
 import 'package:mobile/presentation/pages/multi_step_register_page.dart';
-// Import other pages as needed
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
   return GoRouter(
     initialLocation: authState.isLoggedIn ? '/home' : '/login',
     redirect: (context, state) {
-      if (authState.isLoading) return null;
+      if (authState.isLoading) return null; // Don't redirect while loading
       // Allow unauthenticated users to access /login and /register
       final allowedUnauthenticated = ['/login', '/register'];
       if (!authState.isLoggedIn && !allowedUnauthenticated.contains(state.uri.toString())) {

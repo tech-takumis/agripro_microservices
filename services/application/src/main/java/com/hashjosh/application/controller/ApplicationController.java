@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,54 +28,35 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping("/submit")
+    @PostMapping(value = "/submit", consumes = "multipart/form-data")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
             @Valid @RequestPart ApplicationSubmissionDto submission,
-            @RequestPart(required = false) List<MultipartFile> files
+            @RequestPart(value = "files",required = false) List<MultipartFile> files
     ) {
+
         try {
-            log.debug("Processing application submission for type: {}", submission.getApplicationTypeId());
+
             ApplicationSubmissionResponse response = applicationService.processSubmission(
                     submission,
-                    files != null ? files : Collections.emptyList()
+                    files
             );
 
-            // If success, return the same values as the submission DTO (plus success/message)
+            // Return appropriate response
             if (response.isSuccess()) {
-                ApplicationSubmissionResponse successResponse = ApplicationSubmissionResponse.builder()
-                        .success(true)
-                        .message("Application submitted successfully")
-                        .applicationId(response.getApplicationId())
-                        .applicationTypeId(submission.getApplicationTypeId())
-                        .uploadedBy(submission.getUploadedBy())
-                        .fieldValues(submission.getFieldValues())
-                        .build();
-                return ResponseEntity.ok(successResponse);
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.badRequest().body(response);
             }
 
-        } catch (ResourceNotFoundException e) {
-            log.error("Resource not found during application submission", e);
-            return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
-            log.error("Error processing application submission", e);
-            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An error occurred while processing your application");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApplicationSubmissionResponse.builder()
+                            .success(false)
+                            .message("An error occurred while processing your application: " + e.getMessage())
+                            .build());
         }
     }
-
-    private ResponseEntity<ApplicationSubmissionResponse> buildErrorResponse(
-            HttpStatus status, String message) {
-        return ResponseEntity
-                .status(status)
-                .body(ApplicationSubmissionResponse.builder()
-                        .success(false)
-                        .message(message)
-                        .build());
-    }
-
 
 
     @GetMapping("/{application-id}")
@@ -96,7 +75,7 @@ public class ApplicationController {
     public ResponseEntity<List<ApplicationResponseDto>> findApplicationByType(
             @PathVariable("application_type_id") UUID applicationTypeId
      ){
-        return new ResponseEntity<>(applicationService.findApplicationByType(applicationTypeId), HttpStatus.OK);
+        return new ResponseEntity<>(applicationService.findApplicationbyType(applicationTypeId), HttpStatus.OK);
     }
 
     @GetMapping("/agriculture")

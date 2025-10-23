@@ -1,6 +1,6 @@
-package com.hashjosh.identity.entity;
+package com.example.agriculture.entity;
 
-import com.hashjosh.identity.enums.DesignatedType;
+import com.example.agriculture.enums.DesignatedType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "designated")
 @Getter
 @Setter
+@Table(name = "designated")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -20,13 +20,17 @@ public class Designated {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID tenantId;
-    private UUID userId;
-    private UUID assignedBy;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private Agriculture userId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "designated_by")
+    private Agriculture designatedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,  name = "type", length = 100)
     private DesignatedType type;
 
-    private LocalDateTime assignedAt;
+    private boolean isActive;
+    private LocalDateTime assignAt;
 }

@@ -175,8 +175,7 @@
                             <button
                                 type="submit"
                                 :disabled="isSendDisabled"
-                                class="flex-shrink-0 px-4 md:px-6 py-2 md:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                :class="{ 'opacity-50': isUploading }"
+                                class="flex-shrink-0 px-4 md:px-6 py-2 md:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                             >
                                 <Send class="h-5 w-5 md:h-6 md:w-6" />
                                 <span v-if="isUploading" class="ml-2">Uploading...</span>
@@ -287,9 +286,20 @@ const messages = computed(() => messageStore.messages)
 
 // Update computed property for files
 
-// Add disabled state for send button
+// Add disabled state for send button with debug logging
 const isSendDisabled = computed(() => {
-    return (!messageInput.value.trim() && localFiles.value.length === 0) || isUploading.value
+    const isEmptyMessage = messageInput.value.trim() === ''
+    const hasNoFiles = localFiles.value.length === 0
+    const isDisabled = (isEmptyMessage && hasNoFiles) || isUploading.value
+    
+    console.log('[MessageComponent] Send button state:', {
+        hasText: !isEmptyMessage,
+        hasFiles: !hasNoFiles,
+        isUploading: isUploading.value,
+        isDisabled
+    })
+    
+    return isDisabled
 })
 
 // Add new state for locally stored files
@@ -352,45 +362,84 @@ const removeFile = index => {
 
 const selectFarmer = async farmer => {
     try {
-        selectedFarmer.value = farmer
+        if (!farmer) {
+            console.error('[MessageComponent] No farmer provided to selectFarmer')
+            return
+        }
 
-        if (farmer && farmer.userId) {
-            await Promise.all([
-                messageStore.fetchMessages(authStore.userId, farmer.userId),
-            ])
+        console.log('[MessageComponent] Selecting farmer:', {
+            id: farmer.id,
+            userId: farmer.userId,
+            name: `${farmer.firstName} ${farmer.lastName}`
+        })
+
+        selectedFarmer.value = {
+            ...farmer,
+            // Ensure we have a userId, fall back to id if userId is not available
+            userId: farmer.userId || farmer.id
+        }
+
+        if (selectedFarmer.value.userId) {
+            console.log('[MessageComponent] Fetching messages for user:', selectedFarmer.value.userId)
+            await messageStore.fetchMessages(authStore.userId, selectedFarmer.value.userId)
             scrollToBottom()
+        } else {
+            console.error('[MessageComponent] No userId available for selected farmer:', farmer)
         }
     } catch (error) {
-        console.error('Error selecting farmer:', error)
+        console.error('[MessageComponent] Error selecting farmer:', {
+            error: error.message,
+            farmer: farmer ? { id: farmer.id, name: `${farmer.firstName} ${farmer.lastName}` } : 'No farmer'
+        })
     }
 }
 
-// Update sendMessage to handle file uploads and exclude senderId
 const sendChatMessage = async () => {
-    if (!messageInput.value.trim() && !localFiles.value.length) return
-    if (!selectedFarmer.value?.userId) return
-
     try {
-        isUploading.value = true
-
-        // Upload files and collect file objects
-        let files = []
-        if (localFiles.value.length > 0) {
-            files = localFiles.value.map(f => f.file)
+        const receiverId = selectedFarmer.value.userId
+        if (!receiverId) {
+            console.error('[MessageComponent] No receiverId available for sending message')
+            return
         }
 
-        await messageStore.sendMessage({
-            receiverId: selectedFarmer.value.userId,
-            text: messageInput.value || (files.length ? 'File Uploaded' : ''),
+        const files = localFiles.value.map(f => f.file)
+        console.log(`[MessageComponent] Prepared ${files.length} files for upload`, 
+            files.map(f => ({ name: f.name, type: f.type, size: f.size })))
+
+        // Prepare message payload
+        const messagePayload = {
+            receiverId: receiverId,  // Use the validated receiverId
+            text: messageInput.value.trim() || (files.length ? 'File Uploaded' : ''),
+            type: 'FARMER_AGRICULTURE',
             files: files,
             sentAt: new Date().toISOString()
+        }
+        
+        console.log('[MessageComponent] Sending message with payload:', {
+            ...messagePayload,
+            files: files.map(f => `${f.name} (${f.type}, ${(f.size / 1024).toFixed(2)} KB)`)
         })
+        
+        console.log('[MessageComponent] Sending message with payload:', {
+            ...messagePayload,
+            files: files.map(f => ({
+                name: f.name,
+                type: f.type,
+                size: f.size
+            }))
+        })
+        
+        await messageStore.sendMessage(messagePayload)
 
         messageInput.value = ''
         localFiles.value = []
         scrollToBottom()
     } catch (error) {
-        console.error('Failed to send message:', error)
+        console.error('[MessageComponent] Failed to send message:', {
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        })
     } finally {
         isUploading.value = false
     }

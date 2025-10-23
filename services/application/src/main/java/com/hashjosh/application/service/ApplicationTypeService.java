@@ -59,8 +59,15 @@ public class ApplicationTypeService {
                     .collect(Collectors.toList());
     }
 
+    public ApplicationType getApplicationTypeById(UUID id) {
+
+        return applicationTypeRepository.findById(id).orElseThrow(
+                () -> ApiException.notFound("Application type not found")
+        );
+    };
+
     public ApplicationTypeResponseDto findById(UUID id) {
         return applicationTypeMapper.toApplicationResponse(applicationTypeRepository.findById(id)
-                .orElseThrow(() -> ApiException.notFound("This type of application does not exists")));
+                .orElseThrow(() -> ApiException.notFound("Application type not found")));
     }
 }

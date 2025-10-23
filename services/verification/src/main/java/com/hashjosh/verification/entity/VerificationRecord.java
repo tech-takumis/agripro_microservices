@@ -1,6 +1,7 @@
-package com.hashjosh.verification.entity;
+package com.example.agriculture.entity;
 
-import com.hashjosh.verification.enums.VerificationStatus;
+
+import com.hashjosh.constant.verification.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,8 +29,7 @@ public class VerificationRecord {
     private UUID uploadedBy;
 
     @Column(name = "verification_type", length = 50)
-    private String verificationType;
-
+    private String verificationType; // e.g., "Application Verification"
 
     @Column(name = "report", length = 255)
     private String report;

@@ -1,6 +1,7 @@
 package com.hashjosh.communication.controller;
 
-import com.hashjosh.communication.dto.*;
+import com.hashjosh.communication.dto.PostPageResponse;
+import com.hashjosh.communication.dto.PostResponse;
 import com.hashjosh.communication.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -68,7 +69,7 @@ public class PostController {
         fetch.setHasMore(hasMore);
         return ResponseEntity.ok(fetch);
     }
-    
+
 
     // DELETE
     @DeleteMapping("/{id}")

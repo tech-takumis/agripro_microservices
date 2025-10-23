@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/presentation/controllers/multi_step_registration_controller.dart';
 import 'package:mobile/presentation/widgets/common/step_indicator.dart';
 import 'package:mobile/presentation/widgets/common/custom_button.dart';
@@ -117,7 +118,13 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: controller.currentStep > 1
               ? () => _previousStep(controller)
-              : () => Navigator.of(context).pop(),
+              : () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    GoRouter.of(context).go('/login');
+                  }
+                },
         ),
       ),
       body: SafeArea(
@@ -128,12 +135,6 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Icon(
-                  //   Icons.person_add_outlined,
-                  //   size: 60,
-                  //   color: Theme.of(context).primaryColor,
-                  // ),
-                  // const SizedBox(height: 16),
                   Text(
                     'Create Your Account',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -166,6 +167,10 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
                     child: RegistrationStepOne(
                       formKey: controller.step1FormKey,
                       rsbsaNumberController: controller.rsbsaNumber,
+                      passwordController: controller.passwordController,
+                      dateOfBirthController: controller.dateOfBirthController,
+                      genderController: controller.genderController,
+                      civilStatusController: controller.civilStatusController,
                       firstNameController: controller.firstNameController,
                       lastNameController: controller.lastNameController,
                       middleNameController: controller.middleNameController,
@@ -181,6 +186,8 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
                       key: _step2Key,
                       formKey: controller.step2FormKey,
                       zipCodeController: controller.zipCodeController,
+                      streetController: controller.streetController,
+                      barangayController: controller.barangayController,
                     ),
                   ),
 
@@ -365,7 +372,7 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
               Column(
                 children: [
                   CustomButton(
-                    onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
+                    onPressed: () => context.go('/login'),
                     backgroundColor: Colors.green,
                     child: const Text(
                       'Go to Login',
@@ -394,8 +401,14 @@ class _MultiStepRegisterPageState extends ConsumerState<MultiStepRegisterPage> {
                       'Already have an account? ',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
+                    InkWell(
+                      onTap: () {
+                        if (Navigator.of(context).canPop()) {
+                          Navigator.of(context).pop();
+                        } else {
+                          GoRouter.of(context).go('/login');
+                        }
+                      },
                       child: Text(
                         'Sign in here',
                         style: TextStyle(

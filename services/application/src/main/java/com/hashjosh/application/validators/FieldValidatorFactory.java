@@ -44,7 +44,7 @@ public class FieldValidatorFactory {
         ValidatorStrategy strategy = strategies.get(fieldType);
 
         if(strategy == null){
-            throw ApiException.badRequest("Unsupported datatype:: "+fieldType);
+            throw ApiException.badRequest("Unsupported field type: " + fieldType);
         }
         return strategy;
     }

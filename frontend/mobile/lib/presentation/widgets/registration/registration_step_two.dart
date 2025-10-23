@@ -11,11 +11,15 @@ import 'package:mobile/injection_container.dart';
 class RegistrationStepTwo extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController zipCodeController;
+  final TextEditingController streetController;
+  final TextEditingController barangayController;
 
   const RegistrationStepTwo({
     super.key,
     required this.formKey,
     required this.zipCodeController,
+    required this.streetController,
+    required this.barangayController,
   });
 
   @override
@@ -221,6 +225,89 @@ class RegistrationStepTwoState extends State<RegistrationStepTwo> with Automatic
           ),
           const SizedBox(height: 20),
 
+          // Barangay Dropdown (PSGC) - only enabled after city selection
+          _selectedCity == null
+              ? CustomDropdown<PSGCBarangay>(
+                  label: 'Barangay *',
+                  value: null,
+                  items: [],
+                  isLoading: false,
+                  hint: 'Select city/municipality first',
+                  prefixIcon: Icons.location_searching,
+                  displayText: (barangay) => barangay.name,
+                  onChanged: null,
+                )
+              : FutureBuilder<List<PSGCBarangay>>(
+                  future: _psgcService.getBarangaysByCity(_selectedCity!.code),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CustomDropdown<PSGCBarangay>(
+                        label: 'Barangay *',
+                        value: null,
+                        items: [],
+                        isLoading: true,
+                        hint: 'Loading barangays...',
+                        prefixIcon: Icons.location_searching,
+                        displayText: (barangay) => barangay.name,
+                        onChanged: null,
+                      );
+                    } else if (snapshot.hasError) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomDropdown<PSGCBarangay>(
+                            label: 'Barangay *',
+                            value: null,
+                            items: [],
+                            isLoading: false,
+                            hint: 'Error loading barangays',
+                            prefixIcon: Icons.location_searching,
+                            displayText: (barangay) => barangay.name,
+                            onChanged: null,
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() {}),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      );
+                    } else {
+                      final barangays = snapshot.data ?? [];
+                      PSGCBarangay? selectedBarangay;
+                      if (widget.barangayController.text.isNotEmpty) {
+                        try {
+                          selectedBarangay = barangays.firstWhere(
+                            (b) => b.name == widget.barangayController.text,
+                          );
+                        } catch (e) {
+                          selectedBarangay = null;
+                        }
+                      }
+                      return CustomDropdown<PSGCBarangay>(
+                        label: 'Barangay *',
+                        value: selectedBarangay,
+                        items: barangays,
+                        displayText: (barangay) => barangay.name,
+                        isLoading: false,
+                        hint: barangays.isEmpty
+                            ? 'No barangays found for this city'
+                            : 'Select your barangay',
+                        prefixIcon: Icons.location_searching,
+                        onChanged: (barangay) {
+                          widget.barangayController.text = barangay?.name ?? '';
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select your barangay';
+                          }
+                          return null;
+                        },
+                      );
+                    }
+                  },
+                ),
+          const SizedBox(height: 20),
+
           // ZIP Code
           CustomTextField(
             controller: widget.zipCodeController,
@@ -241,6 +328,22 @@ class RegistrationStepTwoState extends State<RegistrationStepTwo> with Automatic
               return null;
             },
           ),
+          const SizedBox(height: 20),
+
+          // Street
+          CustomTextField(
+            controller: widget.streetController,
+            label: 'Street *',
+            prefixIcon: Icons.home_outlined,
+            keyboardType: TextInputType.text,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your street';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );

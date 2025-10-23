@@ -1,28 +1,18 @@
 package com.hashjosh.application.exceptions;
 
-import com.hashjosh.application.dto.ValidationError;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-import java.util.List;
-
-@Getter
 public class ApiException extends RuntimeException {
     private final HttpStatus status;
-    private List<ValidationError> errors;
-
 
     public ApiException(String message, HttpStatus status) {
         super(message);
         this.status = status;
     }
 
-    public ApiException(String message,List<ValidationError> errors, HttpStatus status) {
-        super(message);
-        this.errors = errors;
-        this.status = status;
+    public HttpStatus getStatus() {
+        return status;
     }
-
 
     public static ApiException notFound(String message) {
         return new ApiException(message, HttpStatus.NOT_FOUND);

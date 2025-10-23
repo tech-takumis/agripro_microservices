@@ -3,7 +3,6 @@ package com.hashjosh.communication.service;
 import com.hashjosh.communication.client.DocumentClient;
 import com.hashjosh.communication.config.CustomUserDetails;
 import com.hashjosh.communication.dto.PostPageResponse;
-import com.hashjosh.communication.dto.PostRequest;
 import com.hashjosh.communication.dto.PostResponse;
 import com.hashjosh.communication.entity.Post;
 import com.hashjosh.communication.mapper.PostMapper;
@@ -39,6 +38,7 @@ public class PostService {
                 .getAuthentication()
                 .getPrincipal();
 
+
         post.setAuthorId(UUID.fromString(userDetails.getUserId()));
 
         List<UUID> documentIds = new ArrayList<>();
@@ -51,8 +51,6 @@ public class PostService {
             }
         }
         post.setDocumentIds(documentIds);
-        // Fetch author entity
-
         return postMapper.toPostResponse(postRepository.save(post));
     }
 
@@ -68,6 +66,7 @@ public class PostService {
                 .toList();
         return postMapper.toPostPageResponse(posts);
     }
+
 
     public void deletePost(UUID id) {
         if (!postRepository.existsById(id)) {

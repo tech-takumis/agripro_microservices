@@ -1,22 +1,24 @@
 class Permission {
-  final String id;
-  final String name;
-  final String slug;
-  final String description;
+  final String? id;
+  final String? name;
+  final String? slug;
+  final String? description;
 
   Permission({
-    required this.id,
-    required this.name,
-    required this.slug,
-    required this.description,
+    this.id,
+    this.name,
+    this.slug,
+    this.description,
   });
 
   factory Permission.fromJson(Map<String, dynamic> json) {
+    print('🔎 Parsing Permission from JSON:');
+    print(json);
     return Permission(
-      id: json['id'],
-      name: json['name'],
-      slug: json['slug'],
-      description: json['description'],
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      slug: json['slug'] as String?,
+      description: json['description'] as String?,
     );
   }
 
@@ -31,26 +33,26 @@ class Permission {
 }
 
 class Role {
-  final String id;
-  final String name;
-  final String slug;
-  final List<Permission> permissions;
+  final String? id;
+  final String? name;
+  final String? slug;
+  final List<Permission>? permissions;
 
   Role({
-    required this.id,
-    required this.name,
-    required this.slug,
-    required this.permissions,
+    this.id,
+    this.name,
+    this.slug,
+    this.permissions,
   });
 
   factory Role.fromJson(Map<String, dynamic> json) {
+    print('🔎 Parsing Role from JSON:');
+    print(json);
     return Role(
-      id: json['id'],
-      name: json['name'],
-      slug: json['slug'],
-      permissions: (json['permissions'] as List)
-          .map((p) => Permission.fromJson(p))
-          .toList(),
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      slug: json['slug'] as String?,
+      permissions: (json['permissions'] as List?)?.map((p) => Permission.fromJson(p)).toList() ?? [],
     );
   }
 
@@ -59,93 +61,95 @@ class Role {
       'id': id,
       'name': name,
       'slug': slug,
-      'permissions': permissions.map((p) => p.toJson()).toList(),
+      'permissions': permissions?.map((p) => p.toJson()).toList(),
     };
   }
 }
 
 class UserProfile {
-  final String id;
-  final String rsbsaId;
+  final String? id;
+  final String? rsbsaId;
   final String? nationalId;
-  final String dateOfBirth;
-  final String gender;
-  final String civilStatus;
-  final String houseNo;
-  final String street;
-  final String barangay;
-  final String municipality;
-  final String province;
-  final String region;
-  final String farmerType;
+  final String? dateOfBirth;
+  final String? gender;
+  final String? civilStatus;
+  final String? houseNo;
+  final String? street;
+  final String? barangay;
+  final String? municipality;
+  final String? province;
+  final String? region;
+  final String? farmerType;
   final String? primaryOccupation;
-  final double totalFarmAreaHa;
+  final double? totalFarmAreaHa;
   final String? landTenure;
-  final bool pcicEnrolled;
+  final bool? pcicEnrolled;
   final String? pcicPolicyNumber;
   final String? pcicPolicyStart;
   final String? pcicPolicyEnd;
   final int? householdSize;
   final String? educationLevel;
   final double? annualFarmIncome;
-  final String createdAt;
-  final String updatedAt;
+  final String? createdAt;
+  final String? updatedAt;
 
   UserProfile({
-    required this.id,
-    required this.rsbsaId,
+    this.id,
+    this.rsbsaId,
     this.nationalId,
-    required this.dateOfBirth,
-    required this.gender,
-    required this.civilStatus,
-    required this.houseNo,
-    required this.street,
-    required this.barangay,
-    required this.municipality,
-    required this.province,
-    required this.region,
-    required this.farmerType,
+    this.dateOfBirth,
+    this.gender,
+    this.civilStatus,
+    this.houseNo,
+    this.street,
+    this.barangay,
+    this.municipality,
+    this.province,
+    this.region,
+    this.farmerType,
     this.primaryOccupation,
-    required this.totalFarmAreaHa,
+    this.totalFarmAreaHa,
     this.landTenure,
-    required this.pcicEnrolled,
+    this.pcicEnrolled,
     this.pcicPolicyNumber,
     this.pcicPolicyStart,
     this.pcicPolicyEnd,
     this.householdSize,
     this.educationLevel,
     this.annualFarmIncome,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    print('🔎 Parsing UserProfile from JSON:');
+    print(json);
     return UserProfile(
-      id: json['id'],
-      rsbsaId: json['rsbsaId'],
-      nationalId: json['nationalId'],
-      dateOfBirth: json['dateOfBirth'],
-      gender: json['gender'],
-      civilStatus: json['civilStatus'],
-      houseNo: json['houseNo'],
-      street: json['street'],
-      barangay: json['barangay'],
-      municipality: json['municipality'],
-      province: json['province'],
-      region: json['region'],
-      farmerType: json['farmerType'],
-      primaryOccupation: json['primaryOccupation'],
-      totalFarmAreaHa: json['totalFarmAreaHa']?.toDouble() ?? 0.0,
-      landTenure: json['landTenure'],
-      pcicEnrolled: json['pcicEnrolled'] ?? false,
-      pcicPolicyNumber: json['pcicPolicyNumber'],
-      pcicPolicyStart: json['pcicPolicyStart'],
-      pcicPolicyEnd: json['pcicPolicyEnd'],
-      householdSize: json['householdSize'],
-      educationLevel: json['educationLevel'],
-      annualFarmIncome: json['annualFarmIncome']?.toDouble(),
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+      id: json['id'] as String?,
+      rsbsaId: json['rsbsaId'] as String?,
+      nationalId: json['nationalId'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
+      gender: json['gender'] as String?,
+      civilStatus: json['civilStatus'] as String?,
+      houseNo: json['houseNo'] as String?,
+      street: json['street'] as String?,
+      barangay: json['barangay'] as String?,
+      municipality: json['municipality'] as String?,
+      province: json['province'] as String?,
+      region: json['region'] as String?,
+      farmerType: json['farmerType'] as String?,
+      primaryOccupation: json['primaryOccupation'] as String?,
+      totalFarmAreaHa: (json['totalFarmAreaHa'] as num?)?.toDouble(),
+      landTenure: json['landTenure'] as String?,
+      pcicEnrolled: json['pcicEnrolled'] as bool? ?? false,
+      pcicPolicyNumber: json['pcicPolicyNumber'] as String?,
+      pcicPolicyStart: json['pcicPolicyStart'] as String?,
+      pcicPolicyEnd: json['pcicPolicyEnd'] as String?,
+      householdSize: json['householdSize'] as int?,
+      educationLevel: json['educationLevel'] as String?,
+      annualFarmIncome: (json['annualFarmIncome'] as num?)?.toDouble(),
+      createdAt: json['createdAt'] as String?,
+      updatedAt: json['updatedAt'] as String?,
     );
   }
 
@@ -181,35 +185,35 @@ class UserProfile {
 }
 
 class User {
-  final String username;
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String phoneNumber;
-  final List<Role> roles;
-  final UserProfile profile;
+  final String? username;
+  final String? firstName;
+  final String? lastName;
+  final String? email;
+  final String? phoneNumber;
+  final List<Role>? roles;
+  final UserProfile? profile;
 
   User({
-    required this.username,
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.phoneNumber,
-    required this.roles,
-    required this.profile,
+    this.username,
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.phoneNumber,
+    this.roles,
+    this.profile,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    print('🔎 Parsing User from JSON:');
+    print(json);
     return User(
-      username: json['username'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      phoneNumber: json['phoneNumber'],
-      roles: (json['roles'] as List)
-          .map((r) => Role.fromJson(r))
-          .toList(),
-      profile: UserProfile.fromJson(json['profile']),
+      username: json['username'] as String?,
+      firstName: json['firstName'] as String?,
+      lastName: json['lastName'] as String?,
+      email: json['email'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
+      roles: (json['roles'] as List?)?.map((r) => Role.fromJson(r)).toList() ?? [],
+      profile: json['profile'] != null ? UserProfile.fromJson(json['profile']) : null,
     );
   }
 
@@ -220,34 +224,36 @@ class User {
       'lastName': lastName,
       'email': email,
       'phoneNumber': phoneNumber,
-      'roles': roles.map((r) => r.toJson()).toList(),
-      'profile': profile.toJson(),
+      'roles': roles?.map((r) => r.toJson()).toList(),
+      'profile': profile?.toJson(),
     };
   }
 }
 
 class UserCredentials {
-  final String id;
-  final String accessToken;
-  final String refreshToken;
-  final String websocketToken;
-  final User user;
+  final String? id;
+  final String? accessToken;
+  final String? refreshToken;
+  final String? websocketToken;
+  final User? user;
 
   UserCredentials({
-    required this.id,
-    required this.accessToken,
-    required this.refreshToken,
-    required this.websocketToken,
-    required this.user,
+    this.id,
+    this.accessToken,
+    this.refreshToken,
+    this.websocketToken,
+    this.user,
   });
 
   factory UserCredentials.fromJson(Map<String, dynamic> json) {
+    print('🔎 Parsing UserCredentials from JSON:');
+    print(json);
     return UserCredentials(
-      id: json['id'],
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
-      websocketToken: json['websocketToken'],
-      user: User.fromJson(json['user']),
+      id: json['id'] as String?,
+      accessToken: json['accessToken'] as String?,
+      refreshToken: json['refreshToken'] as String?,
+      websocketToken: json['websocketToken'] as String?,
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
     );
   }
 
@@ -257,7 +263,7 @@ class UserCredentials {
       'accessToken': accessToken,
       'refreshToken': refreshToken,
       'websocketToken': websocketToken,
-      'user': user.toJson(),
+      'user': user?.toJson(),
     };
   }
 }

@@ -36,6 +36,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         _showLocationPromptDialog();
       }
     });
+    // Removed ref.listen from here
   }
 
   void _showCredentialsModal() {
@@ -112,6 +113,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      if (previous?.isLoggedIn == false && next.isLoggedIn == true) {
+        if (mounted) {
+          context.go('/home');
+        }
+      }
+      if (previous?.isLoggedIn == true && next.isLoggedIn == false) {
+        if (mounted) {
+          context.go('/login');
+        }
+      }
+    });
+
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
@@ -272,19 +286,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       "Don't have an account? ",
                       style: TextStyle(color: Colors.grey[600]),
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => context.go('/register'),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                          child: Text(
-                            'Register here',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    GestureDetector(
+                      onTap: () => context.go('/register'),
+                      child: Text(
+                        'Register here',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

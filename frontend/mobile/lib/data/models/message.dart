@@ -11,9 +11,9 @@ class Message {
   final String senderId;
   final String receiverId;
   final String text;
-  final MessageType type;
+  final MessageType? type; // Nullable
   final List<Attachment> attachments;
-  final DateTime sentAt;
+  final DateTime? sentAt; // Nullable
   final bool isRead;
 
   Message({
@@ -21,27 +21,33 @@ class Message {
     required this.senderId,
     required this.receiverId,
     required this.text,
-    required this.type,
+    this.type, // Nullable
     this.attachments = const [],
-    required this.sentAt,
+    this.sentAt, // Nullable
     this.isRead = false,
   });
 
   // Create from JSON
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      messageId: json['messageId'],
+      messageId: json['messageId'] ?? json['id'],
       senderId: json['senderId'],
       receiverId: json['receiverId'],
       text: json['text'],
-      type: MessageType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['type'],
-        orElse: () => MessageType.FARMER_AGRICULTURE,
-      ),
-      attachments: (json['attachments'] as List?)
-          ?.map((attachment) => Attachment.fromJson(attachment))
-          .toList() ?? [],
-      sentAt: DateTime.parse(json['sentAt']),
+      type: (json['type'] ?? json['conversationType']) != null
+          ? MessageType.values.firstWhere(
+              (e) => e.toString().split('.').last == (json['type'] ?? json['conversationType']),
+              orElse: () => MessageType.FARMER_AGRICULTURE,
+            )
+          : null,
+      attachments: (json['attachments'] ?? json['attachmentResponses']) is List
+          ? ((json['attachments'] ?? json['attachmentResponses']) as List)
+              .map((attachment) => Attachment.fromJson(attachment))
+              .toList()
+          : [],
+      sentAt: (json['sentAt'] ?? json['timestamp']) != null
+          ? DateTime.tryParse(json['sentAt'] ?? json['timestamp'])
+          : null,
       isRead: json['isRead'] ?? false,
     );
   }
@@ -53,9 +59,9 @@ class Message {
       'senderId': senderId,
       'receiverId': receiverId,
       'text': text,
-      'type': type.toString().split('.').last,
+      'type': type?.toString().split('.').last,
       'attachments': attachments.map((attachment) => attachment.toJson()).toList(),
-      'sentAt': sentAt.toIso8601String(),
+      'sentAt': sentAt?.toIso8601String(),
     };
   }
 

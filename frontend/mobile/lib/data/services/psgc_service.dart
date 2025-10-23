@@ -136,25 +136,40 @@ class PSGCService {
   /// Fetch barangays by city/municipality code
   Future<List<PSGCBarangay>> getBarangaysByCity(String cityCode) async {
     if (_cachedBarangays.containsKey(cityCode)) {
+      print('🗂 Returning cached barangays for city: $cityCode');
       return _cachedBarangays[cityCode]!;
     }
 
     try {
       print('🚀 Fetching barangays for city: $cityCode');
       final response = await _dio.get('/cities-municipalities/$cityCode/barangays');
+      print('🌍 PSGC API: Response status: [32m${response.statusCode}[0m');
+      print('🌍 PSGC API: Response data: ${response.data}');
 
       final List<dynamic> data = _ensureList(response.data);
-      final barangays = data.map((json) => PSGCBarangay.fromJson(json as Map<String, dynamic>)).toList();
+      print('🌍 PSGC API: Parsed barangays count: ${data.length}');
+      final barangays = data.map((json) {
+        try {
+          return PSGCBarangay.fromJson(json as Map<String, dynamic>);
+        } catch (e) {
+          print('❌ Error parsing barangay: $json, error: $e');
+          rethrow;
+        }
+      }).toList();
 
       _cachedBarangays[cityCode] = barangays;
       print('✅ Fetched ${barangays.length} barangays for city $cityCode');
       return barangays;
     } on DioException catch (e) {
-      print('❌ Failed to fetch barangays: ${e.message}');
-      throw Exception('Failed to load barangays. Please check your internet connection.');
+      print('❌ DioException: ${e.message}');
+      print('❌ DioException response: ${e.response?.data}');
+      throw Exception('Failed to load barangays. Please check your internet connection or API response.');
     } on FormatException catch (e) {
-      print('❌ Failed to parse barangays: ${e.message}');
+      print('❌ FormatException: ${e.message}');
       throw Exception('Failed to load barangays. Unexpected response format.');
+    } catch (e) {
+      print('❌ Unknown error: $e');
+      throw Exception('Failed to load barangays. Unknown error occurred.');
     }
   }
 
