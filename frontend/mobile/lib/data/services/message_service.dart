@@ -74,15 +74,20 @@ class MessageService extends GetxService {
   }
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
-    try {
-      final message = Message.fromJson(data);
-      if (!_messages.any((m) => m.messageId == message.messageId)) {
-        _messages.add(message);
-        _controller.add([..._messages]); // ✅ notify listeners
-      } else {
+    // Only process if it looks like a chat message
+    if (data.containsKey('messageId') && data.containsKey('senderId') && data.containsKey('receiverId')) {
+      try {
+        final message = Message.fromJson(data);
+        if (!_messages.any((m) => m.messageId == message.messageId)) {
+          _messages.add(message);
+          _controller.add([..._messages]); // ✅ notify listeners
+        }
+      } catch (e) {
+        print('❌ [MessageService] Error parsing incoming message: $e');
       }
-    } catch (e) {
-      print('❌ [MessageService] Error parsing incoming message: $e');
+    } else {
+      // Not a chat message, ignore or handle as needed
+      print('ℹ️ [MessageService] Ignored non-chat message: $data');
     }
   }
 
@@ -114,6 +119,8 @@ class MessageService extends GetxService {
         messageRequest: messageRequest,
         attachments: dioFiles,
       );
+      _messages.add(createdMessage);
+      _controller.add([..._messages]);
       print('📤 [MessageService] Sent message via API: \\${createdMessage.text}');
     } catch (e) {
       print('❌ [MessageService] Error sending message via API: $e');

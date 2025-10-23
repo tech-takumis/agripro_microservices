@@ -3,12 +3,15 @@ package com.hashjosh.realtimegatewayservice.config;
 import com.hashjosh.jwtshareable.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.broker.BrokerAvailabilityEvent;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -34,6 +37,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Lazy
     private final JwtService jwtService;
+
+
+    @Bean
+    public ApplicationListener<BrokerAvailabilityEvent> brokerListener() {
+        return event -> log.info("📡 Broker available: {}", event.isBrokerAvailable());
+    }
 
     // ------------------------------------------------------------------------
     // Message Broker Configuration

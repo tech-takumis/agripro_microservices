@@ -59,13 +59,6 @@ class WebSocketService {
     _isConnected = true;
     _isConnecting = false;
 
-    // Subscribe to private queue
-    _subscribeToPrivateMessages();
-
-    print('✅ [WebSocket] Subscribed to /user/queue/private.messages');
-  }
-
-  void _subscribeToPrivateMessages() {
     _client?.subscribe(
       destination: '/user/queue/private.messages',
       callback: (frame) {
@@ -105,6 +98,8 @@ class WebSocketService {
             print('❌ [WebSocket] Notification parse error: $e');
           }
         });
+
+    print('✅ [WebSocket] Subscribed to /user/queue/private.messages and /user/queue/application.notifications');
   }
 
   void _handleConnectionError() {

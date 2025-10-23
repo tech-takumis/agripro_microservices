@@ -26,9 +26,6 @@ public class DocumentClient {
                 .build();
     }
 
-
-
-
     public DocumentResponse getDocument(UUID documentId){
         try {
             return restClient.get()

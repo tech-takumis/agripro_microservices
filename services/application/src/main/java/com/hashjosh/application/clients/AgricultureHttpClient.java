@@ -20,7 +20,7 @@ public class AgricultureHttpClient {
 
     public AgricultureHttpClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:8030/api/v1")
+                .baseUrl("http://localhost:9010/api/v1")
                 .build();
     }
 

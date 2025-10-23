@@ -10,16 +10,21 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class FarmerServiceClient {
 
-    private final RestClient farmerRestClient;
+    private final RestClient restClient;
+
+    public FarmerServiceClient(RestClient.Builder builder){
+        this.restClient = builder
+                .baseUrl("http://localhost:8020/api/v1/farmers")
+                .build();
+    }
 
     @Value("${spring.application.name}")
     private String applicationName;
 
     public FarmerResponse getFarmerById(UUID farmerId) {
-        return farmerRestClient.get()
+        return restClient.get()
                 .uri("/{farmer-id}", farmerId)
                 .header("X-Internal-Service", applicationName)
                 .retrieve()
@@ -27,7 +32,7 @@ public class FarmerServiceClient {
     }
 
     public List<FarmerResponse> getAllFarmers() {
-        return farmerRestClient.get()
+        return restClient.get()
                 .header("X-Internal-Service", applicationName)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<FarmerResponse>>() {});

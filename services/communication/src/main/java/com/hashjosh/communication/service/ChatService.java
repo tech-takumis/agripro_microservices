@@ -91,8 +91,8 @@ public class ChatService {
         NewMessageEvent messageEvent = NewMessageEvent.builder()
                 .messageId(responseDto.getMessageId())
                 .conversationType(messageRequestDto.getType())
-                .senderId(responseDto.getSenderId())
-                .receiverId(responseDto.getReceiverId())
+                .senderId(messageRequestDto.getSenderId())
+                .receiverId(messageRequestDto.getReceiverId())
                 .text(responseDto.getText())
                 .attachmentResponses(responseDto.getAttachments().stream().map(attachment ->
                         AttachmentResponse.builder()

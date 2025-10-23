@@ -16,25 +16,56 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const MAX_RECONNECT_ATTEMPTS = 5
   let reconnectTimeout = null
   let connectionPromise = null
-  let subscription = null
+  let privateMessageSub = null
+  let notificationSub = null
 
   const subscribeToPrivateMessages = () => {
-    const topic = '/user/queue/private.messages'
-    if (!stompClient.value?.active) return
-    if (subscription) subscription.unsubscribe()
+  const topic = '/user/queue/private.messages'
+  if (!stompClient.value?.active) return
+  if (privateMessageSub) privateMessageSub.unsubscribe()
 
-    subscription = stompClient.value.subscribe(topic, (message) => {
-      console.log('[WebSocket] 📨 Message received:', message.body)
-      lastMessage.value = message.body
-      try {
-        const data = JSON.parse(message.body)
-        messageStore.addIncomingMessage(data)
-      } catch (err) {
-        console.error('[WebSocket] Error parsing message:', err)
-      }
-    })
-    console.log(`[WebSocket] ✅ Subscribed to ${topic}`)
+  privateMessageSub = stompClient.value.subscribe(topic, (message) => {
+    console.log('[WebSocket] 📨 Private message:', message.body)
+    lastMessage.value = message.body
+    try {
+      const data = JSON.parse(message.body)
+      messageStore.addIncomingMessage(data)
+    } catch (err) {
+      console.error('[WebSocket] Error parsing private message:', err)
+    }
+  })
+  console.log(`[WebSocket] ✅ Subscribed to ${topic}`)
+}
+
+const subscribeToApplicationNotification = () => {
+  const topic = '/user/queue/application.notifications'
+  if (!stompClient.value?.active) return
+  if (notificationSub) notificationSub.unsubscribe()
+
+  notificationSub = stompClient.value.subscribe(topic, (message) => {
+    console.log('[WebSocket] 📨 Notification:', message.body)
+    try {
+      const data = JSON.parse(message.body)
+      notificationStore.addIncomingNotification(data)
+    } catch (err) {
+      console.error('[WebSocket] Error parsing notification:', err)
+    }
+  })
+  console.log(`[WebSocket] ✅ Subscribed to ${topic}`)
+}
+
+const disconnect = () => {
+  if (reconnectTimeout) clearTimeout(reconnectTimeout)
+  if (stompClient.value?.active) {
+    manualDisconnect.value = true
+    privateMessageSub?.unsubscribe()
+    notificationSub?.unsubscribe()
+    stompClient.value.deactivate()
+    connected.value = false
+    console.log('[WebSocket] 🔌 Manual disconnect')
   }
+}
+
 
   const connect = async () => {
     if (connectionPromise) return connectionPromise
@@ -82,7 +113,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
           connectionPromise = null
           scheduleReconnect()
         },
-
+        onWebSocketClose: () => {
+          console.warn('[WebSocket] 🔌 WebSocket closed')
+          connected.value = false
+          connectionPromise = null
+          scheduleReconnect()
+        },
+        onWebSocketOpen: () => {
+          console.log('[WebSocket] ✅ WebSocket opened')
+          connected.value = true
+          connectionPromise = null
+        },
         onDisconnect: () => {
           connected.value = false
           connectionPromise = null
@@ -113,15 +154,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     reconnectTimeout = setTimeout(() => connect(), delay)
   }
 
-  const disconnect = () => {
-    if (stompClient.value?.active) {
-      manualDisconnect.value = true
-      if (subscription) subscription.unsubscribe()
-      stompClient.value.deactivate()
-      connected.value = false
-      console.log('[WebSocket] 🔌 Manual disconnect')
-    }
-  }
 
   const sendMessage = (destination, body) => {
     if (!connected.value || !stompClient.value?.active) {
@@ -131,24 +163,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     stompClient.value.publish({ destination, body: JSON.stringify(body) })
     console.log(`[WebSocket] 📤 Sent to ${destination}`)
   }
-
-  const subscribeToApplicationNotification = () => {
-    const topic = '/user/queue/application.notifications'
-    if (!stompClient.value?.active) return
-    if (subscription) subscription.unsubscribe()
-
-    subscription = stompClient.value.subscribe(topic, (message) => {
-      console.log('[WebSocket] 📨 Message received:', message.body)
-      try {
-        const data = JSON.parse(message.body)
-        notificationStore.addIncomingNotification(data)
-      } catch (err) {
-        console.error('[WebSocket] Error parsing message:', err)
-      }
-    })
-    console.log(`[WebSocket] ✅ Subscribed to ${topic}`)
-  }
-
 
 
   return { stompClient, connected, lastMessage, connect, disconnect, subscribeToApplicationNotification, sendMessage }
