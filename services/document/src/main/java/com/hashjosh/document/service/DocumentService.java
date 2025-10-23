@@ -3,9 +3,7 @@ package com.hashjosh.document.service;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.constant.document.dto.DownloadFile;
 import com.hashjosh.document.config.CustomUserDetails;
-import com.hashjosh.document.exception.DocumentNotFoundException;
-import com.hashjosh.document.exception.FileValidationException;
-import com.hashjosh.document.exception.MinioOperationException;
+import com.hashjosh.document.exception.ApiException;
 import com.hashjosh.document.mapper.DocumentMapper;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
@@ -13,11 +11,8 @@ import com.hashjosh.document.repository.DocumentRepository;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.http.Method;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -50,7 +45,7 @@ public class DocumentService {
             throws IOException, ServerException, InsufficientDataException,
             ErrorResponseException, NoSuchAlgorithmException,
             InvalidKeyException, InvalidResponseException,
-            XmlParserException, InternalException, FileValidationException {
+            XmlParserException, InternalException {
         
         // Validate the file before processing
         fileValidationService.validateFile(file);
@@ -85,10 +80,7 @@ public class DocumentService {
     public DownloadFile download(UUID documentId) {
         
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException(
-                        "Document not found with id: " + documentId,
-                        HttpStatus.NOT_FOUND.value()
-                        ));
+                .orElseThrow(() -> ApiException.notFound("Document not found with id: " + documentId));
 
         return new DownloadFile(
                 document.getFileName(),
@@ -100,10 +92,7 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public DocumentResponse getDocumentById(UUID documentId) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException(
-                        "Document not found with id: " + documentId,
-                        HttpStatus.NOT_FOUND.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Document not found with id: " + documentId));
         return documentMapper.toDocumentResponse(document);
     }
 
@@ -124,10 +113,7 @@ public class DocumentService {
     public void delete(UUID documentId) {
         try {
             Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new DocumentNotFoundException(
-                            "Document id "+documentId+ " not found!",
-                            HttpStatus.NOT_FOUND.value()
-                    ));
+                    .orElseThrow(() -> ApiException.notFound("Document not found with id: " + documentId));
 
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -139,8 +125,7 @@ public class DocumentService {
             documentRepository.delete(document);
         } catch (Exception e) {
             log.error("Failed to delete document", e);
-            throw new MinioOperationException("Failed to delete document from storage",
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(), e);
+            throw ApiException.internalError("Failed to delete document");
         }
     }
 
@@ -154,21 +139,14 @@ public class DocumentService {
             return stream.readAllBytes();
         } catch (Exception e) {
             log.error("Failed to get file from storage", e);
-            throw new MinioOperationException(
-                    "Failed to retrieve file from storage",
-                    HttpStatus.NON_AUTHORITATIVE_INFORMATION.value(),
-                    e
-            );
+            throw ApiException.internalError("Failed to get file from storage");
         }
     }
 
     public String generatePresignedUrl(UUID documentId, Method method) {
         try {
             Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new DocumentNotFoundException(
-                            "Document not found with id: " + documentId,
-                            HttpStatus.NOT_FOUND.value()
-                    ));
+                    .orElseThrow(() -> ApiException.notFound("Document not found with id: " + documentId));
 
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
@@ -180,11 +158,7 @@ public class DocumentService {
             );
         } catch (Exception e) {
             log.error("Failed to generate presigned URL", e);
-            throw new MinioOperationException(
-                    "Failed to generate presigned URL",
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    e
-            );
+            throw ApiException.internalError("Failed to generate presigned URL");
         }
     }
 
@@ -194,10 +168,7 @@ public class DocumentService {
             InvalidResponseException, XmlParserException, InternalException {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException(
-                        "Document not found with id: " + documentId,
-                        HttpStatus.NOT_FOUND.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Document not found with id: " + documentId));
 
         return generatePresignedUrl(document.getObjectKey(),expiryMinutes,Method.GET);
     }

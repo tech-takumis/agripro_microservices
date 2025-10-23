@@ -1,7 +1,7 @@
 package com.hashjosh.farmer.service;
 
 import com.hashjosh.farmer.dto.FarmerReponse;
-import com.hashjosh.farmer.exception.FarmerNotFoundException;
+import com.hashjosh.farmer.exception.ApiException;
 import com.hashjosh.farmer.mapper.FarmerMapper;
 import com.hashjosh.farmer.repository.FarmerRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class FarmerService {
         return farmerMapper.toFarmerResponse(
                 farmerRepository.findById(farmerId)
                         .orElseThrow(() ->
-                                new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value()))
+                                ApiException.notFound("Farmer with id %s not found".formatted(farmerId)))
         );
     }
 

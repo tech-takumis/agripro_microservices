@@ -3,7 +3,7 @@ package com.hashjosh.rsbsa.service;
 import com.hashjosh.rsbsa.dto.RsbsaRequestDto;
 import com.hashjosh.rsbsa.dto.RsbsaResponseDto;
 import com.hashjosh.rsbsa.entity.Rsbsa;
-import com.hashjosh.rsbsa.exception.RsbsaNotFoundException;
+import com.hashjosh.rsbsa.exception.ApiException;
 import com.hashjosh.rsbsa.mapper.RsbsaMapper;
 import com.hashjosh.rsbsa.repository.RsbsaRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,10 +41,8 @@ public class RsbsaService {
         Optional<Rsbsa> rsbsaOptional = repository.findByRsbsaIdEqualsIgnoreCase(rsbaId);
 
         if(rsbsaOptional.isEmpty()){
-            throw new RsbsaNotFoundException(
-                    "Rsbsa with id " + rsbaId + " not found",
-                    HttpStatus.NOT_FOUND.value(),
-                    request.getRequestURI()
+            throw ApiException.notFound(
+                    "RSBSA with ID " + rsbaId + " not found"
             );
         }
         return mapper.rsbsaToReponseDto(

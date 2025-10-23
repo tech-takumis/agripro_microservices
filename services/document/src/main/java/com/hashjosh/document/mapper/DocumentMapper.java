@@ -2,12 +2,11 @@ package com.hashjosh.document.mapper;
 
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.document.config.CustomUserDetails;
-import com.hashjosh.document.exception.MinioOperationException;
+import com.hashjosh.document.exception.ApiException;
 import com.hashjosh.document.model.Document;
 import com.hashjosh.document.properties.MinioProperties;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
-import io.minio.errors.*;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +39,7 @@ public class DocumentMapper {
                     .build();
         } catch (Exception e) {
             log.error("Failed to generate document response", e);
-            throw new MinioOperationException("Failed to generate presigned URL", HttpStatus.INTERNAL_SERVER_ERROR.value(), e);
+            throw ApiException.internalError("Failed to generate document response");
         }
     }
 
@@ -83,7 +79,7 @@ public class DocumentMapper {
             return presigned;
         } catch (Exception e) {
             log.error("Failed to generate presigned URL", e);
-            throw new MinioOperationException("Failed to generate presigned URL", HttpStatus.INTERNAL_SERVER_ERROR.value(), e);
+            throw ApiException.internalError("Failed to generate presigned URL");
         }
     }
 }

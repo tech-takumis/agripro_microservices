@@ -1,14 +1,12 @@
 package com.hashjosh.document.controller;
 
 import com.hashjosh.constant.document.dto.DocumentResponse;
-import com.hashjosh.document.exception.FileValidationException;
 import com.hashjosh.document.service.DocumentService;
-import io.minio.errors.*;
 import io.minio.http.Method;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,9 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +36,7 @@ public class DocumentController {
 
             DocumentResponse document = documentService.upload(file);
             return ResponseEntity.status(HttpStatus.CREATED).body(document);
-        } catch (FileValidationException e) {
+        } catch (FileUploadException e) {
             return ResponseEntity.badRequest()
                     .body(DocumentResponse.builder()
                             .fileName(file.getOriginalFilename())
