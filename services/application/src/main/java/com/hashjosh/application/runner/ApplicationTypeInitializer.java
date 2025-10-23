@@ -10,6 +10,7 @@ import com.hashjosh.application.model.ApplicationSection;
 import com.hashjosh.application.model.ApplicationType;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
+import com.hashjosh.constant.application.RecipientType;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         ApplicationType cropInsurance = ApplicationType.builder()
                 .name("Crop Insurance Application")
                 .description("Application form for insuring rice or corn crops")
+                .recipientType(RecipientType.AGRICULTURE)
                 .layout("form")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -137,28 +139,6 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
 //        coverageFields.add(createField("cltip_adss_premium", "CLTIP-ADSS Premium", FieldType.NUMBER, false, null, coverageSection));
         coverageSection.setFields(coverageFields);
 
-        // Section D: For PCIC Use
-//        ApplicationSection pcicUseSection = ApplicationSection.builder()
-//                .title("For PCIC Use")
-//                .applicationType(cropInsurance)
-//                .createdAt(LocalDateTime.now())
-//                .updatedAt(LocalDateTime.now())
-//                .fields(new ArrayList<>())
-//                .build();
-//        cropInsuranceSections.add(pcicUseSection);
-
-        // Fields for For PCIC Use
-//        List<ApplicationField> pcicUseFields = new ArrayList<>();
-//        pcicUseFields.add(createField("phase_rice", "Phase (Rice)", FieldType.SELECT, false, createChoices(new String[]{"Wet", "Dry"}), pcicUseSection));
-//        pcicUseFields.add(createField("phase_corn", "Phase (Corn)", FieldType.SELECT, false, createChoices(new String[]{"A", "B"}), pcicUseSection));
-//        pcicUseFields.add(createField("cic_no", "CIC No.", FieldType.TEXT, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("cic_date_issued", "CIC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("coc_no", "COC No.", FieldType.TEXT, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("coc_date_issued", "COC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("period_of_cover_from", "Period of Cover From", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("period_of_cover_to", "Period of Cover To", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseSection.setFields(pcicUseFields);
-
         // Section II: Certification
         ApplicationSection certificationSection = ApplicationSection.builder()
                 .title("Certification")
@@ -183,6 +163,7 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         ApplicationType claimIndemnity = ApplicationType.builder()
                 .name("Claim for Indemnity")
                 .description("Claim form for indemnity of insured high-value crops")
+                .recipientType(RecipientType.PCIC)
                 .layout("form")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

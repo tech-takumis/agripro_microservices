@@ -25,12 +25,12 @@ token:
 
 trusted:
   internal-service-ids:
-    - agriculture-service
+    - user-service
     - notification-service
     - communication-service
-    - farmer-service
+    - transaction-service
+    - schedule-service
     - application-service
-    - pcic-service
     - document-service
     - rsbsa-service
     - program-service

@@ -8,14 +8,13 @@ import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.model.Document;
+import com.hashjosh.constant.document.dto.DocumentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -27,13 +26,13 @@ public class ApplicationMapper {
         ApplicationResponseDto dto = new ApplicationResponseDto();
         dto.setId(entity.getId());
         dto.setApplicationTypeId(entity.getApplicationType().getId());
-        dto.setUserId(entity.getUserId());
+        dto.setUserId(entity.getUploadedBy());
         dto.setSubmittedAt(entity.getSubmittedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setVersion(entity.getVersion());
 
         List<String> generatedUrl = new ArrayList<>();
-        entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document,30)));
+        entity.getDocumentsUploaded().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document.getDocumentId(),30)) );
         dto.setFileUploads(generatedUrl);
         // map JsonNode into typed DTO
         if (entity.getDynamicFields() != null) {
@@ -49,16 +48,23 @@ public class ApplicationMapper {
     }
 
 
-    public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, String userId) {
+    public Application toEntity(ApplicationSubmissionDto submission, ApplicationType type, Set<Document> documents) {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode dynamicFieldsNode = objectMapper.valueToTree(submission.getFieldValues());
 
         return Application.builder()
                 .applicationType(type)
-                .userId(UUID.fromString(userId))
-                .documentId(submission.getDocumentIds())
+                .uploadedBy(submission.getUploadedBy())
+                .documentsUploaded(documents)
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
                 .submittedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public Document toDocumentEntity(DocumentResponse response) {
+        return Document.builder()
+                .uploadedBy(response.getUploadedBy())
+                .documentId(response.getDocumentId())
                 .build();
     }
 }

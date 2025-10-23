@@ -38,27 +38,12 @@ public class GatewaySecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // ✅ Auth routes
                         .pathMatchers(
-                                // Farmer
-                                "/api/v1/farmer/auth/login",
-                                "/api/v1/farmer/auth/registration",
-                                // Agriculture
-                                "/api/v1/agriculture/auth/login",
-                                "/api/v1/agriculture/auth/registration",
-                                // Pcic
-                                "/api/v1/pcic/auth/login",
-                                "/api/v1/pcic/auth/registration",
-                                "/ws/**"
+                                "/api/v1/users/auth/login",
+                                "/api/v1/users/auth/registration"
                         ).permitAll()
                         .pathMatchers(
-                                // Farmer
-                                "/api/v1/farmer/auth/me",
-                                "/api/v1/farmer/auth/logout",
-                                // Agriculture
-                                "/api/v1/agriculture/auth/me",
-                                "/api/v1/agriculture/auth/logout",
-                                // PCIC
-                                "/api/v1/pcic/auth/me",
-                                "/api/v1/pcic/auth/logout").authenticated()
+                                "/api/v1/users/auth/me",
+                                "/api/v1/users/auth/logout").authenticated()
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )

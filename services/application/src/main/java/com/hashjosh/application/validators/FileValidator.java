@@ -91,14 +91,5 @@ public class FileValidator implements ValidatorStrategy {
 
         return errors;
     }
-    
-    private String getCurrentToken() {
-        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .map(Authentication::getPrincipal)
-                .filter(principal -> principal instanceof CustomUserDetails)
-                .map(CustomUserDetails.class::cast)
-                .map(CustomUserDetails::getToken)
-                .orElseThrow(() -> new SecurityException("No authentication token found in security context"));
-    }
 }
 

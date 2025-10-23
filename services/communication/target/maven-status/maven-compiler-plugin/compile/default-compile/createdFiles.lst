@@ -6,7 +6,6 @@ com\hashjosh\communication\controller\PostController.class
 com\hashjosh\communication\client\AgricultureClient.class
 com\hashjosh\communication\handle\GlobalExceptionHandler.class
 com\hashjosh\communication\entity\Message$MessageBuilder.class
-com\hashjosh\communication\service\MessageService.class
 com\hashjosh\communication\config\RestClientConfig.class
 com\hashjosh\communication\entity\Attachment.class
 com\hashjosh\communication\client\DocumentClient.class
