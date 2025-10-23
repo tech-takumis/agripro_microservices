@@ -1,262 +1,301 @@
 <template>
-    <AuthenticatedLayout
-        :navigation="navigation"
-        role-title="Municipal Agriculturist"
-        page-title="Messages">
-        <template #header>
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-semibold text-gray-900">Messages</h1>
-            </div>
-        </template>
+  <AuthenticatedLayout
+    :navigation="navigation"
+    role-title="Municipal Agriculturist"
+    page-title="Messages"
+  >
+    <template #header>
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-semibold text-gray-900">Messages</h1>
+      </div>
+    </template>
 
-        <!-- Container with responsive classes -->
+    <!-- 💬 Main Container -->
+    <div
+      class="flex flex-col md:flex-row bg-white rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-10rem)] border border-gray-100"
+    >
+      <!-- 💭 Chat Interface -->
+      <div
+        class="flex-1 flex flex-col min-w-0 order-2 md:order-1 transition-all duration-300"
+        :class="{ 'hidden md:flex': !selectedFarmer && isMobile }"
+      >
+        <!-- 🌤️ Empty State -->
         <div
-            class="flex flex-col md:flex-row bg-white rounded-lg shadow h-[calc(100vh-12rem)]">
-            <!-- Left Side - Chat Interface with responsive width -->
-            <div
-                class="flex-1 flex flex-col min-w-0 order-2 md:order-1"
-                :class="{ 'hidden md:flex': !selectedFarmer && isMobile }">
-                <!-- Empty State -->
-                <div
-                    v-if="!selectedFarmer"
-                    class="flex-1 flex items-center justify-center bg-gray-50">
-                    <div class="text-center">
-                        <User class="h-20 w-20 text-gray-300 mx-auto mb-4" />
-                        <h3 class="text-xl font-medium text-gray-900 mb-2">
-                            No conversation selected
-                        </h3>
-                        <p class="text-gray-500">
-                            Choose a farmer from the list to start messaging
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Chat Interface -->
-                <template v-else>
-                    <!-- Chat Header with back button for mobile -->
-                    <div
-                        class="bg-white border-b border-gray-200 p-4 md:p-6 flex items-center gap-4">
-                        <button
-                            v-if="isMobile"
-                            @click="backToList"
-                            class="p-1 mr-2 rounded-full hover:bg-gray-100">
-                            <ChevronLeft class="h-6 w-6 text-gray-600" />
-                        </button>
-                        <div
-                            class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium text-lg">
-                            {{ getInitials(selectedFarmer) }}
-                        </div>
-                        <div>
-                            <h3
-                                class="text-base md:text-lg font-semibold text-gray-900">
-                                {{ selectedFarmerName }}
-                            </h3>
-                            <p class="text-xs md:text-sm text-gray-500">
-                                {{ selectedFarmer.email || 'No email' }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Messages Container with increased height -->
-                    <div
-                        ref="messagesContainer"
-                        class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50">
-                        <div
-                            v-if="messages.length === 0"
-                            class="text-center text-gray-500 mt-8">
-                            No messages yet. Start the conversation!
-                        </div>
-
-                        <div
-                            v-for="message in messages"
-                            :key="message.id"
-                            :class="[
-                                'flex',
-                                message.isOwn ? 'justify-end' : 'justify-start',
-                            ]">
-                            <div
-                                :class="[
-                                    'max-w-[80%] md:max-w-xl px-4 md:px-6 py-2 md:py-3 rounded-lg',
-                                    message.isOwn
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-white text-gray-900 border border-gray-200',
-                                ]">
-                                <p class="text-sm md:text-base">
-                                    {{ message.text }}
-                                </p>
-                                <!-- Display message attachments -->
-                                <div
-                                    v-if="message.attachments && message.attachments.length > 0"
-                                    class="mt-2 flex flex-wrap gap-2">
-                                    <div
-                                        v-for="(attachment, index) in message.attachments"
-                                        :key="attachment.documentId"
-                                        @click="openAttachment(attachment.url)"
-                                        class="h-24 w-24 flex items-center justify-center bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors">
-                                        <img
-                                            v-if="attachment.url"
-                                            :src="attachment.url"
-                                            class="h-24 w-24 object-cover rounded"
-                                            :alt="'Attachment ' + (index + 1)"
-                                        />
-                                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <p
-                                    :class="[
-                                        'text-xs mt-1',
-                                        message.isOwn
-                                            ? 'text-blue-100'
-                                            : 'text-gray-500',
-                                    ]">
-                                    {{ formatTime(message.timestamp) }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- File Preview Section -->
-                    <div v-if="localFiles.length > 0" class="bg-gray-50 border-t border-gray-200 px-3 md:px-6 py-3">
-                        <div class="flex flex-wrap gap-2">
-                            <div
-                                v-for="(file, index) in localFiles"
-                                :key="index"
-                                class="group relative flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 hover:border-gray-300 transition-colors"
-                            >
-                                <img
-                                    v-if="file.preview"
-                                    :src="file.preview"
-                                    class="h-8 w-8 object-cover rounded"
-                                    :alt="file.name"
-                                />
-                                <Paperclip v-else class="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <span class="text-sm text-gray-700 truncate max-w-[150px] md:max-w-[200px]">
-                                    {{ file.name }}
-                                </span>
-                                <button
-                                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                                    type="button"
-                                    @click="removeFile(index)"
-                                >
-                                    <X class="h-4 w-4 text-gray-500" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Message Input with file upload -->
-                    <div class="bg-white border-t border-gray-200 p-3 md:p-6">
-                        <form
-                            @submit.prevent="sendChatMessage"
-                            class="flex gap-2 md:gap-3">
-                            <!-- File Upload Button -->
-                            <label
-                                class="flex-shrink-0 px-3 md:px-4 py-2 md:py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer flex items-center justify-center">
-                                <Paperclip class="h-5 w-5 md:h-6 md:w-6" />
-                                <input
-                                    ref="fileInput"
-                                    type="file"
-                                    multiple
-                                    accept="image/*,.pdf,.doc,.docx,.txt"
-                                    class="hidden"
-                                    @change="handleFileSelect" />
-                            </label>
-
-                            <!-- Message Input -->
-                            <input
-                                v-model="messageInput"
-                                type="text"
-                                placeholder="Type a message..."
-                                class="flex-1 px-4 md:px-6 py-2 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-
-                            <!-- Send Button -->
-                            <button
-                                type="submit"
-                                :disabled="isSendDisabled"
-                                class="flex-shrink-0 px-4 md:px-6 py-2 md:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-                            >
-                                <Send class="h-5 w-5 md:h-6 md:w-6" />
-                                <span v-if="isUploading" class="ml-2">Uploading...</span>
-                            </button>
-                        </form>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Right Sidebar - Farmer List with responsive width -->
-            <div
-                class="border-b md:border-l md:border-b-0 border-gray-200 flex flex-col order-1 md:order-2 md:w-80 lg:w-96"
-                :class="{ 'hidden md:flex': selectedFarmer && isMobile }">
-                <!-- Search Header -->
-                <div class="p-4 md:p-6 border-b border-gray-200">
-                    <div class="relative">
-                        <Search
-                            class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-gray-400" />
-                        <input
-                            v-model="searchQuery"
-                            type="text"
-                            placeholder="Search farmers..."
-                            class="w-full pl-9 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                    </div>
-                </div>
-
-                <!-- Farmer List with responsive items -->
-                <div class="flex-1 overflow-y-auto">
-                    <div
-                        v-if="farmerStore.isLoading"
-                        class="p-4 md:p-6 text-center text-gray-500">
-                        Loading farmers...
-                    </div>
-                    <div
-                        v-else-if="filteredFarmers.length === 0"
-                        class="p-4 md:p-6 text-center text-gray-500">
-                        No farmers found
-                    </div>
-                    <div v-else>
-                        <button
-                            v-for="farmer in filteredFarmers"
-                            :key="farmer.id"
-                            @click="selectFarmer(farmer)"
-                            :class="[
-                                'w-full p-4 md:p-6 flex items-center gap-3 md:gap-4 hover:bg-gray-50 transition-colors border-b border-gray-100',
-                                selectedFarmer?.id === farmer.id
-                                    ? 'bg-blue-50'
-                                    : '',
-                            ]">
-                            <!-- Avatar -->
-                            <div
-                                class="flex-shrink-0 w-10 h-10 md:w-14 md:h-14 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium text-base md:text-lg">
-                                {{ getInitials(farmer) }}
-                            </div>
-
-                            <!-- Farmer Info -->
-                            <div class="flex-1 text-left min-w-0">
-                                <p
-                                    class="font-medium text-base md:text-lg text-gray-900 truncate">
-                                    {{ farmer.firstName }} {{ farmer.lastName }}
-                                </p>
-                                <p
-                                    class="text-xs md:text-sm text-gray-500 truncate">
-                                    {{ farmer.username || 'No RSBSA' }}
-                                </p>
-                                <p
-                                    class="text-xs md:text-sm text-gray-500 truncate">
-                                    {{ farmer.email || 'No email' }}
-                                </p>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
+          v-if="!selectedFarmer"
+          class="flex-1 flex items-center justify-center bg-gray-50"
+        >
+          <div class="text-center space-y-3">
+            <User class="h-20 w-20 text-gray-300 mx-auto" />
+            <h3 class="text-xl font-medium text-gray-900">
+              No conversation selected
+            </h3>
+            <p class="text-gray-500 text-sm">
+              Choose a farmer from the list to start messaging
+            </p>
+          </div>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- 🧑‍🌾 Chat Section -->
+        <template v-else>
+          <!-- Header -->
+          <div
+            class="bg-white border-b border-gray-200 p-4 md:p-5 flex items-center gap-4 sticky top-0 z-10 shadow-sm"
+          >
+            <button
+              v-if="isMobile"
+              @click="backToList"
+              class="p-2 rounded-full hover:bg-gray-100 transition"
+            >
+              <ChevronLeft class="h-6 w-6 text-gray-600" />
+            </button>
+
+            <!-- Avatar + Online Status -->
+            <div class="relative">
+              <div
+                class="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-medium text-lg"
+              >
+                {{ getInitials(selectedFarmer) }}
+              </div>
+              <span
+                class="absolute bottom-0 right-0 block w-3 h-3 bg-green-400 border-2 border-white rounded-full"
+                title="Online"
+              ></span>
+            </div>
+
+            <!-- Farmer Info -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+                {{ selectedFarmerName }}
+              </h3>
+              <p class="text-xs text-gray-500 flex items-center gap-1">
+                <Mail class="h-3.5 w-3.5 text-gray-400" />
+                {{ selectedFarmer.email || "No email" }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div
+            ref="messagesContainer"
+            class="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50 scroll-smooth"
+          >
+            <div
+              v-if="messages.length === 0"
+              class="text-center text-gray-500 mt-8"
+            >
+              No messages yet. Start the conversation!
+            </div>
+
+            <!-- 💬 Message Bubbles -->
+            <div
+              v-for="message in messages"
+              :key="message.id"
+              :class="[
+                'flex',
+                message.isOwn ? 'justify-end' : 'justify-start',
+              ]"
+            >
+              <div
+                :class="[
+                  'max-w-[80%] md:max-w-xl px-4 py-3 rounded-2xl shadow-sm transition-all duration-200',
+                  message.isOwn
+                    ? 'bg-green-600 text-white rounded-br-none'
+                    : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
+                ]"
+              >
+                <p class="text-sm leading-relaxed">{{ message.text }}</p>
+
+                <!-- Attachments -->
+                <div
+                  v-if="message.attachments?.length"
+                  class="mt-2 flex flex-wrap gap-2"
+                >
+                  <div
+                    v-for="(attachment, index) in message.attachments"
+                    :key="attachment.documentId"
+                    @click="openAttachment(attachment.url)"
+                    class="h-24 w-24 bg-gray-100 hover:bg-gray-200 flex items-center justify-center rounded-lg cursor-pointer transition"
+                  >
+                    <img
+                      v-if="attachment.url"
+                      :src="attachment.url"
+                      class="h-full w-full object-cover rounded-lg"
+                      :alt="'Attachment ' + (index + 1)"
+                    />
+                    <Paperclip v-else class="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+
+                <p
+                  :class="[
+                    'text-xs mt-1',
+                    message.isOwn ? 'text-green-100' : 'text-gray-500',
+                  ]"
+                >
+                  {{ formatTime(message.timestamp) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🧾 File Preview -->
+          <div
+            v-if="localFiles.length > 0"
+            class="bg-gray-50 border-t border-gray-200 px-4 py-3"
+          >
+            <div class="flex flex-wrap gap-2">
+              <div
+                v-for="(file, index) in localFiles"
+                :key="index"
+                class="group relative flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 hover:border-green-400 transition"
+              >
+                <img
+                  v-if="file.preview"
+                  :src="file.preview"
+                  class="h-8 w-8 object-cover rounded"
+                  :alt="file.name"
+                />
+                <Paperclip
+                  v-else
+                  class="h-4 w-4 text-gray-400 flex-shrink-0"
+                />
+                <span
+                  class="text-sm text-gray-700 truncate max-w-[150px] md:max-w-[200px]"
+                >
+                  {{ file.name }}
+                </span>
+                <button
+                  class="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+                  type="button"
+                  @click="removeFile(index)"
+                >
+                  <X class="h-4 w-4 text-gray-500" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✉️ Input Section -->
+          <div class="bg-white border-t border-gray-200 p-4 md:p-5">
+            <form @submit.prevent="sendChatMessage" class="flex gap-3">
+              <!-- File Upload -->
+              <label
+                class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-500 transition cursor-pointer flex items-center justify-center"
+              >
+                <Paperclip class="h-5 w-5" />
+                <input
+                  ref="fileInput"
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                  class="hidden"
+                  @change="handleFileSelect"
+                />
+              </label>
+
+              <!-- Input Field -->
+              <input
+                v-model="messageInput"
+                type="text"
+                placeholder="Type a message..."
+                class="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+              />
+
+              <!-- Send Button -->
+              <button
+                type="submit"
+                :disabled="isSendDisabled"
+                class="px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center transition"
+              >
+                <Send class="h-5 w-5" />
+              </button>
+            </form>
+          </div>
+        </template>
+      </div>
+
+      <!-- 👨‍🌾 Farmer List Sidebar -->
+      <div
+        class="border-b md:border-l md:border-b-0 border-gray-200 flex flex-col order-1 md:order-2 md:w-80 lg:w-96 bg-gray-50"
+        :class="{ 'hidden md:flex': selectedFarmer && isMobile }"
+      >
+        <!-- Search Bar -->
+        <div
+          class="p-4 md:p-6 border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm"
+        >
+          <div class="relative">
+            <Search
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+            />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search farmers..."
+              class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+            />
+          </div>
+        </div>
+
+        <!-- Farmer List -->
+        <div class="flex-1 overflow-y-auto">
+          <div
+            v-if="farmerStore.isLoading"
+            class="p-4 text-center text-gray-500"
+          >
+            Loading farmers...
+          </div>
+          <div
+            v-else-if="filteredFarmers.length === 0"
+            class="p-4 text-center text-gray-500"
+          >
+            No farmers found
+          </div>
+          <div v-else>
+            <button
+              v-for="farmer in filteredFarmers"
+              :key="farmer.id"
+              @click="selectFarmer(farmer)"
+              :class="[
+                'w-full p-4 flex items-center gap-4 hover:bg-gray-100 transition border-b border-gray-100 text-left',
+                selectedFarmer?.id === farmer.id ? 'bg-green-100' : '',
+              ]"
+            >
+              <!-- Avatar + Online Dot -->
+              <div class="relative">
+                <div
+                  class="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-medium text-lg"
+                >
+                  {{ getInitials(farmer) }}
+                </div>
+                <span
+                  class="absolute bottom-0 right-0 block w-3 h-3 bg-green-400 border-2 border-white rounded-full"
+                  title="Online"
+                ></span>
+              </div>
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 truncate">
+                  {{ farmer.firstName }} {{ farmer.lastName }}
+                </p>
+                <p class="text-xs text-gray-500 truncate">
+                  {{ farmer.username || "No RSBSA" }}
+                </p>
+                <p class="text-xs text-gray-500 truncate">
+                  {{ farmer.email || "No email" }}
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </AuthenticatedLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { Search, Send, User, ChevronLeft, Paperclip, X } from 'lucide-vue-next'
+import { Search, Send, User, ChevronLeft, Paperclip, X, Mail } from 'lucide-vue-next'
 import { useFarmerStore } from '@/stores/farmer'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'

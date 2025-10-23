@@ -24,7 +24,7 @@
   </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+    <nav class="flex-1 px-1 py-5 space-y-2 overflow-y-auto">
       <template v-for="item in filteredNavigation" :key="item.title">
         <!-- Single Navigation Item -->
         <router-link

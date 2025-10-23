@@ -1,124 +1,153 @@
 <template>
-    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-        <!-- Create Post Section -->
-        <div class="mb-6">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="p-2 bg-blue-50 rounded-lg">
-                    <FileText class="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 class="text-lg font-semibold text-blue-700">Posts</h3>
-            </div>
-
-            <!-- Post Creation Input -->
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <!-- Title Input -->
-                <input
-                    v-model="newTitle"
-                    placeholder="Title"
-                    class="w-full mb-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                />
-
-                <textarea
-                    v-model="newPostContent"
-                    placeholder="Share your thoughts or updates..."
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows="3"
-                ></textarea>
-
-                <div class="mt-3 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <label class="flex items-center cursor-pointer">
-                            <input
-                                type="file"
-                                accept="image/*,video/*"
-                                class="hidden"
-                                multiple
-                                @change="handleFileUpload"
-                            />
-                            <Paperclip class="h-5 w-5 text-gray-600 hover:text-blue-600" />
-                        </label>
-                        <!-- Show all selected files -->
-                        <span v-if="selectedFile.length" class="text-xs text-gray-600">
-                            <template v-for="file in selectedFile" :key="file.name">{{ file.name }} </template>
-                        </span>
-                    </div>
-                    <button
-                        class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        :disabled="!newPostContent.trim() || !newTitle.trim() || creatingPost"
-                        @click="onCreatePost"
-                    >
-                        <span v-if="!creatingPost">Post</span>
-                        <span v-else class="flex items-center space-x-2">
-                            <Loader2 class="h-4 w-4 animate-spin" />
-                            <span>Posting...</span>
-                        </span>
-                    </button>
-                </div>
-            </div>
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6">
+    <!-- ✏️ Create Post Section -->
+    <div class="space-y-4">
+      <!-- Header -->
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-green-50 rounded-xl">
+          <FileText class="h-6 w-6 text-green-600" />
         </div>
+        <h3 class="text-lg font-semibold text-green-700">Create a Post</h3>
+      </div>
 
-        <!-- Posts List -->
-        <div class="space-y-4">
-            <div
-                v-for="post in posts"
-                :key="post.id"
-                class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition"
+      <!-- 🧾 Post Input Card -->
+      <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm">
+        <!-- Title -->
+        <input
+          v-model="newTitle"
+          placeholder="Post title..."
+          class="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm transition-all"
+        />
+
+        <!-- Post Text -->
+        <textarea
+          v-model="newPostContent"
+          placeholder="Share your thoughts..."
+          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm resize-none transition-all"
+          rows="3"
+        ></textarea>
+
+        <!-- Attach + Post Button -->
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="file"
+                accept="image/*,video/*"
+                class="hidden"
+                multiple
+                @change="handleFileUpload"
+              />
+              <div
+                class="flex items-center justify-center w-9 h-9 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition"
+              >
+                <Paperclip class="h-5 w-5 text-gray-600 hover:text-green-600" />
+              </div>
+            </label>
+
+            <!-- Show selected files -->
+            <span
+              v-if="selectedFile.length"
+              class="text-xs text-gray-600 truncate max-w-[180px]"
             >
-                <div class="flex items-start justify-between mb-2">
-                    <div class="flex items-center space-x-3">
-                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User class="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-900">{{ post.authorName || 'Anonymous' }}</p>
-                            <p class="text-xs text-gray-500">{{ formatDate(post.createdAt) }}</p>
-                        </div>
-                    </div>
-                    <MoreVertical class="h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-                </div>
+              <template v-for="file in selectedFile" :key="file.name">{{ file.name }} </template>
+            </span>
+          </div>
 
-                <p class="text-gray-700 text-sm mb-3">{{ post.content }}</p>
-
-                <div v-if="post.image" class="mb-3 rounded-lg overflow-hidden">
-                    <img :src="post.image" :alt="post.content" class="w-full h-48 object-cover" />
-                </div>
-
-                <div class="flex items-center justify-between text-xs text-gray-600 pt-3 border-t border-gray-100">
-                    <button class="flex items-center space-x-1 hover:text-blue-600">
-                        <Heart class="h-4 w-4" />
-                        <span>{{ post.likes || 0 }}</span>
-                    </button>
-                    <button class="flex items-center space-x-1 hover:text-blue-600">
-                        <MessageCircle class="h-4 w-4" />
-                        <span>{{ post.comments || 0 }}</span>
-                    </button>
-                    <button class="flex items-center space-x-1 hover:text-blue-600">
-                        <Share2 class="h-4 w-4" />
-                        <span>Share</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Loading Trigger for Infinite Scroll -->
-            <div
-                v-if="hasMore"
-                ref="loadTrigger"
-                class="load-trigger py-4 text-center"
-            >
-                <div v-if="loading" class="flex items-center justify-center space-x-2">
-                    <Loader2 class="h-5 w-5 animate-spin text-blue-600" />
-                    <span class="text-sm text-gray-600">Loading more posts...</span>
-                </div>
-            </div>
-
-            <!-- Empty State -->
-            <div v-if="posts.length === 0 && !loading" class="text-center py-8">
-                <FileText class="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p class="text-gray-500">No posts yet. Be the first to share!</p>
-            </div>
+          <button
+            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
+            :disabled="!newPostContent.trim() || !newTitle.trim() || creatingPost"
+            @click="onCreatePost"
+          >
+            <span v-if="!creatingPost">Post</span>
+            <span v-else class="flex items-center gap-2">
+              <Loader2 class="h-4 w-4 animate-spin" />
+              <span>Posting...</span>
+            </span>
+          </button>
         </div>
+      </div>
     </div>
+
+    <!-- 📜 Posts Feed -->
+    <div class="space-y-5">
+      <div
+        v-for="post in posts"
+        :key="post.id"
+        class="border border-gray-200 bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200"
+      >
+        <!-- 🧑 Author Header -->
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div
+              class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center"
+            >
+              <User class="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900">
+                {{ post.authorName || 'Anonymous' }}
+              </p>
+              <p class="text-xs text-gray-500">{{ formatDate(post.createdAt) }}</p>
+            </div>
+          </div>
+          <MoreVertical class="h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+        </div>
+
+        <!-- 📝 Post Content -->
+        <p class="text-gray-700 text-sm mb-3 leading-relaxed">
+          {{ post.content }}
+        </p>
+
+        <!-- 🖼️ Image (if any) -->
+        <div v-if="post.image" class="mb-3 rounded-lg overflow-hidden">
+          <img
+            :src="post.image"
+            :alt="post.content"
+            class="w-full h-56 object-cover rounded-lg border border-gray-100"
+          />
+        </div>
+
+        <!-- ❤️ Reactions -->
+        <div class="flex items-center justify-between text-xs text-gray-600 pt-3 border-t border-gray-100">
+          <button class="flex items-center space-x-1 hover:text-green-600 transition">
+            <Heart class="h-4 w-4" />
+            <span>{{ post.likes || 0 }}</span>
+          </button>
+          <button class="flex items-center space-x-1 hover:text-green-600 transition">
+            <MessageCircle class="h-4 w-4" />
+            <span>{{ post.comments || 0 }}</span>
+          </button>
+          <button class="flex items-center space-x-1 hover:text-green-600 transition">
+            <Share2 class="h-4 w-4" />
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔄 Infinite Scroll Loader -->
+      <div v-if="hasMore" ref="loadTrigger" class="text-center py-4">
+        <div
+          v-if="loading"
+          class="flex items-center justify-center gap-2 text-gray-600"
+        >
+          <Loader2 class="h-5 w-5 animate-spin text-green-600" />
+          <span class="text-sm">Loading more posts...</span>
+        </div>
+      </div>
+
+      <!-- 🚫 Empty State -->
+      <div
+        v-if="posts.length === 0 && !loading"
+        class="text-center py-10 text-gray-500"
+      >
+        <FileText class="h-12 w-12 text-gray-300 mx-auto mb-3" />
+        <p>No posts yet — be the first to share!</p>
+      </div>
+    </div>
+  </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
