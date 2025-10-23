@@ -1,6 +1,5 @@
 package com.hashjosh.realtimegatewayservice.exception;
 
-import com.hashjosh.realtimegatewayservice.dto.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

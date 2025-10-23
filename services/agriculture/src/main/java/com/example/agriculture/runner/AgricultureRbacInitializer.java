@@ -65,7 +65,7 @@ public class AgricultureRbacInitializer implements CommandLineRunner {
 
             // Define roles
             List<Role> roles = Arrays.asList(
-                    new Role(null, "Municipal Agriculturists", slug.toSlug("Municipal Agriculturists"),"/municipal-agriculturist/dashboard", new HashSet<>(Arrays.asList(
+                    new Role(null, "Municipal Agriculturists", slug.toSlug("Municipal Agriculturists"),"/agriculturist/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_PROCESS_CLAIM"),
                             permMap.get("CAN_SUBMIT_CROP_DATA"),

@@ -1,6 +1,5 @@
 package com.hashjosh.realtimegatewayservice.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract;
 import com.hashjosh.realtimegatewayservice.entity.Notification;
 import com.hashjosh.realtimegatewayservice.exception.ApiException;
@@ -46,10 +45,9 @@ public class FarmerRegistrationNotificationService {
 
             // Create and save notification
             Notification notification = NotificationUtils.createEmailNotification(
-                    recipientEmail,
+                   contract.getUsername(),
                     subject,
-                    emailContent,
-                    null
+                    "Welcome to the platform"
             );
 
             // Send email
@@ -63,7 +61,6 @@ public class FarmerRegistrationNotificationService {
 
         } catch (Exception e) {
             log.error("❌ Failed to send registration email notification to: {}", contract.getEmail(), e);
-            emailService.saveFailedNotification(contract.getEmail(),"Failed: User Registration Notification", contract.getUserId(),"Failed to send registration email: " + e.getMessage());
             throw ApiException.badRequest("Failed to send registration email notification");
         }
     }

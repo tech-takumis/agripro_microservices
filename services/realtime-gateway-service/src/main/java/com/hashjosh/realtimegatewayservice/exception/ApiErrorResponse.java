@@ -1,4 +1,4 @@
-package com.hashjosh.realtimegatewayservice.dto;
+package com.hashjosh.realtimegatewayservice.exception;
 
 import lombok.*;
 
