@@ -2,7 +2,7 @@
     <AuthenticatedLayout :navigation="navigation" role-title="Municipal Agriculturist" :page-title="'Municipal Dashboard'">
         <!-- Navbar -->
         <nav class="w-full bg-transparent border-0 shadow-none px-6 py-3 mb-6 flex items-center justify-between">
-            <h4 class="text-3xl font-bold text-black-700">Dzashboard</h4>
+            <h4 class="text-3xl font-bold text-black-700">Dashboard</h4>
             <!-- Right Side: Notifications + Profile -->
             <div class="flex items-center space-x-6">
 
@@ -21,102 +21,164 @@
             </span>
                     </button>
 
-                    <!-- Notifications Dropdown -->
+                <!-- Notifications Dropdown with Smooth Transition -->
+                <transition
+                enter-active-class="transition ease-out duration-300"
+                enter-from-class="opacity-0 -translate-y-2"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-200"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-2"
+                >
+                <div
+                    v-show="showNotificationsDropdown"
+                    class="absolute right-0 top-10 w-[26rem] bg-white rounded-2xl shadow-xl border border-gray-200 z-50"
+                >
+                    <!-- Header -->
                     <div
-                        v-show="showNotificationsDropdown"
-                        class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                    class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl"
                     >
-                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
-                            <button class="text-sm text-green-600 hover:text-green-700 font-medium">
-                                Mark all as read
-                            </button>
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                        <Bell class="h-5 w-5 text-green-600" />
+                        <span>Notifications</span>
+                    </h3>
+                    <button
+                        class="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
+                        @click="markAllAsRead"
+                    >
+                        Mark all as read
+                    </button>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="max-h-[26rem] overflow-y-auto">
+                    <div
+                        v-for="notification in notifications"
+                        :key="notification.id"
+                        class="p-4 border-b border-gray-100 hover:bg-green-50 transition cursor-pointer flex space-x-4"
+                    >
+                        <!-- Icon / Status -->
+                        <div class="flex-shrink-0">
+                        <div
+                            class="h-9 w-9 flex items-center justify-center rounded-full"
+                            :class="notification.read ? 'bg-gray-100' : 'bg-green-100'"
+                        >
+                            <Bell class="h-4 w-4 text-green-600" />
+                        </div>
                         </div>
 
-                        <div class="max-h-96 overflow-y-auto">
-                            <div
-                                v-for="notification in notifications"
-                                :key="notification.id"
-                                class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                            >
-                                <div class="flex items-start space-x-3">
-                                    <div v-if="!notification.read" class="h-2 w-2 bg-red-500 rounded-full mt-2"></div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
-                                        <p class="text-sm text-gray-600">{{ notification.message }}</p>
-                                        <p class="text-xs text-gray-500">{{ notification.time }}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Empty State -->
-                            <div v-if="notifications.length === 0" class="p-8 text-center">
-                                <Bell class="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                                <p class="text-sm text-gray-500">No new notifications</p>
-                            </div>
+                        <!-- Message -->
+                        <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <p class="font-medium text-gray-900 text-sm">{{ notification.title }}</p>
+                            <span class="text-xs text-gray-400">{{ notification.time }}</span>
                         </div>
-
-                        <div class="p-4 border-t border-gray-200">
-                            <button class="w-full text-center text-sm text-green-600 hover:text-green-700 font-medium">
-                                View all notifications
-                            </button>
+                        <p class="text-sm text-gray-600 mt-1">{{ notification.message }}</p>
+                        <div
+                            v-if="!notification.read"
+                            class="mt-1 inline-block bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full"
+                        >
+                            New
+                        </div>
                         </div>
                     </div>
+
+                    <!-- Empty State -->
+                    <div v-if="notifications.length === 0" class="p-8 text-center text-gray-500">
+                        <Bell class="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                        <p class="text-base font-medium">No new notifications</p>
+                        <p class="text-sm text-gray-400">You're all caught up!</p>
+                    </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                    <button
+                        class="w-full text-center text-sm text-green-700 hover:text-green-800 font-medium transition"
+                        @click="viewAllNotifications"
+                    >
+                        View all notifications
+                    </button>
+                    </div>
+                </div>
+                </transition>
                 </div>
 
                 <!-- Profile Dropdown -->
-                <div class="relative profile-dropdown">
-                    <button
-                        class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        @mouseenter="showProfileDropdown = true"
-                    >
-                        <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                            <span class="text-sm font-medium text-white">{{ userInitials }}</span>
-                        </div>
-                        <div class="hidden md:block text-left">
-                            <p class="text-sm font-medium text-gray-900">{{ userFullName }}</p>
-                            <p class="text-xs text-gray-500">{{ userEmail }}</p>
-                        </div>
-                        <ChevronDown class="h-4 w-4 text-gray-400" />
-                    </button>
-
-                    <!-- Profile Dropdown Menu -->
-                    <div
-                        v-if="showProfileDropdown"
-                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
-                        @mouseleave="showProfileDropdown = false"
-                    >
-                        <div class="py-1">
-                            <button
-                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                @click="handleProfileClick"
-                            >
-                                <User class="h-4 w-4 mr-3 text-gray-400" />
-                                View Profile
-                            </button>
-                            <button
-                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                @click="handleSettingsClick"
-                            >
-                                <Settings class="h-4 w-4 mr-3 text-gray-400" />
-                                Settings
-                            </button>
-                            <button
-                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                @click="handlePreferencesClick"
-                            >
-                                <Sliders class="h-4 w-4 mr-3 text-gray-400" />
-                                Preferences
-                            </button>
-                            <button
-                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                @click="handleLogoutClick"
-                            >
-                                <Briefcase class="h-4 w-4 mr-3 text-gray-400" />
-                                Logout
-                            </button>
-                        </div>
+                <div class="relative select-none">
+                <!-- Profile Button -->
+                <button
+                    class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    @click.stop="showProfileDropdown = !showProfileDropdown"
+                >
+                    <div class="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center">
+                    <span class="text-sm font-semibold text-white">{{ userInitials }}</span>
                     </div>
+                    <div class="hidden md:block text-left">
+                    <p class="text-sm font-medium text-gray-900">{{ userFullName }}</p>
+                    <p class="text-xs text-gray-500">{{ userEmail }}</p>
+                    </div>
+                    <ChevronDown
+                    class="h-4 w-4 text-gray-400 transition-transform duration-300"
+                    :class="{ 'rotate-180': showProfileDropdown }"
+                    />
+                </button>
+
+                <!-- Dropdown Menu with Animation -->
+                <transition
+                    enter-active-class="transition ease-out duration-200"
+                    enter-from-class="opacity-0 scale-95 -translate-y-2"
+                    enter-to-class="opacity-100 scale-100 translate-y-0"
+                    leave-active-class="transition ease-in duration-150"
+                    leave-from-class="opacity-100 scale-100 translate-y-0"
+                    leave-to-class="opacity-0 scale-95 -translate-y-2"
+                >
+                    <div
+                    v-if="showProfileDropdown"
+                    class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
+                    >
+                    <div class="py-2">
+                        <!-- Profile -->
+                        <button
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                        @click="handleProfileClick"
+                        >
+                        <User class="h-4 w-4 mr-3 text-gray-400" />
+                        View Profile
+                        </button>
+
+                        <!-- Settings -->
+                        <button
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                        @click="handleSettingsClick"
+                        >
+                        <Settings class="h-4 w-4 mr-3 text-gray-400" />
+                        Settings
+                        </button>
+
+                        <!-- Preferences -->
+                        <button
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                        @click="handlePreferencesClick"
+                        >
+                        <Sliders class="h-4 w-4 mr-3 text-gray-400" />
+                        Preferences
+                        </button>
+
+                        <!-- Divider -->
+                        <div class="border-t border-gray-100 my-1"></div>
+
+                        <!-- Logout -->
+                        <button
+                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                        @click="handleLogoutClick"
+                        >
+                        <Briefcase class="h-4 w-4 mr-3 text-red-500" />
+                        Logout
+                        </button>
+                    </div>
+                    </div>
+                </transition>
                 </div>
             </div>
         </nav>
@@ -366,20 +428,25 @@ const handleLogoutClick = () => {
 
 // Click outside handler for dropdowns
 const handleClickOutside = (event) => {
-    const profileDropdown = event.target.closest('.profile-dropdown')
-    const filtersDropdown = event.target.closest('.filters-dropdown')
-    const notificationsDropdown = event.target.closest('.notifications-dropdown')
+  const profileDropdownEl = document.querySelector('.profile-dropdown')
+  const filtersDropdownEl = document.querySelector('.filters-dropdown')
+  const notificationsDropdownEl = document.querySelector('.notifications-dropdown')
 
-    if (!profileDropdown && showProfileDropdown.value) {
-        showProfileDropdown.value = false
-    }
-    if (!filtersDropdown && showFiltersDropdown.value) {
-        showFiltersDropdown.value = false
-    }
-    if (!notificationsDropdown && showNotificationsDropdown.value) {
-        showNotificationsDropdown.value = false
-    }
+  const clickedInsideProfile = profileDropdownEl?.contains(event.target)
+  const clickedInsideFilters = filtersDropdownEl?.contains(event.target)
+  const clickedInsideNotifications = notificationsDropdownEl?.contains(event.target)
+
+  if (!clickedInsideProfile && showProfileDropdown.value) {
+    showProfileDropdown.value = false
+  }
+  if (!clickedInsideFilters && showFiltersDropdown.value) {
+    showFiltersDropdown.value = false
+  }
+  if (!clickedInsideNotifications && showNotificationsDropdown.value) {
+    showNotificationsDropdown.value = false
+  }
 }
+
 
 onMounted(async () => {
     // Add click outside listener
