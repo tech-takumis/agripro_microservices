@@ -19,7 +19,6 @@
         <module>schedule</module>
         <module>communication</module>
         <module>constant</module>
-        <module>notification</module>
         <module>application</module>
         <module>config-server</module>
         <module>discovery-server</module>
