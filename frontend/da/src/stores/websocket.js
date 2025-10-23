@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useMessageStore } from '@/stores/message'
+import { useNotificationStore } from './notification'
 
 export const useWebSocketStore = defineStore('websocket', () => {
   const stompClient = ref(null)
@@ -10,6 +11,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const lastMessage = ref(null)
   const manualDisconnect = ref(false)
   const messageStore = useMessageStore()
+  const notificationStore = useNotificationStore()
   let reconnectAttempts = 0
   const MAX_RECONNECT_ATTEMPTS = 5
   let reconnectTimeout = null
@@ -61,6 +63,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
           reconnectAttempts = 0
           console.log('[WebSocket] ✅ Connected to server')
           subscribeToPrivateMessages()
+          subscribeToApplicationNotification()
           connectionPromise = null
           resolve()
         },
@@ -129,5 +132,24 @@ export const useWebSocketStore = defineStore('websocket', () => {
     console.log(`[WebSocket] 📤 Sent to ${destination}`)
   }
 
-  return { stompClient, connected, lastMessage, connect, disconnect, sendMessage }
+  const subscribeToApplicationNotification = () => {
+    const topic = '/user/queue/application.notifications'
+    if (!stompClient.value?.active) return
+    if (subscription) subscription.unsubscribe()
+
+    subscription = stompClient.value.subscribe(topic, (message) => {
+      console.log('[WebSocket] 📨 Message received:', message.body)
+      try {
+        const data = JSON.parse(message.body)
+        notificationStore.addIncomingNotification(data)
+      } catch (err) {
+        console.error('[WebSocket] Error parsing message:', err)
+      }
+    })
+    console.log(`[WebSocket] ✅ Subscribed to ${topic}`)
+  }
+
+
+
+  return { stompClient, connected, lastMessage, connect, disconnect, subscribeToApplicationNotification, sendMessage }
 })

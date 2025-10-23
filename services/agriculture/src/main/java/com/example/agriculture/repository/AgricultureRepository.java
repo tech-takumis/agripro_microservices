@@ -18,7 +18,7 @@ public interface AgricultureRepository extends JpaRepository<Agriculture, UUID> 
     @Query("SELECT a.username FROM Agriculture a WHERE a.username LIKE '100-%' ORDER BY a.username DESC LIMIT 1")
     String findLastUsername();
 
-    Optional<Agriculture> findByUsername(String username);
+    Optional<Agriculture> findByUsernameContainingIgnoreCase(String username);
     @Query("SELECT u FROM Agriculture u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
     Optional<Agriculture> findByIdWithRolesAndPermissions(@Param("id") UUID id);
 
@@ -28,4 +28,6 @@ public interface AgricultureRepository extends JpaRepository<Agriculture, UUID> 
             "LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Agriculture> search(@Param("search") String search, Pageable pageable);
+
+    Optional<Agriculture> findByUsername(String username);
 }

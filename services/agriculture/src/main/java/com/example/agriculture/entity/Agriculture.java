@@ -63,7 +63,8 @@ public class Agriculture {
     @JsonIgnore
     private AgricultureProfile agricultureProfile;
 
-    // Method to compute effective permissions (union of role  and direct, deduplicated)
+    private boolean isActive;
+
     public Set<String> getEffectivePermissions() {
         Set<String> permissionFromRoles = roles.stream()
                 .flatMap(role -> role.getPermissions().stream())

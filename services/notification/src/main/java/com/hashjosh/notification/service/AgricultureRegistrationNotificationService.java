@@ -1,18 +1,13 @@
 package com.hashjosh.notification.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
 import com.hashjosh.notification.entity.Notification;
 import com.hashjosh.notification.repository.NotificationRepository;
 import com.hashjosh.notification.utils.NotificationUtils;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;

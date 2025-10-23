@@ -1,7 +1,7 @@
 package com.example.agriculture.clients;
 
 
-import com.example.agriculture.exception.ApplicationNotFoundException;
+import com.example.agriculture.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,9 +32,7 @@ public class ApplicationClient {
                     if(res.getStatusCode().is2xxSuccessful()) {
                         return res.bodyTo(ApplicationResponseDto.class);
                     } else if (res.getStatusCode() == HttpStatus.NOT_FOUND) {
-                        throw new ApplicationNotFoundException(
-                                "Application not found in Application Service!"
-                        );
+                        throw ApiException.notFound("Application not found with ID: " + applicationId);
                     }else{
                         throw new RuntimeException("Remote Application Service error in workflow service find workflow by application id: "+ applicationId +" status"+ res.getStatusCode());
                     }

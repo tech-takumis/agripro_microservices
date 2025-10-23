@@ -1,7 +1,7 @@
 package com.hashjosh.application.validators;
 
 import com.hashjosh.application.enums.FieldType;
-import com.hashjosh.application.exceptions.ApplicationNotSupportedDatatypeException;
+import com.hashjosh.application.exceptions.ApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -44,7 +44,7 @@ public class FieldValidatorFactory {
         ValidatorStrategy strategy = strategies.get(fieldType);
 
         if(strategy == null){
-            throw new ApplicationNotSupportedDatatypeException("Unsupported datatype:: "+fieldType);
+            throw ApiException.badRequest("Unsupported field type: " + fieldType);
         }
         return strategy;
     }

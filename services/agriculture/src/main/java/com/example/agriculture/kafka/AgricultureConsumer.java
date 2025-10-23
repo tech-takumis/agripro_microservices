@@ -1,17 +1,15 @@
 package com.example.agriculture.kafka;
 
 import com.example.agriculture.entity.VerificationRecord;
-import com.example.agriculture.enums.VerificationStatus;
+import com.hashjosh.constant.verification.VerificationStatus;
 import com.example.agriculture.repository.VerificationRecordRepository;
 import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import com.hashjosh.kafkacommon.application.VerificationStartedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Component

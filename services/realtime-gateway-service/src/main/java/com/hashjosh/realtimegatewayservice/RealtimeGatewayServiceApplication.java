@@ -4,6 +4,7 @@ import com.hashjosh.jwtshareable.config.JwtConfig;
 import com.hashjosh.jwtshareable.properties.JwtProperties;
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.realtimegatewayservice.config.TrustedService;
+import com.hashjosh.realtimegatewayservice.properties.EmailProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +14,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 
 @SpringBootApplication
-@EnableConfigurationProperties({JwtProperties.class, TrustedService.class})
+@EnableConfigurationProperties({JwtProperties.class, TrustedService.class, EmailProperties.class})
 @Import({JwtConfig.class})
 @EnableKafka
 @EnableWebSocket

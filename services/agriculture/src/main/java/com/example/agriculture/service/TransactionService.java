@@ -3,7 +3,7 @@ package com.example.agriculture.service;
 import com.example.agriculture.dto.transaction.TransactionRequest;
 import com.example.agriculture.dto.transaction.TransactionResponse;
 import com.example.agriculture.entity.Transaction;
-import com.example.agriculture.exception.UserException;
+import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.mapper.TransactionMapper;
 import com.example.agriculture.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +82,6 @@ public class TransactionService {
 
     private Transaction findTransactionById(UUID id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new UserException("Transaction not found with ID: " + id,
-                        HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("Transaction with ID " + id + " not found"));
     }
 }

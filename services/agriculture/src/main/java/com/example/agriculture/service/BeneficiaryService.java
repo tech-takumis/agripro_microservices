@@ -4,7 +4,7 @@ import com.example.agriculture.dto.beneficiary.BeneficiaryRequest;
 import com.example.agriculture.dto.beneficiary.BeneficiaryResponse;
 import com.example.agriculture.entity.Beneficiary;
 import com.example.agriculture.entity.Program;
-import com.example.agriculture.exception.UserException;
+import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.mapper.BeneficiaryMapper;
 import com.example.agriculture.repository.BeneficiaryRepository;
 import com.example.agriculture.repository.ProgramRepository;
@@ -31,11 +31,12 @@ public class BeneficiaryService {
         // Check if beneficiary already exists for this program
         beneficiaryRepository.findByUserIdAndProgramId(request.getUserId(), request.getProgramId())
                 .ifPresent(b -> {
-                    throw new UserException("Beneficiary already exists in this program", HttpStatus.BAD_REQUEST.value());
+                    throw ApiException.notFound(String.format("Beneficiary with userId %s already exists for program %s",
+                            request.getUserId(), request.getProgramId()));
                 });
 
         Program program = programRepository.findById(request.getProgramId())
-                .orElseThrow(() -> new UserException("Program not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound(String.format("Program with ID %s not found", request.getProgramId())));
 
         Beneficiary beneficiary = beneficiaryMapper.toBeneficiaryEntity(request);
         beneficiary.setProgram(program);
@@ -47,7 +48,7 @@ public class BeneficiaryService {
     public BeneficiaryResponse getBeneficiary(UUID id) {
         return beneficiaryMapper.toBeneficiaryResponse(
                 beneficiaryRepository.findById(id)
-                        .orElseThrow(() -> new UserException("Beneficiary not found", HttpStatus.NOT_FOUND.value()))
+                        .orElseThrow(() -> ApiException.notFound(String.format("Beneficiary with ID %s not found", id)))
         );
     }
 
@@ -60,12 +61,12 @@ public class BeneficiaryService {
     @Transactional
     public BeneficiaryResponse updateBeneficiary(UUID id, BeneficiaryRequest request) {
         Beneficiary beneficiary = beneficiaryRepository.findById(id)
-                .orElseThrow(() -> new UserException("Beneficiary not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound(String.format("Beneficiary with ID %s not found", id)));
 
         // If program is being changed, verify new program exists
         if (!beneficiary.getProgram().getId().equals(request.getProgramId())) {
             Program newProgram = programRepository.findById(request.getProgramId())
-                    .orElseThrow(() -> new UserException("Program not found", HttpStatus.NOT_FOUND.value()));
+                    .orElseThrow(() -> ApiException.notFound(String.format("Program with ID %s not found", request.getProgramId())));
             beneficiary.setProgram(newProgram);
         }
 
@@ -78,7 +79,7 @@ public class BeneficiaryService {
     @Transactional
     public void deleteBeneficiary(UUID id) {
         if (!beneficiaryRepository.existsById(id)) {
-            throw new UserException("Beneficiary not found", HttpStatus.NOT_FOUND.value());
+            throw ApiException.notFound(String.format("Beneficiary with ID %s not found", id));
         }
         beneficiaryRepository.deleteById(id);
     }
@@ -86,7 +87,7 @@ public class BeneficiaryService {
     @Transactional(readOnly = true)
     public Page<BeneficiaryResponse> getBeneficiariesByProgram(UUID programId, Pageable pageable) {
         if (!programRepository.existsById(programId)) {
-            throw new UserException("Program not found", HttpStatus.NOT_FOUND.value());
+            throw ApiException.notFound("Program with ID " + programId + " not found");
         }
         return beneficiaryRepository.findByProgramId(programId, pageable)
                 .map(beneficiaryMapper::toBeneficiaryResponse);

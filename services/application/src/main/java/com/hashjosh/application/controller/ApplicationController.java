@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,23 +28,18 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping("/submit")
+    @PostMapping(value = "/submit", consumes = "multipart/form-data")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
-            @Valid @RequestBody ApplicationSubmissionDto submission
+            @Valid @RequestPart ApplicationSubmissionDto submission,
+            @RequestPart(value = "files",required = false) List<MultipartFile> files
     ) {
 
         try {
 
-            // Get the current user from security context
-            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
-                    .getAuthentication()
-                    .getPrincipal();
-
-            // Process the submission
             ApplicationSubmissionResponse response = applicationService.processSubmission(
                     submission,
-                    userDetails
+                    files
             );
 
             // Return appropriate response

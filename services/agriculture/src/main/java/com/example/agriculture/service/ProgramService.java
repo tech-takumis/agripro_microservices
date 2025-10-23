@@ -4,7 +4,7 @@ import com.example.agriculture.dto.program.ProgramRequest;
 import com.example.agriculture.dto.program.ProgramResponse;
 import com.example.agriculture.entity.Beneficiary;
 import com.example.agriculture.entity.Program;
-import com.example.agriculture.exception.UserException;
+import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.mapper.BeneficiaryMapper;
 import com.example.agriculture.mapper.ProgramMapper;
 import com.example.agriculture.repository.BeneficiaryRepository;
@@ -98,8 +98,7 @@ public class ProgramService {
 
         beneficiaryIds.forEach(beneficiaryId -> {
             Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId)
-                    .orElseThrow(() -> new UserException("Beneficiary not found: " + beneficiaryId,
-                            HttpStatus.NOT_FOUND.value()));
+                    .orElseThrow(() -> ApiException.notFound(String.format("Beneficiary with ID %s not found", beneficiaryId)));
 
             if (!program.getBeneficiaries().contains(beneficiary)) {
                 program.addBeneficiary(beneficiary);
@@ -130,7 +129,6 @@ public class ProgramService {
 
     private Program findProgramById(UUID id) {
         return programRepository.findById(id)
-                .orElseThrow(() -> new UserException("Program not found with ID: " + id,
-                        HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("Program with ID " + id + " not found"));
     }
 }

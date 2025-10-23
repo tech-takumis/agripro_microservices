@@ -52,7 +52,7 @@ public class ChatService {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
 
-        messageRequestDto.setSenderId(messageRequestDto.getSenderId());
+        messageRequestDto.setSenderId(UUID.fromString(userDetails.getUserId()));
 
         // Save message
         Message message =  messageRepository.save(

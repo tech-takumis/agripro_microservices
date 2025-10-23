@@ -1,20 +1,17 @@
 package com.example.agriculture.service;
 
 
-import com.example.agriculture.clients.ApplicationClient;
-import com.example.agriculture.clients.ApplicationResponseDto;
+import com.hashjosh.constant.verification.VerificationRequestDto;
 import com.example.agriculture.entity.VerificationRecord;
-import com.example.agriculture.enums.VerificationStatus;
-import com.example.agriculture.exception.VerificationException;
+import com.hashjosh.constant.verification.VerificationStatus;
+import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.kafka.AgricultureProducer;
-import com.example.agriculture.mapper.VerificationRecordMapper;
 import com.example.agriculture.repository.VerificationRecordRepository;
 import com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent;
-import com.hashjosh.kafkacommon.application.VerificationCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,14 +23,12 @@ import java.util.UUID;
 public class VerificationService {
 
     private final VerificationRecordRepository verificationRecordRepository;
-    private final VerificationRecordMapper verificationRecordMapper;
     private final AgricultureProducer agricultureProducer;
-    private final ApplicationClient applicationClient;
 
     public void startReview(UUID submissionId) {
 
         VerificationRecord record = verificationRecordRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> new VerificationException("Verification record not found: " + submissionId,HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("Verification record not found: " + submissionId));
 
         agricultureProducer.publishEvent("application-lifecycle",
                 new ApplicationUnderReviewEvent(
@@ -45,31 +40,9 @@ public class VerificationService {
         log.info("Application {} marked as under review", submissionId);
     }
 
-    public void completeVerification(UUID submissionId, String report, VerificationStatus status, String rejectionReason) {
-        VerificationRecord record = verificationRecordRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> new VerificationException("Verification record not found: " + submissionId,HttpStatus.NOT_FOUND.value()));
-        record.setStatus(status);
-        record.setReport(report);
-        record.setRejectionReason(status == VerificationStatus.REJECTED ? rejectionReason : null);
-        verificationRecordRepository.save(record);
-
-        agricultureProducer.publishEvent("application-lifecycle",
-                new VerificationCompletedEvent(
-                        submissionId,
-                        record.getUploadedBy(),
-                        record.getVerificationType(),
-                        status.name(),
-                        record.getReport(),
-                        rejectionReason,
-                        LocalDateTime.now()
-                ));
-
-        log.info("Verification completed for application: {}, status: {}", submissionId, status);
-    }
-
     public void sendToPcic(UUID submissionId) {
         VerificationRecord record = verificationRecordRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> new VerificationException("Verification record not found: " + submissionId,HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("Verification record not found: " + submissionId));
 
         if (record.getStatus() != VerificationStatus.COMPLETED) {
             throw new IllegalStateException("Application not verified: " + submissionId);
@@ -83,5 +56,28 @@ public class VerificationService {
                 ));
 
         log.info("Application {} sent to PCIC", submissionId);
+    }
+
+    public void createVerificationRecord(
+            VerificationRequestDto dto
+    ) {
+        log.info("Creating new verification record");
+        VerificationRecord record = VerificationRecord.builder()
+                .submissionId(dto.getSubmissionId())
+                .uploadedBy(dto.getUploadedBy())
+                .verificationType("Application Verification")
+                .status(VerificationStatus.PENDING)
+                .build();
+
+        agricultureProducer.publishEvent("application-lifecycle",
+                ApplicationSubmittedEvent.builder()
+                        .submissionId(dto.getSubmissionId())
+                        .userId(UUID.fromString(String.valueOf(dto.getUploadedBy())))
+                        .submittedAt(LocalDateTime.now())
+                        .build()
+        );
+
+        verificationRecordRepository.save(record);
+
     }
 }

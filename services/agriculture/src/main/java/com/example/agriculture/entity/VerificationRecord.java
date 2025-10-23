@@ -1,7 +1,7 @@
 package com.example.agriculture.entity;
 
 
-import com.example.agriculture.enums.VerificationStatus;
+import com.hashjosh.constant.verification.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

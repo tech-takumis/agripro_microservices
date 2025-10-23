@@ -60,6 +60,12 @@ class WebSocketService {
     _isConnecting = false;
 
     // Subscribe to private queue
+    _subscribeToPrivateMessages();
+
+    print('✅ [WebSocket] Subscribed to /user/queue/private.messages');
+  }
+
+  void _subscribeToPrivateMessages() {
     _client?.subscribe(
       destination: '/user/queue/private.messages',
       callback: (frame) {
@@ -72,9 +78,9 @@ class WebSocketService {
             'senderId': message['senderId'],
             'receiverId': message['receiverId'],
             'text': message['text'],
-            'type': message['type'] ?? 'FARMER_AGRICULTURE',
-            'attachments': message['attachments'] ?? [],
-            'sentAt': message['timestamp'] ?? message['sentAt'],
+            'type': message['type'] ?? message['conversationType'] ?? 'FARMER_AGRICULTURE',
+            'attachments': message['attachments'] ?? message['attachmentResponses'] ?? [],
+            'sentAt': message['sentAt'] ?? message['timestamp'],
             'isRead': message['isRead'] ?? false,
           };
           for (final sub in _subscribers) {
@@ -86,50 +92,47 @@ class WebSocketService {
       },
     );
 
-    print('✅ [WebSocket] Subscribed to /user/queue/private.messages');
-  }
-
-  void sendMessage(String destination, Map<String, dynamic> body) {
-    if (!_isConnected || _client == null) {
-      print('⚠️ [WebSocket] Not connected');
-      return;
-    }
-
-    final token = getIt<StorageService>().getWebSocketToken();
-    _client!.send(
-      destination: destination,
-      body: jsonEncode(body),
-      headers: {
-        'content-type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    print('📤 [WebSocket] Sent to $destination');
-  }
-
-  void addListener(MessageCallback callback) {
-    if (!_subscribers.contains(callback)) _subscribers.add(callback);
-  }
-
-  void removeListener(MessageCallback callback) {
-    _subscribers.remove(callback);
-  }
-
-  void disconnect() {
-    if (_client != null) {
-      print('🔌 [WebSocket] Disconnecting...');
-      _client?.deactivate();
-      _client = null;
-      _isConnected = false;
-      _isConnecting = false;
-      _subscribers.clear();
-    } else {
-      print('✅ [WebSocket] Already disconnected');
-    }
+    _client?.subscribe(
+        destination: '/user/queue/application.notifications',
+        callback: (frame){
+          try {
+            final notification = jsonDecode(frame.body!);
+            print('🔔 [WebSocket] Notification: $notification');
+            for (final sub in _subscribers) {
+              sub(notification);
+            }
+          } catch (e) {
+            print('❌ [WebSocket] Notification parse error: $e');
+          }
+        });
   }
 
   void _handleConnectionError() {
     _isConnected = false;
     _isConnecting = false;
+  }
+
+  // Add a message callback subscriber
+  void addListener(MessageCallback callback) {
+    if (!_subscribers.contains(callback)) {
+      _subscribers.add(callback);
+    }
+  }
+
+  // Remove a message callback subscriber
+  void removeListener(MessageCallback callback) {
+    _subscribers.remove(callback);
+  }
+
+  // Disconnect and clean up the WebSocket connection
+  void disconnect() {
+    if (_client != null) {
+      print('🔌 [WebSocket] Disconnecting...');
+      _client!.deactivate();
+      _client = null;
+    }
+    _isConnected = false;
+    _isConnecting = false;
+    _subscribers.clear();
   }
 }

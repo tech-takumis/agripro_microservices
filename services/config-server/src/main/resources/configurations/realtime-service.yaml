@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/communication
+    url: jdbc:postgresql://localhost:5432/notification
     username: agripro
     password: agripro
     driver-class-name: org.postgresql.Driver
@@ -25,8 +25,39 @@ spring:
           newMessageEvent:com.hashjosh.kafkacommon.communication.NewMessageEvent,
           agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
           farmerRegistrationContract:com.hashjosh.kafkacommon.farmer.FarmerRegistrationContract,
-          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract
+          pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
+          verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
+          applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent,
+          inspectionScheduledEvent:com.hashjosh.kafkacommon.application.InspectionScheduledEvent,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pracullosjohnpaul@gmail.com
+    password: vggv yxhs abhp ynrm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+thymeleaf:
+  cache: false
+  prefix: classpath:/templates/
+  suffix: .html
+  mode: HTML
+  encoding: UTF-8
+
+notification:
+  from: pracullosjohnpaul@gmail.com
+  sender-name: AgriPro Notifications
 
 eureka:
   client:

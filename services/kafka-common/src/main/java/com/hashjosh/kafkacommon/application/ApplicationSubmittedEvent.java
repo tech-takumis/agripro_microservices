@@ -21,15 +21,6 @@ public class ApplicationSubmittedEvent  {
     @JsonProperty("userId")
     private UUID userId;
 
-    @JsonProperty("applicationTypeId")
-    private UUID applicationTypeId;
-
-    @JsonProperty("dynamicFields")
-    private JsonNode dynamicFields;
-
-    @JsonProperty("documentIds")
-    private List<UUID> documentIds;
-
     @JsonProperty("submittedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime submittedAt;

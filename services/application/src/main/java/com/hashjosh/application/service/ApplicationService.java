@@ -2,10 +2,11 @@ package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hashjosh.application.clients.AgricultureHttpClient;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.*;
-import com.hashjosh.application.exceptions.ApplicationNotFoundException;
+import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.Application;
@@ -15,16 +16,15 @@ import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
+import com.hashjosh.constant.document.dto.DocumentResponse;
+import com.hashjosh.constant.verification.VerificationRequestDto;
 import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,87 +41,56 @@ public class ApplicationService {
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationService.class);
     private final ApplicationProducer applicationProducer;
     private final DocumentServiceClient documentServiceClient;
-
-    /**
-     * Gets the current user's authentication token
-     * @return The JWT token of the current user
-     */
-    private String getCurrentUserToken() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-                return ((CustomUserDetails) authentication.getPrincipal()).getToken();
-            }
-            logger.warn("Could not extract JWT token from authentication context - CustomUserDetails not found");
-            return "";
-        } catch (Exception e) {
-            logger.error("Error getting current user token", e);
-            return "";
-        }
-    }
-
-    /**
-     * Validates that all document IDs in the list exist in the document service
-     * @param documentIds List of document IDs to validate
-     * @return List of validation errors, empty if all documents exist
-     */
-    private List<ValidationError> validateDocumentIds(List<UUID> documentIds) {
-        List<ValidationError> errors = new ArrayList<>();
-
-        for (UUID documentId : documentIds) {
-            try {
-                // Check if document exists
-                boolean exists = documentServiceClient.documentExists(documentId);
-                if (!exists) {
-                    errors.add(new ValidationError(
-                            "documents",
-                            "Document not found with ID: " + documentId
-                    ));
-                }
-            } catch (Exception e) {
-                log.error("Error validating document with ID: {}", documentId, e);
-                errors.add(new ValidationError(
-                        "documents",
-                        "Error validating document with ID: " + documentId + " - " + e.getMessage()
-                ));
-            }
-        }
-        
-        return errors;
-    }
+    private final AgricultureHttpClient agricultureHttpClient;
 
 
     public ApplicationSubmissionResponse processSubmission(
             ApplicationSubmissionDto submission,
-            CustomUserDetails userDetails) {
+            List<MultipartFile> files) {
 
-        // 1. Validate application type exists
+
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+
+
         ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Application type not found: " + submission.getApplicationTypeId()));
 
-        // 2. Get all fields for this application type
+
+
         List<ApplicationField> fields = applicationType.getSections().stream()
                 .flatMap(section -> section.getFields().stream())
                 .collect(Collectors.toList());
 
-        // 3. Validate document IDs if present
-        if (submission.getDocumentIds() != null && !submission.getDocumentIds().isEmpty()) {
-            List<ValidationError> documentValidationErrors = validateDocumentIds(submission.getDocumentIds());
-            if (!documentValidationErrors.isEmpty()) {
-                return ApplicationSubmissionResponse.builder()
-                        .success(false)
-                        .message("Document validation failed")
-                        .errors(documentValidationErrors)
-                        .build();
-            }
-        }
+
 
         // 4. Validate fields
         List<ValidationError> validationErrors = validateSubmission(submission, fields);
+
+
+        List<DocumentResponse> uploadedDocuments = new ArrayList<>();
+        if(files != null && !files.isEmpty()){
+            // 1. Upload documents if any
+            for (MultipartFile file : files) {
+                DocumentResponse documentResponse = documentServiceClient
+                        .uploadDocument(file, userDetails.getUserId());
+                uploadedDocuments.add(documentResponse);
+            }
+        }
+
+
+        List<UUID> documentIds = uploadedDocuments.stream()
+                .map(DocumentResponse::getDocumentId)
+                .collect(Collectors.toList());
+
+        if (submission.getDocumentIds() != null) {
+            submission.getDocumentIds().addAll(documentIds);
+        } else {
+            submission.setDocumentIds(documentIds);
+        }
 
         if (!validationErrors.isEmpty()) {
             return ApplicationSubmissionResponse.builder()
@@ -132,11 +101,20 @@ public class ApplicationService {
         }
 
 
-        // 4. Process and save the application
+        // Submit the application for verification
+
+
+
         Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
         Application savedApplication = applicationRepository.save(application);
-
-        publishApplicationStatus(savedApplication, userDetails);
+        agricultureHttpClient.submitApplication(
+                VerificationRequestDto.builder()
+                        .submissionId(savedApplication.getId())
+                        .uploadedBy(UUID.fromString(userDetails.getUserId()))
+                        .report("Application submitted for verification")
+                        .build(),
+                userDetails.getUserId()
+        );
 
         return ApplicationSubmissionResponse.builder()
                 .success(true)
@@ -198,10 +176,7 @@ public class ApplicationService {
 
     public ApplicationResponseDto getApplicationById(UUID applicationId) {
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application not found!",
-                        HttpStatus.NOT_FOUND.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
         return applicationMapper.toApplicationResponseDto(application);
     }
 
@@ -211,22 +186,6 @@ public class ApplicationService {
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 
-
-    public void publishApplicationStatus(Application application, CustomUserDetails user) {
-
-        applicationProducer.publishEvent("application-lifecycle",
-               ApplicationSubmittedEvent.builder()
-                       .submissionId(application.getId())
-                       .userId(UUID.fromString(user.getUserId()))
-                       .applicationTypeId(application.getApplicationType().getId())
-                       .dynamicFields(application.getDynamicFields())
-                       .documentIds(application.getDocumentId())
-                       .submittedAt(LocalDateTime.now())
-                       .build()
-        );
-    }
-
-
     public List<ApplicationResponseDto> findApplicationbyType(UUID applicationTypeId) {
         return applicationRepository.findByApplicationTypeId(applicationTypeId)
                 .stream().map(applicationMapper::toApplicationResponseDto)
@@ -235,18 +194,12 @@ public class ApplicationService {
 
     private Application findApplicationById(UUID applicationId) {
         return  applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application not found with id "+ applicationId,
-                        HttpStatus.BAD_REQUEST.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
     }
 
     public List<ApplicationResponseDto> findAllAgricultureApplication() {
         ApplicationType type = applicationTypeRepository.findByNameContains("Crop Insurance Application")
-                .orElseThrow(() -> new ApplicationNotFoundException(
-                        "Application for agriculture not found",
-                        HttpStatus.NOT_FOUND.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Application type not found with name Crop Insurance Application"));
         List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
 
 

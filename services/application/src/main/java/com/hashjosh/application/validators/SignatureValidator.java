@@ -2,21 +2,15 @@ package com.hashjosh.application.validators;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hashjosh.application.clients.DocumentServiceClient;
-import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ValidationErrors;
-import com.hashjosh.application.exceptions.FileUploadException;
 import com.hashjosh.application.model.ApplicationField;
-import com.hashjosh.constant.document.dto.DocumentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -88,7 +82,7 @@ public class SignatureValidator implements ValidatorStrategy {
                     field.getKey(),
                     String.format("Signature document with ID '%s' not found", documentIdStr)
                 ));
-            } catch (FileUploadException e) {
+            } catch (Exception e) {
                 log.error("Error validating signature document with ID: " + documentIdStr, e);
                 errors.add(new ValidationErrors(
                     field.getKey(),

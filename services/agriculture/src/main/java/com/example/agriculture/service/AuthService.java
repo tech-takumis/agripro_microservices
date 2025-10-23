@@ -7,7 +7,7 @@ import com.example.agriculture.dto.auth.RegistrationRequest;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.entity.Permission;
 import com.example.agriculture.entity.Role;
-import com.example.agriculture.exception.UserException;
+import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.kafka.AgricultureProducer;
 import com.example.agriculture.mapper.AuthMapper;
 import com.example.agriculture.mapper.UserMapper;
@@ -43,13 +43,13 @@ public class AuthService {
     @Transactional
     public Agriculture register(RegistrationRequest request) {
         if (agricultureRepository.existsByEmail(request.getEmail())) {
-            throw new UserException("Email already exists", HttpStatus.BAD_REQUEST.value());
+            throw ApiException.conflict("Email already in use: " + request.getEmail());
         }
 
         Set<Role> roles = new HashSet<>();
         request.getRoleNames().forEach(roleName -> {
             Role role = roleRepository.findByName(roleName)
-                    .orElseThrow(() -> new UserException("Role not found", HttpStatus.NOT_FOUND.value()));
+                    .orElseThrow(() -> ApiException.notFound("Role not found: " + roleName));
             roles.add(role);
         });
 
@@ -119,7 +119,7 @@ public class AuthService {
 
     public Agriculture getAgricultureWithRoles(UUID userId) {
         return agricultureRepository.findByIdWithRolesAndPermissions(userId)
-                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userId));
     }
     private Set<String> extractPermissions(Set<Role> roles) {
         return roles.stream()
