@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/application_data.dart';
 
-/// A card widget that displays application type information
-/// 
-/// Shows the application name, description, and number of sections
-/// Follows single responsibility principle - only displays application info
 class ApplicationCard extends StatelessWidget {
   final ApplicationContent application;
   final VoidCallback onTap;

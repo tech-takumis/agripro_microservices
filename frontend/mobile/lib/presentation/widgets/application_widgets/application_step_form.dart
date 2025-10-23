@@ -120,9 +120,8 @@ class ApplicationStepForm extends StatelessWidget {
       case 'SIGNATURE':
         return SignatureFieldWidget(
           field: field,
-          signatureFile: controller.getFileValue(field.key),
-          onSignatureChanged: (file) =>
-              controller.setFileValue(field.key, file),
+          signatureFile: controller.getSignatureValue(field.key),
+          onSignatureChanged: (file) => controller.setSignatureValue(field.key, file),
           validator: (file) => controller.validateField(field, file),
         );
 
