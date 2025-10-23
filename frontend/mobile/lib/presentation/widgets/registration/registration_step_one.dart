@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/presentation/widgets/common/custom_text_field.dart';
 
+// Riverpod provider for password match
+final passwordMatchProvider = StateProvider.autoDispose<bool>((ref) => true);
+
 /// First step of registration: Basic Information
-class RegistrationStepOne extends StatelessWidget {
+class RegistrationStepOne extends ConsumerStatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController rsbsaNumberController;
   final TextEditingController passwordController;
@@ -32,9 +36,40 @@ class RegistrationStepOne extends StatelessWidget {
   });
 
   @override
+  ConsumerState<RegistrationStepOne> createState() => _RegistrationStepOneState();
+}
+
+class _RegistrationStepOneState extends ConsumerState<RegistrationStepOne> {
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.passwordController.addListener(_checkPasswordMatch);
+    _confirmPasswordController.addListener(_checkPasswordMatch);
+  }
+
+  void _checkPasswordMatch() {
+    final match = widget.passwordController.text == _confirmPasswordController.text;
+    ref.read(passwordMatchProvider.notifier).state = match;
+  }
+
+  @override
+  void dispose() {
+    widget.passwordController.removeListener(_checkPasswordMatch);
+    _confirmPasswordController.removeListener(_checkPasswordMatch);
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final passwordsMatch = ref.watch(passwordMatchProvider);
+
     return Form(
-      key: formKey,
+      key: widget.formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -96,7 +131,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // RSBSA Reference Number
           CustomTextField(
-            controller: rsbsaNumberController,
+            controller: widget.rsbsaNumberController,
             label: 'RSBSA Reference Number *',
             prefixIcon: Icons.badge_outlined,
             keyboardType: TextInputType.text,
@@ -131,11 +166,21 @@ class RegistrationStepOne extends StatelessWidget {
 
           // Password
           CustomTextField(
-            controller: passwordController,
+            controller: widget.passwordController,
             label: 'Password *',
             prefixIcon: Icons.lock_outline,
             keyboardType: TextInputType.visiblePassword,
-            obscureText: true,
+            obscureText: _obscurePassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a password';
@@ -147,6 +192,46 @@ class RegistrationStepOne extends StatelessWidget {
             },
           ),
           const SizedBox(height: 20),
+
+          // Confirm Password
+          CustomTextField(
+            controller: _confirmPasswordController,
+            label: 'Confirm Password *',
+            prefixIcon: Icons.lock_outline,
+            keyboardType: TextInputType.visiblePassword,
+            obscureText: _obscureConfirmPassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                });
+              },
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please confirm your password';
+              }
+              if (value.length < 6) {
+                return 'Password must be at least 6 characters';
+              }
+              if (!passwordsMatch) {
+                return 'Passwords do not match';
+              }
+              return null;
+            },
+          ),
+          if (_confirmPasswordController.text.isNotEmpty && !passwordsMatch)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, left: 8.0),
+              child: Text(
+                'Passwords do not match',
+                style: TextStyle(color: Colors.red[700], fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 20),
           // Date of Birth
           GestureDetector(
             onTap: () async {
@@ -157,12 +242,12 @@ class RegistrationStepOne extends StatelessWidget {
                 lastDate: DateTime(DateTime.now().year - 18, 12, 31),
               );
               if (picked != null) {
-                dateOfBirthController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}' ;
+                widget.dateOfBirthController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}' ;
               }
             },
             child: AbsorbPointer(
               child: CustomTextField(
-                controller: dateOfBirthController,
+                controller: widget.dateOfBirthController,
                 label: 'Date of Birth *',
                 prefixIcon: Icons.cake_outlined,
                 validator: (value) {
@@ -182,7 +267,7 @@ class RegistrationStepOne extends StatelessWidget {
           const SizedBox(height: 20),
           // Gender Dropdown
           DropdownButtonFormField<String>(
-            value: genderController.text.isNotEmpty ? genderController.text : null,
+            value: widget.genderController.text.isNotEmpty ? widget.genderController.text : null,
             decoration: const InputDecoration(
               labelText: 'Gender *',
               prefixIcon: Icon(Icons.wc),
@@ -195,7 +280,7 @@ class RegistrationStepOne extends StatelessWidget {
                     ))
                 .toList(),
             onChanged: (value) {
-              genderController.text = value ?? '';
+              widget.genderController.text = value ?? '';
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -207,7 +292,7 @@ class RegistrationStepOne extends StatelessWidget {
           const SizedBox(height: 20),
           // Civil Status Dropdown
           DropdownButtonFormField<String>(
-            value: civilStatusController.text.isNotEmpty ? civilStatusController.text : null,
+            value: widget.civilStatusController.text.isNotEmpty ? widget.civilStatusController.text : null,
             decoration: const InputDecoration(
               labelText: 'Civil Status *',
               prefixIcon: Icon(Icons.family_restroom),
@@ -220,7 +305,7 @@ class RegistrationStepOne extends StatelessWidget {
                     ))
                 .toList(),
             onChanged: (value) {
-              civilStatusController.text = value ?? '';
+              widget.civilStatusController.text = value ?? '';
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -233,7 +318,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // First Name
           CustomTextField(
-            controller: firstNameController,
+            controller: widget.firstNameController,
             label: 'First Name *',
             prefixIcon: Icons.person_outline,
             keyboardType: TextInputType.name,
@@ -254,7 +339,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // Last Name
           CustomTextField(
-            controller: lastNameController,
+            controller: widget.lastNameController,
             label: 'Last Name *',
             prefixIcon: Icons.person_outline,
             keyboardType: TextInputType.name,
@@ -275,7 +360,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // Middle Name (Optional)
           CustomTextField(
-            controller: middleNameController,
+            controller: widget.middleNameController,
             label: 'Middle Name (Optional)',
             prefixIcon: Icons.person_outline,
             keyboardType: TextInputType.name,
@@ -287,7 +372,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // Email
           CustomTextField(
-            controller: emailController,
+            controller: widget.emailController,
             label: 'Email Address *',
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
@@ -306,7 +391,7 @@ class RegistrationStepOne extends StatelessWidget {
 
           // Phone Number
           CustomTextField(
-            controller: phoneNumberController,
+            controller: widget.phoneNumberController,
             label: 'Phone Number *',
             prefixIcon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,

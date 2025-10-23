@@ -169,7 +169,7 @@ class MultiStepRegistrationController extends ChangeNotifier {
         dateOfBirth: dateOfBirthController.text.trim(),
         gender: genderController.text.trim(),
         civilStatus: civilStatusController.text.trim(),
-        houseNo: '123', // TODO: Replace with actual houseNo input
+        houseNo: '123',
         street: streetController.text.trim(),
         barangay: barangayController.text.trim(),
         municipality: selectedCity,

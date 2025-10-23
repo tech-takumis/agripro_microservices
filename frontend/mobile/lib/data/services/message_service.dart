@@ -119,8 +119,11 @@ class MessageService extends GetxService {
         messageRequest: messageRequest,
         attachments: dioFiles,
       );
-      _messages.add(createdMessage);
-      _controller.add([..._messages]);
+
+      if(!_messages.any((m) => m.messageId == createdMessage.messageId)){
+        _messages.add(createdMessage);
+        _controller.add([..._messages]);
+      }
       print('📤 [MessageService] Sent message via API: \\${createdMessage.text}');
     } catch (e) {
       print('❌ [MessageService] Error sending message via API: $e');

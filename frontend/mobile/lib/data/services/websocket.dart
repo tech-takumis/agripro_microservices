@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:mobile/data/services/storage_service.dart';
-
 import '../../injection_container.dart';
 
 typedef MessageCallback = void Function(Map<String, dynamic> message);

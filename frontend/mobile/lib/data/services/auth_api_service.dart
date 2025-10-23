@@ -182,7 +182,6 @@ class AuthApiService {
   }
 
   Future<void> logout() async {
-      // Call backend logout API
       try {
         final response = await _dio.post(
             '/farmer/auth/logout',
