@@ -45,11 +45,11 @@ public class AgricultureRegistrationNotificationService {
 
             // Create and save notification
             Notification notification = NotificationUtils.createEmailNotification(
-                    recipientEmail,
+                    event.getUsername(),
                     subject,
-                    emailContent,
-                    null
+                    "Welcome to the platform"
             );
+
 
             // Send email
             emailService.sendEmail(recipientEmail, subject, emailContent, true);
@@ -62,7 +62,6 @@ public class AgricultureRegistrationNotificationService {
 
         } catch (Exception e) {
             log.error("❌ Failed to send registration email notification to: {}", event.getEmail(), e);
-            emailService.saveFailedNotification(event.getEmail(),"Failed: User Registration Notification", event.getUserId(),"Failed to send registration email: " + e.getMessage());
             throw ApiException.badRequest("Failed to send registration email notification");
         }
     }

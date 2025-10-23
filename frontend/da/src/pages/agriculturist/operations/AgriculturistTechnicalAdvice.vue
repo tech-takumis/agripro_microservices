@@ -1,15 +1,14 @@
-<script setup lang="ts">
+<script setup>
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import FeatureUnavailable from '../../components/FeatureUnavailable.vue'
+import FeatureUnavailable from '@/components/FeatureUnavailable.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
 
-// <CHANGE> Handle back navigation when user clicks back button
 const handleBack = () => {
-  router.push({'name': "municipal-agriculturist-dashboard"})
+  router.push({'name': "agriculturist-dashboard"})
 }
 </script>
 

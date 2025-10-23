@@ -34,9 +34,8 @@ public class Notification {
     @Column(name = "title", nullable = false, length = 100)
     private String title; // Title or subject of the notification
 
-    @Type(JsonBinaryType.class)
-    @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
-    private JsonNode payload; // JSON representation of dynamic content
+    @Column(name = "massage")
+    private String message;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

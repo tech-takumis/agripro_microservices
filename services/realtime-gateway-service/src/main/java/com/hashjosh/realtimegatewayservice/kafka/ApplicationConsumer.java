@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.*;
 import com.hashjosh.realtimegatewayservice.clients.FarmerResponse;
 import com.hashjosh.realtimegatewayservice.clients.FarmerServiceClient;
+import com.hashjosh.realtimegatewayservice.entity.Notification;
+import com.hashjosh.realtimegatewayservice.repository.NotificationRepository;
 import com.hashjosh.realtimegatewayservice.service.EmailService;
 import com.hashjosh.realtimegatewayservice.wrapper.ApplicationNotificationDTO;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class ApplicationConsumer {
     private final SimpMessagingTemplate messagingTemplate;
     private final FarmerServiceClient farmerServiceClient;
     private final EmailService emailService;
+    private final NotificationRepository notificationRepository;
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group")
     public void consumeApplicationEvents(@Payload Object event){
@@ -165,6 +168,18 @@ public class ApplicationConsumer {
                 return;
             }
 
+            Notification notificationEntity = Notification.builder()
+                    .recipient(receiverId.toString())
+                    .type("APPLICATION")
+                    .status("SENT")
+                    .title(notification.getTitle())
+                    .message(notification.getMessage())
+                    .createdAt(notification.getTime() != null ? notification.getTime() : LocalDateTime.now())
+                    .build();
+
+            log.info("✅ Saved notification to database for user {}", receiverId);
+            notificationRepository.save(notificationEntity);
+
             // WebSocket notification
             messagingTemplate.convertAndSendToUser(
                     receiverId.toString(),
@@ -173,7 +188,7 @@ public class ApplicationConsumer {
             );
             log.info("✅ Sent WebSocket notification to user {}", receiverId);
 
-            // Email notification
+
             try {
                 FarmerResponse farmer = farmerServiceClient.getFarmerById(receiverId);
                 recipientEmail = farmer.getEmail();

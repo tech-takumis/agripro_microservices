@@ -17,9 +17,6 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(false);
     const initializationPromise = ref(null);
 
-    const ws = useWebSocketStore();
-
-    // Getters
     const userFullName = computed(() =>
         userData.value?.firstName && userData.value?.lastName
             ? `${userData.value.firstName} ${userData.value.lastName}`
@@ -37,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
         return userData.value.roles[0].defaultRoute;
     });
 
-    // Methods that were getters with parameters
+
     const hasRole = (roleName) => {
         if (!roleName) return false;
         return userData.value?.roles?.some(role =>
