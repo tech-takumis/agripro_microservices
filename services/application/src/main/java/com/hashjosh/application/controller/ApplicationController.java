@@ -1,19 +1,13 @@
 package com.hashjosh.application.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.ApplicationSubmissionResponse;
 import com.hashjosh.application.service.ApplicationService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,34 +22,13 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping(value = "/submit", consumes = "multipart/form-data")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
+    @PostMapping(value = "/submit", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> submitApplication(
             @Valid @RequestPart ApplicationSubmissionDto submission,
             @RequestPart(value = "files",required = false) List<MultipartFile> files
     ) {
-
-        try {
-
-            ApplicationSubmissionResponse response = applicationService.processSubmission(
-                    submission,
-                    files
-            );
-
-            // Return appropriate response
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApplicationSubmissionResponse.builder()
-                            .success(false)
-                            .message("An error occurred while processing your application: " + e.getMessage())
-                            .build());
-        }
+        applicationService.processSubmission(submission, files);
+        return ResponseEntity.ok("Application submitted successfully");
     }
 
 

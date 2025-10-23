@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.AgricultureHttpClient;
 import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
-import com.hashjosh.application.dto.*;
+import com.hashjosh.application.dto.ApplicationResponseDto;
+import com.hashjosh.application.dto.ApplicationSubmissionDto;
+import com.hashjosh.application.dto.ValidationError;
+import com.hashjosh.application.dto.ValidationErrors;
 import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
@@ -18,7 +21,6 @@ import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.document.dto.DocumentResponse;
 import com.hashjosh.constant.verification.VerificationRequestDto;
-import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -26,7 +28,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -46,81 +47,69 @@ public class ApplicationService {
     private final AgricultureHttpClient agricultureHttpClient;
 
 
-    public ApplicationSubmissionResponse processSubmission(
+    public void processSubmission(
             ApplicationSubmissionDto submission,
             List<MultipartFile> files) {
 
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
 
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
+            ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Application type not found: " + submission.getApplicationTypeId()));
 
-
-        ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Application type not found: " + submission.getApplicationTypeId()));
-
-
-
-        List<ApplicationField> fields = applicationType.getSections().stream()
-                .flatMap(section -> section.getFields().stream())
-                .collect(Collectors.toList());
+            List<ApplicationField> fields = applicationType.getSections().stream()
+                    .flatMap(section -> section.getFields().stream())
+                    .collect(Collectors.toList());
 
 
+            // 4. Validate fields
+            List<ValidationError> validationErrors = validateSubmission(submission, fields);
 
-        // 4. Validate fields
-        List<ValidationError> validationErrors = validateSubmission(submission, fields);
 
-
-        List<DocumentResponse> uploadedDocuments = new ArrayList<>();
-        if(files != null && !files.isEmpty()){
-            // 1. Upload documents if any
-            for (MultipartFile file : files) {
-                DocumentResponse documentResponse = documentServiceClient
-                        .uploadDocument(file, userDetails.getUserId());
-                uploadedDocuments.add(documentResponse);
+            List<DocumentResponse> uploadedDocuments = new ArrayList<>();
+            if(files != null && !files.isEmpty()){
+                // 1. Upload documents if any
+                for (MultipartFile file : files) {
+                    DocumentResponse documentResponse = documentServiceClient
+                            .uploadDocument(file, userDetails.getUserId());
+                    uploadedDocuments.add(documentResponse);
+                }
             }
+
+
+            List<UUID> documentIds = uploadedDocuments.stream()
+                    .map(DocumentResponse::getDocumentId)
+                    .collect(Collectors.toList());
+
+            if (submission.getDocumentIds() != null) {
+                submission.getDocumentIds().addAll(documentIds);
+            } else {
+                submission.setDocumentIds(documentIds);
+            }
+
+            if (!validationErrors.isEmpty()) {
+                throw ApiException.badRequest("Validation failed: " + validationErrors);
+            }
+
+
+
+            Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
+            Application savedApplication = applicationRepository.save(application);
+            agricultureHttpClient.submitApplication(
+                    VerificationRequestDto.builder()
+                            .submissionId(savedApplication.getId())
+                            .uploadedBy(UUID.fromString(userDetails.getUserId()))
+                            .report("Application submitted for verification")
+                            .build(),
+                    userDetails.getUserId()
+            );
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw ApiException.internalError("An error occurred while processing your application: " + e.getMessage());
         }
-
-
-        List<UUID> documentIds = uploadedDocuments.stream()
-                .map(DocumentResponse::getDocumentId)
-                .collect(Collectors.toList());
-
-        if (submission.getDocumentIds() != null) {
-            submission.getDocumentIds().addAll(documentIds);
-        } else {
-            submission.setDocumentIds(documentIds);
-        }
-
-        if (!validationErrors.isEmpty()) {
-            return ApplicationSubmissionResponse.builder()
-                    .success(false)
-                    .message("Validation failed")
-                    .errors(validationErrors)
-                    .build();
-        }
-
-
-        // Submit the application for verification
-
-
-
-        Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
-        Application savedApplication = applicationRepository.save(application);
-        agricultureHttpClient.submitApplication(
-                VerificationRequestDto.builder()
-                        .submissionId(savedApplication.getId())
-                        .uploadedBy(UUID.fromString(userDetails.getUserId()))
-                        .report("Application submitted for verification")
-                        .build(),
-                userDetails.getUserId()
-        );
-
-        return ApplicationSubmissionResponse.builder()
-                .success(true)
-                .message("Application submitted successfully")
-                .applicationId(savedApplication.getId())
-                .build();
     }
 
     private List<ValidationError> validateSubmission(
