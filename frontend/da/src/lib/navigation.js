@@ -66,7 +66,7 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        to: { name: 'municipal-agriculturist-dashboard' },
+        to: { name: 'agriculturist-dashboard' },
         exact: true
     },
     {
@@ -75,23 +75,23 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
         children: [
             {
                 title: 'Submit Crop Data',
-                to: { name: 'municipal-agriculturist-submit-crop-data' }
+                to: { name: 'agriculturist-submit-crop-data' }
             },
             {
                 title: 'Develop Plans',
-                to: { name: 'municipal-agriculturist-develop-plans' }
+                to: { name: 'agriculturist-develop-plans' }
             },
             {
                 title: 'Coordinate Agencies',
-                to: { name: 'municipal-agriculturist-coordinate-agencies' }
+                to: { name: 'agriculturist-coordinate-agencies' }
             },
             {
                 title: 'Monitor Programs',
-                to: { name: 'municipal-agriculturist-monitor-programs' }
+                to: { name: 'agriculturist-monitor-programs' }
             },
             {
                 title: 'Conduct Surveys',
-                to: { name: 'municipal-agriculturist-conduct-surveys' }
+                to: { name: 'agriculturist-conduct-surveys' }
             }
         ]
     },
@@ -101,19 +101,19 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
         children: [
             {
                 title: 'Process Claims',
-                to: { name: 'municipal-agriculturist-process-claims' }
+                to: { name: 'agriculturist-process-claims' }
             }
         ]
     },
     {
         title: 'Reports',
         icon: FileBarChart2,
-        to: { name: 'municipal-agriculturist-reports' }
+        to: { name: 'agriculturist-reports' }
     },
     {
         title: 'Messages',
         icon: MessageCircle,
-        to: { name: 'municipal-agriculturist-message' }
+        to: { name: 'agriculturist-message' }
     }
 ];
 

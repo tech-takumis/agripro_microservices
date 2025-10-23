@@ -113,108 +113,108 @@ export const ADMIN_ROUTES = [
 
 export const MUNICIPALITY_ROUTES = [
     {
-        path: '/municipal-agriculturist/dashboard',
-        name: 'municipal-agriculturist-dashboard',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistDashboard.vue'),
+        path: '/agriculturist/dashboard',
+        name: 'agriculturist-dashboard',
+        component: () => import('@/pages/agriculturist/AgriculturistDashboard.vue'),
         meta: {
             title: 'Municipal Agriculturist Dashboard',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/submit-crop-data',
-        name: 'municipal-agriculturist-submit-crop-data',
-        component: () => import('@/pages/municipal-agriculturist/applications/ApplicationList.vue'),
+        path: '/agriculturist/submit-crop-data',
+        name: 'agriculturist-submit-crop-data',
+        component: () => import('@/pages/agriculturist/applications/ApplicationList.vue'),
         meta: {
             title: 'Submit Crop Data',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/submit-crop-data/:id',
-        name: 'municipal-agriculturist-submit-crop-data-detail',
-        component: () => import('@/pages/municipal-agriculturist/applications/ApplicationDetail.vue'),
+        path: '/agriculturist/submit-crop-data/:id',
+        name: 'agriculturist-submit-crop-data-detail',
+        component: () => import('@/pages/agriculturist/applications/ApplicationDetail.vue'),
         meta: {
             title: 'Submit Crop Data Detail',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/develop-plans',
-        name: 'municipal-agriculturist-develop-plans',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistDevelopPlans.vue'),
+        path: '/agriculturist/develop-plans',
+        name: 'agriculturist-develop-plans',
+        component: () => import('@/pages/agriculturist/operations/AgriculturistDevelopPlans.vue'),
         meta: {
             title: 'Develop Plans',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/coordinate-agencies',
-        name: 'municipal-agriculturist-coordinate-agencies',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistCoordinateAgencies.vue'),
+        path: '/agriculturist/coordinate-agencies',
+        name: 'agriculturist-coordinate-agencies',
+        component: () => import('@/pages/agriculturist/operations/AgriculturistCoordinateAgencies.vue'),
         meta: {
             title: 'Coordinate Agencies',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/provide-infrastructure',
-        name: 'municipal-agriculturist-provide-infrastructure',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistProvideInfrastructure.vue'),
+        path: '/agriculturist/provide-infrastructure',
+        name: 'agriculturist-provide-infrastructure',
+        component: () => import('@/pages/agriculturist/operations/AgriculturistProvideInfrastructure.vue'),
         meta: {
             title: 'Provide Infrastructure',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/technical-advice',
-        name: 'municipal-agriculturist-technical-advice',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistTechnicalAdvice.vue'),
+        path: '/agriculturist/technical-advice',
+        name: 'agriculturist-technical-advice',
+        component: () => import('@/pages/agriculturist/operations/AgriculturistTechnicalAdvice.vue'),
         meta: {
             title: 'Provide Technical Advice',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/monitor-programs',
-        name: 'municipal-agriculturist-monitor-programs',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistMonitorPrograms.vue'),
+        path: '/agriculturist/monitor-programs',
+        name: 'agriculturist-monitor-programs',
+        component: () => import('@/pages/agriculturist/operations/AgriculturistMonitorPrograms.vue'),
         meta: {
             title: 'Monitor Programs',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/conduct-surveys',
-        name: 'municipal-agriculturist-conduct-surveys',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistConductSurveys.vue'),
+        path: '/agriculturist/conduct-surveys',
+        name: 'agriculturist-conduct-surveys',
+        component: () => import('@/pages/agriculturist/survey/AgriculturistConductSurveys.vue'),
         meta: {
             title: 'Conduct Surveys',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/process-claims',
-        name: 'municipal-agriculturist-process-claims',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistProcessClaims.vue'),
+        path: '/agriculturist/process-claims',
+        name: 'agriculturist-process-claims',
+        component: () => import('@/pages/agriculturist/claims/AgriculturistProcessClaims.vue'),
         meta: {
             title: 'Process Claims',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/reports',
-        name: 'municipal-agriculturist-reports',
-        component: () => import('@/pages/municipal-agriculturist/MunicipalAgriculturistReports.vue'),
+        path: '/agriculturist/reports',
+        name: 'agriculturist-reports',
+        component: () => import('@/pages/agriculturist/report/AgriculturistReports.vue'),
         meta: {
             title: 'Reports',
             guard: 'auth'
         }
     },
     {
-        path: '/municipal-agriculturist/message',
-        name: 'municipal-agriculturist-message',
-        component: () => import('@/pages/municipal-agriculturist/message/MunicipalAgriculturistMessage.vue'),
+        path: '/agriculturist/message',
+        name: 'agriculturist-message',
+        component: () => import('@/pages/agriculturist/message/AgriculturistMessage.vue'),
         meta: {
             title: 'Message',
             guard: 'auth'

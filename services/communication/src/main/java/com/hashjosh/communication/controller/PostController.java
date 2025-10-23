@@ -41,7 +41,6 @@ public class PostController {
         return ResponseEntity.ok(postService.getPostsByAuthor(authorId));
     }
 
-    // READ (all posts)
     @GetMapping
     public ResponseEntity<PostPageResponse> getAllPosts(
             @RequestParam(required = false) UUID cursor,
