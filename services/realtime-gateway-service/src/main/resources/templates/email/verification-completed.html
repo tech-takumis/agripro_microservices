@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Completed</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+    .header { background-color: #28a745; color: #ffffff; padding: 15px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 20px; line-height: 1.6; color: #333333; }
+    .content p { margin: 10px 0; }
+    .footer { text-align: center; padding: 10px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; }
+    .alert { color: #d9534f; font-weight: bold; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Verification Completed</h1>
+  </div>
+  <div class="content">
+    <p>Dear <span th:text="${name}"></span>,</p>
+    <p th:if="${event.status == 'COMPLETED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) has been successfully verified by Agriculture on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
+    <p th:if="${event.status == 'REJECTED'}">Your application (ID: <span th:text="${event.submissionId}"></span>) was rejected by Agriculture on <span th:text="${#temporals.format(event.verifiedAt, 'dd MMMM yyyy HH:mm')}"></span>.</p>
+    <p th:if="${event.status == 'REJECTED'}" class="alert">Reason: <span th:text="${event.rejectionReason}"></span></p>
+    <p th:if="${event.status == 'COMPLETED'}">Your application will be sent to PCIC for inspection soon.</p>
+    <p th:if="${event.status == 'REJECTED'}">Please contact support for further assistance.</p>
+  </div>
+  <div class="footer">
+    <p>Agriculture Service Team</p>
+    <p>Contact us at <a href="mailto:support@agriculture.com">support@agriculture.com</a></p>
+  </div>
+</div>
+</body>
+</html>

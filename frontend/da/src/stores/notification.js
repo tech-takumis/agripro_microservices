@@ -1,53 +1,44 @@
-import {defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import axios  from '@/lib/axios'
-
+import {defineStore} from 'pinia'
+import { computed, ref } from 'vue'
+import axios from 'axios'
 
 export const useNotificationStore = defineStore('notification', () => {
     const notifications = ref([])
-    const loading =  ref([])
-    const error = ref([])
+    const loading = ref(false)
+    const error = ref(null)
 
-
+    // Getter
+    const allNotifications = computed(() => notifications.value)
     const isLoading = computed(() => loading.value)
-    const isError = computed(() => error.value)
-    const allNotifications = computed(() => notifications.value)    
-    const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-    const hasUnread = computed(() => unreadCount.value > 0)
-    const lastNotification = computed(() => notifications.value[notifications.value.length - 1])
-    const hasNotifications = computed(() => notifications.value.length > 0)
-    const hasNewNotifications = computed(() => notifications.value.some(n => n.new))
+    const hasError = computed(() => error.value !== null)
 
-    const fetchNotification = async () => {
-        try{
-            loading.value = true
-            const response = await axios.get('/api/v1/notifications')
+    //Actions
+    const fetchNotifications = async () => {
+        loading.value = true
+        error.value = null
+        try {
+            const response = await axios.get('/api/v1/notification')
             notifications.value = response.data
-
-            return {status: true, data: response.data}
-        }catch(error){
-            error.value = error.response?.data?.message || error.message || 'Failed to fetch notifications'
-            return {status: false, error: error.response?.data?.message || error.message || 'Failed to fetch notifications'}
-        }finally{
+            console.log('Fetched notifications:', notifications.value)
+            return { success: true, data: notifications.value }
+        }catch (error){
+            console.error('Error fetching notifications:', error)
+            return { success: false, error: error.message }
+        }finally {
             loading.value = false
         }
     }
-    const addIncomingNotification = (notification) => {
-        notifications.value.unshift(notification)
+
+    const addIncomingNotifications = (notifications) => {
+        notifications.value.unshift(...notifications)
+        console.log('New notifications added:', notifications)
     }
 
-    
-
     return {
-        isLoading,
-        isError,
         allNotifications,
-        unreadCount,
-        hasUnread,
-        lastNotification,
-        hasNotifications,
-        hasNewNotifications,
-        fetchNotification,
-        addIncomingNotification
+        isLoading,
+        hasError,
+        addIncomingNotifications,
+        fetchNotifications
     }
 })
