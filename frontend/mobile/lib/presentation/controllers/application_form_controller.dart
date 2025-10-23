@@ -1,11 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
-import '../../data/models/application_data.dart';
-import '../../data/services/application_api_service.dart';
-import '../../data/services/location_service.dart';
-import '../../injection_container.dart';
+import 'package:mobile/data/models/application_data.dart';
+import 'package:mobile/data/services/location_service.dart';
+import 'package:mobile/injection_container.dart';
 
 class ApplicationFormController {
   final ApplicationContent application;
@@ -17,7 +16,8 @@ class ApplicationFormController {
 
   // Dynamic controllers for form fields
   final Map<String, TextEditingController> _textControllers = {};
-  final Map<String, XFile?> _fileSelections = {};
+  final Map<String, PlatformFile?> _fileValues = {}; // For FILE fields
+  final Map<String, XFile?> _signatureValues = {}; // For SIGNATURE fields
   final Map<String, GlobalKey<FormFieldState>> _formFieldKeys = {};
 
   // Coordinate field, if applicable
@@ -44,7 +44,9 @@ class ApplicationFormController {
           _textControllers[fieldKey]!.text = field.defaultValue!;
         }
       } else if (field.fieldType == 'FILE') {
-        _fileSelections[fieldKey] = null;
+        _fileValues[fieldKey] = null;
+      } else if (field.fieldType == 'SIGNATURE') {
+        _signatureValues[fieldKey] = null;
       }
     }
     if (_hasCoordinateField) {
@@ -54,7 +56,8 @@ class ApplicationFormController {
 
   TextEditingController? getTextFieldController(String key) =>
       _textControllers[key];
-  XFile? getFileSelection(String key) => _fileSelections[key];
+  PlatformFile? getFileValue(String key) => _fileValues[key];
+  XFile? getSignatureValue(String key) => _signatureValues[key];
   GlobalKey<FormFieldState>? getFormFieldKey(String key) => _formFieldKeys[key];
   TextEditingController get coordinateController => _coordinateController;
   GlobalKey<FormFieldState> get coordinateFieldKey => _coordinateFieldKey;
@@ -71,7 +74,7 @@ class ApplicationFormController {
     );
 
     if (pickedFile != null) {
-      _fileSelections[fieldKey] = pickedFile;
+      _signatureValues[fieldKey] = pickedFile;
       getFormFieldKey(fieldKey)?.currentState?.validate();
 
       // Get GPS coordinates using geolocator if the application has a coordinate field
@@ -138,7 +141,7 @@ class ApplicationFormController {
   }
 
   void removeFile(String fieldKey) {
-    _fileSelections[fieldKey] = null;
+    _signatureValues[fieldKey] = null;
     getFormFieldKey(fieldKey)?.currentState?.validate();
     if (_hasCoordinateField) {
       _coordinateController.clear();
@@ -153,102 +156,11 @@ class ApplicationFormController {
     return null;
   }
 
-  String? validateFileField(XFile? file, bool required) {
+  String? validateFileField(PlatformFile? file, bool required) {
     if (required && file == null) {
       return 'This file is required';
     }
     return null;
-  }
-
-  Future<void> submitForm(BuildContext context) async {
-    if (!formKey.currentState!.validate()) {
-      errorMessage.value =
-          'Please fill in all required fields and select all required files.';
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
-      successMessage.value = '';
-
-      final Map<String, dynamic> fieldValues = {};
-      final Map<String, XFile> filesToUpload = {};
-
-      for (var field in application.fields) {
-        final fieldKey = getFieldKey(field);
-
-        if (field.fieldType == 'TEXT') {
-          fieldValues[fieldKey] = _textControllers[fieldKey]?.text.trim() ?? '';
-        } else if (field.fieldType == 'NUMBER') {
-          final text = _textControllers[fieldKey]?.text.trim() ?? '';
-          fieldValues[fieldKey] = int.tryParse(text) ?? text;
-        } else if (field.fieldType == 'FILE') {
-          final file = _fileSelections[fieldKey];
-          if (file != null) {
-            fieldValues[fieldKey] = file.name;
-            filesToUpload[fieldKey] = file;
-          } else {
-            fieldValues[fieldKey] = '';
-          }
-        }
-      }
-
-      if (_hasCoordinateField && _coordinateController.text.isNotEmpty) {
-        fieldValues['coordinate'] = _coordinateController.text.trim();
-      }
-
-      final response = await getIt<ApplicationApiService>().submitApplicationFormHttp(
-        application.id,
-        fieldValues,
-        filesToUpload,
-      );
-
-      if (!response!.success) {
-        throw Exception(response.error ?? response.message);
-      }
-
-      successMessage.value = response.message;
-      _clearForm();
-      _showSuccessAlert(context);
-    } catch (e) {
-      errorMessage.value = 'An unexpected error occurred: ${e.toString()}';
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void _showSuccessAlert(BuildContext context) {
-    Alert(
-      context: context,
-      type: AlertType.success,
-      title: "Application Submitted",
-      desc: successMessage.value,
-      buttons: [
-        DialogButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Close the alert dialog
-            Navigator.of(context).pop(); // Go back to the applications list page
-          },
-          width: 120,
-          child: const Text(
-            "OK",
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-        ),
-      ],
-    ).show();
-  }
-
-  void _clearForm() {
-    for (var controller in _textControllers.values) {
-      controller.clear();
-    }
-    for (var key in _fileSelections.keys) {
-      _fileSelections[key] = null;
-    }
-    _coordinateController.clear();
-    clearMessages();
   }
 
   void clearMessages() {

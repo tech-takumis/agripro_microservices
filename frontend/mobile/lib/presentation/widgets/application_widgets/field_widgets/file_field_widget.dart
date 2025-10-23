@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../data/models/application_data.dart';
 
 /// Widget for FILE field type
 class FileFieldWidget extends StatefulWidget {
   final ApplicationField field;
-  final XFile? selectedFile;
-  final void Function(XFile?) onFileSelected;
-  final String? Function(XFile?)? validator;
+  final PlatformFile? selectedFile;
+  final void Function(PlatformFile?) onFileSelected;
+  final String? Function(PlatformFile?)? validator;
 
   const FileFieldWidget({
     super.key,
@@ -22,64 +22,17 @@ class FileFieldWidget extends StatefulWidget {
 }
 
 class _FileFieldWidgetState extends State<FileFieldWidget> {
-  final ImagePicker _picker = ImagePicker();
-
   Future<void> _pickFile() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-    );
-
-    if (pickedFile != null) {
-      widget.onFileSelected(pickedFile);
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result != null && result.files.isNotEmpty) {
+      widget.onFileSelected(result.files.first);
     }
-  }
-
-  Future<void> _pickFromGallery() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-
-    if (pickedFile != null) {
-      widget.onFileSelected(pickedFile);
-    }
-  }
-
-  void _showPickerOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickFile();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickFromGallery();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final hasError = widget.validator?.call(widget.selectedFile) != null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,7 +57,7 @@ class _FileFieldWidgetState extends State<FileFieldWidget> {
             leading: Icon(
               widget.selectedFile != null
                   ? Icons.check_circle
-                  : Icons.camera_alt,
+                  : Icons.attach_file,
               color: widget.selectedFile != null
                   ? Colors.green
                   : Theme.of(context).primaryColor,
@@ -125,7 +78,7 @@ class _FileFieldWidgetState extends State<FileFieldWidget> {
                     onPressed: () => widget.onFileSelected(null),
                   )
                 : null,
-            onTap: _showPickerOptions,
+            onTap: _pickFile,
           ),
         ),
         if (hasError)

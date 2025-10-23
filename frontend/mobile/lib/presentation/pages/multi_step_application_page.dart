@@ -5,13 +5,8 @@ import 'package:mobile/presentation/controllers/multi_step_application_controlle
 import 'package:mobile/presentation/widgets/application_widgets/application_step_form.dart';
 import 'package:mobile/presentation/widgets/common/custom_button.dart';
 import 'package:mobile/presentation/widgets/common/step_indicator.dart';
+import 'package:mobile/presentation/controllers/auth_controller.dart';
 
-import '../controllers/auth_controller.dart';
-
-/// Multi-step application page
-///
-/// Displays application form in steps based on sections
-/// Handles navigation between steps and final submission
 class MultiStepApplicationPage extends ConsumerStatefulWidget {
   final ApplicationContent application;
 
@@ -40,7 +35,7 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
         backgroundColor: const Color.fromARGB(0, 36, 225, 43).withAlpha(204), // 80% opacity of Material Green 500 (0x4CAF50)        duration: const Duration(seconds: 4),
       ),
         );
-         navigator.pop(); // use navigator safely
+         navigator.pop();
     }
     else{
       scaffoldMessenger.showSnackBar(

@@ -1,15 +1,19 @@
 import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
-import '../../data/models/application_data.dart';
-import '../../data/models/application_submission_request.dart';
-import '../../data/services/document_service.dart';
-import '../../data/services/application_api_service.dart';
-import '../../injection_container.dart';
+import 'package:mobile/data/services/storage_service.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
-/// Controller for multi-step application submission
-///
+import 'package:mobile/data/models/application_data.dart';
+import 'package:mobile/data/models/application_submission_request.dart';
+import 'package:mobile/data/services/application_api_service.dart';
+import 'package:mobile/injection_container.dart';
+
+
 /// Handles step navigation, field values, file uploads, and submission
 class MultiStepApplicationController {
   final ApplicationContent application;
@@ -27,7 +31,7 @@ class MultiStepApplicationController {
   // Field values storage
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, String?> _selectValues = {};
-  final Map<String, XFile?> _fileValues = {};
+  final Map<String, PlatformFile?> _fileValues = {}; // <-- Use PlatformFile?
   final Map<String, bool?> _booleanValues = {}; // <-- Add boolean field storage
 
   // Location field values (for PSGC location fields)
@@ -58,6 +62,37 @@ class MultiStepApplicationController {
   }
 
   void _initializeControllers() {
+    // Get user credentials from storage
+    final userCredentials = getIt<StorageService>().getUserCredentials();
+    final user = userCredentials?.user;
+    final profile = user?.profile;
+
+    // Helper to get user/profile values by field key
+    String? getUserFieldValue(String key) {
+      final lowerKey = key.toLowerCase();
+      // Common mappings (expand as needed)
+      if (lowerKey == 'first_name' || lowerKey == 'firstname') return user?.firstName;
+      if (lowerKey == 'last_name' || lowerKey == 'lastname') return user?.lastName;
+      if (lowerKey == 'middle_name' || lowerKey == 'middlename') return null; // Add if available
+      if (lowerKey == 'email') return user?.email;
+      if (lowerKey == 'cell_phone_number' || lowerKey == 'phone' || lowerKey == 'phone_number') return user?.phoneNumber;
+      if (lowerKey == 'sex' || lowerKey == 'gender') return profile?.gender;
+      if (lowerKey == 'date_of_birth' || lowerKey == 'dob') return profile?.dateOfBirth;
+      if (lowerKey == 'civil_status') return profile?.civilStatus;
+      if (lowerKey == 'address') {
+        final parts = [
+          profile?.houseNo,
+          profile?.street,
+          profile?.barangay,
+          profile?.municipality,
+          profile?.province
+        ].where((e) => e != null && e.isNotEmpty).toList();
+        return parts.isNotEmpty ? parts.join(', ') : null;
+      }
+      // Add more mappings as needed
+      return null;
+    }
+
     for (var section in application.sections) {
       for (var field in section.fields) {
         // Check if field is a location field (by key pattern)
@@ -82,8 +117,10 @@ class MultiStepApplicationController {
         else if (field.fieldType == 'TEXT' ||
             field.fieldType == 'NUMBER' ||
             field.fieldType == 'DATE') {
+          // Use user/profile value if available, else defaultValue
+          final userValue = getUserFieldValue(field.key);
           _textControllers[field.key] = TextEditingController(
-            text: field.defaultValue,
+            text: userValue ?? field.defaultValue,
           );
         } else if (field.fieldType == 'SELECT') {
           _selectValues[field.key] = field.defaultValue;
@@ -117,9 +154,16 @@ class MultiStepApplicationController {
     _selectValues[key] = value;
   }
 
-  XFile? getFileValue(String key) => _fileValues[key];
+  PlatformFile? getFileValue(String key) => _fileValues[key];
 
-  void setFileValue(String key, XFile? file) {
+  void setFileValue(String key, PlatformFile? file) {
+    _fileValues[key] = file;
+  }
+
+  // Add these for SIGNATURE fields (same as FILE)
+  PlatformFile? getSignatureValue(String key) => _fileValues[key];
+
+  void setSignatureValue(String key, PlatformFile? file) {
     _fileValues[key] = file;
   }
 
@@ -243,41 +287,59 @@ class MultiStepApplicationController {
       _errorMessage = '';
       _uploadProgress = 0.0;
 
-      // Step 1: Upload all files and signatures first
-      final List<String> documentIds = [];
-      final Map<String, String> fieldDocumentIds = {};
-      final filesToUpload = _fileValues.entries
-          .where((entry) => entry.value != null)
-          .toList();
+      // Step 1: Collect files (do not upload here)
+      final filesToSend = <Map<String, dynamic>>[];
+      _fileValues.entries.where((entry) => entry.value != null).forEach((entry) {
+        final file = entry.value!;
+        final fileName = file.name;
+        String? mimeType = lookupMimeType(file.path ?? file.name);
 
-      if (filesToUpload.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Uploading ${filesToUpload.length} document(s)...'),
-            backgroundColor: Colors.blue.withOpacity(0.8),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        for (var i = 0; i < filesToUpload.length; i++) {
-          final entry = filesToUpload[i];
-          final fieldKey = entry.key;
-          final file = entry.value!;
-
-          try {
-            final documentResponse = await getIt<DocumentService>().uploadDocument(
-              authState: authState,
-              file: File(file.path),
-            );
-
-            documentIds.add(documentResponse.documentId);
-            fieldDocumentIds[fieldKey] = documentResponse.documentId;
-            _uploadProgress = (i + 1) / filesToUpload.length;
-          } catch (e) {
-            throw Exception('Failed to upload $fieldKey: $e');
+        // Improved fallback: use extension to guess type if lookupMimeType fails
+        if (mimeType == null) {
+          final ext = fileName.split('.').last.toLowerCase();
+          if (ext == 'png') {
+            mimeType = 'image/png';
+          } else if (ext == 'jpg' || ext == 'jpeg') {
+            mimeType = 'image/jpeg';
+          } else if (ext == 'gif') {
+            mimeType = 'image/gif';
+          } else if (ext == 'bmp') {
+            mimeType = 'image/bmp';
+          } else if (ext == 'webp') {
+            mimeType = 'image/webp';
+          } else if (ext == 'pdf') {
+            mimeType = 'application/pdf';
+          } else if (ext == 'doc' || ext == 'docx') {
+            mimeType = 'application/msword';
+          } else if (ext == 'xls' || ext == 'xlsx') {
+            mimeType = 'application/vnd.ms-excel';
+          } else if (ext == 'txt') {
+            mimeType = 'text/plain';
+          } else {
+            // If still unknown, skip the file (do not use application/octet-stream)
+            print('⚠️ Skipping file $fileName due to unsupported MIME type.');
+            return;
           }
         }
-      }
+
+        // Only add file if not octet-stream (backend does not accept it)
+        if (mimeType != 'application/octet-stream') {
+          filesToSend.add({
+            'file': file,
+            'fileName': fileName,
+            'mimeType': mimeType,
+          });
+        } else {
+          // Show error to user if a file is skipped due to unsupported MIME type
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('File "$fileName" is not supported and was not submitted.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          print('⚠️ Skipping file $fileName due to unsupported MIME type.');
+        }
+      });
 
       // Step 2: Prepare field values
       final Map<String, dynamic> fieldValues = {};
@@ -314,13 +376,11 @@ class MultiStepApplicationController {
               fieldValues[key] = '';
             } else {
               try {
-                // Try to parse and format as ISO date (YYYY-MM-DD)
                 final parsedDate = DateTime.parse(rawDate);
                 fieldValues[key] = "${parsedDate.year.toString().padLeft(4, '0')}-"
                                    "${parsedDate.month.toString().padLeft(2, '0')}-"
                                    "${parsedDate.day.toString().padLeft(2, '0')}";
               } catch (e) {
-                // If parsing fails, send as is (backend will reject)
                 fieldValues[key] = rawDate;
               }
             }
@@ -335,27 +395,28 @@ class MultiStepApplicationController {
           } else if (field.fieldType == 'SELECT') {
             fieldValues[key] = _selectValues[key] ?? '';
           } else if (field.fieldType == 'FILE') {
-            fieldValues[key] = fieldDocumentIds.containsKey(key)
-                ? fieldDocumentIds[key]
-                : null;
+            // Do not set documentId, backend will handle file mapping
+            fieldValues[key] = null;
           } else if (field.fieldType == 'SIGNATURE') {
-            fieldValues[key] = fieldDocumentIds.containsKey(key)
-                ? 'signature:${fieldDocumentIds[key]}'
-                : null;
+            fieldValues[key] = null;
           } else if (field.fieldType == 'BOOLEAN') {
             fieldValues[key] = _booleanValues[key] ?? false;
           }
         }
       }
 
-      // Step 3: Submit application
+      // Step 3: Submit application as multipart/form-data
       final request = ApplicationSubmissionRequest(
         applicationTypeId: application.id,
         fieldValues: fieldValues,
-        documentIds: documentIds,
+        documentIds: [],
       );
 
-      final response = await getIt<ApplicationApiService>().submitApplication(authState,request);
+      final response = await getIt<ApplicationApiService>().submitApplication(
+        authState,
+        request,
+        files: filesToSend,
+      );
 
       return response;
     } catch (e) {
@@ -368,9 +429,9 @@ class MultiStepApplicationController {
         ),
       );
       return ApplicationSubmissionResponse(
-      success: false,
-      message: _errorMessage,
-    );
+        success: false,
+        message: _errorMessage,
+      );
     } finally {
       _isLoading = false;
       _uploadProgress = 0.0;

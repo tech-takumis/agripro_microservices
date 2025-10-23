@@ -1,17 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/application_submission_request.dart';
-import 'package:mobile/data/models/application_submission_response.dart' as response_model;
-
+import 'package:mobile/injection_container.dart'; // For getIt
 import '../../presentation/controllers/auth_controller.dart';
 import 'storage_service.dart';
-import 'package:mobile/injection_container.dart'; // For getIt
 
 class ApplicationApiService {
   final Dio _dio;
@@ -107,132 +104,11 @@ class ApplicationApiService {
     }
   }
 
-  // New method to submit application form
-  Future<response_model.ApplicationSubmissionResponse?> submitApplicationForm(
-      String applicationId,
-      Map<String, dynamic> fieldValues,
-      Map<String, XFile> files,
-      ) async {
-    try {
-
-      final authState = getIt<AuthState>();
-      if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
-        print('User not logged in, skipping submitApplicationForm');
-        return null;
-      }
-      print('🚀 Attempting to submit application form for ID: $applicationId');
-
-      final formData = FormData();
-
-      formData.fields.add(MapEntry("fieldValues", jsonEncode(fieldValues)));
-
-      for (final entry in files.entries) {
-        formData.files.add(
-          MapEntry(
-            entry.key, // field key, e.g. "crop_damage"
-            await MultipartFile.fromFile(
-              entry.value.path,
-              filename: entry.value.name,
-              contentType: MediaType("image", "jpeg"),
-            ),
-          ),
-        );
-      }
-      print("FormData fields: ${formData.fields}");
-      print(
-        "FormData files: ${formData.files.map((e) => "${e.key}: ${e.value.filename}")}",
-      );
-
-      final response = await _dio.post(
-        '/applications/$applicationId/submit',
-        data: formData,
-        options: Options(
-          headers: {'Accept': 'application/json'},
-          validateStatus:
-              (status) =>
-          status != null &&
-              (status >= 200 && status < 300 || status == 400),
-        ),
-      );
-
-      print('✅ Response: ${response.data}');
-
-      return response_model.ApplicationSubmissionResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('❌ DioException: ${e.response?.data}');
-      return response_model.ApplicationSubmissionResponse(
-        success: false,
-        message: 'Submission failed',
-        error: e.response?.data?.toString() ?? e.message,
-      );
-    }
-  }
-
-  Future<response_model.ApplicationSubmissionResponse?> submitApplicationFormHttp(
-      String applicationId,
-      Map<String, dynamic> fieldValues,
-      Map<String, XFile> files,
-      ) async {
-    final authState = getIt<AuthState>();
-    if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
-      print('User not logged in, skipping submitApplicationFormHttp');
-      return null;
-    }
-    final uri = Uri.parse(
-      'http://localhost:8010/api/v1/applications/$applicationId/submit',
-    );
-    final request = http.MultipartRequest('POST', uri);
-
-    // ✅ Add headers
-    final token = getIt<StorageService>().getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    request.headers['Accept'] = 'application/json';
-
-    // ✅ Add JSON fieldValues
-    request.fields['fieldValues'] = jsonEncode(fieldValues);
-
-    // ✅ Add each file with correct content type
-    for (final entry in files.entries) {
-      final file = File(entry.value.path);
-      request.files.add(
-        http.MultipartFile(
-          entry.key, // field key
-          file.openRead(),
-          await file.length(),
-          filename: entry.value.name,
-          contentType: MediaType(
-            'image',
-            'jpeg',
-          ), // <- MUST use correct MediaType
-        ),
-      );
-    }
-
-    print('📦 Sending multipart/form-data request...');
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    print('✅ Response status: ${response.statusCode}');
-    print('✅ Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      return response_model.ApplicationSubmissionResponse.fromJson(jsonDecode(response.body));
-    } else {
-      return response_model.ApplicationSubmissionResponse(
-        success: false,
-        message: 'Submission failed',
-        error: response.body,
-      );
-    }
-  }
-
   Future<ApplicationSubmissionResponse> submitApplication(
       AuthState authState,
-      ApplicationSubmissionRequest request,
-      ) async {
+      ApplicationSubmissionRequest request, {
+      List<Map<String, dynamic>>? files,
+      }) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
@@ -241,13 +117,62 @@ class ApplicationApiService {
       print('🚀 Submitting application for type: ${request.applicationTypeId}');
       print('📋 Field values: ${request.fieldValues}');
       print('📎 Document IDs: ${request.documentIds}');
+      print('📁 Files: ${files?.length ?? 0}');
+
+      // Prepare multipart form data
+      final formData = FormData();
+
+      // Add the submission part as JSON string
+      formData.fields.add(MapEntry(
+        'submission',
+        jsonEncode({
+          'applicationTypeId': request.applicationTypeId,
+          'fieldValues': request.fieldValues,
+          'documentIds': [],
+        }),
+      ));
+
+      // Add files if any, with correct content type
+      if (files != null && files.isNotEmpty) {
+        for (final fileMap in files) {
+          final file = fileMap['file'] as PlatformFile;
+          final fileName = fileMap['fileName'] as String;
+          final mimeType = fileMap['mimeType'] as String;
+          final mediaType = MediaType.parse(mimeType);
+
+          MultipartFile multipartFile;
+          if (file.path != null) {
+            multipartFile = await MultipartFile.fromFile(
+              file.path!,
+              filename: fileName,
+              contentType: mediaType,
+            );
+          } else if (file.bytes != null) {
+            multipartFile = MultipartFile.fromBytes(
+              file.bytes!,
+              filename: fileName,
+              contentType: mediaType,
+            );
+          } else {
+            print('⚠️ Skipping file $fileName: no path or bytes.');
+            continue;
+          }
+
+          // Only add file if not octet-stream (backend does not accept it)
+          if (mimeType != 'application/octet-stream') {
+            formData.files.add(MapEntry('files', multipartFile));
+          } else {
+            print('⚠️ Skipping file $fileName due to unsupported MIME type.');
+          }
+        }
+      }
 
       final response = await _dio.post(
         '/applications/submit',
-        data: request.toJson(),
+        data: formData,
         options: Options(
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/form-data',
             'Accept': 'application/json',
           },
         ),

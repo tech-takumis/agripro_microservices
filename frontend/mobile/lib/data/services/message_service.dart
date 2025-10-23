@@ -8,7 +8,6 @@ import 'package:mime/mime.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/models/message_request_dto.dart';
-import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/data/services/message_api.dart';
 import 'package:mobile/data/services/websocket.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
@@ -22,7 +21,6 @@ class MessageService extends GetxService {
   final _controller = StreamController<List<Message>>.broadcast();
   final WebSocketService _ws = getIt<WebSocketService>();
   final MessageApi _messageApi = MessageApi();
-  final DocumentService _documentService = getIt<DocumentService>();
 
   String? _userId;
   String? _receiverId;

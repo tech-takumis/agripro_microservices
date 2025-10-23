@@ -1,17 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:mobile/data/models/application_data.dart';
 import 'package:image/image.dart' as img;
+import 'package:mime/mime.dart';
 
 enum UploadStatus { idle, uploading, success, failure }
 
 class SignatureFieldWidget extends StatefulWidget {
   final ApplicationField field;
-  final XFile? signatureFile;
-  final void Function(XFile?) onSignatureChanged;
-  final String? Function(XFile?)? validator;
+  final PlatformFile? signatureFile;
+  final void Function(PlatformFile?) onSignatureChanged;
+  final String? Function(PlatformFile?)? validator;
 
   const SignatureFieldWidget({
     Key? key,
@@ -26,10 +26,9 @@ class SignatureFieldWidget extends StatefulWidget {
 }
 
 class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
-  final ImagePicker _picker = ImagePicker();
   UploadStatus _uploadStatus = UploadStatus.idle;
   String? _errorMessage;
-  XFile? _localFile; // ✅ track locally for immediate UI refresh
+  PlatformFile? _localFile;
 
   @override
   void initState() {
@@ -47,73 +46,56 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
     }
   }
 
-  Future<bool> _requestPermission(Permission permission) async {
-    final status = await permission.request();
-    return status.isGranted;
-  }
-
-  Future<void> _pickFromCamera() async {
-    if (!await _requestPermission(Permission.camera)) {
-      _showSnack('Camera permission denied');
-      return;
-    }
-
+  Future<void> _pickSignatureFile() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-        preferredCameraDevice: CameraDevice.rear,
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg'],
+        withData: true,
       );
-      if (pickedFile != null) _handleFilePicked(pickedFile);
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        await _handleFilePicked(file);
+      }
     } catch (e) {
-      _showSnack('Failed to capture image: $e');
+      _showSnack('Failed to pick file: $e');
     }
   }
 
-  Future<void> _pickFromGallery() async {
-    if (!await _requestPermission(Permission.photos)) {
-      _showSnack('Gallery permission denied');
-      return;
-    }
-
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
-      if (pickedFile != null) _handleFilePicked(pickedFile);
-    } catch (e) {
-      _showSnack('Failed to select image: $e');
-    }
-  }
-
-  void _handleFilePicked(XFile file) async {
+  Future<void> _handleFilePicked(PlatformFile file) async {
     setState(() {
       _uploadStatus = UploadStatus.uploading;
       _errorMessage = null;
     });
 
     try {
-      final f = File(file.path);
-      final length = await f.length();
+      if (file.size < 1024) throw Exception("Selected image is too small or invalid.");
 
-      if (length < 1024) throw Exception("Selected image is too small or invalid.");
-
-      final decodedImage = img.decodeImage(await f.readAsBytes());
+      final bytes = file.bytes ?? await File(file.path!).readAsBytes();
+      final decodedImage = img.decodeImage(bytes);
       if (decodedImage == null || decodedImage.width < 50 || decodedImage.height < 50) {
         throw Exception("Selected image is corrupted or unsupported format.");
       }
 
-      // ✅ simulate upload
+      // Check mime type
+      final mimeType = lookupMimeType(file.path ?? file.name) ?? '';
+      if (mimeType == 'application/octet-stream') {
+        setState(() {
+          _uploadStatus = UploadStatus.failure;
+          _errorMessage = "The selected file/image is not supported. Please select a valid image file (PNG, JPG, JPEG).";
+        });
+        _showSnack(_errorMessage!);
+        return;
+      }
+
+      // Simulate upload
       await Future.delayed(const Duration(seconds: 2));
 
-      // ✅ update local state immediately
       setState(() {
         _uploadStatus = UploadStatus.success;
         _localFile = file;
       });
 
-      // ✅ notify parent
       widget.onSignatureChanged(file);
     } catch (e) {
       setState(() {
@@ -127,37 +109,6 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  void _showPickerOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: Colors.blue),
-              title: const Text('Take Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickFromCamera();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: Colors.green),
-              title: const Text('Choose from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickFromGallery();
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -178,7 +129,11 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Image.file(File(_localFile!.path), fit: BoxFit.contain),
+              child: _localFile!.bytes != null
+                  ? Image.memory(_localFile!.bytes!, fit: BoxFit.contain)
+                  : (_localFile!.path != null
+                      ? Image.file(File(_localFile!.path!), fit: BoxFit.contain)
+                      : const Text('No preview available')),
             ),
           ],
         ),
@@ -207,7 +162,7 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: InkWell(
-            onTap: _showPickerOptions,
+            onTap: _pickSignatureFile,
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -234,8 +189,8 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
                       _uploadStatus == UploadStatus.uploading
                           ? "Uploading..."
                           : _localFile != null
-                          ? (_uploadStatus == UploadStatus.success ? "Signature uploaded" : "Upload failed")
-                          : "Upload signature",
+                              ? (_uploadStatus == UploadStatus.success ? "Signature uploaded" : "Upload failed")
+                              : "Upload signature",
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: _uploadStatus == UploadStatus.failure
@@ -265,7 +220,11 @@ class _SignatureFieldWidgetState extends State<SignatureFieldWidget> {
         if (_localFile != null && _uploadStatus == UploadStatus.success)
           Container(
             margin: const EdgeInsets.only(top: 8),
-            child: Image.file(File(_localFile!.path), height: 100, fit: BoxFit.contain),
+            child: _localFile!.bytes != null
+                ? Image.memory(_localFile!.bytes!, height: 100, fit: BoxFit.contain)
+                : (_localFile!.path != null
+                    ? Image.file(File(_localFile!.path!), height: 100, fit: BoxFit.contain)
+                    : const Text('No preview available')),
           ),
         if (hasError)
           Padding(
