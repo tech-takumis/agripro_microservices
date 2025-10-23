@@ -5,7 +5,7 @@ import com.hashjosh.pcic.dto.*;
 import com.hashjosh.pcic.entity.*;
 import com.hashjosh.constant.pcic.enums.ClaimStatus;
 import com.hashjosh.constant.pcic.enums.PolicyStatus;
-import com.hashjosh.pcic.exception.ClaimNotFoundException;
+import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.mapper.ClaimMapper;
 import com.hashjosh.pcic.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,10 +28,7 @@ public class ClaimService {
                                      ClaimRequest claim,
                                      HttpServletRequest request) {
         Claim savedClaim = claimRepository.findById(claimId)
-                .orElseThrow(() -> new ClaimNotFoundException(
-                        "Claim id "+ claimId + " not found!",
-                        HttpStatus.NOT_FOUND.value()
-                ));
+                .orElseThrow(() -> ApiException.notFound("Claim not found"));
 
         savedClaim.setClaimAmount(claim.claimAmount());
         savedClaim.setPayoutStatus(claim.payoutStatus());

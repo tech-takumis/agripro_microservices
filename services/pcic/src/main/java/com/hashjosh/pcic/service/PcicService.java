@@ -1,7 +1,7 @@
 package com.hashjosh.pcic.service;
 
 import com.hashjosh.pcic.dto.PcicResponse;
-import com.hashjosh.pcic.exception.PcicException;
+import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.mapper.PcicMapper;
 import com.hashjosh.pcic.repository.PcicRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class PcicService {
     public PcicResponse findById(UUID pcicId) {
         return pcicMapper.toPcicResponse(
                 pcicRepository.findById(pcicId)
-                        .orElseThrow(() -> new PcicException("Pcic id not found", HttpStatus.NOT_FOUND.value()))
+                        .orElseThrow(() -> ApiException.notFound("Pcic not found"))
         );
     }
 

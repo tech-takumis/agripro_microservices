@@ -3,7 +3,7 @@ package com.hashjosh.farmer.service;
 import com.hashjosh.farmer.config.CustomUserDetails;
 import com.hashjosh.farmer.dto.*;
 import com.hashjosh.farmer.entity.*;
-import com.hashjosh.farmer.exception.FarmerNotFoundException;
+import com.hashjosh.farmer.exception.ApiException;
 import com.hashjosh.farmer.kafka.FarmerProducer;
 import com.hashjosh.farmer.mapper.UserMapper;
 import com.hashjosh.farmer.repository.*;
@@ -38,20 +38,17 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     @Transactional
     public Farmer register(RegistrationRequest request) {
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            throw new FarmerNotFoundException("Password cannot be empty", HttpStatus.BAD_REQUEST.value());
-        }
 
         if (farmerRepository.existsByEmail(request.getEmail())) {
-            throw new FarmerNotFoundException("Email already exists", HttpStatus.BAD_REQUEST.value());
+            throw ApiException.badRequest("Email already exists");
         }
 
         if (farmerRepository.existsByUsername(request.getRsbsaId())) {
-            throw new FarmerNotFoundException("RSBSA ID already exists", HttpStatus.BAD_REQUEST.value());
+            throw ApiException.badRequest("RSBSA ID already exists");
         }
 
         Set<Role> roles = Collections.singleton(roleRepository.findByName("FARMER")
-                .orElseThrow(() -> new FarmerNotFoundException("Role not found", HttpStatus.NOT_FOUND.value())));
+                .orElseThrow(() -> ApiException.badRequest("Role FARMER not found")));
 
         // Create and save UserProfile first
         Farmer farmer = userMapper.toUserEntity(request, roles);
@@ -100,7 +97,7 @@ public class AuthService {
 
             // Log the user exists and has password (without showing the password)
             Farmer farmer = farmerRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new FarmerNotFoundException("User not found", HttpStatus.NOT_FOUND.value()));
+                    .orElseThrow(() -> ApiException.badRequest("User not found"));
 
             log.info("Found user: {}, Has password: {}",
                     farmer.getUsername(),
@@ -117,7 +114,7 @@ public class AuthService {
             Farmer farmerLoggedIn = userDetails.getFarmer();
 
             if (farmerLoggedIn == null) {
-                throw new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value());
+                throw ApiException.badRequest("User not found");
             }
 
             // Extract permissions and roles
@@ -164,7 +161,7 @@ public class AuthService {
 
     public AuthUserResponse getAuthenticatedUser(UUID id) {
         Farmer farmer = farmerRepository.findById(id)
-                .orElseThrow(() -> new FarmerNotFoundException("Farmer not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.badRequest("User not found"));
 
         return userMapper.toAuthUserResponse(farmer);
     }

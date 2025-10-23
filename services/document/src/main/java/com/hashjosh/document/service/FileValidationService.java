@@ -1,6 +1,6 @@
 package com.hashjosh.document.service;
 
-import com.hashjosh.document.exception.FileValidationException;
+import com.hashjosh.document.exception.ApiException;
 import com.hashjosh.document.properties.FileUploadProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,22 +16,20 @@ public class FileValidationService {
 
     public void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new FileValidationException("File cannot be empty");
+           throw ApiException.badRequest("File is empty or not provided");
         }
 
         // Check file size
         if (file.getSize() > fileUploadProperties.getMaxFileSize()) {
-            throw new FileValidationException(
-                String.format("File size %d bytes exceeds maximum allowed size of %d bytes",
+            throw ApiException.badRequest(String.format("File size %d bytes exceeds maximum allowed size of %d bytes",
                     file.getSize(),
-                    fileUploadProperties.getMaxFileSize())
-            );
+                    fileUploadProperties.getMaxFileSize()));
         }
 
         // Check file type
         String fileContentType = file.getContentType();
         if (fileContentType == null) {
-            throw new FileValidationException("Could not determine file type");
+            throw ApiException.badRequest("File content type is not provided");
         }
 
         Set<String> allowedTypes = fileUploadProperties.getAllowedFileTypes();
@@ -39,10 +37,10 @@ public class FileValidationService {
                 .anyMatch(allowedType -> fileContentType.toLowerCase().contains(allowedType.toLowerCase()));
 
         if (!isValidType) {
-            throw new FileValidationException(
-                String.format("File type '%s' is not allowed. Allowed types are: %s",
-                    fileContentType,
-                    String.join(", ", allowedTypes))
+            throw ApiException.badRequest(
+                    String.format("File type '%s' is not allowed. Allowed types are: %s",
+                            fileContentType,
+                            String.join(", ", allowedTypes))
             );
         }
 
@@ -61,10 +59,10 @@ public class FileValidationService {
             }
             
             if (!isValidExtension) {
-                throw new FileValidationException(
-                    String.format("File extension '.%s' is not allowed. Allowed extensions are: %s",
-                        fileExtension,
-                        String.join(", ", allowedExtensions))
+                throw ApiException.badRequest(
+                        String.format("File extension '.%s' is not allowed. Allowed extensions are: %s",
+                                fileExtension,
+                                String.join(", ", allowedExtensions))
                 );
             }
         }

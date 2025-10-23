@@ -1,6 +1,6 @@
 package com.hashjosh.document.config;
 
-import com.hashjosh.document.exception.MinioOperationException;
+import com.hashjosh.document.exception.ApiException;
 import com.hashjosh.document.properties.MinioProperties;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
@@ -40,11 +40,7 @@ public class MinioConfiguration {
                     .build();
         } catch (Exception e) {
             log.error("Error creating MinIO client: {}", e.getMessage(), e);
-            throw new MinioOperationException(
-                    "Failed to initialize MinIO client: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    e
-                    );
+            throw ApiException.internalError("Failed to create MinIO client: " + e.getMessage());
         }
     }
 
@@ -68,11 +64,7 @@ public class MinioConfiguration {
             }
         } catch (Exception e) {
             log.error("Error initializing MinIO bucket: {}", e.getMessage(), e);
-            throw new MinioOperationException(
-                    "Failed to initialize MinIO bucket: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    e
-                    );
+            throw ApiException.internalError("Failed to initialize MinIO bucket: " + e.getMessage());
         }
     }
 }

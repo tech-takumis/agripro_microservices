@@ -1,6 +1,6 @@
 package com.hashjosh.pcic.clients;
 
-import com.hashjosh.pcic.exception.ApplicationNotFoundException;
+import com.hashjosh.pcic.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,12 +29,9 @@ public class ApplicationServiceClient {
                     if(res.getStatusCode().is2xxSuccessful()) {
                         return res.bodyTo(ApplicationResponseDto.class);
                     } else if (res.getStatusCode() == HttpStatus.NOT_FOUND) {
-                        throw new ApplicationNotFoundException(
-                                "Application not found in Application Service!",
-                                HttpStatus.NOT_FOUND.value()
-                        );
+                        throw ApiException.notFound("Application not found");
                     }else{
-                        throw new RuntimeException("Remote Application Service error in workflow service find workflow by application id: "+ applicationId +" status"+ res.getStatusCode());
+                        throw ApiException.internalError("Failed to fetch application details");
                     }
                 });
     }

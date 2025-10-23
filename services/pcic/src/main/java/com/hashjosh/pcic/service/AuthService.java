@@ -7,7 +7,7 @@ import com.hashjosh.kafkacommon.pcic.PcicRegistrationContract;
 import com.hashjosh.pcic.config.CustomUserDetails;
 import com.hashjosh.pcic.dto.*;
 import com.hashjosh.pcic.entity.*;
-import com.hashjosh.pcic.exception.PcicException;
+import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.kafka.PcicProducer;
 import com.hashjosh.pcic.mapper.UserMapper;
 import com.hashjosh.pcic.repository.*;
@@ -37,13 +37,13 @@ public class AuthService {
 
     public Pcic register(RegistrationRequest request) {
         if (pcicRepository.existsByEmail(request.getEmail())) {
-            throw new PcicException("Email already exists", HttpStatus.BAD_REQUEST.value());
+            throw ApiException.conflict("Email already exists");
         }
 
         Set<Role> roles = new HashSet<>();
         request.getRolesId().forEach(roleId -> {
             Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new PcicException("Role not found", HttpStatus.NOT_FOUND.value()));
+                    .orElseThrow(() -> ApiException.notFound("Role not found"));
             roles.add(role);
         });
 
@@ -120,7 +120,7 @@ public class AuthService {
     public AuthenticatedResponse getAuthenticatedUser(Pcic request) {
 
         Pcic pcic = pcicRepository.findByIdWithRolesAndPermissions(request.getId())
-                .orElseThrow(() -> new PcicException("User not found", HttpStatus.NOT_FOUND.value()));
+                .orElseThrow(() -> ApiException.notFound("User not found"));
 
         return userMapper.toAuthenticatedResponse(pcic);
     }
