@@ -96,10 +96,7 @@ export const useApplicationStore = defineStore("application", () => {
 
     // Expose state and actions
     return {
-        availableFieldTypes,
-        applications,
-        sections,
-        allApplications, // <-- expose getter
+        allApplications,
         fetchFieldTypes,
         createInsuranceApplication,
         fetchApplications,
