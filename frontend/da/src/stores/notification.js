@@ -29,6 +29,25 @@ export const useNotificationStore = defineStore('notification', () => {
         }
     }
 
+    const fetchUserNotifications = async (username) => {
+        try{
+            loading.value = true
+            error.value = null
+
+            const response = await axios.get(`/api/v1/notification/user/${username}`)
+            notifications.value = response.data
+            console.log(`Fetched notifications for user ${username}:`, notifications.value)
+            return { success: true, data: notifications.value }
+        }catch (error){
+            console.error('Error fetching user notifications:', error)
+            error.value = error.message
+            return { success: false, error: error.message }
+        }finally {
+            loading.value = false
+            error.value = null
+        }
+    }
+
     const addIncomingNotifications = (notifications) => {
         notifications.value.unshift(...notifications)
         console.log('New notifications added:', notifications)

@@ -1,21 +1,16 @@
 package com.hashjosh.application.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.application.dto.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.dto.ApplicationSubmissionResponse;
+import com.hashjosh.application.model.Application;
 import com.hashjosh.application.service.ApplicationService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,34 +23,16 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping(value = "/submit", consumes = "multipart/form-data")
-    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/submit")
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
-            @Valid @RequestPart ApplicationSubmissionDto submission,
-            @RequestPart(value = "files",required = false) List<MultipartFile> files
+            @Valid @RequestBody ApplicationSubmissionDto submission
     ) {
-
-        try {
-
-            ApplicationSubmissionResponse response = applicationService.processSubmission(
-                    submission,
-                    files
-            );
-
-            // Return appropriate response
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApplicationSubmissionResponse.builder()
-                            .success(false)
-                            .message("An error occurred while processing your application: " + e.getMessage())
-                            .build());
-        }
+        Application application = applicationService.processSubmission(submission);
+        return ResponseEntity.ok(ApplicationSubmissionResponse.builder()
+                        .applicationId(application.getId())
+                        .success(true)
+                        .message("Application submitted successfully")
+                        .build());
     }
 
 
@@ -81,5 +58,13 @@ public class ApplicationController {
     @GetMapping("/agriculture")
     public ResponseEntity<List<ApplicationResponseDto>> findAllAgricultureApplication(){
             return new ResponseEntity<>(applicationService.findAllAgricultureApplication(),HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{application-id}")
+    public ResponseEntity<Void> deleteApplication(
+            @PathVariable("application-id") UUID applicationId
+    ){
+        applicationService.deleteApplication(applicationId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

@@ -1,5 +1,3 @@
-
-/// Model for application submission request
 class ApplicationSubmissionRequest {
   final String applicationTypeId;
   final Map<String, dynamic> fieldValues;
@@ -20,26 +18,23 @@ class ApplicationSubmissionRequest {
   }
 }
 
-/// Model for application submission response
+
 class ApplicationSubmissionResponse {
   final bool success;
   final String message;
-  final String? applicationId;
-  final dynamic errors;
+  final String applicationId;
 
   ApplicationSubmissionResponse({
     required this.success,
     required this.message,
-    this.applicationId,
-    this.errors,
+    required this.applicationId,
   });
 
   factory ApplicationSubmissionResponse.fromJson(Map<String, dynamic> json) {
     return ApplicationSubmissionResponse(
-      success: json['success'] as bool,
-      message: json['message'] as String,
-      applicationId: json['applicationId'] as String?,
-      errors: json['errors'],
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      applicationId: json['applicationId']?.toString() ?? '',
     );
   }
 }

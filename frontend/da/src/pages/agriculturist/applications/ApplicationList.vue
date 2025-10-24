@@ -1,4 +1,3 @@
-
 <template>
     <AuthenticatedLayout
         :navigation="navigation"
@@ -113,16 +112,18 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ application.dynamicFields.crop_type }}</div>
+                            <div class="text-sm text-gray-900">{{ application.dynamicFields?.crop_type || 'N/A' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ application.dynamicFields.cover_type }}</div>
+                            <div class="text-sm text-gray-900">{{ application.dynamicFields?.cover_type || 'N/A' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">₱{{ formatAmount(application.dynamicFields.amount_of_cover) }}</div>
+                            <div class="text-sm text-gray-900">
+                                ₱{{ formatAmount(application.dynamicFields?.amount_of_cover) }}
+                            </div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">{{ getLocation(application.dynamicFields.lot_1_location) }}</div>
+                            <div class="text-sm text-gray-900">{{ getLocation(application.dynamicFields?.lot_1_location) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ formatDate(application.submittedAt) }}</div>
@@ -436,6 +437,7 @@
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                         </tr>
                         <tr class="font-bold">
                             <td class="border border-black px-0.5 py-0.5 text-center text-xs" colspan="11">TOTAL</td>
@@ -510,7 +512,6 @@ const filters = ref({
     amountMax: ''
 })
 
-// Computed
 const navigation = computed(() => {
     const role = authStore.userData?.roles?.[0]
     if (role === 'Admin') return ADMIN_NAVIGATION
@@ -525,7 +526,7 @@ const roleTitle = computed(() => {
 })
 
 const filteredApplications = computed(() => {
-    let apps = applicationStore.applications
+    let apps = applicationStore.applications.value || []
 
     // Apply filters
     if (filters.value.cropType) {
@@ -558,7 +559,7 @@ const filteredApplications = computed(() => {
 
 const farmerChunks = computed(() => {
     const chunks = []
-    const apps = filteredApplications.value
+    const apps = filteredApplications.value || []
 
     for (let i = 0; i < apps.length; i += 10) {
         chunks.push(apps.slice(i, i + 10))
@@ -568,7 +569,7 @@ const farmerChunks = computed(() => {
 })
 
 const isAllSelected = computed(() => {
-    return filteredApplications.value.length > 0 &&
+    return (filteredApplications.value && filteredApplications.value.length > 0) &&
         selectedApplications.value.length === filteredApplications.value.length
 })
 
@@ -587,8 +588,9 @@ const fetchApplications = async () => {
 }
 
 const getFullName = (fields) => {
+    if (!fields) return 'N/A'
     const parts = [fields.first_name, fields.middle_name, fields.last_name].filter(Boolean)
-    return parts.join(' ')
+    return parts.length ? parts.join(' ') : 'N/A'
 }
 
 const getLocation = (location) => {
@@ -598,7 +600,7 @@ const getLocation = (location) => {
         location.municipality || location.city,
         location.province
     ].filter(Boolean)
-    return parts.join(', ')
+    return parts.length ? parts.join(', ') : 'N/A'
 }
 
 const getBarangay = (location) => {
@@ -633,26 +635,6 @@ const formatDate = (dateString) => {
     })
 }
 
-const formatPrintDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric'
-    })
-}
-
-const formatDateTime = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
-
 const isSelected = (id) => {
     return selectedApplications.value.includes(id)
 }
@@ -678,12 +660,12 @@ const handleRowClick = (id, event) => {
     // Don't navigate if clicking on checkbox
     if (event.target.type === 'checkbox') return
 
-    router.push({ name: 'municipal-agriculturist-submit-crop-data-detail', params: { id } })
+    router.push({ name: 'agriculturist-submit-crop-data-detail', params: { id } })
 }
 
 const handleUpdate = () => {
     if (selectedApplications.value.length === 1) {
-        router.push({ name: 'municipal-agriculturist-submit-crop-data-detail', params: { id: selectedApplications.value[0] } })
+        router.push({ name: 'agriculturist-submit-crop-data-detail', params: { id: selectedApplications.value[0] } })
     }
 }
 
@@ -724,14 +706,6 @@ const handlePrint = () => {
     window.print()
 }
 
-const getShortLocation = (location) => {
-    if (!location) return 'N/A'
-    const parts = [
-        location.sitio,
-        location.barangay
-    ].filter(Boolean)
-    return parts.join(', ') || 'N/A'
-}
 
 const formatShortDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -780,5 +754,3 @@ onMounted(() => {
     }
 }
 </style>
-
-

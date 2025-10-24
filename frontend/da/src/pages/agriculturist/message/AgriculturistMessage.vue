@@ -299,14 +299,12 @@ import { Search, Send, User, ChevronLeft, Paperclip, X, Mail } from 'lucide-vue-
 import { useFarmerStore } from '@/stores/farmer'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'
-import { useDocumentStore } from '@/stores/document'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
 const messageStore = useMessageStore()
-const documentStore = useDocumentStore()
 
 // Use the navigation directly
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION

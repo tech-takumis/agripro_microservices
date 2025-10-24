@@ -1,17 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_request.dart';
-import 'package:mobile/data/models/application_submission_response.dart' as response_model;
-
+import 'package:mobile/data/models/application_submission.dart';
+import 'package:mobile/injection_container.dart'; // For getIt
 import '../../presentation/controllers/auth_controller.dart';
 import 'storage_service.dart';
-import 'package:mobile/injection_container.dart'; // For getIt
 
 class ApplicationApiService {
   final Dio _dio;
@@ -107,141 +100,19 @@ class ApplicationApiService {
     }
   }
 
-  // New method to submit application form
-  Future<response_model.ApplicationSubmissionResponse?> submitApplicationForm(
-      String applicationId,
-      Map<String, dynamic> fieldValues,
-      Map<String, XFile> files,
-      ) async {
-    try {
-
-      final authState = getIt<AuthState>();
-      if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
-        print('User not logged in, skipping submitApplicationForm');
-        return null;
-      }
-      print('🚀 Attempting to submit application form for ID: $applicationId');
-
-      final formData = FormData();
-
-      formData.fields.add(MapEntry("fieldValues", jsonEncode(fieldValues)));
-
-      for (final entry in files.entries) {
-        formData.files.add(
-          MapEntry(
-            entry.key, // field key, e.g. "crop_damage"
-            await MultipartFile.fromFile(
-              entry.value.path,
-              filename: entry.value.name,
-              contentType: MediaType("image", "jpeg"),
-            ),
-          ),
-        );
-      }
-      print("FormData fields: ${formData.fields}");
-      print(
-        "FormData files: ${formData.files.map((e) => "${e.key}: ${e.value.filename}")}",
-      );
-
-      final response = await _dio.post(
-        '/applications/$applicationId/submit',
-        data: formData,
-        options: Options(
-          headers: {'Accept': 'application/json'},
-          validateStatus:
-              (status) =>
-          status != null &&
-              (status >= 200 && status < 300 || status == 400),
-        ),
-      );
-
-      print('✅ Response: ${response.data}');
-
-      return response_model.ApplicationSubmissionResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('❌ DioException: ${e.response?.data}');
-      return response_model.ApplicationSubmissionResponse(
-        success: false,
-        message: 'Submission failed',
-        error: e.response?.data?.toString() ?? e.message,
-      );
-    }
-  }
-
-  Future<response_model.ApplicationSubmissionResponse?> submitApplicationFormHttp(
-      String applicationId,
-      Map<String, dynamic> fieldValues,
-      Map<String, XFile> files,
-      ) async {
-    final authState = getIt<AuthState>();
-    if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
-      print('User not logged in, skipping submitApplicationFormHttp');
-      return null;
-    }
-    final uri = Uri.parse(
-      'http://localhost:8010/api/v1/applications/$applicationId/submit',
-    );
-    final request = http.MultipartRequest('POST', uri);
-
-    // ✅ Add headers
-    final token = getIt<StorageService>().getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    request.headers['Accept'] = 'application/json';
-
-    // ✅ Add JSON fieldValues
-    request.fields['fieldValues'] = jsonEncode(fieldValues);
-
-    // ✅ Add each file with correct content type
-    for (final entry in files.entries) {
-      final file = File(entry.value.path);
-      request.files.add(
-        http.MultipartFile(
-          entry.key, // field key
-          file.openRead(),
-          await file.length(),
-          filename: entry.value.name,
-          contentType: MediaType(
-            'image',
-            'jpeg',
-          ), // <- MUST use correct MediaType
-        ),
-      );
-    }
-
-    print('📦 Sending multipart/form-data request...');
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    print('✅ Response status: ${response.statusCode}');
-    print('✅ Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      return response_model.ApplicationSubmissionResponse.fromJson(jsonDecode(response.body));
-    } else {
-      return response_model.ApplicationSubmissionResponse(
-        success: false,
-        message: 'Submission failed',
-        error: response.body,
-      );
-    }
-  }
-
   Future<ApplicationSubmissionResponse> submitApplication(
       AuthState authState,
-      ApplicationSubmissionRequest request,
-      ) async {
+      ApplicationSubmissionRequest request) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
-        return ApplicationSubmissionResponse(success: false, message: 'User not logged in');
+        return ApplicationSubmissionResponse(success: false, message: 'User not logged in', applicationId: '');
       }
-      print('🚀 Submitting application for type: ${request.applicationTypeId}');
-      print('📋 Field values: ${request.fieldValues}');
-      print('📎 Document IDs: ${request.documentIds}');
+      print('🚀 Submitting application for type: \\${request.applicationTypeId}');
+      print('📋 Field values: \\${request.fieldValues}');
+      print('📎 Document IDs: \\${request.documentIds}');
 
+      // Send as application/json
       final response = await _dio.post(
         '/applications/submit',
         data: request.toJson(),
@@ -253,43 +124,44 @@ class ApplicationApiService {
         ),
       );
 
-      print('✅ Application submitted successfully: ${response.statusCode}');
-      return ApplicationSubmissionResponse.fromJson(response.data);
+      print('✅ Application submitted successfully: \\${response.statusCode}');
+      if (response.data is Map<String, dynamic> || response.data is Map) {
+        return ApplicationSubmissionResponse.fromJson(response.data);
+      } else if (response.data is String) {
+        // Try to decode if backend returns a stringified JSON
+        try {
+          final Map<String, dynamic> json = jsonDecode(response.data);
+          return ApplicationSubmissionResponse.fromJson(json);
+        } catch (_) {
+          return ApplicationSubmissionResponse(success: false, message: response.data.toString(), applicationId: '');
+        }
+      } else {
+        return ApplicationSubmissionResponse(success: false, message: 'Unknown response format', applicationId: '');
+      }
     } on DioException catch (e) {
-      print('❌ Application submission failed: ${e.message}');
-      print('❌ Response data: ${e.response?.data}');
-
+      print('❌ Application submission failed: \\${e.message}');
+      print('❌ Response data: \\${e.response?.data}');
+      if (e.response?.data is Map<String, dynamic> || e.response?.data is Map) {
+        return ApplicationSubmissionResponse.fromJson(e.response?.data);
+      } else if (e.response?.data is String) {
+        try {
+          final Map<String, dynamic> json = jsonDecode(e.response?.data);
+          return ApplicationSubmissionResponse.fromJson(json);
+        } catch (_) {
+          return ApplicationSubmissionResponse(success: false, message: (e.response?.data?.toString() ?? ''), applicationId: '');
+        }
+      }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Connection timeout. Please try again.',
-        );
+        return ApplicationSubmissionResponse(success: false, message: 'Connection timeout. Please try again.', applicationId: '');
       } else if (e.type == DioExceptionType.connectionError) {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Cannot connect to server. Please check your connection.',
-        );
-      } else if (e.response?.statusCode == 400) {
-        final errorData = e.response?.data;
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: errorData['message'] ?? 'Invalid application data',
-          errors: errorData['errors'],
-        );
-      } else {
-        return ApplicationSubmissionResponse(
-          success: false,
-          message: 'Server error (${e.response?.statusCode})',
-        );
+        return ApplicationSubmissionResponse(success: false, message: 'Cannot connect to server. Please check your connection.', applicationId: '');
       }
+      return ApplicationSubmissionResponse(success: false, message: 'Failed to submit application', applicationId: '');
     } catch (e) {
-      print('❌ Unexpected error: $e');
-      return ApplicationSubmissionResponse(
-        success: false,
-        message: 'An unexpected error occurred: ${e.toString()}',
-      );
+      print('❌ Unexpected error: \\${e.toString()}');
+      return ApplicationSubmissionResponse(success: false, message: 'Unexpected error: \\${e.toString()}', applicationId: '');
     }
   }
 }
