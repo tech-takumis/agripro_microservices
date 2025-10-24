@@ -47,105 +47,269 @@
         <!-- Application details -->
         <div v-else-if="application" class="space-y-6">
             <!-- Personal Information -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User class="h-5 w-5" />
-                    Personal Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DetailField label="First Name" :value="fields.first_name" />
-                    <DetailField label="Middle Name" :value="fields.middle_name" />
-                    <DetailField label="Last Name" :value="fields.last_name" />
-                    <DetailField label="Date of Birth" :value="formatDate(fields.date_of_birth)" />
-                    <DetailField label="Age" :value="fields.age" />
-                    <DetailField label="Sex" :value="fields.sex" />
-                    <DetailField label="Civil Status" :value="fields.civil_status" />
-                    <DetailField label="Spouse Name" :value="fields.spouse_name" />
-                    <DetailField label="Tribe" :value="fields.tribe" />
-                    <DetailField label="Indigenous People" :value="fields.indigenous_people ? 'Yes' : 'No'" />
-                    <DetailField label="Cell Phone Number" :value="fields.cell_phone_number" />
-                    <DetailField label="Address" :value="fields.address" class="md:col-span-2" />
-                </div>
+
+        <!-- Personal Information Section -->
+        <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+        <!-- Section Title -->
+        <div class="flex items-center gap-3 pb-4 border-b border-gray-200">
+            <User class="h-7 w-7 text-green-600" />
+            <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
+        </div>
+
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+
+            <!-- Name Fields: 3 in One Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:col-span-2">
+
+        <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+            <p class="text-xs text-green-600">First Name</p>
+            <p class="text-l font-medium text-gray-900">{{ fields.first_name }}</p>
+            </div>
+        </div>
+
+        <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+            <p class="text-xs text-green-600">Middle Name</p>
+            <p class="text-l font-medium text-gray-900">{{ fields.middle_name }}</p>
+            </div>
+        </div>
+
+        <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+            <p class="text-xs text-green-600">Last Name</p>
+            <p class="text-l font-medium text-gray-900">{{ fields.last_name }}</p>
+            </div>
+        </div>
+
+        </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Date of Birth</p>
+                <p class="text-l font-medium text-gray-900">{{ formatDate(fields.date_of_birth) }}</p>
+            </div>
             </div>
 
-            <!-- Insurance Information -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText class="h-5 w-5" />
-                    Insurance Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DetailField label="Crop Type" :value="fields.crop_type" />
-                    <DetailField label="Cover Type" :value="fields.cover_type" />
-                    <DetailField label="Amount of Cover" :value="`₱${formatAmount(fields.amount_of_cover)}`" />
-                    <DetailField label="Primary Beneficiary" :value="fields.primary_beneficiary" />
-                    <DetailField label="Secondary Beneficiary" :value="fields.secondary_beneficiary" />
-                </div>
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Age</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.age }}</p>
+            </div>
             </div>
 
-            <!-- Lot Information -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <MapPin class="h-5 w-5" />
-                    Lot 1 Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DetailField label="Area (hectares)" :value="fields.lot_1_area" />
-                    <DetailField label="Variety" :value="fields.lot_1_variety" />
-                    <DetailField label="Soil Type" :value="fields.lot_1_soil_type" />
-                    <DetailField label="Topography" :value="fields.lot_1_topography" />
-                    <DetailField label="Land Category" :value="fields.lot_1_land_category" />
-                    <DetailField label="Tenurial Status" :value="fields.lot_1_tenurial_status" />
-                    <DetailField label="Planting Method" :value="fields.lot_1_planting_method" />
-                    <DetailField label="Irrigation Source" :value="fields.lot_1_irrigation_source" />
-                    <DetailField label="Date of Sowing" :value="formatDate(fields.lot_1_date_sowing)" />
-                    <DetailField label="Date of Planting" :value="formatDate(fields.lot_1_date_planting)" />
-                    <DetailField label="Date of Harvest" :value="formatDate(fields.lot_1_date_harvest)" />
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Sex</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.sex }}</p>
+            </div>
+            </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Civil Status</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.civil_status }}</p>
+            </div>
+            </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Spouse Name</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.spouse_name }}</p>
+            </div>
+            </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Tribe</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.tribe }}</p>
+            </div>
+            </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Indigenous People</p>
+                <p class="text-l font-medium text-gray-900">
+                {{ fields.indigenous_people ? 'Yes' : 'No' }}
+                </p>
+            </div>
+            </div>
+
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div>
+                <p class="text-xs text-green-600">Cell Phone Number</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.cell_phone_number }}</p>
+            </div>
+            </div>
+
+            <!-- Address: Full Width -->
+            <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3 md:col-span-2">
+            <div>
+                <p class="text-xs text-green-600">Address</p>
+                <p class="text-l font-medium text-gray-900">{{ fields.address }}</p>
+            </div>
+            </div>
+
+        </div>
+        </div>
+
+                <!-- Insurance Information Section -->
+                <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mt-6">
+                <!-- Section Title -->
+                <div class="pb-4 border-b border-gray-200 flex items-center gap-2">
+                <FileText class="h-5 w-5 text-green-600" />
+                <h2 class="text-lg font-semibold text-gray-900">Insurance Information</h2>
                 </div>
 
-                <!-- Location -->
-                <div class="mt-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Location</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DetailField label="Sitio" :value="fields.lot_1_location?.sitio" />
-                        <DetailField label="Barangay" :value="fields.lot_1_location?.barangay" />
-                        <DetailField label="Municipality/City" :value="fields.lot_1_location?.municipality || fields.lot_1_location?.city" />
-                        <DetailField label="Province" :value="fields.lot_1_location?.province" />
+                <!-- Details Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Crop Type</p>
+                        <p class="text-base font-medium text-gray-900">{{ fields.crop_type }}</p>
+                    </div>
+                    </div>
+
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-base font-medium text-gray-900">{{ fields.cover_type }}</p>
+                    </div>
+                    </div>
+
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Amount of Cover</p>
+                        <p class="text-base font-medium text-gray-900">₱{{ formatAmount(fields.amount_of_cover) }}</p>
+                    </div>
+                    </div>
+
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Primary Beneficiary</p>
+                        <p class="text-base font-medium text-gray-900">{{ fields.primary_beneficiary }}</p>
+                    </div>
+                    </div>
+
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Secondary Beneficiary</p>
+                        <p class="text-base font-medium text-gray-900">{{ fields.secondary_beneficiary }}</p>
+                    </div>
                     </div>
                 </div>
-
-                <!-- Boundaries -->
-                <div class="mt-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Boundaries</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <DetailField label="North" :value="fields.lot_1_boundaries?.north" />
-                        <DetailField label="South" :value="fields.lot_1_boundaries?.south" />
-                        <DetailField label="East" :value="fields.lot_1_boundaries?.east" />
-                        <DetailField label="West" :value="fields.lot_1_boundaries?.west" />
-                    </div>
                 </div>
-            </div>
 
-            <!-- Documents section to display images from documentIds -->
-            <div v-if="application.documentIds && application.documentIds.length > 0" class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText class="h-5 w-5" />
-                    Documents
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div v-for="docId in application.documentIds" :key="docId" class="border border-gray-200 rounded-lg overflow-hidden">
-                        <img
-                            :src="`http://localhost:9001/api/v1/documents/${docId}`"
-                            :alt="`Document ${docId}`"
-                            class="w-full h-48 object-cover"
-                            @error="handleImageError"
-                        />
-                        <div class="p-2 bg-gray-50">
-                            <p class="text-xs text-gray-600 truncate">ID: {{ docId }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
+    <!-- Lot Information Section -->
+<div class="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+
+  <!-- Section Title -->
+  <div class="pb-4 border-b border-gray-200 flex items-center gap-2">
+    <MapPin class="h-5 w-5 text-green-600" />
+    <h2 class="text-lg font-semibold text-gray-900">Lot 1 Information</h2>
+  </div>
+
+  <!-- Main Fields -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Area (hectares)" :value="fields.lot_1_area" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Variety" :value="fields.lot_1_variety" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Soil Type" :value="fields.lot_1_soil_type" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Topography" :value="fields.lot_1_topography" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Land Category" :value="fields.lot_1_land_category" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Tenurial Status" :value="fields.lot_1_tenurial_status" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Planting Method" :value="fields.lot_1_planting_method" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Irrigation Source" :value="fields.lot_1_irrigation_source" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Date of Sowing" :value="formatDate(fields.lot_1_date_sowing)" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Date of Planting" :value="formatDate(fields.lot_1_date_planting)" />
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-3">
+      <DetailField label="Date of Harvest" :value="formatDate(fields.lot_1_date_harvest)" />
+    </div>
+
+  </div>
+
+  <!-- Location -->
+  <div class="mt-6">
+    <h3 class="text-sm font-semibold text-green-700 mb-2">Location</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="Sitio" :value="fields.lot_1_location?.sitio" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="Barangay" :value="fields.lot_1_location?.barangay" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="Municipality/City"
+                     :value="fields.lot_1_location?.municipality || fields.lot_1_location?.city" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="Province" :value="fields.lot_1_location?.province" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Boundaries -->
+  <div class="mt-6">
+    <h3 class="text-sm font-semibold text-green-700 mb-2">Boundaries</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="North" :value="fields.lot_1_boundaries?.north" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="South" :value="fields.lot_1_boundaries?.south" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="East" :value="fields.lot_1_boundaries?.east" />
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-3">
+        <DetailField label="West" :value="fields.lot_1_boundaries?.west" />
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 
             <!-- Farmer Signature section if it exists -->
             <div v-if="farmerSignatureDocId" class="bg-white shadow-sm rounded-lg p-6">
