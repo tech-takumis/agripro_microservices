@@ -1,11 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:mime/mime.dart';
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_request.dart';
+import 'package:mobile/data/models/application_submission.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
 import '../../presentation/controllers/auth_controller.dart';
 import 'storage_service.dart';
@@ -104,17 +100,17 @@ class ApplicationApiService {
     }
   }
 
-  Future<String> submitApplication(
+  Future<ApplicationSubmissionResponse> submitApplication(
       AuthState authState,
       ApplicationSubmissionRequest request) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
-        return 'User not logged in';
+        return ApplicationSubmissionResponse(success: false, message: 'User not logged in', applicationId: '');
       }
-      print('🚀 Submitting application for type: ${request.applicationTypeId}');
-      print('📋 Field values: ${request.fieldValues}');
-      print('📎 Document IDs: ${request.documentIds}');
+      print('🚀 Submitting application for type: \\${request.applicationTypeId}');
+      print('📋 Field values: \\${request.fieldValues}');
+      print('📎 Document IDs: \\${request.documentIds}');
 
       // Send as application/json
       final response = await _dio.post(
@@ -128,33 +124,44 @@ class ApplicationApiService {
         ),
       );
 
-      print('✅ Application submitted successfully: ${response.statusCode}');
-      // Expecting a plain string response
-      return response.data is String ? response.data : response.data.toString();
+      print('✅ Application submitted successfully: \\${response.statusCode}');
+      if (response.data is Map<String, dynamic> || response.data is Map) {
+        return ApplicationSubmissionResponse.fromJson(response.data);
+      } else if (response.data is String) {
+        // Try to decode if backend returns a stringified JSON
+        try {
+          final Map<String, dynamic> json = jsonDecode(response.data);
+          return ApplicationSubmissionResponse.fromJson(json);
+        } catch (_) {
+          return ApplicationSubmissionResponse(success: false, message: response.data.toString(), applicationId: '');
+        }
+      } else {
+        return ApplicationSubmissionResponse(success: false, message: 'Unknown response format', applicationId: '');
+      }
     } on DioException catch (e) {
-      print('❌ Application submission failed: ${e.message}');
-      print('❌ Response data: ${e.response?.data}');
-      if (e.response?.data is String) {
-        return e.response?.data;
+      print('❌ Application submission failed: \\${e.message}');
+      print('❌ Response data: \\${e.response?.data}');
+      if (e.response?.data is Map<String, dynamic> || e.response?.data is Map) {
+        return ApplicationSubmissionResponse.fromJson(e.response?.data);
+      } else if (e.response?.data is String) {
+        try {
+          final Map<String, dynamic> json = jsonDecode(e.response?.data);
+          return ApplicationSubmissionResponse.fromJson(json);
+        } catch (_) {
+          return ApplicationSubmissionResponse(success: false, message: (e.response?.data?.toString() ?? ''), applicationId: '');
+        }
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        return 'Connection timeout. Please try again.';
+        return ApplicationSubmissionResponse(success: false, message: 'Connection timeout. Please try again.', applicationId: '');
       } else if (e.type == DioExceptionType.connectionError) {
-        return 'Cannot connect to server. Please check your connection.';
-      } else if (e.response?.statusCode == 400) {
-        final errorData = e.response?.data;
-        if (errorData is Map && errorData['message'] != null) {
-          return errorData['message'];
-        }
-        return 'Invalid application data';
-      } else {
-        return 'Server error (${e.response?.statusCode})';
+        return ApplicationSubmissionResponse(success: false, message: 'Cannot connect to server. Please check your connection.', applicationId: '');
       }
+      return ApplicationSubmissionResponse(success: false, message: 'Failed to submit application', applicationId: '');
     } catch (e) {
-      print('❌ Unexpected error: $e');
-      return 'An unexpected error occurred: ${e.toString()}';
+      print('❌ Unexpected error: \\${e.toString()}');
+      return ApplicationSubmissionResponse(success: false, message: 'Unexpected error: \\${e.toString()}', applicationId: '');
     }
   }
 }

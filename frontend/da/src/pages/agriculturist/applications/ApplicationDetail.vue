@@ -155,7 +155,7 @@
                 </h2>
                 <div class="border border-gray-200 rounded-lg overflow-hidden inline-block">
                     <img
-                        :src="`http://localhost:9001/api/v1/documents/${farmerSignatureDocId}`"
+                        :src="farmerSignatureDocId"
                         alt="Farmer Signature"
                         class="max-w-md h-auto"
                         @error="handleImageError"
@@ -216,18 +216,14 @@ const navigation = computed(() => {
 })
 
 const roleTitle = computed(() => {
-    const role = authStore.userData?.roles?.[0]
+    const role = authStore.userData?.roles?.[0].name
     return role || 'Staff Portal'
 })
 
 const fields = computed(() => application.value?.dynamicFields || {})
 
 const farmerSignatureDocId = computed(() => {
-    const signature = fields.value.farmer_signature
-    if (signature && signature.startsWith('signature:')) {
-        return signature.replace('signature:', '')
-    }
-    return null
+    return application.value?.fileUploads?.[0] || null
 })
 
 // Methods

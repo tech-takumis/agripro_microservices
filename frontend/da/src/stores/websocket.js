@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Client } from '@stomp/stompjs'
-import SockJS from 'sockjs-client'
 import { useMessageStore } from '@/stores/message'
 import { useNotificationStore } from './notification'
 
@@ -46,7 +45,7 @@ const subscribeToApplicationNotification = () => {
     console.log('[WebSocket] 📨 Notification:', message.body)
     try {
       const data = JSON.parse(message.body)
-      notificationStore.addIncomingNotification(data)
+      notificationStore.addIncomingNotifications(data)
     } catch (err) {
       console.error('[WebSocket] Error parsing notification:', err)
     }

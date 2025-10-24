@@ -45,7 +45,7 @@ public class ApplicationService {
     private final AgricultureHttpClient agricultureHttpClient;
 
 
-    public void processSubmission(
+    public Application processSubmission(
             ApplicationSubmissionDto submission) {
 
         try {
@@ -80,6 +80,8 @@ public class ApplicationService {
                             .build(),
                     userDetails.getUserId()
             );
+
+            return application;
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
@@ -168,5 +170,10 @@ public class ApplicationService {
 
 
         return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
+    }
+
+    public void deleteApplication(UUID applicationId) {
+        Application application = findApplicationById(applicationId);
+        applicationRepository.delete(application);
     }
 }

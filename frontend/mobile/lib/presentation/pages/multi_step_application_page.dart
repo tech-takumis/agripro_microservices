@@ -1,11 +1,14 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/models/application_data.dart';
+import 'package:mobile/features/messages/providers/router_provider.dart';
 import 'package:mobile/presentation/controllers/multi_step_application_controller.dart';
 import 'package:mobile/presentation/widgets/application_widgets/application_step_form.dart';
 import 'package:mobile/presentation/widgets/common/custom_button.dart';
 import 'package:mobile/presentation/widgets/common/step_indicator.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
+import 'package:go_router/go_router.dart';
 
 class MultiStepApplicationPage extends ConsumerStatefulWidget {
   final ApplicationContent application;
@@ -20,35 +23,37 @@ class MultiStepApplicationPage extends ConsumerStatefulWidget {
 }
 
 class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationPage> {
-  Future<void> _submitApplication(BuildContext context, AuthState authState) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
 
-    final response = await controller.submitApplication(context, authState);
+  Future<void> _submitApplication(WidgetRef ref, BuildContext context, AuthState authState) async {
 
-    if(!mounted) return;
+    final response = await controller.submitApplication(authState);
+    if (!context.mounted) return;
 
-    // Since response is now a String, treat any response containing 'successfully' as success
-    if(response.toLowerCase().contains('success')){
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: const Text('Application submitted successfully'),
-          backgroundColor: const Color.fromARGB(0, 36, 225, 43).withAlpha(204),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-      navigator.pop();
-    }
-    else{
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(response),
-          backgroundColor: const Color.fromARGB(0, 179, 13, 13).withAlpha(204),
-          duration: const Duration(seconds: 4),
-        ),
-      );
+    if (response.success) {
+      await Flushbar(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Application submitted successfully!',
+        backgroundColor: Colors.green.withOpacity(0.9),
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(12),
+        borderRadius: BorderRadius.circular(8),
+        flushbarPosition: FlushbarPosition.TOP,
+      ).show(context);
+
+      if (mounted) {
+        ref.read(goRouterProvider).go('/home');
+      }
+    } else {
+      if (!mounted) return;
+      Flushbar(
+        message: response.message,
+        backgroundColor: Colors.red.withOpacity(0.9),
+        duration: const Duration(seconds: 4),
+      ).show(context);
     }
   }
+
 
   late final MultiStepApplicationController controller;
 
@@ -150,7 +155,7 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
                       onPressed: controller.isLoading
                           ? null
                           : (controller.currentStep == controller.totalSteps - 1
-                              ? () => _submitApplication(context, authState)
+                              ? () => _submitApplication(ref,context, authState)
                               : () {
                                   setState(() {
                                     controller.nextStep();

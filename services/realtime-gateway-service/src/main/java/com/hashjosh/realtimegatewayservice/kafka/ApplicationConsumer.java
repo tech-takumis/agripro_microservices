@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class ApplicationConsumer {
     private final NotificationRepository notificationRepository;
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-submitted")
-    public void listenApplicationSubmitted(ApplicationSubmittedEvent event) {
+    public void listenApplicationSubmitted(@Payload ApplicationSubmittedEvent event) {
         try {
             handleApplicationSubmitted(event);
         } catch (Exception e) {
@@ -38,7 +39,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-started")
-    public void listenVerificationStarted(VerificationStartedEvent event) {
+    public void listenVerificationStarted(@Payload VerificationStartedEvent event) {
         try {
             handleVerificationStarted(event);
         } catch (Exception e) {
@@ -47,7 +48,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-under-review")
-    public void listenApplicationUnderReview(ApplicationUnderReviewEvent event) {
+    public void listenApplicationUnderReview(@Payload  ApplicationUnderReviewEvent event) {
         try {
             handleApplicationUnderReview(event);
         } catch (Exception e) {
@@ -56,7 +57,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-completed")
-    public void listenVerificationCompleted(VerificationCompletedEvent event) {
+    public void listenVerificationCompleted(@Payload  VerificationCompletedEvent event) {
         try {
             handleVerificationCompleted(event);
         } catch (Exception e) {
@@ -65,7 +66,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-sent-to-pcic")
-    public void listenApplicationSentToPcic(ApplicationSentToPcicEvent event) {
+    public void listenApplicationSentToPcic(@Payload  ApplicationSentToPcicEvent event) {
         try {
             handleApplicationSentToPcic(event);
         } catch (Exception e) {
@@ -74,7 +75,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-received-by-pcic")
-    public void listenApplicationReceivedByPcic(ApplicationReceivedByPcicEvent event) {
+    public void listenApplicationReceivedByPcic(@Payload  ApplicationReceivedByPcicEvent event) {
         try {
             handleApplicationReceivedByPcic(event);
         } catch (Exception e) {
@@ -83,7 +84,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-scheduled")
-    public void listenInspectionScheduled(InspectionScheduledEvent event) {
+    public void listenInspectionScheduled(@Payload  InspectionScheduledEvent event) {
         try {
             handleInspectionScheduled(event);
         } catch (Exception e) {
@@ -92,7 +93,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-completed")
-    public void listenInspectionCompleted(InspectionCompletedEvent event) {
+    public void listenInspectionCompleted(@Payload  InspectionCompletedEvent event) {
         try {
             handleInspectionCompleted(event);
         } catch (Exception e) {
@@ -101,7 +102,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-policy-issued")
-    public void listenPolicyIssued(PolicyIssuedEvent event) {
+    public void listenPolicyIssued(@Payload  PolicyIssuedEvent event) {
         try {
             handlePolicyIssued(event);
         } catch (Exception e) {
@@ -110,7 +111,7 @@ public class ApplicationConsumer {
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-claim-processed")
-    public void listenClaimProcessed(ClaimProcessedEvent event) {
+    public void listenClaimProcessed(@Payload  ClaimProcessedEvent event) {
         try {
             handleClaimProcessed(event);
         } catch (Exception e) {

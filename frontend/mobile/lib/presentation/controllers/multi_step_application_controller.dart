@@ -4,7 +4,7 @@ import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add th
 import 'package:mobile/data/services/storage_service.dart';
 
 import 'package:mobile/data/models/application_data.dart';
-import 'package:mobile/data/models/application_submission_request.dart';
+import 'package:mobile/data/models/application_submission.dart';
 import 'package:mobile/data/services/application_api_service.dart';
 import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/injection_container.dart';
@@ -272,10 +272,10 @@ class MultiStepApplicationController {
   }
 
   // Submission
-  Future<String> submitApplication(BuildContext context, AuthState authState) async {
+  Future<ApplicationSubmissionResponse> submitApplication(AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
-      return _errorMessage;
+      return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
     }
 
     try {
@@ -299,13 +299,9 @@ class MultiStepApplicationController {
           fileFieldDocumentIds[entry.key] = response.documentId;
         } catch (e) {
           final fileName = file.name;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to upload file "$fileName".'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          print('⚠️ Failed to upload file $fileName: $e');
+          return ApplicationSubmissionResponse(
+              success: false,
+              message: 'Failed to upload "$fileName".', applicationId: '');
         }
       }
 
@@ -376,14 +372,7 @@ class MultiStepApplicationController {
           if (field.fieldType == 'SIGNATURE' && field.required) {
             if (fieldValues[field.key] == null) {
               _errorMessage = "Signature field '${field.fieldName ?? field.key}' is required.";
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(_errorMessage),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              _isLoading = false;
-              return _errorMessage;
+              return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
             }
           }
         }
@@ -396,17 +385,17 @@ class MultiStepApplicationController {
         documentIds: documentIds,
       );
 
-      final responseMessage = await getIt<ApplicationApiService>().submitApplication(
+      final response = await getIt<ApplicationApiService>().submitApplication(
         authState,
         request,
       );
 
-      return responseMessage;
+      return response;
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Failed to submit application: $e';
       print('❌ Failed to submit application: $e');
-      return _errorMessage;
+      return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
     } finally {
       _isLoading = false;
     }
