@@ -12,11 +12,11 @@ import com.hashjosh.application.dto.ValidationErrors;
 import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
-import com.hashjosh.application.model.Application;
-import com.hashjosh.application.model.ApplicationField;
-import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.model.*;
+import com.hashjosh.application.repository.ApplicationProviderRepository;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
+import com.hashjosh.application.repository.BatchRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.document.dto.DocumentResponse;
@@ -43,19 +43,29 @@ public class ApplicationService {
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
     private final AgricultureHttpClient agricultureHttpClient;
+    private final BatchRepository batchRepository;
 
 
     public Application processSubmission(
             ApplicationSubmissionDto submission) {
 
         try {
+
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
                     .getContext().getAuthentication().getPrincipal();
 
-            ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Application type not found: " + submission.getApplicationTypeId()));
+            // Set the userId
+            submission.setUseId(UUID.fromString(userDetails.getUserId()));
 
+            Batch batch = batchRepository.findByApplicationTypeId(submission.getApplicationTypeId())
+                    .orElseThrow(() -> ApiException.badRequest("No batch found for application type"));
+
+            if(!batch.isAvailable()){
+                throw ApiException.badRequest("Application type is not available for submission");
+            }
+
+            // We get the application type through the batch
+            ApplicationType applicationType = batch.getApplicationType();
             List<ApplicationField> fields = applicationType.getSections().stream()
                     .flatMap(section -> section.getFields().stream())
                     .collect(Collectors.toList());
@@ -70,7 +80,7 @@ public class ApplicationService {
                 throw ApiException.badRequest("Validation failed: " + validationErrors);
             }
 
-            Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
+            Application application = applicationMapper.toEntity(submission,batch);
             Application savedApplication = applicationRepository.save(application);
             agricultureHttpClient.submitApplication(
                     VerificationRequestDto.builder()
@@ -87,6 +97,36 @@ public class ApplicationService {
         } catch (Exception e) {
             throw ApiException.internalError("An error occurred while processing your application: " + e.getMessage());
         }
+    }
+
+    public List<ApplicationResponseDto> findAllApplicationByBatchName(String bacthName) {
+
+        Batch batch = batchRepository.findByName(bacthName)
+                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ bacthName));
+        ApplicationType type = batch.getApplicationType();
+        List<Application> applications = applicationRepository.findAllByBatchNameAndApplicationTypeId(
+                bacthName,
+                type.getId()
+        );
+
+        return applications.stream()
+                .map(applicationMapper::toApplicationResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ApplicationResponseDto> findAllApplicationByBatchId(UUID batchId) {
+
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ batchId));
+        ApplicationType type = batch.getApplicationType();
+        List<Application> applications = applicationRepository.findAllByBatchIdAndApplicationTypeId(
+                batchId,
+                type.getId()
+        );
+
+        return applications.stream()
+                .map(applicationMapper::toApplicationResponseDto)
+                .collect(Collectors.toList());
     }
 
     private List<ValidationError> validateSubmission(
@@ -152,22 +192,19 @@ public class ApplicationService {
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 
-    public List<ApplicationResponseDto> findApplicationbyType(UUID applicationTypeId) {
-        return applicationRepository.findByApplicationTypeId(applicationTypeId)
-                .stream().map(applicationMapper::toApplicationResponseDto)
-                .collect(Collectors.toList());
-    }
-
     private Application findApplicationById(UUID applicationId) {
         return  applicationRepository.findById(applicationId)
                 .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
     }
 
-    public List<ApplicationResponseDto> findAllAgricultureApplication() {
-        ApplicationType type = applicationTypeRepository.findByNameContains("Crop Insurance Application")
-                .orElseThrow(() -> ApiException.notFound("Application type not found with name Crop Insurance Application"));
-        List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
+    public List<ApplicationResponseDto> findAllAgricultureApplication(
+            String provider
+    ) {
 
+       ApplicationType type = applicationTypeRepository.findByProvider_Name(provider)
+               .orElseThrow(() -> ApiException.notFound("Application type not found for provider "+ provider));
+
+       List<Application> application = applicationRepository.findAllByApplicationTypeId(type.getId());
 
         return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
@@ -176,4 +213,5 @@ public class ApplicationService {
         Application application = findApplicationById(applicationId);
         applicationRepository.delete(application);
     }
+
 }

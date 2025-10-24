@@ -21,6 +21,7 @@ public class ApplicationSubmissionDto {
         private UUID applicationTypeId;
         private Map<String, Object> fieldValues = new HashMap<>();
         private List<UUID> documentIds;
+        private UUID useId;
 
         @JsonAnyGetter
         public Map<String, Object> getFieldValues() {

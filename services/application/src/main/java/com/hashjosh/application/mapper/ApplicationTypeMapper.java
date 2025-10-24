@@ -4,6 +4,7 @@ import com.hashjosh.application.dto.ApplicationSectionResponseDto;
 import com.hashjosh.application.dto.ApplicationTypeRequestDto;
 import com.hashjosh.application.dto.ApplicationTypeResponseDto;
 import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.model.Batch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationTypeMapper {
     private final ApplicationSectionMapper applicationSectionMapper;
-    private final ApplicationFieldMapper applicationFieldMapper;
 
     public ApplicationType toApplicationType(ApplicationTypeRequestDto dto) {
         return ApplicationType.builder()

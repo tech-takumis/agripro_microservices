@@ -12,6 +12,10 @@ import java.util.List;
 public class TextValidator implements ValidatorStrategy {
     @Override
     public List<ValidationErrors> validate(ApplicationField field, JsonNode value) {
+
+        if(!field.getRequired() && (value == null || value.isNull())){
+            return new ArrayList<>();
+        }
         List<ValidationErrors> errors = new ArrayList<>();
         if (!value.isTextual()) {
            errors.add(new ValidationErrors(

@@ -6,11 +6,15 @@ export const useApplicationStore = defineStore("application", () => {
     // State
     const availableFieldTypes = ref([])
     const applications = ref([])
+    const loading = ref(false)
+    const error = ref(null)
     const sections = ref([])
+    const pcicApllications = ref([])
 
     // Getter: always returns an array
     const allApplications = computed(() => applications.value || [])
-
+    const isLoading = computed(() => loading.value)
+    const errors = computed(() => errors.value)
     // Actions
     async function fetchFieldTypes() {
         try {
@@ -85,7 +89,7 @@ export const useApplicationStore = defineStore("application", () => {
 
     async function fetchAgricultureApplications() {
         try {
-            const response = await axios.get("/api/v1/applications/agriculture")
+            const response = await axios.get("/api/v1/applications/provider/Agriculture")
             applications.value = response.data
             return { success: true, data: response.data }
         } catch (error) {
@@ -94,8 +98,41 @@ export const useApplicationStore = defineStore("application", () => {
         }
     }
 
+    const  fetchPcicApplications = async () => {
+        try {
+            const response = await axios.get("/api/v1/applications/provider/PCIC")
+            pcicApllications.value = response.data
+            return { success: true, data: response.data }
+        } catch (error) {
+            console.error("Error fetching PCIC applications:", error.response?.data || error.message)
+        }
+    }
+
+    const fetchApplicationByBatches = async (batchName) => {
+        try{
+            loading.value = true
+            error.value = null
+            const response = await axios.get(`/api/v1/applications/batch/name/${batchName}`)
+
+            if(response.status === 200){
+                console.log("Fetched applications by batch:", response.data)
+                applications.value = response.data
+                return { success: true, data: response.data }
+            }else{
+                return { success: false, error: response.data }
+            }
+        }catch (error){
+            error.value = error.message
+            loading.value = false
+        }finally {
+            loading.value = false
+        }
+    }
+
     // Expose state and actions
     return {
+        availableFieldTypes,
+        applications,sections,
         allApplications,
         fetchFieldTypes,
         createInsuranceApplication,
@@ -104,5 +141,7 @@ export const useApplicationStore = defineStore("application", () => {
         updateApplication,
         deleteApplication,
         fetchAgricultureApplications,
+        fetchPcicApplications,
+        fetchApplicationByBatches
     }
 })

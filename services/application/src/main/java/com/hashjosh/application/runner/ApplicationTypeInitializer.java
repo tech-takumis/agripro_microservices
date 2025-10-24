@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.hashjosh.application.enums.FieldType;
-import com.hashjosh.application.model.ApplicationField;
-import com.hashjosh.application.model.ApplicationSection;
-import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.repository.ApplicationRepository;
+import com.hashjosh.application.model.*;
+import com.hashjosh.application.repository.ApplicationProviderRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
+import com.hashjosh.application.repository.BatchRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,8 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
     private final EntityManager entityManager;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ObjectMapper objectMapper;
+    private final ApplicationProviderRepository applicationProviderRepository;
+    private final BatchRepository batchRepository;
 
 
     public boolean isApplicationNotNull(){
@@ -37,20 +38,36 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-
         if(isApplicationNotNull()){
             log.info("Application Type already exists initialization skipped!");
             return;
         }
+
+        ApplicationProvider provider1 = ApplicationProvider.builder()
+                .name("Agriculture")
+                .description("Agriculture related application forms")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        applicationProviderRepository.save(provider1);
+        ApplicationProvider provider2 = ApplicationProvider.builder()
+                .name("PCIC")
+                .description("Pcic related application forms")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        applicationProviderRepository.save(provider2);
+
+
         // Application Type 1: Crop Insurance Application
         ApplicationType cropInsurance = ApplicationType.builder()
                 .name("Crop Insurance Application")
                 .description("Application form for insuring rice or corn crops")
                 .layout("form")
+                .provider(provider1)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .sections(new ArrayList<>())
-                .applications(new ArrayList<>())
                 .build();
 
         // Sections for Crop Insurance
@@ -76,17 +93,12 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         basicInfoFields.add(createField("sex", "Sex", FieldType.SELECT, true, createChoices(new String[]{"Male", "Female"}), basicInfoSection));
         basicInfoFields.add(createField("age", "Age", FieldType.NUMBER, false, null, basicInfoSection));
         basicInfoFields.add(createField("date_of_birth", "Date of Birth", FieldType.DATE, false, null, basicInfoSection));
-//        basicInfoFields.add(createField("bank_name", "Bank Name", FieldType.TEXT, false, null, basicInfoSection));
-//        basicInfoFields.add(createField("bank_account_no", "Bank Account No.", FieldType.TEXT, false, null, basicInfoSection));
-//        basicInfoFields.add(createField("pwd", "PWD", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("indigenous_people", "Indigenous People", FieldType.BOOLEAN, false, null, basicInfoSection));
         basicInfoFields.add(createField("tribe", "Tribe", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("civil_status", "Civil Status", FieldType.SELECT, true, createChoices(new String[]{"Single", "Married", "Widow/Widower", "Separated"}), basicInfoSection));
         basicInfoFields.add(createField("spouse_name", "Name of Spouse", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("primary_beneficiary", "Primary Beneficiary", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoFields.add(createField("secondary_beneficiary", "Secondary Beneficiary", FieldType.TEXT, false, null, basicInfoSection));
-//        basicInfoFields.add(createField("assignee", "Assignee", FieldType.TEXT, false, null, basicInfoSection));
-//        basicInfoFields.add(createField("assignment_reason", "Reason for Assignment", FieldType.TEXT, false, null, basicInfoSection));
         basicInfoSection.setFields(basicInfoFields);
 
         // Section B: The Farm
@@ -132,32 +144,7 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         coverageFields.add(createField("crop_type", "Crop", FieldType.SELECT, true, createChoices(new String[]{"Rice", "Corn"}), coverageSection));
         coverageFields.add(createField("cover_type", "Type of Cover", FieldType.SELECT, true, createChoices(new String[]{"Multi-Risk", "Natural Disaster"}), coverageSection));
         coverageFields.add(createField("amount_of_cover", "Amount of Cover", FieldType.NUMBER, true, null, coverageSection));
-//        coverageFields.add(createField("premium", "Premium", FieldType.NUMBER, true, null, coverageSection));
-//        coverageFields.add(createField("cltip_adss_si", "CLTIP-ADSS Sum Insured", FieldType.NUMBER, false, null, coverageSection));
-//        coverageFields.add(createField("cltip_adss_premium", "CLTIP-ADSS Premium", FieldType.NUMBER, false, null, coverageSection));
         coverageSection.setFields(coverageFields);
-
-        // Section D: For PCIC Use
-//        ApplicationSection pcicUseSection = ApplicationSection.builder()
-//                .title("For PCIC Use")
-//                .applicationType(cropInsurance)
-//                .createdAt(LocalDateTime.now())
-//                .updatedAt(LocalDateTime.now())
-//                .fields(new ArrayList<>())
-//                .build();
-//        cropInsuranceSections.add(pcicUseSection);
-
-        // Fields for For PCIC Use
-//        List<ApplicationField> pcicUseFields = new ArrayList<>();
-//        pcicUseFields.add(createField("phase_rice", "Phase (Rice)", FieldType.SELECT, false, createChoices(new String[]{"Wet", "Dry"}), pcicUseSection));
-//        pcicUseFields.add(createField("phase_corn", "Phase (Corn)", FieldType.SELECT, false, createChoices(new String[]{"A", "B"}), pcicUseSection));
-//        pcicUseFields.add(createField("cic_no", "CIC No.", FieldType.TEXT, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("cic_date_issued", "CIC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("coc_no", "COC No.", FieldType.TEXT, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("coc_date_issued", "COC Date Issued", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("period_of_cover_from", "Period of Cover From", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseFields.add(createField("period_of_cover_to", "Period of Cover To", FieldType.DATE, false, null, pcicUseSection));
-//        pcicUseSection.setFields(pcicUseFields);
 
         // Section II: Certification
         ApplicationSection certificationSection = ApplicationSection.builder()
@@ -172,11 +159,20 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         // Fields for Certification
         List<ApplicationField> certificationFields = new ArrayList<>();
         certificationFields.add(createField("farmer_signature", "Farmer Signature/Thumb Mark", FieldType.SIGNATURE, true, null, certificationSection));
-//        certificationFields.add(createField("technologist_signature", "Supervising Agricultural Technologist Signature", FieldType.SIGNATURE, true, null, certificationSection));
-//        certificationFields.add(createField("certification_date", "Certification Date", FieldType.DATE, true, null, certificationSection));
         certificationSection.setFields(certificationFields);
 
         cropInsurance.setSections(cropInsuranceSections);
+
+        Batch batch = Batch.builder()
+                .name("BATCH-001")
+                .description("Batch 001 for crop insurance applications")
+                .isAvailable(true)
+                .startDate(LocalDateTime.now())
+                .applicationType(cropInsurance)
+                .endDate(LocalDateTime.now().plusMonths(1))
+                .createdAt(LocalDateTime.now())
+                .build();
+        batchRepository.save(batch);
         entityManager.persist(cropInsurance);
 
         // Application Type 2: Claim for Indemnity
@@ -184,10 +180,10 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
                 .name("Claim for Indemnity")
                 .description("Claim form for indemnity of insured high-value crops")
                 .layout("form")
+                .provider(provider2)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .sections(new ArrayList<>())
-                .applications(new ArrayList<>())
                 .build();
 
         // Sections for Claim for Indemnity
@@ -263,6 +259,18 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         locationSketchFields.add(createField("lot_4_boundaries", "Lot 4 Boundaries", FieldType.JSON, false, null, locationSketchSection)); // North, South, East, West
         // Add similar fields for Lot 2, Lot 3, Lot 4 if needed
         locationSketchSection.setFields(locationSketchFields);
+
+        Batch batch2 = Batch.builder()
+                .name("BATCH-002")
+                .description("Batch 002 for claim for indemnity applications")
+                .isAvailable(true)
+                .startDate(LocalDateTime.now())
+                .applicationType(claimIndemnity)
+                .endDate(LocalDateTime.now().plusMonths(1))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        batchRepository.save(batch2);
 
         claimIndemnity.setSections(claimIndemnitySections);
         entityManager.persist(claimIndemnity);

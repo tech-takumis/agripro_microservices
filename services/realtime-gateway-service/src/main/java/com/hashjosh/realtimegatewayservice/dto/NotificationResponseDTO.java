@@ -1,4 +1,4 @@
-package com.hashjosh.realtimegatewayservice.wrapper;
+package com.hashjosh.realtimegatewayservice.dto;
 
 import lombok.*;
 
@@ -10,7 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApplicationNotificationDTO {
+public class NotificationResponseDTO {
     private UUID id;
     private String title;
     private String message;

@@ -13,6 +13,10 @@ public class BooleanValidator implements ValidatorStrategy{
 
     @Override
     public List<ValidationErrors> validate(ApplicationField field, JsonNode value) {
+        if(!field.getRequired() && (value == null || value.isNull())){
+            return new ArrayList<>();
+        }
+
         List<ValidationErrors> errors = new ArrayList<>();
         if (!value.isBoolean()){
             errors.add(new ValidationErrors(

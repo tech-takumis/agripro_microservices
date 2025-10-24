@@ -492,7 +492,10 @@ import {
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
+import {useBatchStore} from '@/stores/batch'
 
+
+const {allBatch, fetchBatch} = useBatchStore()
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
@@ -722,6 +725,7 @@ const handleImageError = (event) => {
 
 onMounted(() => {
     fetchApplications()
+    fetchBatch()
 })
 </script>
 <style>

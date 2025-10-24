@@ -107,7 +107,6 @@
                 <div class="mt-4">
                     <h3 class="text-sm font-medium text-gray-700 mb-2">Location</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DetailField label="Sitio" :value="fields.lot_1_location?.sitio" />
                         <DetailField label="Barangay" :value="fields.lot_1_location?.barangay" />
                         <DetailField label="Municipality/City" :value="fields.lot_1_location?.municipality || fields.lot_1_location?.city" />
                         <DetailField label="Province" :value="fields.lot_1_location?.province" />
@@ -171,11 +170,10 @@
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <DetailField label="Application ID" :value="application.id" class="md:col-span-2" />
-                    <DetailField label="Application Type ID" :value="application.applicationTypeId" class="md:col-span-2" />
-                    <DetailField label="User ID" :value="application.userId" class="md:col-span-2" />
+                    <DetailField label="Application Type ID" :value="application.applicationName" class="md:col-span-2" />
+                    <DetailField label="Batch Name" :value="application.batchName" class="md:col-span-2" />
                     <DetailField label="Submitted At" :value="formatDateTime(application.submittedAt)" />
                     <DetailField label="Updated At" :value="formatDateTime(application.updatedAt)" />
-                    <DetailField label="Version" :value="application.version" />
                 </div>
             </div>
         </div>

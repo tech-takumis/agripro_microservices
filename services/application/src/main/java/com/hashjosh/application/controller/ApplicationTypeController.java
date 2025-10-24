@@ -32,10 +32,13 @@ public class ApplicationTypeController {
         List<ApplicationTypeResponseDto> allApplicationType = applicationTypeService.findAll();
         return new ResponseEntity<>(allApplicationType,HttpStatus.OK);
     }
+    // we need to get the application on a certain batch
+    // Because this function just returns a single application type
 
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationTypeResponseDto> getById(@PathVariable UUID id){
        return new ResponseEntity<>(applicationTypeService.findById(id),HttpStatus.OK);
     }
+
 }
 

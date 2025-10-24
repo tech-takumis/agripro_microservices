@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:mobile/data/models/designated_response.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/services/storage_service.dart';
-import 'package:mobile/injection_container.dart'; // <-- Add this import
+import 'package:mobile/injection_container.dart'; 
 import 'dart:convert';
 import 'package:mobile/data/models/message_request_dto.dart';
 import 'package:http_parser/http_parser.dart';
