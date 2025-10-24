@@ -1,7 +1,6 @@
 package com.hashjosh.application.dto.batch;
 
 import com.hashjosh.application.dto.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationTypeResponseDto;
 import lombok.*;
 
 import java.util.List;
@@ -18,5 +17,4 @@ public class BatchResponseDTO {
     private String description;
     private boolean isAvailable;
     private List<ApplicationResponseDto> applications;
-//    private ApplicationTypeResponseDto type;
 }

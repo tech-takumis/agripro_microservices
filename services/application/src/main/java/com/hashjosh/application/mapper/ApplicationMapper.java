@@ -22,7 +22,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApplicationMapper {
 
-    private  final ObjectMapper objectMapper;
     private final DocumentServiceClient documentServiceClient;
     public ApplicationResponseDto toApplicationResponseDto(Application entity) {
 
@@ -42,15 +41,16 @@ public class ApplicationMapper {
         entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document,30)));
         dto.setFileUploads(generatedUrl);
         // map JsonNode into typed DTO
-        if (entity.getDynamicFields() != null) {
-            try {
-                ApplicationDynamicFieldsDTO dynamic =
-                        objectMapper.treeToValue(entity.getDynamicFields(), ApplicationDynamicFieldsDTO.class);
-                dto.setDynamicFields(dynamic);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to map dynamicFields", e);
-            }
-        }
+//        if (entity.getDynamicFields() != null) {
+//            try {
+//                ApplicationDynamicFieldsDTO dynamic =
+//                        objectMapper.treeToValue(entity.getDynamicFields(), ApplicationDynamicFieldsDTO.class);
+//                dto.setDynamicFields(dynamic);
+//            } catch (Exception e) {
+//                throw new RuntimeException("Failed to map dynamicFields", e);
+//            }
+//        }
+        dto.setJsonDynamicFields(entity.getDynamicFields());
         return dto;
     }
 

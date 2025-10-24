@@ -19,14 +19,13 @@ public class BatchMapper {
         List<ApplicationResponseDto> dtos = batch.getApplications().stream()
                 .map(applicationMapper::toApplicationResponseDto).toList();
 
-        ApplicationTypeResponseDto typeDto = batch.getApplicationType() != null ?
-                applicationTypeMapper.toApplicationResponse(batch.getApplicationType()) : null;
-
-        return  BatchResponseDTO.builder()
+        BatchResponseDTO responseDTO =   BatchResponseDTO.builder()
                 .name(batch.getName())
                 .description(batch.getDescription())
                 .applications(dtos)
-//                .type(typeDto)
                 .build();
+
+        responseDTO.setAvailable(batch.isAvailable());
+        return responseDTO;
     }
 }
