@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { ref } from "vue"
+import { ref, computed } from "vue"
 import axios from "@/lib/axios"
 
 export const useApplicationStore = defineStore("application", () => {
@@ -7,6 +7,9 @@ export const useApplicationStore = defineStore("application", () => {
     const availableFieldTypes = ref([])
     const applications = ref([])
     const sections = ref([])
+
+    // Getter: always returns an array
+    const allApplications = computed(() => applications.value || [])
 
     // Actions
     async function fetchFieldTypes() {
@@ -93,9 +96,7 @@ export const useApplicationStore = defineStore("application", () => {
 
     // Expose state and actions
     return {
-        availableFieldTypes,
-        applications,
-        sections,
+        allApplications,
         fetchFieldTypes,
         createInsuranceApplication,
         fetchApplications,

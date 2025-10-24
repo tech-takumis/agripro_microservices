@@ -526,7 +526,7 @@ const roleTitle = computed(() => {
 })
 
 const filteredApplications = computed(() => {
-    let apps = applicationStore.applications.value || []
+    let apps = applicationStore.allApplications // use getter
 
     // Apply filters
     if (filters.value.cropType) {
