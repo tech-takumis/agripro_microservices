@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 public class RegistrationResponse {
     private String username;
     private String message;
-    private String error;
     private boolean success;
     private int status;
     private LocalDateTime timestamp;

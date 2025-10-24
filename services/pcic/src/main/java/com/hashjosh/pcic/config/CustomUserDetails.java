@@ -7,47 +7,60 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final String token;
+    private UUID userId;
+    private final String username;
+    private final String firstname;
+    private final String lastname;
+    private final String email;
+    private final String phoneNumber;
     private final Pcic pcic;
-    private final Collection<? extends GrantedAuthority> authorities;
-    private final String serviceId; // For internal services
+    private final String serviceId;
+    private Set<SimpleGrantedAuthority> authorities;
 
-    // Constructor for internal services
-    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
-        this.token = null;
+    // Constructor for database-based authentication
+    public CustomUserDetails(Pcic pcic, Set<SimpleGrantedAuthority> authorities) {
+        this.pcic = pcic;
+        this.authorities = authorities;
+        this.userId = pcic.getId();
+        this.username = pcic.getUsername();
+        this.firstname = pcic.getFirstName();
+        this.lastname = pcic.getLastName();
+        this.email = pcic.getEmail();
+        this.phoneNumber = pcic.getPhoneNumber();
+        this.serviceId = null;
+    }
+
+    // Constructor for JWT claims-based authentication
+    public CustomUserDetails(Map<String, Object> claims, Set<SimpleGrantedAuthority> authorities) {
+        this.username = claims.get("sub").toString();
+        this.authorities = authorities;
+        this.firstname = (String) claims.get("firstname");
+        this.lastname = (String) claims.get("lastname");
+        this.email = (String) claims.get("email");
+        this.phoneNumber = (String) claims.get("phoneNumber");
+        this.userId = UUID.fromString((String) claims.get("userId"));
         this.pcic = null;
-        this.authorities = authorities != null ? authorities : Collections.emptyList();
+        this.serviceId = null;
+    }
+
+    // Constructor for internal service
+    public CustomUserDetails(String serviceId,String userId, Set<SimpleGrantedAuthority> authorities) {
+        this.username = serviceId;
+        this.authorities = authorities;
+        this.firstname = null;
+        this.lastname = null;
+        this.email = null;
+        this.phoneNumber = null;
+        this.userId = userId != null ? UUID.fromString(userId) : null;
+        this.pcic = null;
         this.serviceId = serviceId;
     }
-
-    // Constructor for JWT-based authentication
-    public CustomUserDetails(Pcic pcic) {
-        this.token = null;
-        this.pcic = pcic;
-        this.serviceId = null;
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-        if (pcic != null && pcic.getRoles() != null) {
-            pcic.getRoles().forEach(role -> {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-                if (role.getPermissions() != null) {
-                    role.getPermissions().forEach(permission -> {
-                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
-                    });
-                }
-            });
-        }
-        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;

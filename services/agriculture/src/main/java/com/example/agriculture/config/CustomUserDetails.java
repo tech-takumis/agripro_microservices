@@ -51,14 +51,14 @@ public class CustomUserDetails implements UserDetails {
     }
 
     // Constructor for internal service
-    public CustomUserDetails(String serviceId, Set<SimpleGrantedAuthority> authorities) {
+    public CustomUserDetails(String serviceId,String userId, Set<SimpleGrantedAuthority> authorities) {
         this.username = serviceId;
         this.authorities = authorities;
         this.firstName = null;
         this.lastName = null;
         this.email = null;
         this.phoneNumber = null;
-        this.userId = null;
+        this.userId = userId != null ? UUID.fromString(userId) : null;
         this.agriculture = null;
         this.serviceId = serviceId;
     }

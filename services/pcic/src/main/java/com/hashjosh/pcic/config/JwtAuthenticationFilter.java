@@ -3,6 +3,7 @@ package com.hashjosh.pcic.config;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.pcic.entity.Pcic;
+import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.service.TokenRenewalService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -35,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TrustedConfig trustedConfig;
 
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private static final String USERID_HEADER = "X-User-Id";
     private static final Set<String> PUBLIC_ENDPOINTS = Set.of(
             "/api/v1/pcic/auth/login",
             "/api/v1/pcic/auth/registration"
@@ -55,14 +57,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Check for internal service header
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        String userIdHeader = request.getHeader(USERID_HEADER);
         log.debug("X-Internal-Service header: {}, Trusted service IDs: {}", internalServiceHeader, trustedConfig.getInternalServiceIds());
-
-        if (internalServiceHeader != null) {
+        if (internalServiceHeader != null && !internalServiceHeader.isEmpty()) {
             if (trustedConfig.getInternalServiceIds().contains(internalServiceHeader)) {
                 log.info("Internal service request from {} to {}", internalServiceHeader, requestUri);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                new CustomUserDetails(internalServiceHeader, Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))),
+                                new CustomUserDetails(
+                                        internalServiceHeader + UUID.randomUUID().toString().substring(0, 8),
+                                        userIdHeader,
+                                        Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                                ),
                                 null,
                                 Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                         );
@@ -88,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid X-Internal-Service header");
                     response.setContentType("application/json");
                     response.getWriter().write(
-                            "{\"message\": \"Unauthorized - Invalid X-Internal-Service header\"}"
+                            "{\"message\": \"Unauthorized - Invalid X-Internal-Service header and user id header\"}"
                     );
                     response.getWriter().flush();
                 }
@@ -126,7 +132,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Handle expired access token with valid refresh token
-            if (refreshToken != null && jwtService.validateRefreshToken(refreshToken, clientIp, userAgent)) {
+            if (refreshToken != null ) {
                 Claims claims = jwtService.getClaimsAllowExpired(accessToken);
                 String username = claims.getSubject();
                 String userId = claims.get("userId", String.class);
@@ -137,7 +143,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 Map<String, String> newTokens = tokenRenewalService.refreshTokens(
                         UUID.fromString(userId), refreshToken, username,
-                        null, claimsMap, clientIp, userAgent, false);
+                         claimsMap, clientIp, userAgent, false);
 
                 // Set authentication with new access token
                 setAuthentication(newTokens.get("accessToken"));
@@ -181,15 +187,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         Pcic pcic = customUser.getPcic();
         List<SimpleGrantedAuthority> roles = new ArrayList<>();
-
-        pcic.getRoles().forEach(role -> {
-            roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-            role.getPermissions().forEach(permission -> {
-                roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+        if(pcic != null) {
+            pcic.getRoles().forEach(role -> {
+                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
+                role.getPermissions().forEach(permission -> {
+                    roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
+                });
             });
-        });
+        }
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(customUser,
+        // If pcic is null lets assume it's from JWT claims
+        claims = jwtService.getAllClaims(accessToken);
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+
+        if(claims.get("roles") instanceof Collection<?>){
+            ((Collection<?>) claims.get("roles")).forEach(role -> {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString().toUpperCase()));
+            });
+        }
+        // Add permissions
+        if (claims.get("permissions") instanceof Collection<?>) {
+            ((Collection<?>) claims.get("permissions")).forEach(permission -> {
+                authorities.add(new SimpleGrantedAuthority(permission.toString().toUpperCase()));
+            });
+        }
+        customUser = new CustomUserDetails(claims, authorities);
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                customUser,
                 null, roles);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }

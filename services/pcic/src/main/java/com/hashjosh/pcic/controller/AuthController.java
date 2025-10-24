@@ -35,16 +35,15 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest farmer
+            @RequestBody RegistrationRequest request
     ){
 
-        Pcic pcic = authService.register(farmer);
+        Pcic pcic = authService.register(request);
 
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
                         .username(pcic.getUsername())
                         .message("User Registered Successfully")
-                        .error(null)
                         .success(true)
                         .status(HttpStatus.CREATED.value())
                         .timestamp(LocalDateTime.now())
