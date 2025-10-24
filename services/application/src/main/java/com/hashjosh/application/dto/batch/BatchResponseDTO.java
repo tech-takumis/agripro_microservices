@@ -1,6 +1,6 @@
 package com.hashjosh.application.dto.batch;
 
-import com.hashjosh.application.dto.ApplicationResponseDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import lombok.*;
 
 import java.util.List;

@@ -3,8 +3,7 @@ package com.hashjosh.application.mapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.DocumentServiceClient;
-import com.hashjosh.application.dto.ApplicationDynamicFieldsDTO;
-import com.hashjosh.application.dto.ApplicationResponseDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
@@ -14,9 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor

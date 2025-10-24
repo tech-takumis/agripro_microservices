@@ -1,4 +1,4 @@
-package com.hashjosh.farmer.dto;
+package com.hashjosh.constant.farmer;
 
 import lombok.*;
 
@@ -16,5 +16,4 @@ public class FarmerReponse {
     private String lastName;
     private String email;
     private String phoneNumber;
-
 }

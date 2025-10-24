@@ -1,7 +1,6 @@
 package com.hashjosh.application.mapper;
 
-import com.hashjosh.application.dto.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationTypeResponseDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.batch.BatchResponseDTO;
 import com.hashjosh.application.model.Batch;
 import lombok.RequiredArgsConstructor;

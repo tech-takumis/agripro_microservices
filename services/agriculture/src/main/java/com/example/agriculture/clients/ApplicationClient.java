@@ -2,6 +2,7 @@ package com.example.agriculture.clients;
 
 
 import com.example.agriculture.exception.ApiException;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

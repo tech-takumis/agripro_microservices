@@ -27,9 +27,6 @@ public class Post {
     @JoinColumn(name = "author_id", nullable = false)
     private UUID authorId;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
     @Column(name = "content", nullable = false)
     private String content;
 

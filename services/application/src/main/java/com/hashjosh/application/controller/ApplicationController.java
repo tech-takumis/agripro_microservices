@@ -1,6 +1,6 @@
 package com.hashjosh.application.controller;
 
-import com.hashjosh.application.dto.ApplicationResponseDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.ApplicationSubmissionDto;
 import com.hashjosh.application.dto.ApplicationSubmissionResponse;
 import com.hashjosh.application.model.Application;

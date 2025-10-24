@@ -1,4 +1,4 @@
-package com.hashjosh.application.dto;
+package com.hashjosh.constant.application;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;

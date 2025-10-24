@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.mapper;
 
-import com.hashjosh.farmer.dto.FarmerReponse;
+import com.hashjosh.constant.farmer.FarmerReponse;
 import com.hashjosh.farmer.entity.Farmer;
 import org.springframework.stereotype.Component;
 

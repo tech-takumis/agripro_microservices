@@ -24,7 +24,6 @@ public class PostMapper {
 
         return PostResponse.builder()
                 .id(post.getId())
-                .title(post.getTitle())
                 .content(post.getContent())
                 .authorName(agricultureClient.getAgricultureName(post.getAuthorId()))
                 .authorId(String.valueOf(post.getAuthorId()))
