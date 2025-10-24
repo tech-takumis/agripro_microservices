@@ -63,3 +63,5 @@ Jwt Claim payload to all tenant:
 Kafka notes:
 
 Application.id = submissionId
+
+ docker-compose -f docker-compose.local.ymal up -d
