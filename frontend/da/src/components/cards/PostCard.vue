@@ -12,13 +12,6 @@
 
       <!-- 🧾 Post Input Card -->
       <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm">
-        <!-- Title -->
-        <input
-          v-model="newTitle"
-          placeholder="Post title..."
-          class="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm transition-all"
-        />
-
         <!-- Post Text -->
         <textarea
           v-model="newPostContent"
@@ -56,7 +49,7 @@
 
           <button
             class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
-            :disabled="!newPostContent.trim() || !newTitle.trim() || creatingPost"
+            :disabled="!newPostContent.trim() || creatingPost"
             @click="onCreatePost"
           >
             <span v-if="!creatingPost">Post</span>
@@ -99,13 +92,35 @@
           {{ post.content }}
         </p>
 
-        <!-- 🖼️ Image (if any) -->
-        <div v-if="post.image" class="mb-3 rounded-lg overflow-hidden">
-          <img
-            :src="post.image"
-            :alt="post.content"
-            class="w-full h-56 object-cover rounded-lg border border-gray-100"
-          />
+        <!-- 🖼️ Carousel for Images (if any) -->
+        <div v-if="post.urls && post.urls.length" class="mb-3">
+          <div class="relative">
+            <img
+              :src="post.urls[carouselIndexes[post.id] || 0]"
+              :alt="post.content"
+              class="w-full h-56 object-cover rounded-lg border border-gray-100 cursor-pointer"
+              @click="openImage(post.urls[carouselIndexes[post.id] || 0])"
+            />
+            <!-- Carousel Controls -->
+            <button
+              v-if="post.urls.length > 1"
+              class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-green-100 transition"
+              @click.stop="prevImage(post.id, post.urls.length)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button
+              v-if="post.urls.length > 1"
+              class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-green-100 transition"
+              @click.stop="nextImage(post.id, post.urls.length)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <!-- Dots -->
+            <div v-if="post.urls.length > 1" class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              <span v-for="(url, idx) in post.urls" :key="idx" :class="['w-2 h-2 rounded-full', (carouselIndexes[post.id] || 0) === idx ? 'bg-green-600' : 'bg-gray-300']"></span>
+            </div>
+          </div>
         </div>
 
         <!-- ❤️ Reactions -->
@@ -150,16 +165,16 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue'
 import { usePostStore } from '@/stores/post'
 import { FileText, Paperclip, Loader2, User, MoreVertical, Heart, MessageCircle, Share2 } from 'lucide-vue-next'
 
 const postStore = usePostStore()
 const loadTrigger = ref(null)
-const newTitle = ref('')
 const newPostContent = ref('')
 const selectedFile = ref([])
 const creatingPost = ref(false)
+const carouselIndexes = reactive({})
 
 const props = defineProps({
   posts: {
@@ -183,12 +198,11 @@ const onCreatePost = async () => {
 }
 
 const createPost = async () => {
-    if (!(newPostContent.value.trim() && newTitle.value.trim())) return
+    if (!(newPostContent.value.trim())) return
 
     creatingPost.value = true
     try {
         const formData = new FormData()
-        formData.append('title', newTitle.value)
         formData.append('content', newPostContent.value)
         // Append all selected files
         if (selectedFile.value && selectedFile.value.length) {
@@ -206,7 +220,6 @@ const createPost = async () => {
         }
         await postStore.createPost(formData)
         newPostContent.value = ''
-        newTitle.value = ''
         selectedFile.value = []
     } catch (error) {
         console.error('Error creating post:', error)
@@ -274,4 +287,16 @@ onUnmounted(() => {
         observer.disconnect()
     }
 })
+
+function nextImage(postId, length) {
+  if (!(postId in carouselIndexes)) carouselIndexes[postId] = 0
+  carouselIndexes[postId] = (carouselIndexes[postId] + 1) % length
+}
+function prevImage(postId, length) {
+  if (!(postId in carouselIndexes)) carouselIndexes[postId] = 0
+  carouselIndexes[postId] = (carouselIndexes[postId] - 1 + length) % length
+}
+function openImage(url) {
+  window.open(url, '_blank')
+}
 </script>

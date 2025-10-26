@@ -5,9 +5,9 @@
       <SidebarNavigation
         :navigation="navigation"
         :role-title="roleTitle"
-        :agriculture-full-name="store.userFullName"
-        :agriculture-email="store.userEmail"
-        :agriculture-initials="userInitials"
+        :user-full-name="store.userData?.fullName"
+        :user-email="store.userData?.email"
+        :user-initials="userInitials"
         @logout="handleLogout"
       />
     </div>
@@ -28,9 +28,9 @@
         <SidebarNavigation
           :navigation="navigation"
           :role-title="roleTitle"
-          :agriculture-full-name="store.userFullName"
-          :agriculture-email="store.userEmail"
-          :agriculture-initials="userInitials"
+          :user-full-name="store.userData?.fullName"
+          :user-email="store.userData?.email"
+          :user-initials="userInitials"
           @logout="handleLogout"
         />
       </div>
@@ -64,7 +64,6 @@
         </div>
       </header>
 
-
       <!-- Main content area -->
       <main class="flex-1 overflow-y-auto bg-gray-50">
         <div class="p-4 sm:p-6 lg:p-8">
@@ -78,10 +77,10 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Menu, X } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/agriculture'
-import SidebarNavigation from '@/components/layouts/SidebarNavigation.vue' // Import the new component
+import { useAuthStore } from '@/stores/auth'
+import SidebarNavigation from '@/components/layouts/SidebarNavigation.vue'
 
-const store = useUserStore()
+const store = useAuthStore()
 
 const props = defineProps({
   navigation: {
@@ -101,7 +100,7 @@ const props = defineProps({
 const sidebarOpen = ref(false)
 
 const userInitials = computed(() => {
-  const name = store.userFullName
+  const name = store.userData?.fullName
   if (!name) return ''
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
 })

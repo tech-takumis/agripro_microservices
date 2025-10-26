@@ -162,16 +162,14 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  Users, FileText, ClipboardList, Activity, UserPlus, Settings, BarChart3
-} from 'lucide-vue-next'
+import { Activity, BarChart3, ClipboardList, FileText, Settings, UserPlus, Users } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
-import ApplicationCard from '@/components/underwriter/ApplicationCard.vue' // Reusing for stats
-import UnderwriterQuickActionButton from '@/components/underwriter/UnderwriterQuickActionButton.vue' // Reusing for quick actions
-import { useUserStore } from '@/stores/user'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import ApplicationCard from '@/components/underwriter/ApplicationCard.vue'
+import UnderwriterQuickActionButton from '@/components/underwriter/UnderwriterQuickActionButton.vue'
+import { useAuthStore } from '@/stores/auth'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
-const store = useUserStore()
+const store = useAuthStore()
 const router = useRouter()
 
 const adminNavigation = ADMIN_NAVIGATION

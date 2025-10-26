@@ -1,8 +1,8 @@
 package com.hashjosh.application.controller;
 
-import com.hashjosh.application.dto.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.ApplicationSubmissionResponse;
+import com.hashjosh.constant.application.ApplicationResponseDto;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionResponse;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -27,6 +27,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
             @Valid @RequestBody ApplicationSubmissionDto submission
     ) {
+
         Application application = applicationService.processSubmission(submission);
         return ResponseEntity.ok(ApplicationSubmissionResponse.builder()
                         .applicationId(application.getId())
@@ -35,30 +36,43 @@ public class ApplicationController {
                         .build());
     }
 
+    // Return all applications by provider name
+    @GetMapping("/provider/{provider}")
+    public ResponseEntity<List<ApplicationResponseDto>> findAllProviderApplication(
+            @PathVariable("provider") String provider
+    ){
+        return new ResponseEntity<>(applicationService.findAllProviderApplication(provider),HttpStatus.OK);
+    }
 
+    // We get a specific application by its id
     @GetMapping("/{application-id}")
     public ResponseEntity<ApplicationResponseDto> findById(
             @PathVariable("application-id") UUID applicationId
     ){
         return  ResponseEntity.ok(applicationService.getApplicationById(applicationId));
     }
-
+    // We get all applications -  for the admin side
     @GetMapping
     public ResponseEntity<List<ApplicationResponseDto>> findAll(){
         return  new ResponseEntity<>(applicationService.findAll(),HttpStatus.OK);
     }
 
-    @GetMapping("/type/{application_type_id}")
-    public ResponseEntity<List<ApplicationResponseDto>> findApplicationByType(
-            @PathVariable("application_type_id") UUID applicationTypeId
-     ){
-        return new ResponseEntity<>(applicationService.findApplicationbyType(applicationTypeId), HttpStatus.OK);
+    // We get all applications by batch name
+    @GetMapping("/batch/{batchName}")
+    public ResponseEntity<List<ApplicationResponseDto>> findAllApplicationByBatchName(
+            @PathVariable("batchName") String batchName
+    ){
+        return new ResponseEntity<>(applicationService.findAllApplicationByBatchName(batchName),HttpStatus.OK);
     }
 
-    @GetMapping("/agriculture")
-    public ResponseEntity<List<ApplicationResponseDto>> findAllAgricultureApplication(){
-            return new ResponseEntity<>(applicationService.findAllAgricultureApplication(),HttpStatus.OK);
+    // we get all applications by batch id
+    @GetMapping("/batch/id/{batchId}")
+    public ResponseEntity<List<ApplicationResponseDto>> findAllApplicationByBatchId(
+            @PathVariable("batchId") UUID batchId
+    ){
+        return new ResponseEntity<>(applicationService.findAllApplicationByBatchId(batchId),HttpStatus.OK);
     }
+
 
     @DeleteMapping("/{application-id}")
     public ResponseEntity<Void> deleteApplication(

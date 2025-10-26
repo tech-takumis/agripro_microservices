@@ -29,9 +29,6 @@ public class GatewaySecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final TrustedConfig trustedConfig;
-
-    // Static sets for permitted and authenticated paths
-
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
     public static final Set<String> PERMITTED_PATHS = Set.of(
             "/ws/**", "/ws", "/ws/info", "/ws/info/**",
@@ -95,7 +92,7 @@ public class GatewaySecurityConfig {
         corsConfig.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "http://localhost:3000"
+                "http://localhost:3000" // Add this line
         ));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         corsConfig.setAllowedHeaders(List.of("*"));

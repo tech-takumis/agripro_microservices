@@ -29,9 +29,8 @@ public class PostService {
     private final PostMapper postMapper;
     private final DocumentClient documentClient;
 
-    public PostResponse createPost(String title,String content, List<MultipartFile> files) {
+    public PostResponse createPost(String content, List<MultipartFile> files) {
         Post post = new Post();
-        post.setTitle(title);
         post.setContent(content);
 
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext()

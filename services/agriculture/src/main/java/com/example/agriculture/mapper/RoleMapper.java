@@ -44,9 +44,4 @@ public class RoleMapper {
                 .build();
     }
 
-    public Set<RoleResponse> toRoleResponseSet(Set<Role> roles) {
-        return roles.stream()
-                .map(this::toRoleResponse)
-                .collect(Collectors.toSet());
-    }
 }

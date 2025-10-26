@@ -27,10 +27,20 @@ public class BeneficiaryController {
         return ResponseEntity.ok(beneficiaryService.createBeneficiary(request));
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<BeneficiaryResponse> getBeneficiary(
             @PathVariable UUID id) {
         return ResponseEntity.ok(beneficiaryService.getBeneficiary(id));
+    }
+
+    @GetMapping("/program/{programId}")
+    public ResponseEntity<Page<BeneficiaryResponse>> getBeneficiariesByProgram(
+            @PathVariable UUID programId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ResponseEntity.ok(beneficiaryService.getBeneficiariesByProgram(programId, pageable));
     }
 
     @GetMapping
@@ -48,18 +58,18 @@ public class BeneficiaryController {
         return ResponseEntity.ok(beneficiaryService.updateBeneficiary(id, request));
     }
 
+    @PutMapping("/{programId}/assign/all/farmers")
+    public ResponseEntity<Void> assignAllBeneficiariesToProgram(
+            @PathVariable("programId") UUID programId
+    ) {
+        beneficiaryService.assignAllFarmerBeneficiariesToProgram(programId);
+        return ResponseEntity.ok().build();
+    }
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBeneficiary(@PathVariable UUID id) {
         beneficiaryService.deleteBeneficiary(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/program/{programId}")
-    public ResponseEntity<Page<BeneficiaryResponse>> getBeneficiariesByProgram(
-            @PathVariable UUID programId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return ResponseEntity.ok(beneficiaryService.getBeneficiariesByProgram(programId, pageable));
     }
 }

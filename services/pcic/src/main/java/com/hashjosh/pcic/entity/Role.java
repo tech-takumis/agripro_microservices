@@ -1,5 +1,6 @@
 package com.hashjosh.pcic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,11 +28,15 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String slug;
 
+    @Column(name = "default_route")
+    private String defaultRoute;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permission",
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
+    @JsonIgnore
     private Set<Permission> permissions = new HashSet<>();
 }

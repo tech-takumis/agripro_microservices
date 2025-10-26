@@ -1,143 +1,25 @@
 import { createWebHistory, createRouter } from "vue-router"
-import { useUserStore } from "@/stores/user"
+// import { useUserStore } from "@/stores/user"
+import { useAuthStore } from "@/stores/auth"
+import {
+  ADMIN_ROUTES,
+  UNDERWRITER_ROUTES,
+  CLAIMS_PROCESSOR_ROUTES,
+  TELLER_ROUTES,
+} from "@/lib/routes"
 
 const APP_NAME = import.meta.env.VITE_APP_NAME
 
 const routes = [
-  // Admin Dashboard
-  {
-    path: "/admin/dashboard",
-    name: "admin-dashboard",
-    component: () => import("@/pages/admin/AdminDashboard.vue"),
-    meta: {
-      title: "Admin Dashboard",
-      guard: "auth",
-      roles: ["ADMIN"],
-    },
-  },
-  // Register Staff Page for Admin
-  {
-    path: "/admin/staff/register",
-    name: "admin-register-staff",
-    component: () => import("@/pages/admin/staff/RegisterStaff.vue"),
-    meta: {
-      title: "Register New Staff",
-      guard: "auth",
-      roles: ["ADMIN"],
-    },
-  },
-  // Create New Application Type Page for Admin
-  {
-    path: "/admin/applications/new",
-    name: "admin-new-application",
-    component: () => import("@/pages/admin/applications/NewApplication.vue"),
-    meta: {
-      title: "Create New Application Type",
-      guard: "auth",
-      roles: ["ADMIN"],
-    },
-  },
-  // View All Applications Page for Admin
-  {
-    path: "/admin/applications/all",
-    name: "admin-view-applications",
-    component: () => import("@/pages/admin/applications/ViewApplications.vue"),
-    meta: {
-      title: "All Application Types",
-      guard: "auth",
-      roles: ["ADMIN"],
-    },
-  },
-  // Roles & Permissions Page for Admin
-  {
-    path: "/admin/roles",
-    name: "admin-roles-permissions",
-    component: () => import("@/pages/admin/roles/RolesPermissions.vue"),
-    meta: {
-      title: "Roles & Permissions",
-      guard: "auth",
-      roles: ["ADMIN"],
-    },
-  },
-
-  // Management Dashboard
-  // {
-  //   path: "/management/dashboard",
-  //   name: "management-dashboard",
-  //   component: () => import("@/pages/management/ManagementDashboard.vue"),
-  //   meta: {
-  //     title: "Management Dashboard",
-  //     guard: "auth",
-  //     roles: ["MANAGEMENT"],
-  //   },
-  // },
-
-  // Insurance Underwriter Dashboard
-  {
-    path: "/underwriter/dashboard",
-    name: "underwriter-dashboard",
-    component: () => import("@/pages/underwriter/UnderwriterDashboard.vue"),
-    meta: {
-      title: "Insurance Underwriter Dashboard",
-      guard: "auth",
-      roles: ["UNDERWRITER"],
-    },
-  },
-
-  {
-    path: "/underwriter/applications/all",
-    name: "all-application",
-    component: () => import("@/pages/underwriter/applications/ViewApplications.vue"),
-    meta: {
-      title: "All Application",
-      guard: "auth",
-      roles: ["UNDERWRITER"],
-    },
-  },
-
-  // Claims Processor Dashboard
-  {
-    path: "/claims-processor/dashboard",
-    name: "claims-processor-dashboard",
-    component: () => import("@/pages/claims-processor/ClaimsProcessorDashboard.vue"),
-    meta: {
-      title: "Claims Processor Dashboard",
-      guard: "auth",
-      roles: ["CLAIM_PROCESSOR"],
-    },
-  },
-
-  // Teller Dashboard
-  {
-    path: "/teller/dashboard",
-    name: "teller-dashboard",
-    component: () => import("@/pages/teller/TellerDashboard.vue"),
-    meta: {
-      title: "Teller Dashboard",
-      guard: "auth",
-      roles: ["TELLER"],
-    },
-  },
-
-  // Multi-Role Dashboard (for users with multiple roles)
-  {
-    path: "/multi-role/dashboard",
-    name: "multi-role-dashboard",
-    component: () => import("@/pages/multi-role/MultiRoleDashboard.vue"),
-    meta: {
-      title: "Dashboard",
-      guard: "auth",
-      // No specific roles - accessible to any authenticated user
-    },
-  },
-
-
-  // Legacy Dashboard (redirects to appropriate dashboard)
+  ...ADMIN_ROUTES,
+  ...UNDERWRITER_ROUTES,
+  ...CLAIMS_PROCESSOR_ROUTES,
+  ...TELLER_ROUTES,
   {
     path: "/dashboard",
     name: "dashboard",
     redirect: (to) => {
-      const store = useUserStore()
+      const store = useAuthStore()
       return store.getRedirectPath()
     },
     meta: {
@@ -180,7 +62,7 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     redirect: "/page-not-found",
-  },
+  }
 ]
 
 const router = createRouter({
@@ -190,7 +72,7 @@ const router = createRouter({
 
 // Main navigation guard
 router.beforeEach(async (to, from, next) => {
-  const store = useUserStore()
+  const store = useAuthStore()
 
   const requiresAuth = to.matched.some((route) => route.meta.guard === "auth")
   const requiresGuest = to.matched.some((route) => route.meta.guard === "guest")
@@ -199,12 +81,11 @@ router.beforeEach(async (to, from, next) => {
   // Only fetch user data if route requires auth and user is not authenticated
   if (requiresAuth && !store.isAuthenticate) {
     try {
-      console.log("Fetching user data...")
-      await store.getData()
-      console.log("User data fetched successfully")
+      console.log("Fetching authenticated user...")
+      await store.getAuthenticated()
+      console.log("Authenticated user fetched successfully")
     } catch (error) {
       console.error("Auth check failed:", error)
-      // Clear any invalid stored data
       store.$reset()
       return next({ name: "login" })
     }
@@ -218,7 +99,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Validate PCIC staff access
-    if (!store.isValidStaff) {
+    if (!store.userData?.roles || store.userData.roles.length === 0) {
       console.error("User is not valid staff:", store.userData?.roles)
       return next({ name: "access-denied" })
     }
@@ -231,7 +112,7 @@ router.beforeEach(async (to, from, next) => {
 
       console.log("Checking role access - User roles:", userRoles, "Required roles:", requiredRoles)
 
-      const hasRequiredRole = store.hasAnyRole(requiredRoles)
+      const hasRequiredRole = userRoles.some(role => requiredRoles.includes(role.name))
 
       if (!hasRequiredRole) {
         console.log("User roles not allowed for this route, redirecting to appropriate dashboard")

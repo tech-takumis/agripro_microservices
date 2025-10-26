@@ -1,7 +1,11 @@
 package com.hashjosh.pcic.mapper;
 
 
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.auth.AuthenticatedResponse;
+import com.hashjosh.pcic.dto.auth.AuthenticatedUser;
+import com.hashjosh.pcic.dto.auth.LoginResponse;
+import com.hashjosh.pcic.dto.auth.RegistrationRequest;
+import com.hashjosh.pcic.dto.role.RoleResponse;
 import com.hashjosh.pcic.entity.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,12 +13,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
+    private final RoleMapper roleMapper;
 
     public PcicProfile toPcicProfileEntity(RegistrationRequest request) {
         return PcicProfile.builder()
@@ -32,7 +38,7 @@ public class UserMapper {
             RegistrationRequest request, Set<Role> roles) {
 
         PcicProfile profile = toPcicProfileEntity(request);
-        return Pcic.builder()
+        Pcic pcic =  Pcic.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
@@ -43,29 +49,27 @@ public class UserMapper {
                 .roles(roles)
                 .pcicProfile(profile)
                 .build();
+
+        profile.setPcic(pcic);
+        return pcic;
     }
 
-    public AuthenticatedResponse toAuthenticatedResponse(Pcic pcic) {
-        Set<String> roles = new HashSet<>();
-        Set<String> permissions = new HashSet<>();
+    public AuthenticatedUser toAuthenticatedResponse(Pcic pcic) {
+        Set<RoleResponse> roles = pcic.getRoles().stream()
+                .map(roleMapper::toRoleResponse)
+                .collect(Collectors.toSet());
 
-        // roles and permissions are now initialized
-        pcic.getRoles().forEach(role -> {
-            roles.add(role.getName());
-            role.getPermissions().forEach(permission -> permissions.add(permission.getName()));
-        });
-
-
-        return new AuthenticatedResponse(
-                pcic.getId(),
-                pcic.getUsername(),
-                pcic.getFirstName(),
-                pcic.getLastName(),
-                pcic.getEmail(),
-                pcic.getPhoneNumber(),
-                pcic.getAddress(),
-                roles,
-                permissions
-        );
+        return AuthenticatedUser.builder()
+                .userId(pcic.getId())
+                .username(pcic.getUsername())
+                .firstName(pcic.getFirstName())
+                .lastName(pcic.getLastName())
+                .email(pcic.getEmail())
+                .phoneNumber(pcic.getPhoneNumber())
+                .address(pcic.getAddress())
+                .roles(roles)
+                .build();
     }
+
 }
+// No changes needed for circular reference.

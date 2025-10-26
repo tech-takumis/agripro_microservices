@@ -16,7 +16,7 @@ spring:
             - id: ws_route
               uri: lb://realtime-service
               predicates:
-                - Path=/ws/**
+                - Path=/ws/**,/api/v1/notifications/**
               filters:
                 - PreserveHostHeader
                 - RemoveRequestHeader=Cookie,Sec-WebSocket-Protocol
@@ -41,7 +41,7 @@ spring:
             - id: application-service
               uri: lb://application-service
               predicates:
-                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**
+                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,/api/v1/batches/**
 
             - id: document-service
               uri: lb://document-service

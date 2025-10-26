@@ -5,6 +5,7 @@ import 'package:mobile/data/models/application_submission.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
 import '../../presentation/controllers/auth_controller.dart';
 import 'storage_service.dart';
+import 'package:mobile/data/utils/address_utils.dart';
 
 class ApplicationApiService {
   final Dio _dio;
@@ -108,14 +109,23 @@ class ApplicationApiService {
         print('User not logged in, skipping submitApplication');
         return ApplicationSubmissionResponse(success: false, message: 'User not logged in', applicationId: '');
       }
+      // Convert farm_location object to string if needed
+      final Map<String, dynamic> updatedFieldValues = Map<String, dynamic>.from(request.fieldValues);
+      if (updatedFieldValues['farm_location'] is Map<String, dynamic>) {
+        updatedFieldValues['farm_location'] = farmLocationToString(updatedFieldValues['farm_location']);
+      }
       print('🚀 Submitting application for type: \\${request.applicationTypeId}');
-      print('📋 Field values: \\${request.fieldValues}');
+      print('📋 Field values: \\${updatedFieldValues}');
       print('📎 Document IDs: \\${request.documentIds}');
 
       // Send as application/json
       final response = await _dio.post(
         '/applications/submit',
-        data: request.toJson(),
+        data: {
+          'applicationTypeId': request.applicationTypeId,
+          'fieldValues': updatedFieldValues,
+          'documentIds': request.documentIds,
+        },
         options: Options(
           headers: {
             'Content-Type': 'application/json',

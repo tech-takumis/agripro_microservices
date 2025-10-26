@@ -28,6 +28,10 @@ public class ApplicationType {
     @Column(name = "layout", length = 255)
     private String layout;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "provider_id", referencedColumnName = "id")
+    private ApplicationProvider provider;
+
     @Column(name = "name", length = 255)
     private String name;
 
@@ -42,7 +46,7 @@ public class ApplicationType {
     @OneToMany(mappedBy = "applicationType", fetch = FetchType.EAGER , cascade = CascadeType.ALL)
     private List<ApplicationSection> sections;
 
-    @OneToMany(mappedBy = "applicationType")
-    private List<Application> applications;
+    @OneToMany(mappedBy = "applicationType", fetch = FetchType.EAGER)
+    private List<Batch> batches;
 
 }

@@ -1,8 +1,10 @@
 package com.hashjosh.pcic.service;
 
 
+import com.hashjosh.pcic.dto.role.RoleRequest;
+import com.hashjosh.pcic.dto.role.RoleResponse;
+import com.hashjosh.pcic.dto.role.RoleUpdateRequest;
 import com.hashjosh.pcic.repository.*;
-import com.hashjosh.pcic.dto.*;
 import com.hashjosh.pcic.entity.*;
 import com.hashjosh.pcic.mapper.RoleMapper;
 

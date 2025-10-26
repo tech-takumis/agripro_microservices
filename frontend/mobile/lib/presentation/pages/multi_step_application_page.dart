@@ -8,7 +8,6 @@ import 'package:mobile/presentation/widgets/application_widgets/application_step
 import 'package:mobile/presentation/widgets/common/custom_button.dart';
 import 'package:mobile/presentation/widgets/common/step_indicator.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
-import 'package:go_router/go_router.dart';
 
 class MultiStepApplicationPage extends ConsumerStatefulWidget {
   final ApplicationContent application;
@@ -41,11 +40,11 @@ class _MultiStepApplicationPageState extends ConsumerState<MultiStepApplicationP
         flushbarPosition: FlushbarPosition.TOP,
       ).show(context);
 
-      if (mounted) {
+      if (context.mounted) {
         ref.read(goRouterProvider).go('/home');
       }
     } else {
-      if (!mounted) return;
+      if (!context.mounted) return;
       Flushbar(
         message: response.message,
         backgroundColor: Colors.red.withOpacity(0.9),

@@ -387,13 +387,11 @@ import {
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationDetailModal from '@/components/modals/ApplicationDetailModal.vue'
 import { useApplicationStore } from '@/stores/application'
-import { useRolePermissionStore } from '@/stores/rolePermission'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 import axios from '@/lib/axios'
 
 const router = useRouter()
 const applicationStore = useApplicationStore()
-const rolePermissionStore = useRolePermissionStore()
 
 const adminNavigation = ADMIN_NAVIGATION
 

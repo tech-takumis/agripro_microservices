@@ -335,11 +335,10 @@
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <DetailField label="Application ID" :value="application.id" class="md:col-span-2" />
-                    <DetailField label="Application Type ID" :value="application.applicationTypeId" class="md:col-span-2" />
-                    <DetailField label="User ID" :value="application.userId" class="md:col-span-2" />
+                    <DetailField label="Application Name" :value="application.applicationName" class="md:col-span-2" />
+                    <DetailField label="Batch" :value="application.batchName" class="md:col-span-2" />
                     <DetailField label="Submitted At" :value="formatDateTime(application.submittedAt)" />
                     <DetailField label="Updated At" :value="formatDateTime(application.updatedAt)" />
-                    <DetailField label="Version" :value="application.version" />
                 </div>
             </div>
         </div>
@@ -349,7 +348,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useApplicationStore } from '@/stores/application'
+import {useApplicationStore} from '@/stores/applications'
 import { useAuthStore } from '@/stores/auth'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import DetailField from '@/components/tables/DetailField.vue'
@@ -362,7 +361,7 @@ import {
 
 const router = useRouter()
 const route = useRoute()
-const applicationStore = useApplicationStore()
+const { fetchApplicationById, deleteApplication, updateApplication } = useApplicationStore()
 const authStore = useAuthStore()
 
 // State
@@ -390,21 +389,6 @@ const farmerSignatureDocId = computed(() => {
     return application.value?.fileUploads?.[0] || null
 })
 
-// Methods
-const fetchApplication = async () => {
-    loading.value = true
-    error.value = null
-
-    const result = await applicationStore.fetchApplicationById(route.params.id)
-
-    if (result.success) {
-        application.value = result.data
-    } else {
-        error.value = result.error?.message || 'Failed to fetch application'
-    }
-
-    loading.value = false
-}
 
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -439,16 +423,32 @@ const handleEdit = () => {
     console.log('Edit application:', application.value.id)
 }
 
+// Methods
+const fetchApplication = async () => {
+    loading.value = true
+    error.value = null
+
+    const result = await fetchApplicationById(route.params.id)
+
+    if (result.success) {
+        application.value = result.data
+    } else {
+        error.value = result.error?.message || 'Failed to fetch application'
+    }
+
+    loading.value = false
+}
+
 const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this application?')) {
         return
     }
 
     loading.value = true
-    const result = await applicationStore.deleteApplication(application.value.id)
+    const result = await deleteApplication(application.value.id)
 
     if (result.success) {
-        router.push({ name: 'applications-list' })
+        await router.push({ name: 'applications-list' })
     } else {
         error.value = result.error?.message || 'Failed to delete application'
         loading.value = false

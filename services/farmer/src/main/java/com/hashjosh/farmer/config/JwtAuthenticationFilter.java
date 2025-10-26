@@ -123,7 +123,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Handle expired access token with valid refresh token
-            if (refreshToken != null && jwtService.validateRefreshToken(refreshToken, clientIp, userAgent)) {
+            if (refreshToken != null) {
                 log.info("[JWT Filter] Expired access token, valid refresh token for URI: {}", requestUri);
                 Claims claim = jwtService.getClaimsAllowExpired(accessToken);
                 String username = claim.getSubject();
@@ -135,7 +135,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 Map<String, String> newTokens = tokenRenewalService.refreshTokens(
                         UUID.fromString(userId), refreshToken, username,
-                        null, claimsMap, clientIp, userAgent, false);
+                        claimsMap, clientIp, userAgent, false);
 
                 // Set authentication with new access token
                 setAuthentication(newTokens.get("accessToken"), request);

@@ -1,8 +1,8 @@
 package com.hashjosh.application.mapper;
 
-import com.hashjosh.application.dto.ApplicationSectionResponseDto;
-import com.hashjosh.application.dto.ApplicationTypeRequestDto;
-import com.hashjosh.application.dto.ApplicationTypeResponseDto;
+import com.hashjosh.application.dto.sections.ApplicationSectionResponseDto;
+import com.hashjosh.application.dto.type.ApplicationTypeRequestDto;
+import com.hashjosh.application.dto.type.ApplicationTypeResponseDto;
 import com.hashjosh.application.model.ApplicationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationTypeMapper {
     private final ApplicationSectionMapper applicationSectionMapper;
-    private final ApplicationFieldMapper applicationFieldMapper;
 
     public ApplicationType toApplicationType(ApplicationTypeRequestDto dto) {
         return ApplicationType.builder()

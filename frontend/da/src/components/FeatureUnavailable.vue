@@ -22,7 +22,6 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const handleBack = () => {
-  // <CHANGE> Emit event to parent component for navigation handling
   emit('back')
 }
 </script>

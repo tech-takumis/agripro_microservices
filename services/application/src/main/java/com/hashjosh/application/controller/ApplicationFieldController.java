@@ -1,6 +1,6 @@
 package com.hashjosh.application.controller;
 
-import com.hashjosh.application.dto.ApplicationFieldsRequestDto;
+import com.hashjosh.application.dto.fields.ApplicationFieldsRequestDto;
 import com.hashjosh.application.service.ApplicationFieldsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -628,7 +628,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { RefreshCw, Search, Printer, X } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import { UNDERWRITER_NAVIGATION } from '@/lib/constants'
+import { UNDERWRITER_NAVIGATION } from '@/lib/navigation'
 import { 
   Info, Users, MapPin, Leaf, CheckCircle2, Clock, XCircle, Layers, Calendar, UserCheck, User, Trash2 
 } from "lucide-vue-next";

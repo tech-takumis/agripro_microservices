@@ -1,16 +1,14 @@
 package com.hashjosh.realtimegatewayservice.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.*;
 import com.hashjosh.realtimegatewayservice.clients.FarmerResponse;
 import com.hashjosh.realtimegatewayservice.clients.FarmerServiceClient;
 import com.hashjosh.realtimegatewayservice.entity.Notification;
 import com.hashjosh.realtimegatewayservice.repository.NotificationRepository;
 import com.hashjosh.realtimegatewayservice.service.EmailService;
-import com.hashjosh.realtimegatewayservice.wrapper.ApplicationNotificationDTO;
+import com.hashjosh.realtimegatewayservice.dto.NotificationResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -122,7 +120,7 @@ public class ApplicationConsumer {
     private void handleApplicationSubmitted(ApplicationSubmittedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Submitted")
                 .message("Your application has been submitted successfully.")
@@ -137,7 +135,7 @@ public class ApplicationConsumer {
     private void handleVerificationStarted(VerificationStartedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Verification Started")
                 .message("Verification process has started for your application.")
@@ -152,7 +150,7 @@ public class ApplicationConsumer {
     private void handleApplicationUnderReview(ApplicationUnderReviewEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Under Review")
                 .message("Your application is now under review.")
@@ -167,7 +165,7 @@ public class ApplicationConsumer {
     private void handleVerificationCompleted(VerificationCompletedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Verification Completed")
                 .message("Verification completed: " + e.getStatus())
@@ -182,7 +180,7 @@ public class ApplicationConsumer {
     private void handleApplicationSentToPcic(ApplicationSentToPcicEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Sent to PCIC")
                 .message("Your application has been sent to PCIC.")
@@ -197,7 +195,7 @@ public class ApplicationConsumer {
     private void handleApplicationReceivedByPcic(ApplicationReceivedByPcicEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Received by PCIC")
                 .message("PCIC has received your application. Status: " + e.getVerificationStatus())
@@ -212,7 +210,7 @@ public class ApplicationConsumer {
     private void handleInspectionScheduled(InspectionScheduledEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Inspection Scheduled")
                 .message("An inspection has been scheduled for your application.")
@@ -227,7 +225,7 @@ public class ApplicationConsumer {
     private void handleInspectionCompleted(InspectionCompletedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Inspection Completed")
                 .message("Inspection for your application has been completed.")
@@ -242,7 +240,7 @@ public class ApplicationConsumer {
     private void handlePolicyIssued(PolicyIssuedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Policy Issued")
                 .message("A policy has been issued for your application. Policy #: " + e.getPolicyNumber())
@@ -257,7 +255,7 @@ public class ApplicationConsumer {
     private void handleClaimProcessed(ClaimProcessedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Claim Processed")
                 .message("Your claim has been processed. Status: " + e.getPayoutStatus())
@@ -269,7 +267,7 @@ public class ApplicationConsumer {
         );
     }
 
-    private void handleNotification(UUID receiverId, ApplicationNotificationDTO notification, String emailSubject, String emailMessage) {
+    private void handleNotification(UUID receiverId, NotificationResponseDTO notification, String emailSubject, String emailMessage) {
         if (receiverId == null || notification == null) {
             log.warn("Could not extract receiverId or notification from event");
             return;

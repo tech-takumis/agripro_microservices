@@ -1,10 +1,10 @@
 <script setup>
-import { useUserStore } from '../../stores/user'
+import { useAuthStore } from '@/stores/auth'
 import ApplicationLogo from '@/components/ApplicationLogo.vue'
 
-const store = useUserStore()
+const store = useAuthStore()
 
-const auth = store.authUser
+const auth = store.isAuthenticate
 </script>
 
 <template>

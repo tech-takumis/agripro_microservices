@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,11 +20,14 @@ public class Beneficiary {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private UUID userId;
-    private String type; // e.g., Farmer, Cooperative, NGO
+    private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id")
     private Program program;
+
+    private boolean isActive;
+    private LocalDateTime assignAt;
 
     @Override
     public String toString() {

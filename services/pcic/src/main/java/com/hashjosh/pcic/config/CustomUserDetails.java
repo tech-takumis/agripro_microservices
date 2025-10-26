@@ -2,50 +2,65 @@ package com.hashjosh.pcic.config;
 
 import com.hashjosh.pcic.entity.Pcic;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-@RequiredArgsConstructor
 @Getter
 public class CustomUserDetails implements UserDetails {
-
-    private final String token;
+    private final UUID userId;
+    private final String username;
+    private final String firstname;
+    private final String lastname;
+    private final String email;
+    private final String phoneNumber;
+    private final String serviceId;
+    private final Set<SimpleGrantedAuthority> authorities;
+    private final String password;
     private final Pcic pcic;
-    private final Collection<? extends GrantedAuthority> authorities;
-    private final String serviceId; // For internal services
 
-    // Constructor for internal services
-    public CustomUserDetails(String serviceId, Collection<? extends GrantedAuthority> authorities) {
-        this.token = null;
-        this.pcic = null;
-        this.authorities = authorities != null ? authorities : Collections.emptyList();
-        this.serviceId = serviceId;
+    // Database constructor
+    public CustomUserDetails(Pcic pcic, Set<SimpleGrantedAuthority> authorities) {
+        this.userId = pcic.getId();
+        this.username = pcic.getUsername();
+        this.firstname = pcic.getFirstName();
+        this.lastname = pcic.getLastName();
+        this.email = pcic.getEmail();
+        this.phoneNumber = pcic.getPhoneNumber();
+        this.password = pcic.getPassword();
+        this.serviceId = null;
+        this.authorities = authorities;
+        this.pcic = pcic;
     }
 
-    // Constructor for JWT-based authentication
-    public CustomUserDetails(Pcic pcic) {
-        this.token = null;
-        this.pcic = pcic;
+    // JWT claims-based authentication constructor
+    public CustomUserDetails(Map<String, Object> claims, Set<SimpleGrantedAuthority> authorities) {
+        this.userId = claims.get("userId") != null ? UUID.fromString((String) claims.get("userId")) : null;
+        this.username = claims.get("sub") != null ? claims.get("sub").toString() : null;
+        this.firstname = (String) claims.get("firstname");
+        this.lastname = (String) claims.get("lastname");
+        this.email = (String) claims.get("email");
+        this.phoneNumber = (String) claims.get("phoneNumber");
+        this.password = null;
         this.serviceId = null;
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-        if (pcic != null && pcic.getRoles() != null) {
-            pcic.getRoles().forEach(role -> {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + role.getSlug().toUpperCase()));
-                if (role.getPermissions() != null) {
-                    role.getPermissions().forEach(permission -> {
-                        roles.add(new SimpleGrantedAuthority(permission.getSlug().toUpperCase()));
-                    });
-                }
-            });
-        }
-        this.authorities = roles.isEmpty() ? Collections.emptyList() : roles;
+        this.authorities = authorities;
+        this.pcic = null;
+    }
+
+    // Internal service authentication constructor
+    public CustomUserDetails(String serviceId, UUID userId, Set<SimpleGrantedAuthority> authorities) {
+        this.userId = userId;
+        this.username = serviceId;
+        this.firstname = null;
+        this.lastname = null;
+        this.email = null;
+        this.phoneNumber = null;
+        this.password = null;
+        this.serviceId = serviceId;
+        this.authorities = authorities;
+        this.pcic = null;
     }
 
     @Override
@@ -55,18 +70,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return pcic != null ? pcic.getPassword() : null;
+        return password;
     }
 
     @Override
     public String getUsername() {
-        if (pcic != null) {
-            return pcic.getUsername();
-        }
-        if (serviceId != null) {
-            return "internal-service-" + serviceId; // Unique username for internal services
-        }
-        throw new IllegalStateException("Neither pcic nor serviceId is set");
+        return username != null ? username : serviceId;
     }
 
     @Override

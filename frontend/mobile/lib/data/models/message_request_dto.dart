@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:uuid/uuid.dart';
-
 class MessageRequestDto {
   final String senderId;
   final String receiverId;
