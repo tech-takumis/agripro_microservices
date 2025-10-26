@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.AgricultureHttpClient;
 import com.hashjosh.application.configs.CustomUserDetails;
 import com.hashjosh.constant.application.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.ValidationError;
-import com.hashjosh.application.dto.ValidationErrors;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
+import com.hashjosh.application.dto.validation.ValidationError;
+import com.hashjosh.application.dto.validation.ValidationErrors;
 import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.*;
@@ -44,22 +44,30 @@ public class ApplicationService {
             ApplicationSubmissionDto submission) {
 
         try {
-
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
                     .getContext().getAuthentication().getPrincipal();
 
             // Set the userId
             submission.setUseId(UUID.fromString(userDetails.getUserId()));
 
-            Batch batch = batchRepository.findByApplicationTypeId(submission.getApplicationTypeId())
-                    .orElseThrow(() -> ApiException.badRequest("No batch found for application type"));
-
-            if(!batch.isAvailable()){
-                throw ApiException.badRequest("Application type is not available for submission");
+            // Fetch all batches for the application type, ordered by oldest first
+            List<Batch> batches = batchRepository.findAllByApplicationTypeIdOrderByCreatedAtAsc(submission.getApplicationTypeId());
+            Batch selectedBatch = null;
+            for (Batch batch : batches) {
+                // Check if batch is available (not full and not closed)
+                boolean notFull = batch.getApplications().size() < batch.getMaxApplications();
+                boolean available = batch.isAvailable(); // Assuming isAvailable() checks for open status
+                if (notFull && available) {
+                    selectedBatch = batch;
+                    break;
+                }
+            }
+            if (selectedBatch == null) {
+                throw ApiException.badRequest("No available batch for this application type");
             }
 
             // We get the application type through the batch
-            ApplicationType applicationType = batch.getApplicationType();
+            ApplicationType applicationType = selectedBatch.getApplicationType();
             List<ApplicationField> fields = applicationType.getSections().stream()
                     .flatMap(section -> section.getFields().stream())
                     .collect(Collectors.toList());
@@ -74,8 +82,13 @@ public class ApplicationService {
                 throw ApiException.badRequest("Validation failed: " + validationErrors);
             }
 
-            Application application = applicationMapper.toEntity(submission,batch);
+            Application application = applicationMapper.toEntity(submission, selectedBatch);
             Application savedApplication = applicationRepository.save(application);
+
+            // Increment the batch's application count and save
+            selectedBatch.setMaxApplications(selectedBatch.getMaxApplications() + 1);
+            batchRepository.save(selectedBatch);
+
             agricultureHttpClient.submitApplication(
                     VerificationRequestDto.builder()
                             .submissionId(savedApplication.getId())
@@ -191,7 +204,7 @@ public class ApplicationService {
                 .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
     }
 
-    public List<ApplicationResponseDto> findAllAgricultureApplication(
+    public List<ApplicationResponseDto> findAllProviderApplication(
             String provider
     ) {
 

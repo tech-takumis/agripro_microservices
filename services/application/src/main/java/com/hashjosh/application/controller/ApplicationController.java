@@ -1,8 +1,8 @@
 package com.hashjosh.application.controller;
 
 import com.hashjosh.constant.application.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.ApplicationSubmissionResponse;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionResponse;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -36,12 +36,12 @@ public class ApplicationController {
                         .build());
     }
 
-    // Get all agriculture applications
+    // Return all applications by provider name
     @GetMapping("/provider/{provider}")
-    public ResponseEntity<List<ApplicationResponseDto>> findAllAgricultureApplication(
+    public ResponseEntity<List<ApplicationResponseDto>> findAllProviderApplication(
             @PathVariable("provider") String provider
     ){
-        return new ResponseEntity<>(applicationService.findAllAgricultureApplication(provider),HttpStatus.OK);
+        return new ResponseEntity<>(applicationService.findAllProviderApplication(provider),HttpStatus.OK);
     }
 
     // We get a specific application by its id
@@ -58,7 +58,7 @@ public class ApplicationController {
     }
 
     // We get all applications by batch name
-    @GetMapping("/batch/name/{batchName}")
+    @GetMapping("/batch/{batchName}")
     public ResponseEntity<List<ApplicationResponseDto>> findAllApplicationByBatchName(
             @PathVariable("batchName") String batchName
     ){

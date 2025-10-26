@@ -49,6 +49,7 @@ public class BatchService {
                 .name(batch.getName())
                 .description(batch.getDescription())
                 .isAvailable(batch.isAvailable())
+                .maxApplications(batch.getMaxApplications())
                 .startDate(batch.getStartDate())
                 .endDate(batch.getEndDate())
                 .applicationType(type)
@@ -83,8 +84,8 @@ public class BatchService {
         batchRepository.delete(batch);
     }
 
-    public List<BatchResponseDTO> getAvailableBatchesByApplicationType(UUID applicationTypeId, boolean isAvailable) {
-        return batchRepository.findAllByIsAvailableAndApplicationType_Id(isAvailable, applicationTypeId).stream()
+    public List<BatchResponseDTO> getBatchesByProvider(String providerName) {
+        return batchRepository.findAllByApplicationType_Provider_Name(providerName).stream()
                 .map(batchMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }

@@ -180,9 +180,9 @@ import {
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import TransactionCard from '@/components/teller/TransactionCard.vue'
 import QuickActionButton from '@/components/teller/QuickActionButton.vue'
-import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 
-const store = useUserStore()
+const store = useAuthStore()
 const router = useRouter()
 
 // Navigation for teller role

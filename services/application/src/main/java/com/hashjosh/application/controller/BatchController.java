@@ -37,18 +37,17 @@ public class BatchController {
         return ResponseEntity.ok(response);
     }
 
-
-    @GetMapping("/application-type/{applicationTypeId}")
-    public ResponseEntity<List<BatchResponseDTO>> getBatchesByApplicationType(
-            @PathVariable("applicationTypeId") UUID applicationTypeId,
-            @RequestParam(required = false) boolean isAvailable
+    // Return all batches of a provider.
+    @GetMapping("/provider/{providerName}")
+    public ResponseEntity<List<BatchResponseDTO>> getBatchesByProvider(
+            @PathVariable("providerName") String providerName
     ){
-        // Implementation for getting batches by application type would go here
-        List<BatchResponseDTO> response = batchService.getAvailableBatchesByApplicationType(applicationTypeId, isAvailable);
-
+        // Implementation for getting batches by the provider would go here
+        List<BatchResponseDTO> response = batchService.getBatchesByProvider(providerName);
         return ResponseEntity.ok(response);
     }
 
+    // Return a batch by its name.
     @GetMapping("/name/{batchName}")
     public ResponseEntity<BatchResponseDTO> getBatchByName(
             @PathVariable("batchName") String batchName

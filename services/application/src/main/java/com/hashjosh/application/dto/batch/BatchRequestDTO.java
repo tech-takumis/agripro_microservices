@@ -15,6 +15,7 @@ public class BatchRequestDTO {
     String description;
     LocalDateTime startDate;
     LocalDateTime endDate;
+    int maxApplications;
     boolean isAvailable;
     UUID  applicationTypeId;
 }

@@ -3,8 +3,9 @@ package com.hashjosh.pcic.controller;
 
 import com.hashjosh.jwtshareable.service.JwtService;
 import com.hashjosh.pcic.config.CustomUserDetails;
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.auth.*;
 import com.hashjosh.pcic.entity.*;
+import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.service.AuthService;
 import com.hashjosh.pcic.service.RefreshTokenService;
 import io.jsonwebtoken.Claims;
@@ -35,7 +36,7 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
-            @RequestBody RegistrationRequest request
+            @RequestBody @Valid RegistrationRequest request
     ){
 
         Pcic pcic = authService.register(request);
@@ -51,26 +52,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
+    public ResponseEntity<AuthenticatedResponse> login(
             @RequestBody @Valid LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-
 
         String clientIp = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
 
         LoginResponse tokens = authService.login(request, clientIp, userAgent);
 
-            Cookie accessCookie = buildCookie("ACCESS_TOKEN", tokens.getAccessToken(),
+        Cookie accessCookie = buildCookie("ACCESS_TOKEN", tokens.getAccessToken(),
                     (int) (jwtExpirySeconds(tokens.getAccessToken())));
-            Cookie refreshCookie = buildCookie("REFRESH_TOKEN", tokens.getRefreshToken(),
+        Cookie refreshCookie = buildCookie("REFRESH_TOKEN", tokens.getRefreshToken(),
                     (int) Duration.ofDays(1).toSeconds());
 
-            httpResponse.addCookie(accessCookie);
-            httpResponse.addCookie(refreshCookie);
+        httpResponse.addCookie(accessCookie);
+        httpResponse.addCookie(refreshCookie);
 
-            return ResponseEntity.ok("Login successful");
+        AuthenticatedResponse response = AuthenticatedResponse.builder()
+                .websocketToken(tokens.getWebSocketToken())
+                .user(tokens.getUser())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
 
@@ -106,24 +111,9 @@ public class AuthController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<AuthenticatedResponse> getAuthenticatedUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<AuthenticatedUser> getAuthenticatedUser() {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof CustomUserDetails customUserDetails)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Pcic pcic = customUserDetails.getPcic();
-        if (pcic == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        AuthenticatedResponse response = authService.getAuthenticatedUser(pcic);
+        AuthenticatedUser response = authService.getAuthenticatedUser();
         return ResponseEntity.ok(response);
     }
 

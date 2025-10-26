@@ -349,16 +349,18 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ClipboardList, CheckCircle, XCircle, Filter, Trash2, Eye } from 'lucide-vue-next'
+import { CheckCircle, ClipboardList, Eye, Filter, Trash2, XCircle } from 'lucide-vue-next'
 
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
+import SparklineChart from '@/components/SparklineChart.vue'
+import Clock from '@/components/Clock.vue'
 
-import { useUserStore } from '@/stores/user'
-import { UNDERWRITER_NAVIGATION } from '@/lib/constants'
+import { useAuthStore } from '@/stores/auth'
+import { UNDERWRITER_NAVIGATION } from '@/lib/navigation'
 
-const store = useUserStore()
+const store = useAuthStore()
 const router = useRouter()
 const underwriterNavigation = UNDERWRITER_NAVIGATION
 
@@ -482,4 +484,3 @@ const viewApplication = (appId) => {
   router.push(`/underwriter/applications/${appId}/review`)
 }
 </script>
-

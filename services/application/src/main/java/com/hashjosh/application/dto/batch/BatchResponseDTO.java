@@ -16,5 +16,4 @@ public class BatchResponseDTO {
     private String name;
     private String description;
     private boolean isAvailable;
-    private List<ApplicationResponseDto> applications;
 }

@@ -8,6 +8,18 @@
             <div class="flex items-center justify-between print:hidden">
                 <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
                 <div class="flex items-center gap-3">
+                    <!-- Create Batch Icon Button -->
+                    <button @click="showCreateBatchModal = true" class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 flex items-center" title="Create Batch">
+                        <Plus class="w-5 h-5" />
+                    </button>
+                    <!-- Batch Select Filter -->
+                    <select v-model="selectedBatch" class="border rounded px-2 py-1 text-sm">
+                        <option value="">All Batches</option>
+                        <option v-for="batch in batches" :key="batch.id" :value="batch.id">
+                            {{ batch.name }}
+                        </option>
+                    </select>
+
                     <!-- Action buttons (shown when checkboxes are selected) -->
                     <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
                         <button
@@ -149,6 +161,9 @@
             @apply-filters="applyFilters"
             @reset-filters="resetFilters"
         />
+
+        <!-- Create Batch Modal -->
+        <CreateBatchModal :show="showCreateBatchModal" @close="showCreateBatchModal = false" @created="handleBatchCreated" />
 
         <!-- Print Layout (hidden, only visible when printing) -->
         <div id="print-layout">
@@ -480,31 +495,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApplicationStore } from '@/stores/application'
+import { useApplicationStore } from '@/stores/applications'
 import { useAuthStore } from '@/stores/auth'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationFilterModal from '@/components/modals/ApplicationFilterModal.vue'
-import { Filter, Edit, Trash2, FileText, Printer } from 'lucide-vue-next'
+import CreateBatchModal from '@/components/modals/CreateBatchModal.vue'
+import { Filter, Edit, Trash2, FileText, Printer, Plus } from 'lucide-vue-next'
 import {
     ADMIN_NAVIGATION,
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
-import {useBatchStore} from '@/stores/batch'
+import { useApplicationBatchStore } from '@/stores/applications'
 
-
-const {allBatch, fetchBatch} = useBatchStore()
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
+const batchStore = useApplicationBatchStore()
 
 // State
 const loading = ref(false)
 const error = ref(null)
 const selectedApplications = ref([])
 const showFilterModal = ref(false)
+const showCreateBatchModal = ref(false)
 const filters = ref({
     cropType: '',
     coverType: '',
@@ -514,22 +530,24 @@ const filters = ref({
     amountMin: '',
     amountMax: ''
 })
+const selectedBatch = ref('')
+const batches = ref([])
 
 const navigation = computed(() => {
-    const role = authStore.userData?.roles?.[0]
+    const role = authStore.userData?.roles?.[0]?.name
     if (role === 'Admin') return ADMIN_NAVIGATION
-    if (role === 'Municipal Agriculturists') return MUNICIPAL_AGRICULTURIST_NAVIGATION
-    if (role === 'Agricultural Extension Workers') return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
+    if (role === 'Municipal Agriculturist') return MUNICIPAL_AGRICULTURIST_NAVIGATION
+    if (role === 'Agricultural Extension Worker') return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
     return []
 })
 
 const roleTitle = computed(() => {
-    const role = authStore.userData?.roles?.[0].name
+    const role = authStore.userData?.roles?.[0]?.name
     return role || 'Staff Portal'
 })
 
 const filteredApplications = computed(() => {
-    let apps = applicationStore.allApplications // use getter
+    let apps = applicationStore.allApplications
 
     // Apply filters
     if (filters.value.cropType) {
@@ -577,18 +595,27 @@ const isAllSelected = computed(() => {
 })
 
 // Methods
-const fetchApplications = async () => {
+const fetchApplicationsList = async () => {
     loading.value = true
     error.value = null
-
-    const result = await applicationStore.fetchAgricultureApplications()
-
-    if (!result.success) {
-        error.value = result.error?.message || 'Failed to fetch applications'
+    if (selectedBatch.value) {
+        await applicationStore.fetchApplicationByBatches(selectedBatch.value)
+    } else {
+        await applicationStore.fetchAgricultureApplications()
     }
-
     loading.value = false
 }
+
+const fetchBatches = async () => {
+    const result = await batchStore.fetchApplicationBatches()
+    if (result.success) {
+        batches.value = result.data
+    }
+}
+
+watch(selectedBatch, async (newBatch) => {
+    await fetchApplicationsList()
+})
 
 const getFullName = (fields) => {
     if (!fields) return 'N/A'
@@ -684,7 +711,7 @@ const handleDelete = async () => {
     }
 
     selectedApplications.value = []
-    await fetchApplications()
+    await fetchApplicationsList()
 }
 
 const applyFilters = (newFilters) => {
@@ -723,9 +750,13 @@ const handleImageError = (event) => {
     event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E'
 }
 
+const handleBatchCreated = async () => {
+  await fetchBatches()
+}
+
 onMounted(() => {
-    fetchApplications()
-    fetchBatch()
+    fetchBatches()
+    fetchApplicationsList()
 })
 </script>
 <style>

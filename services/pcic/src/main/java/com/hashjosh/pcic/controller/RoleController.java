@@ -1,7 +1,9 @@
 package com.hashjosh.pcic.controller;
 
 
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.role.RoleRequest;
+import com.hashjosh.pcic.dto.role.RoleResponse;
+import com.hashjosh.pcic.dto.role.RoleUpdateRequest;
 import com.hashjosh.pcic.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

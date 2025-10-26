@@ -29,6 +29,9 @@ public class Batch {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 
+    @Column(name = "max_applications", columnDefinition = "int default 10")
+    private int maxApplications;
+
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.EAGER)

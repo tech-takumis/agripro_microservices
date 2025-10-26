@@ -1,10 +1,9 @@
 package com.hashjosh.application.mapper;
 
-import com.hashjosh.application.dto.ApplicationSectionResponseDto;
-import com.hashjosh.application.dto.ApplicationTypeRequestDto;
-import com.hashjosh.application.dto.ApplicationTypeResponseDto;
+import com.hashjosh.application.dto.sections.ApplicationSectionResponseDto;
+import com.hashjosh.application.dto.type.ApplicationTypeRequestDto;
+import com.hashjosh.application.dto.type.ApplicationTypeResponseDto;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.model.Batch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

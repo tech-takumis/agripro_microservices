@@ -2,26 +2,32 @@ package com.hashjosh.pcic.service;
 
 
 import com.hashjosh.jwtshareable.service.JwtService;
-import com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract;
 import com.hashjosh.kafkacommon.pcic.PcicRegistrationContract;
 import com.hashjosh.pcic.config.CustomUserDetails;
-import com.hashjosh.pcic.dto.*;
-import com.hashjosh.pcic.entity.*;
+import com.hashjosh.pcic.dto.auth.AuthenticatedUser;
+import com.hashjosh.pcic.dto.auth.LoginRequest;
+import com.hashjosh.pcic.dto.auth.LoginResponse;
+import com.hashjosh.pcic.dto.auth.RegistrationRequest;
+import com.hashjosh.pcic.entity.Pcic;
+import com.hashjosh.pcic.entity.Permission;
+import com.hashjosh.pcic.entity.Role;
 import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.kafka.PcicProducer;
 import com.hashjosh.pcic.mapper.UserMapper;
-import com.hashjosh.pcic.repository.*;
+import com.hashjosh.pcic.repository.PcicRepository;
+import com.hashjosh.pcic.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,36 +76,18 @@ public class AuthService {
         pcicProducer.publishEvent("pcic-events",contract);
     }
 
-    public LoginResponse login(LoginRequest request,String clientIp, String userAgent) {
+    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
         // ✅ authenticate user
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
+        SecurityContextHolder.getContext().setAuthentication(auth);
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        Pcic pcic = userDetails.getPcic();
 
-        // Extract permissions first
-        Set<String> permissions = pcic.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
+        Pcic pcic = getPcicWithRoles(userDetails.getUserId());
 
-        // Convert roles to string names
-        Set<String> roleNames = pcic.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        // Jwt claims for user
-        Map<String, Object> claims = Map.of(
-                "userId", pcic.getId(),
-                "firstname", pcic.getFirstName(),
-                "lastname", pcic.getLastName(),
-                "email", pcic.getEmail(),
-                "phoneNumber", pcic.getPhoneNumber(),
-                "roles", roleNames,
-                "permissions", permissions
-        );
+        Map<String,Object> claims = buildClaims(pcic);
 
         // ✅ generate tokens (do NOT call login or authenticate again)
         String accessToken = jwtService.generateAccessToken(
@@ -113,15 +101,67 @@ public class AuthService {
                 jwtService.getRefreshTokenExpiry(request.isRememberMe())
         );
 
-        return new LoginResponse(accessToken, refreshToken);
+        String webSocketToken = jwtService.generateWebSocketToken(
+                pcic.getUsername(),
+                claims
+        );
+
+        AuthenticatedUser response = userMapper.toAuthenticatedResponse(pcic);
+
+        return new LoginResponse(accessToken, refreshToken, webSocketToken, response);
     }
 
     @Transactional(readOnly = true)
-    public AuthenticatedResponse getAuthenticatedUser(Pcic request) {
+    public AuthenticatedUser getAuthenticatedUser() {
 
-        Pcic pcic = pcicRepository.findByIdWithRolesAndPermissions(request.getId())
+        var Authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (Authentication == null || !Authentication.isAuthenticated()) {
+            throw ApiException.unauthorized("User is not authenticated");
+        }
+
+        Object principal = Authentication.getPrincipal();
+        if (!(principal instanceof CustomUserDetails userDetails)) {
+            throw ApiException.unauthorized("User is not authenticated");
+        }
+        Pcic pcic = pcicRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
 
         return userMapper.toAuthenticatedResponse(pcic);
+    }
+
+    public Pcic getPcicWithRoles(UUID userId) {
+        return pcicRepository.findByIdWithRolesAndPermissions(userId)
+                .orElseThrow(() -> ApiException.notFound("User not found with ID: " + userId));
+    }
+    private Set<String> extractPermissions(Set<Role> roles) {
+        return roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> extractRoles(Set<Role> roles) {
+        return roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+    }
+
+    private Map<String,Object> buildClaims(Pcic pcic) {
+
+        // Extract permissions first
+        Set<String> permissions = extractPermissions(pcic.getRoles());
+
+        // Convert roles to string names
+        Set<String> roles = extractRoles(pcic.getRoles());
+
+        return Map.of(
+                "userId", pcic.getId(),
+                "firstname", pcic.getFirstName(),
+                "lastname", pcic.getLastName(),
+                "email", pcic.getEmail(),
+                "phoneNumber", pcic.getPhoneNumber(),
+                "roles", roles,
+                "permissions", permissions
+        );
     }
 }

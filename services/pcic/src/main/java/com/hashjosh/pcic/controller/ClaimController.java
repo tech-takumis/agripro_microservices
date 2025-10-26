@@ -1,7 +1,8 @@
 package com.hashjosh.pcic.controller;
 
 
-import com.hashjosh.pcic.dto.ClaimRequest;
+import com.hashjosh.pcic.dto.claim.ClaimRequest;
+import com.hashjosh.pcic.dto.claim.ClaimResponse;
 import com.hashjosh.pcic.service.ClaimService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +35,13 @@ public class ClaimController {
                         "data", claimService.updateClaim(claimId,claim,request)
                 ));
 
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ClaimResponse>> getAllClaims(
+            HttpServletRequest request) {
+
+        return ResponseEntity.ok(claimService.getAllClaims());
     }
 
 

@@ -234,10 +234,11 @@ import {
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import RoleModal from '@/components/modals/RoleModal.vue'
-import { useRolePermissionStore } from '@/stores/rolePermission'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
+import { useRoleStore, usePermissionStore } from '@/stores/authorization'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
-const rolePermissionStore = useRolePermissionStore()
+const roleStore = useRoleStore()
+const permissionStore = usePermissionStore()
 const adminNavigation = ADMIN_NAVIGATION
 
 // Reactive state
@@ -249,11 +250,11 @@ const selectedRoles = ref([])
 const modalActionType = ref('create') // 'create', 'edit', 'delete'
 
 // Computed properties
-const roles = computed(() => rolePermissionStore.allRoles || [])
-const authorities = computed(() => rolePermissionStore.availablePermissions || [])
-const groupedAuthorities = computed(() => rolePermissionStore.groupedPermissions || {})
-const loading = computed(() => rolePermissionStore.loading)
-const error = computed(() => rolePermissionStore.error)
+const roles = computed(() => roleStore.allRoles || [])
+const authorities = computed(() => permissionStore.availablePermissions || [])
+const groupedAuthorities = computed(() => permissionStore.groupedPermissions || {})
+const loading = computed(() => roleStore.loading || permissionStore.loading)
+const error = computed(() => roleStore.error || permissionStore.error)
 
 const filteredRoles = computed(() => {
   if (!searchQuery.value) return roles.value || []
@@ -268,7 +269,10 @@ const isAllSelected = computed(() => {
 
 // Methods
 const refreshData = async () => {
-  await rolePermissionStore.initialize()
+  await Promise.all([
+    roleStore.fetchRoles(),
+    permissionStore.fetchPermissions()
+  ])
 }
 
 const openRoleModal = (role = null, actionType = 'create') => {
@@ -290,23 +294,18 @@ const editRole = (role) => {
 }
 
 const viewRoleDetails = (role) => {
-  // Could open a detailed view modal or navigate to a details page
-  console.log('Viewing role details:', role)
   openRoleModal(role, 'edit')
 }
 
 const saveRole = async (roleData) => {
   let result
-  
   if (isEditingRole.value) {
-    result = await rolePermissionStore.updateRole(selectedRole.value.id, roleData)
+    result = await roleStore.updateRole(selectedRole.value.id, roleData)
   } else {
-    result = await rolePermissionStore.createRole(roleData)
+    result = await roleStore.createRole(roleData)
   }
-  
   if (result.success) {
     closeRoleModal()
-    // Show success message
     alert(`Role ${isEditingRole.value ? 'updated' : 'created'} successfully!`)
   } else {
     alert(`Failed to ${isEditingRole.value ? 'update' : 'create'} role: ${result.error}`)
@@ -315,9 +314,7 @@ const saveRole = async (roleData) => {
 
 const deleteRole = async () => {
   if (!selectedRole.value) return
-  
-  const result = await rolePermissionStore.deleteRole(selectedRole.value.id)
-  
+  const result = await roleStore.updateRole(selectedRole.value.id)
   if (result.success) {
     closeRoleModal()
     selectedRoles.value = selectedRoles.value.filter(id => id !== selectedRole.value.id)
@@ -329,7 +326,7 @@ const deleteRole = async () => {
 
 const confirmDeleteRole = (role) => {
   if (confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
-    rolePermissionStore.deleteRole(role.id).then(result => {
+    roleStore.deleteRole(role.id).then(result => {
       if (result.success) {
         alert('Role deleted successfully!')
       } else {
@@ -339,7 +336,6 @@ const confirmDeleteRole = (role) => {
   }
 }
 
-// Row selection methods
 const toggleRoleSelection = (roleId) => {
   const index = selectedRoles.value.indexOf(roleId)
   if (index > -1) {
@@ -361,7 +357,6 @@ const isRoleSelected = (roleId) => {
   return selectedRoles.value.includes(roleId)
 }
 
-// Bulk action methods
 const editSelectedRole = () => {
   if (selectedRoles.value.length === 1) {
     const role = roles.value.find(r => r.id === selectedRoles.value[0])
@@ -373,27 +368,21 @@ const editSelectedRole = () => {
 
 const deleteSelectedRoles = async () => {
   if (selectedRoles.value.length === 0) return
-  
   if (selectedRoles.value.length === 1) {
-    // Single role deletion - open modal for confirmation
     const role = roles.value.find(r => r.id === selectedRoles.value[0])
     if (role) {
       openRoleModal(role, 'delete')
     }
   } else {
-    // Multiple roles deletion - use confirm dialog
     const roleNames = selectedRoles.value.map(id => {
       const role = roles.value.find(r => r.id === id)
       return role ? role.name : 'Unknown'
     }).join(', ')
-    
     if (confirm(`Are you sure you want to delete the selected roles: ${roleNames}? This action cannot be undone.`)) {
-      const deletePromises = selectedRoles.value.map(id => rolePermissionStore.deleteRole(id))
-      
+      const deletePromises = selectedRoles.value.map(id => roleStore.deleteRole(id))
       try {
         const results = await Promise.all(deletePromises)
         const failedDeletes = results.filter(result => !result.success)
-        
         if (failedDeletes.length === 0) {
           alert('All selected roles deleted successfully!')
           selectedRoles.value = []
@@ -407,7 +396,6 @@ const deleteSelectedRoles = async () => {
   }
 }
 
-// Helper functions
 const formatPermissionName = (name) => {
   return name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
 }
@@ -421,8 +409,7 @@ const formatDate = (dateString) => {
   })
 }
 
-// Initialize data on mount
 onMounted(() => {
-  rolePermissionStore.initialize()
+  refreshData()
 })
 </script>

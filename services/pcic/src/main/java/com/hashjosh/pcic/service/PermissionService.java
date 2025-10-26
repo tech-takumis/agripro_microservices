@@ -1,8 +1,10 @@
 package com.hashjosh.pcic.service;
 
 
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.permission.PermissionRequest;
+import com.hashjosh.pcic.dto.permission.PermissionResponse;
 import com.hashjosh.pcic.entity.*;
+import com.hashjosh.pcic.mapper.PermissionMapper;
 import com.hashjosh.pcic.mapper.RoleMapper;
 import com.hashjosh.pcic.repository.PermissionRepository;
 import jakarta.transaction.Transactional;
@@ -18,25 +20,25 @@ import java.util.stream.Collectors;
 public class PermissionService {
 
     private final PermissionRepository permissionRepository;
-    private final RoleMapper roleMapper;
+    private final PermissionMapper permissionMapper;
 
     @Transactional
     public PermissionResponse createPermission(PermissionRequest request) {
-        Permission permission = roleMapper.toPermission(request);
+        Permission permission = permissionMapper.toPermission(request);
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public PermissionResponse getPermission(UUID permissionId) {
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new RuntimeException("Permission not found"));
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     public List<PermissionResponse> getAllPermissions() {
         return permissionRepository.findAll()
                 .stream()
-                .map(roleMapper::toPermissionResponse)
+                .map(permissionMapper::toPermissionResponse)
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +51,7 @@ public class PermissionService {
         permission.setDescription(request.getDescription());
 
         permissionRepository.save(permission);
-        return roleMapper.toPermissionResponse(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 
     @Transactional

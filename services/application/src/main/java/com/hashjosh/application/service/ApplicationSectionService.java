@@ -1,6 +1,6 @@
 package com.hashjosh.application.service;
 
-import com.hashjosh.application.dto.ApplicationSectionRequestDto;
+import com.hashjosh.application.dto.sections.ApplicationSectionRequestDto;
 import com.hashjosh.application.mapper.ApplicationSectionMapper;
 import com.hashjosh.application.model.ApplicationSection;
 import com.hashjosh.application.model.ApplicationType;

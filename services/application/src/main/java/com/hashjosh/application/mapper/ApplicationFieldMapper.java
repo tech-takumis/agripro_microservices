@@ -1,7 +1,7 @@
 package com.hashjosh.application.mapper;
 
-import com.hashjosh.application.dto.ApplicationFieldsRequestDto;
-import com.hashjosh.application.dto.ApplicationFieldsResponseDto;
+import com.hashjosh.application.dto.fields.ApplicationFieldsRequestDto;
+import com.hashjosh.application.dto.fields.ApplicationFieldsResponseDto;
 import com.hashjosh.application.enums.FieldType;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationSection;

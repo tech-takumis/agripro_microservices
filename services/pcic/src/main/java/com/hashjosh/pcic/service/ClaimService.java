@@ -1,7 +1,8 @@
 package com.hashjosh.pcic.service;
 
 
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.claim.ClaimRequest;
+import com.hashjosh.pcic.dto.claim.ClaimResponse;
 import com.hashjosh.pcic.entity.*;
 import com.hashjosh.constant.pcic.enums.ClaimStatus;
 import com.hashjosh.constant.pcic.enums.PolicyStatus;
@@ -11,9 +12,9 @@ import com.hashjosh.pcic.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -54,5 +55,12 @@ public class ClaimService {
                 .claimAmount(5000.0)
                 .payoutStatus(ClaimStatus.PENDING)
                 .build();
+    }
+
+    public List<ClaimResponse> getAllClaims() {
+        return claimRepository.findAll()
+                .stream()
+                .map(claimMapper::toClaimResponse)
+                .toList();
     }
 }

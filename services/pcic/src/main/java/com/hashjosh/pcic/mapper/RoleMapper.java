@@ -1,8 +1,11 @@
 package com.hashjosh.pcic.mapper;
 
 import com.hashjosh.jwtshareable.utils.SlugUtil;
-import com.hashjosh.pcic.dto.*;
-import com.hashjosh.pcic.entity.*;
+import com.hashjosh.pcic.dto.permission.PermissionResponse;
+import com.hashjosh.pcic.dto.role.RoleRequest;
+import com.hashjosh.pcic.dto.role.RoleResponse;
+import com.hashjosh.pcic.entity.Permission;
+import com.hashjosh.pcic.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,26 +18,21 @@ import java.util.stream.Collectors;
 public class RoleMapper {
 
     private final SlugUtil slugUtil;
+    private final PermissionMapper permissionMapper;
 
     public RoleResponse toRoleResponse(Role role) {
+        List<PermissionResponse> permissionResponses = permissionMapper
+                .toPermissionResponseList(role.getPermissions().stream().toList());
+
         return RoleResponse.builder()
                 .id(role.getId())
                 .name(role.getName())
                 .slug(role.getSlug())
-                .permissions(role.getPermissions().stream()
-                        .map(this::toPermissionResponse)
-                        .collect(Collectors.toList()))
+                .defaultRoute(role.getDefaultRoute())
+                .permissions(permissionResponses)
                 .build();
     }
 
-    public PermissionResponse toPermissionResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .name(permission.getName())
-                .slug(permission.getSlug())
-                .description(permission.getDescription())
-                .build();
-    }
 
     public Role toRole(RoleRequest request, List<Permission> permissions) {
         return Role.builder()
@@ -44,11 +42,4 @@ public class RoleMapper {
                 .build();
     }
 
-    public Permission toPermission(PermissionRequest request) {
-        return Permission.builder()
-                .name(request.getName())
-                .slug(slugUtil.toSlug(request.getName()))
-                .description(request.getDescription())
-                .build();
-    }
 }

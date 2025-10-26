@@ -1,7 +1,7 @@
 package com.hashjosh.application.controller;
 
-import com.hashjosh.application.dto.ApplicationTypeRequestDto;
-import com.hashjosh.application.dto.ApplicationTypeResponseDto;
+import com.hashjosh.application.dto.type.ApplicationTypeRequestDto;
+import com.hashjosh.application.dto.type.ApplicationTypeResponseDto;
 import com.hashjosh.application.service.ApplicationTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,12 +32,18 @@ public class ApplicationTypeController {
         List<ApplicationTypeResponseDto> allApplicationType = applicationTypeService.findAll();
         return new ResponseEntity<>(allApplicationType,HttpStatus.OK);
     }
-    // we need to get the application on a certain batch
-    // Because this function just returns a single application type
 
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationTypeResponseDto> getById(@PathVariable UUID id){
        return new ResponseEntity<>(applicationTypeService.findById(id),HttpStatus.OK);
+    }
+
+    // Return all application types by provider name
+    @GetMapping("/provider/{providerName}")
+    public ResponseEntity<List<ApplicationTypeResponseDto>> getByProviderName(
+            @PathVariable("providerName") String provider)
+    {
+        return ResponseEntity.ok(applicationTypeService.findByProviderName(provider));
     }
 
 }

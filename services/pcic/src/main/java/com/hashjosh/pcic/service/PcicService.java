@@ -1,16 +1,14 @@
 package com.hashjosh.pcic.service;
 
-import com.hashjosh.pcic.dto.PcicResponse;
+import com.hashjosh.pcic.dto.user.PcicResponse;
 import com.hashjosh.pcic.exception.ApiException;
 import com.hashjosh.pcic.mapper.PcicMapper;
 import com.hashjosh.pcic.repository.PcicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service

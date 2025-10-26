@@ -1,7 +1,8 @@
 package com.hashjosh.pcic.controller;
 
 
-import com.hashjosh.pcic.dto.*;
+import com.hashjosh.pcic.dto.permission.PermissionRequest;
+import com.hashjosh.pcic.dto.permission.PermissionResponse;
 import com.hashjosh.pcic.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

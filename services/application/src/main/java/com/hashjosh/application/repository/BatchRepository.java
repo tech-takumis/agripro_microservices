@@ -13,7 +13,9 @@ public interface BatchRepository extends JpaRepository<Batch, UUID> {
 
     Optional<Batch> findByApplicationTypeId(UUID applicationTypeId);
 
-
-    List<Batch> findAllByIsAvailableAndApplicationType_Id(boolean isAvailable, UUID applicationTypeId);
     Optional<Batch> findByName(String name);
+
+    List<Batch> findAllByApplicationType_Provider_Name(String providerName);
+
+    List<Batch> findAllByApplicationTypeIdOrderByCreatedAtAsc(UUID applicationTypeId);
 }

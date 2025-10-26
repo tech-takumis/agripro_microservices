@@ -386,12 +386,10 @@ import {
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationDetailModal from '@/components/modals/ApplicationDetailModal.vue'
-import { useApplicationStore } from '@/stores/application'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 import axios from '@/lib/axios'
 
 const router = useRouter()
-const applicationStore = useApplicationStore()
 
 const adminNavigation = ADMIN_NAVIGATION
 

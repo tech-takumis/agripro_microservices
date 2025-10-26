@@ -50,8 +50,8 @@ public class UserMapper {
     public AgricultureResponseDto toAgricultureResponseDto(Agriculture agriculture){
 
         Set<RoleResponse> roles = agriculture.getRoles().stream()
-                        .map(roleMapper::toRoleResponse)
-                                .collect(Collectors.toSet());
+                .map(roleMapper::toRoleResponse)
+                .collect(Collectors.toSet());
 
         return AgricultureResponseDto.builder()
                 .id(agriculture.getId())

@@ -1,6 +1,6 @@
 package com.hashjosh.application.service;
 
-import com.hashjosh.application.dto.ApplicationFieldsRequestDto;
+import com.hashjosh.application.dto.fields.ApplicationFieldsRequestDto;
 import com.hashjosh.application.mapper.ApplicationFieldMapper;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationSection;
