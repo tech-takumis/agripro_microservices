@@ -2,8 +2,6 @@ import {defineStore} from 'pinia'
 import { computed, ref } from 'vue'
 import axios from '@/lib/axios'
 
-
-
 export const useApplicationStore = defineStore('application', () => {
     const applications = ref([])
     const loading = ref(false)
@@ -87,6 +85,32 @@ export const useApplicationStore = defineStore('application', () => {
         }
     }
 
+    async function fetchVerificationApplication() {
+        try {
+            loading.value = true
+            error.value = null
+            const response = await axios.get(
+                '/api/v1/agriculture/verification',
+            )
+            applications.value = response.data
+            return { success: true, data: response.data }
+        } catch (error) {
+            console.error(
+                'Error fetching verification applications:',
+                error.response?.data || error.message,
+            )
+            loading.value = false
+            error.response?.data || error.message
+            return {
+                success: false,
+                error: error.response?.data || error.message,
+            }
+        } finally {
+            loading.value = false
+            error.value = null
+        }
+    }
+
 
     const fetchApplicationByBatches = async (batchId) => {
         try{
@@ -123,6 +147,7 @@ export const useApplicationStore = defineStore('application', () => {
         fetchAgricultureApplications,
         createInsuranceApplication,
         fetchApplications,
+        fetchVerificationApplication,
         fetchApplicationById,
         updateApplication,
         deleteApplication,
@@ -246,25 +271,35 @@ export const useApplicationBatchStore = defineStore('applicationBatch', () => {
     const isLoading = computed(() => loading.value)
     const errors = computed(() => errors.value)
 
-
     const fetchApplicationBatches = async () => {
         try {
-            const response = await axios.get(`${basePath.value}/provider/Agriculture`)
+            const response = await axios.get(
+                `${basePath.value}/provider/Agriculture`,
+            )
             batches.value = response.data
             return { success: true, data: response.data }
         } catch (error) {
-            console.error("Error fetching application batches:", error.response?.data || error.message)
-            return { success: false, error: error.response?.data || error.message }
+            console.error(
+                'Error fetching application batches:',
+                error.response?.data || error.message,
+            )
+            return {
+                success: false,
+                error: error.response?.data || error.message,
+            }
         }
     }
 
-    const createApplicationBatch = async (batch) => {
+    const createApplicationBatch = async batch => {
         try {
             const response = await axios.post(basePath.value, batch)
             batches.value.push(response.data)
             return { success: true, data: response.data }
         } catch (error) {
-            console.error("Error creating application batch:", error.response?.data || error.message)
+            console.error(
+                'Error creating application batch:',
+                error.response?.data || error.message,
+            )
         }
     }
 
@@ -277,17 +312,23 @@ export const useApplicationBatchStore = defineStore('applicationBatch', () => {
             }
             return { success: true, data: response.data }
         } catch (error) {
-            console.error("Error updating application batch:", error.response?.data || error.message)
+            console.error(
+                'Error updating application batch:',
+                error.response?.data || error.message,
+            )
         }
     }
 
-    const deleteApplicationBatch = async (id) => {
+    const deleteApplicationBatch = async id => {
         try {
             await axios.delete(`${basePath.value}/${id}`)
             batches.value = batches.value.filter(b => b.id !== id)
             return { success: true }
         } catch (error) {
-            console.error("Error deleting application batch:", error.response?.data || error.message)
+            console.error(
+                'Error deleting application batch:',
+                error.response?.data || error.message,
+            )
         }
     }
 
@@ -303,5 +344,4 @@ export const useApplicationBatchStore = defineStore('applicationBatch', () => {
         createApplicationBatch,
         updateApplicationBatch,
     }
-
 })

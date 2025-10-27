@@ -31,6 +31,9 @@ public class VerificationRecord {
     @Column(name = "verification_type", length = 50)
     private String verificationType; // e.g., "Application Verification"
 
+    @Column(name = "is_forwarded")
+    private boolean isForwarded;
+
     @Column(name = "report", length = 255)
     private String report;
 

@@ -7,12 +7,13 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ApplicationReceivedByPcicEvent {
+@AllArgsConstructor
+public class ApplicationForwarded {
     private UUID submissionId;
     private UUID userId;
-    private String verificationStatus; // COMPLETED, REJECTED
-    private LocalDateTime receivedAt;
+    private String provider;
+    private LocalDateTime sentAt;
 }
+

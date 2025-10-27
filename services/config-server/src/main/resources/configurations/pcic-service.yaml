@@ -28,6 +28,7 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
           applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
           pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
@@ -45,13 +46,14 @@ spring:
             spring.json.trusted.packages: "*"
             spring.json.use.type.headers: true
             spring.json.type.mapping: >
+              applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
               applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
               verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
               pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
               inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
               policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
               claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
-              applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent
+              applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

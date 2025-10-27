@@ -63,7 +63,19 @@ management:
   endpoint:
     health:
       show-details: always
-
+trusted:
+  internal-service-ids:
+    - agriculture-service
+    - application-service
+    - verification-service
+    - notification-service
+    - communication-service
+    - farmer-service
+    - application-service
+    - pcic-service
+    - document-service
+    - rsbsa-service
+    - program-service
 
 server:
   port: 8010

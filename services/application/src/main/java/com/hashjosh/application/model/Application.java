@@ -28,7 +28,7 @@ public class Application implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     @JsonProperty("id")
-    private UUID id; // Unique per submission, serves as submissionId
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "batch_id", nullable = false)

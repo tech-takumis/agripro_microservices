@@ -1,9 +1,6 @@
 package com.hashjosh.pcic.kafka;
 
-import com.hashjosh.kafkacommon.application.ApplicationReceivedByPcicEvent;
-import com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent;
-import com.hashjosh.kafkacommon.application.VerificationCompletedEvent;
-import com.hashjosh.kafkacommon.application.VerificationStartedEvent;
+import com.hashjosh.kafkacommon.application.*;
 import com.hashjosh.pcic.entity.InspectionRecord;
 import com.hashjosh.constant.pcic.enums.InspectionStatus;
 import com.hashjosh.pcic.repository.InspectionRecordRepository;
@@ -22,20 +19,40 @@ public class PcicConsumerService {
     private final InspectionRecordRepository inspectionRepository;
     private final PcicProducer producer;
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "pcic-group")
-    public void listen(@Payload Object event) {
-        if (event instanceof ApplicationSentToPcicEvent) {
-            handleApplicationSentToPcicEvent((ApplicationSentToPcicEvent) event);
-        } else if (event instanceof VerificationStartedEvent) {
-            handleVerificationStartedEvent((VerificationStartedEvent) event);
-        } else if (event instanceof VerificationCompletedEvent) {
-            handleVerificationCompletedEvent((VerificationCompletedEvent) event);
-        } else {
-            log.warn("Received unknown event type: {}", event.getClass().getName());
+    @KafkaListener(topics = "application-lifecycle", groupId = "pcic-application-submitted-group")
+    public void listenApplicationSubmitted(@Payload ApplicationSubmittedEvent event) {
+        handleApplicationSubmittedEvent(event);
+    }
+
+    @KafkaListener(topics = "application-lifecycle", groupId = "pcic-application-forwarded-group")
+    public void listenApplicationForwarded(@Payload ApplicationForwarded event) {
+        handleApplicationForwarded(event);
+    }
+
+    private void handleApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
+        if("PCIC".equalsIgnoreCase(event.getProvider())){
+           InspectionRecord record = InspectionRecord.builder()
+                   .submittedBy(event.getUserId())
+                   .submissionId(event.getSubmissionId())
+                   .status(InspectionStatus.PENDING)
+                   .build();
+
+           inspectionRepository.save(record);
+
+           ApplicationReceived receivedEvent = ApplicationReceived.builder()
+                   .provider("PCIC")
+                   .userId(event.getUserId())
+                   .submissionId(event.getSubmissionId())
+                   .status(InspectionStatus.PENDING.name())
+                   .build();
+
+           producer.publishEvent("application-lifecycle", receivedEvent);
+
+            log.info("Application {} sent to PCIC for inspection", event.getSubmissionId());
         }
     }
 
-    private void handleApplicationSentToPcicEvent(ApplicationSentToPcicEvent event) {
+    private void handleApplicationForwarded(ApplicationForwarded event) {
 
         InspectionRecord record = InspectionRecord.builder()
                 .submissionId(event.getSubmissionId())
@@ -45,22 +62,13 @@ public class PcicConsumerService {
         inspectionRepository.save(record);
 
         producer.publishEvent("application-lifecycle",
-        new ApplicationReceivedByPcicEvent(
-                event.getSubmissionId(),
-                event.getUserId(),
-                InspectionStatus.PENDING.name(),
-                LocalDateTime.now()
-        ));
+        ApplicationReceived.builder()
+                .provider("PCIC")
+                .userId(event.getUserId())
+                .submissionId(event.getSubmissionId())
+                .status(InspectionStatus.PENDING.name())
+                .build());
+
         log.info("Application {} received by PCIC", event.getSubmissionId());
-    }
-
-    private void handleVerificationStartedEvent(VerificationStartedEvent event) {
-        // Add your handling logic for VerificationStartedEvent here
-        log.info("Received VerificationStartedEvent for submissionId {} by user {} at {}", event.getSubmissionId(), event.getUserId(), event.getStartedAt());
-    }
-
-    private void handleVerificationCompletedEvent(VerificationCompletedEvent event) {
-        // Add your handling logic for VerificationCompletedEvent here
-        log.info("Received VerificationCompletedEvent for submissionId {} by user {} at {}", event.getSubmissionId(), event.getUserId(), event.getVerifiedAt());
     }
 }

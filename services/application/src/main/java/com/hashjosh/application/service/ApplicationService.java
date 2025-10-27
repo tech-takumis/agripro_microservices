@@ -2,26 +2,30 @@ package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.clients.AgricultureHttpClient;
 import com.hashjosh.application.configs.CustomUserDetails;
-import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
 import com.hashjosh.application.dto.validation.ValidationError;
 import com.hashjosh.application.dto.validation.ValidationErrors;
 import com.hashjosh.application.exceptions.ApiException;
+import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
-import com.hashjosh.application.model.*;
+import com.hashjosh.application.model.Application;
+import com.hashjosh.application.model.ApplicationField;
+import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.model.Batch;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
 import com.hashjosh.application.repository.BatchRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
-import com.hashjosh.constant.verification.VerificationRequestDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,8 +40,8 @@ public class ApplicationService {
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
-    private final AgricultureHttpClient agricultureHttpClient;
     private final BatchRepository batchRepository;
+    private final ApplicationProducer  applicationProducer;
 
 
     public Application processSubmission(
@@ -89,13 +93,13 @@ public class ApplicationService {
             selectedBatch.setMaxApplications(selectedBatch.getMaxApplications() + 1);
             batchRepository.save(selectedBatch);
 
-            agricultureHttpClient.submitApplication(
-                    VerificationRequestDto.builder()
+            applicationProducer.publishEvent("application-lifecycle",
+                    ApplicationSubmittedEvent.builder()
                             .submissionId(savedApplication.getId())
-                            .uploadedBy(UUID.fromString(userDetails.getUserId()))
-                            .report("Application submitted for verification")
-                            .build(),
-                    userDetails.getUserId()
+                            .provider(applicationType.getProvider().getName())
+                            .userId(UUID.fromString(userDetails.getUserId()))
+                            .submittedAt(LocalDateTime.now())
+                            .build()
             );
 
             return application;

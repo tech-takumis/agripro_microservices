@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        Table Header
+        <!-- Table Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div class="flex items-center gap-4">
                 <input
@@ -13,10 +13,18 @@
                 <span class="text-sm font-medium text-gray-700">
           {{ selectedApplications.length }} of {{ applications.length }} selected
         </span>
+                <button
+                  v-if="selectedApplications.length > 0"
+                  @click="handleForwardToPCIC"
+                  class="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  :disabled="isForwarding"
+                >
+                  Forward to PCIC
+                </button>
             </div>
         </div>
 
-        Table Content
+        <!-- Table Content -->
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -57,7 +65,7 @@
             </table>
         </div>
 
-        Empty State
+        <!-- Empty State -->
         <div v-if="applications.length === 0" class="text-center py-12">
             <div class="text-gray-400 mb-4">
                 <FileTextIcon class="w-12 h-12 mx-auto" />
@@ -72,6 +80,8 @@
 import { computed } from 'vue'
 import { FileTextIcon } from 'lucide-vue-next'
 import ApplicationRow from './ApplicationRow.vue'
+import { useVerificationStore } from '../../stores/verification.js'
+import { ref } from 'vue'
 
 // Props
 const props = defineProps({
@@ -87,6 +97,9 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['update:selected', 'viewDetails'])
+
+// Verification Store
+const { isForwarding, forwardApplicationToPCIC } = useVerificationStore()
 
 // Computed
 const isAllSelected = computed(() =>
@@ -117,5 +130,17 @@ const toggleApplicationSelection = (applicationId) => {
     }
 
     emit('update:selected', currentSelection)
+}
+
+const handleForwardToPCIC = async () => {
+  if (selectedApplications.length === 0) return
+  const success = await forwardApplicationToPCIC(selectedApplications)
+  if (success) {
+    // Optionally emit an event or refresh the list
+    // emit('forwarded')
+    alert('Applications forwarded to PCIC successfully!')
+  } else {
+    alert('Failed to forward applications. Please try again.')
+  }
 }
 </script>

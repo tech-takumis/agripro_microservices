@@ -28,12 +28,12 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
           agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
           applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
           verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
-          applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent
+          applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
 
     consumer:
       group-id: agriculture-service
@@ -47,7 +47,8 @@ spring:
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
           applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
           verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
-          applicationSentToPcicEvent:com.hashjosh.kafkacommon.application.ApplicationSentToPcicEvent
+          applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
