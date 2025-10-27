@@ -9,7 +9,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
                 <div class="flex items-center gap-3">
                     <!-- Create Batch Icon Button -->
-                    <button @click="showCreateBatchModal = true" class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 flex items-center" title="Create Batch">
+                    <button class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 flex items-center" @click="showCreateBatchModal = true" title="Create Batch">
                         <Plus class="w-5 h-5" />
                     </button>
                     <!-- Batch Select Filter -->
@@ -23,11 +23,13 @@
                     <!-- Action buttons (shown when checkboxes are selected) -->
                     <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
                         <button
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            @click="handleUpdate"
+                            class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            :disabled="verificationStore.isForwarding.value"
+                            @click="handleForwardToPCIC"
                         >
                             <Edit class="h-4 w-4 mr-2" />
-                            Update
+                            <span v-if="verificationStore.isForwarding.value">Forwarding...</span>
+                            <span v-else>Forward to PCIC</span>
                         </button>
                         <button
                             class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -509,11 +511,13 @@ import {
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
 import { useApplicationBatchStore } from '@/stores/applications'
+import { useVerificationStore } from '@/stores/verification'
 
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
 const batchStore = useApplicationBatchStore()
+const verificationStore = useVerificationStore()
 
 // State
 const loading = ref(false)
@@ -752,6 +756,19 @@ const handleImageError = (event) => {
 
 const handleBatchCreated = async () => {
   await fetchBatches()
+}
+
+const handleForwardToPCIC = async () => {
+    if (selectedApplications.value.length === 0) return
+    if (!confirm(`Forward ${selectedApplications.value.length} application(s) to PCIC?`)) return
+    const success = await verificationStore.forwardApplicationToPCIC(selectedApplications.value)
+    if (success) {
+        selectedApplications.value = []
+        await fetchApplicationsList()
+        alert('Applications forwarded to PCIC successfully.')
+    } else {
+        alert('Failed to forward applications to PCIC.')
+    }
 }
 
 onMounted(() => {

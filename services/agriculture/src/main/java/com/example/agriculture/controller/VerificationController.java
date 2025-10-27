@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -16,21 +17,18 @@ public class VerificationController {
 
     private final VerificationService verificationService;
 
-    @PostMapping()
-    public ResponseEntity<String> createVerificationRecord(
-            @RequestBody VerificationRequestDto request
+    @PutMapping("/{submissionId}/review")
+    public void review(
+            @PathVariable UUID submissionId,
+            @RequestBody VerificationRequestDto review
     ) {
-        verificationService.createVerificationRecord(request);
-        return ResponseEntity.ok("Verification record created");
+        verificationService.applicationReview(submissionId,review);
     }
 
-    @PutMapping("/applications/{submissionId}/review")
-    public void startReview(@PathVariable UUID submissionId) {
-        verificationService.startReview(submissionId);
-    }
-
-    @PostMapping("/applications/{submissionId}/send-to-pcic")
-    public void sendToPcic(@PathVariable UUID submissionId) {
-        verificationService.sendToPcic(submissionId);
+    @PostMapping("/forwards")
+    public void forwardToPCIC(
+            @RequestBody List<UUID> applicationIds
+            ) {
+        verificationService.forwardToPcic(applicationIds);
     }
 }
