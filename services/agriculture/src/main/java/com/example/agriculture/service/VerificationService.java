@@ -1,10 +1,12 @@
 package com.example.agriculture.service;
 
 
+import com.example.agriculture.clients.ApplicationClient;
 import com.example.agriculture.entity.VerificationRecord;
 import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.kafka.AgricultureProducer;
 import com.example.agriculture.repository.VerificationRecordRepository;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.constant.verification.VerificationRequestDto;
 import com.hashjosh.constant.verification.VerificationStatus;
 import com.hashjosh.kafkacommon.application.ApplicationForwarded;
@@ -24,6 +26,7 @@ public class VerificationService {
 
     private final VerificationRecordRepository verificationRecordRepository;
     private final AgricultureProducer agricultureProducer;
+    private final ApplicationClient applicationClient;
 
     public void applicationReview(UUID submissionId, VerificationRequestDto status) {
 
@@ -63,7 +66,8 @@ public class VerificationService {
                 so we need to return the application now every provider using the is not deleted field
                 to return only not deleted applications
          */
-        verificationRecordRepository.delete(record);
+        record.setStatus(VerificationStatus.COMPLETED);
+        verificationRecordRepository.save(record);
 
         agricultureProducer.publishEvent("application-lifecycle",
                 ApplicationForwarded.builder()
@@ -78,4 +82,10 @@ public class VerificationService {
     }
 
 
+    public List<ApplicationResponseDto> getAllPendingVerifications() {
+        List<VerificationRecord> pendingRecords = verificationRecordRepository.findByStatus(VerificationStatus.PENDING);
+        return pendingRecords.stream()
+                .map(record -> applicationClient.getApplicationById(record.getSubmissionId(), String.valueOf(record.getUploadedBy())))
+                .toList();
+    }
 }

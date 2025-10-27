@@ -85,6 +85,32 @@ export const useApplicationStore = defineStore('application', () => {
         }
     }
 
+    async function fetchVerificationApplication() {
+        try {
+            loading.value = true
+            error.value = null
+            const response = await axios.get(
+                '/api/v1/agriculture/verification',
+            )
+            applications.value = response.data
+            return { success: true, data: response.data }
+        } catch (error) {
+            console.error(
+                'Error fetching verification applications:',
+                error.response?.data || error.message,
+            )
+            loading.value = false
+            error.response?.data || error.message
+            return {
+                success: false,
+                error: error.response?.data || error.message,
+            }
+        } finally {
+            loading.value = false
+            error.value = null
+        }
+    }
+
 
     const fetchApplicationByBatches = async (batchId) => {
         try{
@@ -121,6 +147,7 @@ export const useApplicationStore = defineStore('application', () => {
         fetchAgricultureApplications,
         createInsuranceApplication,
         fetchApplications,
+        fetchVerificationApplication,
         fetchApplicationById,
         updateApplication,
         deleteApplication,

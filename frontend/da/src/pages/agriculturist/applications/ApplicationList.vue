@@ -605,7 +605,7 @@ const fetchApplicationsList = async () => {
     if (selectedBatch.value) {
         await applicationStore.fetchApplicationByBatches(selectedBatch.value)
     } else {
-        await applicationStore.fetchAgricultureApplications()
+        await applicationStore.fetchVerificationApplication()
     }
     loading.value = false
 }

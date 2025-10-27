@@ -2,6 +2,6 @@ spring:
   liquibase:
     enabled: false
   application:
-    name: agriculture
+    name: agriculture-service
   profiles:
     active: local

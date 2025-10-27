@@ -28,12 +28,12 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
           applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
           pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
           inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
           policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
-          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
           claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
           
 
@@ -46,14 +46,14 @@ spring:
             spring.json.trusted.packages: "*"
             spring.json.use.type.headers: true
             spring.json.type.mapping: >
+              applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
               applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
               verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
               pcicRegistrationContract:com.hashjosh.kafkacommon.pcic.PcicRegistrationContract,
               inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
               policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
               claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
-              applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
-              applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
+              applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
