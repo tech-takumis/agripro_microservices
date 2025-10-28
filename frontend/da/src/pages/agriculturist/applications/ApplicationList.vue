@@ -40,6 +40,26 @@
                         </button>
                     </div>
 
+                    <!-- Print button -->
+                    <button
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        @click="handlePrint"
+                    >
+                        <Printer class="h-4 w-4 mr-2" />
+                        Print
+                    </button>
+
+                    <!-- Filter button -->
+                    <button
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        @click="showFilterModal = true"
+                    >
+                        <Filter class="h-4 w-4 mr-2" />
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </template>
 
         <!-- Loading state -->
         <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">

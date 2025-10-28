@@ -1,6 +1,6 @@
 <template>
     <!-- Outer Container Wrapper -->
-    <div class="h-screen flex items-start justify-start p-4 bg-white">
+    <div class="h-screen flex items-start justify-start py-4 px-2 bg-white">
         <!-- Sidebar Container with white background -->
         <div
             class="flex flex-col w-72 h-full bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
