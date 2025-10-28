@@ -1,4 +1,4 @@
-package com.hashjosh.application.dto.batch;
+package com.hashjosh.verification.dto;
 
 import lombok.*;
 
@@ -10,12 +10,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BatchRequestDTO {
+public class BatchResponseDTO {
+    UUID id;
+    UUID applicationTypeId;
     String name;
     String description;
+    boolean isAvailable;
+    int maxApplications;
     LocalDateTime startDate;
     LocalDateTime endDate;
-    int maxApplications;
-    boolean isAvailable;
-    UUID  applicationTypeId;
 }

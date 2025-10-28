@@ -12,10 +12,8 @@ import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.model.Batch;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
-import com.hashjosh.application.repository.BatchRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.application.ApplicationResponseDto;
@@ -40,7 +38,6 @@ public class ApplicationService {
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
-    private final BatchRepository batchRepository;
     private final ApplicationProducer  applicationProducer;
 
 
@@ -54,24 +51,11 @@ public class ApplicationService {
             // Set the userId
             submission.setUseId(UUID.fromString(userDetails.getUserId()));
 
-            // Fetch all batches for the application type, ordered by oldest first
-            List<Batch> batches = batchRepository.findAllByApplicationTypeIdOrderByCreatedAtAsc(submission.getApplicationTypeId());
-            Batch selectedBatch = null;
-            for (Batch batch : batches) {
-                // Check if batch is available (not full and not closed)
-                boolean notFull = batch.getApplications().size() < batch.getMaxApplications();
-                boolean available = batch.isAvailable(); // Assuming isAvailable() checks for open status
-                if (notFull && available) {
-                    selectedBatch = batch;
-                    break;
-                }
-            }
-            if (selectedBatch == null) {
-                throw ApiException.badRequest("No available batch for this application type");
-            }
 
             // We get the application type through the batch
-            ApplicationType applicationType = selectedBatch.getApplicationType();
+            ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
+                    .orElseThrow(() -> ApiException.badRequest("Invalid application type ID"));
+
             List<ApplicationField> fields = applicationType.getSections().stream()
                     .flatMap(section -> section.getFields().stream())
                     .collect(Collectors.toList());
@@ -86,12 +70,9 @@ public class ApplicationService {
                 throw ApiException.badRequest("Validation failed: " + validationErrors);
             }
 
-            Application application = applicationMapper.toEntity(submission, selectedBatch);
+            Application application = applicationMapper.toEntity(submission, applicationType);
             Application savedApplication = applicationRepository.save(application);
 
-            // Increment the batch's application count and save
-            selectedBatch.setMaxApplications(selectedBatch.getMaxApplications() + 1);
-            batchRepository.save(selectedBatch);
 
             applicationProducer.publishEvent("application-lifecycle",
                     ApplicationSubmittedEvent.builder()
@@ -108,36 +89,6 @@ public class ApplicationService {
         } catch (Exception e) {
             throw ApiException.internalError("An error occurred while processing your application: " + e.getMessage());
         }
-    }
-
-    public List<ApplicationResponseDto> findAllApplicationByBatchName(String bacthName) {
-
-        Batch batch = batchRepository.findByName(bacthName)
-                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ bacthName));
-        ApplicationType type = batch.getApplicationType();
-        List<Application> applications = applicationRepository.findAllByBatchNameAndApplicationTypeId(
-                bacthName,
-                type.getId()
-        );
-
-        return applications.stream()
-                .map(applicationMapper::toApplicationResponseDto)
-                .collect(Collectors.toList());
-    }
-
-    public List<ApplicationResponseDto> findAllApplicationByBatchId(UUID batchId) {
-
-        Batch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ batchId));
-        ApplicationType type = batch.getApplicationType();
-        List<Application> applications = applicationRepository.findAllByBatchIdAndApplicationTypeId(
-                batchId,
-                type.getId()
-        );
-
-        return applications.stream()
-                .map(applicationMapper::toApplicationResponseDto)
-                .collect(Collectors.toList());
     }
 
     private List<ValidationError> validateSubmission(

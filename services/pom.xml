@@ -12,19 +12,20 @@
     <modules>
         <module>farmer</module>
         <module>agriculture</module>
-        <module>communication</module>
         <module>pcic</module>
-        <module>constant</module>
+        <module>verification</module>
+        <module>communication</module>
         <module>application</module>
         <module>config-server</module>
         <module>discovery-server</module>
         <module>document</module>
         <module>gateway</module>
         <module>jwtshareable</module>
-        <module>kafka-common</module>
         <module>rsbsa</module>
         <module>program</module>
         <module>realtime-gateway-service</module>
+        <module>kafka-common</module>
+        <module>constant</module>
     </modules>
 
     <properties>

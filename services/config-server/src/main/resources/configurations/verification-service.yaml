@@ -7,7 +7,7 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-    url: jdbc:postgresql://localhost:5432/agriculture
+    url: jdbc:postgresql://localhost:5432/verification
     username: agripro
     password: agripro
     driver-class-name: org.postgresql.Driver
@@ -28,7 +28,11 @@ spring:
       properties:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
-          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
+          applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
 
     consumer:
       group-id: agriculture-service
@@ -37,7 +41,12 @@ spring:
       properties:
         spring.json.trusted.packages: '*'
         spring.json.type.mapping: >
-          agricultureRegistrationContract:com.hashjosh.kafkacommon.agriculture.AgricultureRegistrationContract,
+          applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
+          verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
+          applicationUnderReviewEvent:com.hashjosh.kafkacommon.application.ApplicationUnderReviewEvent,
+          verificationCompletedEvent:com.hashjosh.kafkacommon.application.VerificationCompletedEvent,
+          applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=
@@ -77,4 +86,4 @@ management:
       show-details: always
 
 server:
-  port: 9010
+  port: 8030

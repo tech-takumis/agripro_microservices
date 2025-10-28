@@ -1,9 +1,9 @@
-package com.example.agriculture.controller;
+package com.hashjosh.verification.controller;
 
 
-import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.constant.verification.VerificationRequestDto;
-import com.example.agriculture.service.VerificationService;
+import com.hashjosh.verification.dto.VerificationResponseDTO;
+import com.hashjosh.verification.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/agriculture/verification")
+@RequestMapping("/api/v1/verification")
 public class VerificationController {
 
     private final VerificationService verificationService;
@@ -26,9 +26,17 @@ public class VerificationController {
     }
 
     @GetMapping
-    public  ResponseEntity<List<ApplicationResponseDto>> getAllPendingVerifications(){
-        List<ApplicationResponseDto> pendingVerifications = verificationService.getAllPendingVerifications();
+    public  ResponseEntity<List<VerificationResponseDTO>> getAllPendingVerifications(){
+        List<VerificationResponseDTO> pendingVerifications = verificationService.getAllPendingVerifications();
         return ResponseEntity.ok(pendingVerifications);
+    }
+
+    @GetMapping("/{batchId}/submissions")
+    public ResponseEntity<List<VerificationResponseDTO>> getSubmissionsByBatchId(
+            @PathVariable String batchId
+    ) {
+        List<VerificationResponseDTO> submissions = verificationService.getSubmissionsByBatchId(UUID.fromString(batchId));
+        return ResponseEntity.ok(submissions);
     }
 
     @PutMapping("/{submissionId}/review")

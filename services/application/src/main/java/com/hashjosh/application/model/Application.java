@@ -31,8 +31,8 @@ public class Application implements Serializable {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "batch_id", nullable = false)
-    private Batch batch;
+    @JoinColumn(name = "applicationType_id", nullable = false)
+    private ApplicationType type;
 
     @Column(name = "user_id", nullable = false)
     @JsonProperty("userId")

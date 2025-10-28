@@ -74,65 +74,6 @@ export const useApplicationStore = defineStore('application', () => {
         }
     }
 
-    async function fetchAgricultureApplications() {
-        try {
-            const response = await axios.get("/api/v1/applications/provider/Agriculture")
-            applications.value = response.data
-            return { success: true, data: response.data }
-        } catch (error) {
-            console.error("Error fetching agriculture applications:", error.response?.data || error.message)
-            return { success: false, error: error.response?.data || error.message }
-        }
-    }
-
-    async function fetchVerificationApplication() {
-        try {
-            loading.value = true
-            error.value = null
-            const response = await axios.get(
-                '/api/v1/agriculture/verification',
-            )
-            applications.value = response.data
-            return { success: true, data: response.data }
-        } catch (error) {
-            console.error(
-                'Error fetching verification applications:',
-                error.response?.data || error.message,
-            )
-            loading.value = false
-            error.response?.data || error.message
-            return {
-                success: false,
-                error: error.response?.data || error.message,
-            }
-        } finally {
-            loading.value = false
-            error.value = null
-        }
-    }
-
-
-    const fetchApplicationByBatches = async (batchId) => {
-        try{
-            loading.value = true
-            error.value = null
-            const response = await axios.get(`/api/v1/applications/batch/id/${batchId}`)
-
-            if(response.status === 200){
-                console.log("Fetched applications by batch id:", response.data)
-                applications.value = response.data
-                return { success: true, data: response.data }
-            }else{
-                return { success: false, error: response.data }
-            }
-        }catch (error){
-            error.value = error.message
-            loading.value = false
-        }finally {
-            loading.value = false
-        }
-    }
-
     return {
         applications,
         loading,
@@ -143,11 +84,6 @@ export const useApplicationStore = defineStore('application', () => {
         isLoading,
         errors,
 
-        fetchApplicationByBatches,
-        fetchAgricultureApplications,
-        createInsuranceApplication,
-        fetchApplications,
-        fetchVerificationApplication,
         fetchApplicationById,
         updateApplication,
         deleteApplication,
@@ -261,21 +197,20 @@ export const useApplicationFieldStore = defineStore('applicationField', () => {
     }
 })
 
+
 export const useApplicationBatchStore = defineStore('applicationBatch', () => {
     const batches = ref([])
     const loading = ref(false)
     const error = ref(null)
-    const basePath = ref('/api/v1/batches')
+    const basePath = ref('/api/v1/batch')
 
     const allApplicationBatches = computed(() => batches.value || [])
     const isLoading = computed(() => loading.value)
     const errors = computed(() => errors.value)
 
-    const fetchApplicationBatches = async () => {
+    const fetchAllBatches = async () => {
         try {
-            const response = await axios.get(
-                `${basePath.value}/provider/Agriculture`,
-            )
+            const response = await axios.get(basePath.value)
             batches.value = response.data
             return { success: true, data: response.data }
         } catch (error) {
@@ -340,7 +275,7 @@ export const useApplicationBatchStore = defineStore('applicationBatch', () => {
         allApplicationBatches,
         isLoading,
         errors,
-        fetchApplicationBatches,
+        fetchAllBatches,
         createApplicationBatch,
         updateApplicationBatch,
     }
