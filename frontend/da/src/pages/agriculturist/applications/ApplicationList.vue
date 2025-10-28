@@ -499,7 +499,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApplicationStore } from '@/stores/applications'
 import { useAuthStore } from '@/stores/auth'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationFilterModal from '@/components/modals/ApplicationFilterModal.vue'
@@ -514,7 +513,6 @@ import { useApplicationBatchStore } from '@/stores/applications'
 import { useVerificationStore } from '@/stores/verification'
 
 const router = useRouter()
-const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
 const batchStore = useApplicationBatchStore()
 const verificationStore = useVerificationStore()
@@ -551,7 +549,7 @@ const roleTitle = computed(() => {
 })
 
 const filteredApplications = computed(() => {
-    let apps = applicationStore.allApplications
+    let apps = verificationStore.applications.value || []
 
     // Apply filters
     if (filters.value.cropType) {
@@ -603,15 +601,17 @@ const fetchApplicationsList = async () => {
     loading.value = true
     error.value = null
     if (selectedBatch.value) {
-        await applicationStore.fetchApplicationByBatches(selectedBatch.value)
+        const result = await verificationStore.fetchApplicationByBatchId(selectedBatch.value)
+        if (!result.success) error.value = result.error
     } else {
-        await applicationStore.fetchVerificationApplication()
+        const result = await verificationStore.fetchApplications()
+        if (!result.success) error.value = result.error
     }
     loading.value = false
 }
 
 const fetchBatches = async () => {
-    const result = await batchStore.fetchApplicationBatches()
+    const result = await batchStore.fetchAllBatches()
     if (result.success) {
         batches.value = result.data
     }

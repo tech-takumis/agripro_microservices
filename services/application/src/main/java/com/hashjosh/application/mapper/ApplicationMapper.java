@@ -7,7 +7,6 @@ import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationType;
-import com.hashjosh.application.model.Batch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,13 +21,11 @@ public class ApplicationMapper {
     private final DocumentServiceClient documentServiceClient;
     public ApplicationResponseDto toApplicationResponseDto(Application entity) {
 
-        ApplicationType applicationType = entity.getBatch().getApplicationType();
+        ApplicationType applicationType = entity.getType();
 
         ApplicationResponseDto dto = new ApplicationResponseDto();
         dto.setId(entity.getId());
         dto.setApplicationName(applicationType.getName());
-        dto.setBatchId(entity.getBatch().getId());
-        dto.setBatchName(entity.getBatch().getName());
         dto.setUserId(entity.getUserId());
         dto.setSubmittedAt(entity.getSubmittedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
@@ -42,12 +39,12 @@ public class ApplicationMapper {
     }
 
 
-    public Application toEntity(ApplicationSubmissionDto submission, Batch batch) {
+    public Application toEntity(ApplicationSubmissionDto submission,ApplicationType type) {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode dynamicFieldsNode = objectMapper.valueToTree(submission.getFieldValues());
 
         return Application.builder()
-                .batch(batch)
+                .type(type)
                 .userId(submission.getUseId())
                 .documentId(submission.getDocumentIds())
                 .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map

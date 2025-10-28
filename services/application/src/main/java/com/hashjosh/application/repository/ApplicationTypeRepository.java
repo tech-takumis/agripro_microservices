@@ -14,8 +14,4 @@ public interface ApplicationTypeRepository extends JpaRepository<ApplicationType
 
     Optional<ApplicationType> findByProvider_Name(String name);
 
-    @Query("SELECT b.isAvailable FROM ApplicationType a JOIN Batch  b WHERE a.id = :id AND b.applicationType.id = a.id")
-    Boolean isAvailable(@Param("id") UUID id);
-
-    List<ApplicationType> findByProvider_Id(UUID providerId);
 }

@@ -12,37 +12,7 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     @Query("""
     SELECT a FROM Application a
-    WHERE a.batch.applicationType.provider.id = :providerId
-    """)
-    List<Application> findByProviderId(UUID providerId);
-
-
-    /*
-    *Goal: For a given batch (e.g., batch 10) and application type (e.g., type 123), get all Application in that batch with that type.
-     Assuming:
-   Application has a Batch (batch field) and Batch has an ApplicationType (applicationType field).
-   Query:
-    *
-    * /
-    */
-    @Query("""
-    SELECT a FROM Application a
-    WHERE a.batch.id = :batchId
-    AND a.batch.applicationType.id = :applicationTypeId
-    """)
-    List<Application> findAllByBatchIdAndApplicationTypeId(@Param("batchId") UUID batchId, UUID applicationTypeId);
-
-
-    @Query("""
-    SELECT a FROM Application a
-    WHERE LOWER(a.batch.name) = LOWER(:batchName)
-    AND a.batch.applicationType.id = :applicationTypeId
-    """)
-    List<Application> findAllByBatchNameAndApplicationTypeId(@Param("batchName") String batchName, UUID applicationTypeId);
-
-    @Query("""
-    SELECT a FROM Application a
-    WHERE a.batch.applicationType.id = :applicationTypeId
+    WHERE a.type.id = :applicationTypeId
 """)
     List<Application> findAllByApplicationTypeId(@Param("applicationTypeId") UUID applicationTypeId);
 

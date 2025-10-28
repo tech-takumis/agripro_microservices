@@ -1,4 +1,4 @@
-package com.hashjosh.application.model;
+package com.hashjosh.verification.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,9 +21,14 @@ public class Batch {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "application_type_id", nullable = false)
+    private UUID applicationTypeId;
+
     @Column(name = "name", length = 255)
     private String name;
+
     private String description;
+
     private boolean isAvailable;
 
     private LocalDateTime startDate;
@@ -34,11 +39,6 @@ public class Batch {
 
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "application_type_id", referencedColumnName = "id")
-    private ApplicationType applicationType;
-
     @OneToMany(mappedBy = "batch", fetch = FetchType.EAGER)
-    private List<Application> applications;
-
+    private List<VerificationRecord> verificationRecords;
 }

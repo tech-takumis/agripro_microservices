@@ -43,6 +43,11 @@ spring:
               predicates:
                 - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,/api/v1/batches/**
 
+            - id: verification-service
+              uri: lb://verification-service
+              predicates:
+                - Path=/api/v1/verification/**,/api/v1/batch/**
+
             - id: document-service
               uri: lb://document-service
               predicates:
