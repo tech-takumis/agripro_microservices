@@ -8,7 +8,6 @@ import com.hashjosh.application.enums.FieldType;
 import com.hashjosh.application.model.*;
 import com.hashjosh.application.repository.ApplicationProviderRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
-import com.hashjosh.application.repository.BatchRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +28,6 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ObjectMapper objectMapper;
     private final ApplicationProviderRepository applicationProviderRepository;
-    private final BatchRepository batchRepository;
-
-
     public boolean isApplicationNotNull(){
         return applicationTypeRepository.count() > 0;
     }
@@ -163,17 +159,6 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
 
         cropInsurance.setSections(cropInsuranceSections);
 
-        Batch batch = Batch.builder()
-                .name("BATCH-001")
-                .description("Batch 001 for crop insurance applications")
-                .isAvailable(true)
-                .maxApplications(10)
-                .startDate(LocalDateTime.now())
-                .applicationType(cropInsurance)
-                .endDate(LocalDateTime.now().plusMonths(1))
-                .createdAt(LocalDateTime.now())
-                .build();
-        batchRepository.save(batch);
         entityManager.persist(cropInsurance);
 
         // Application Type 2: Claim for Indemnity
@@ -261,18 +246,6 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         // Add similar fields for Lot 2, Lot 3, Lot 4 if needed
         locationSketchSection.setFields(locationSketchFields);
 
-        Batch batch2 = Batch.builder()
-                .name("BATCH-002")
-                .description("Batch 002 for claim for indemnity applications")
-                .isAvailable(true)
-                .maxApplications(10)
-                .startDate(LocalDateTime.now())
-                .applicationType(claimIndemnity)
-                .endDate(LocalDateTime.now().plusMonths(1))
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        batchRepository.save(batch2);
 
         claimIndemnity.setSections(claimIndemnitySections);
         entityManager.persist(claimIndemnity);

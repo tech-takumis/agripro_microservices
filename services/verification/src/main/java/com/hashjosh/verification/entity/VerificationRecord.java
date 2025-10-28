@@ -1,5 +1,4 @@
-package com.example.agriculture.entity;
-
+package com.hashjosh.verification.entity;
 
 import com.hashjosh.constant.verification.VerificationStatus;
 import jakarta.persistence.*;
@@ -43,6 +42,10 @@ public class VerificationRecord {
 
     @Column(name = "rejection_reason", length = 255)
     private String rejectionReason;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "batch_id")
+    private Batch batch;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

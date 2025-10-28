@@ -57,23 +57,6 @@ public class ApplicationController {
         return  new ResponseEntity<>(applicationService.findAll(),HttpStatus.OK);
     }
 
-    // We get all applications by batch name
-    @GetMapping("/batch/{batchName}")
-    public ResponseEntity<List<ApplicationResponseDto>> findAllApplicationByBatchName(
-            @PathVariable("batchName") String batchName
-    ){
-        return new ResponseEntity<>(applicationService.findAllApplicationByBatchName(batchName),HttpStatus.OK);
-    }
-
-    // we get all applications by batch id
-    @GetMapping("/batch/id/{batchId}")
-    public ResponseEntity<List<ApplicationResponseDto>> findAllApplicationByBatchId(
-            @PathVariable("batchId") UUID batchId
-    ){
-        return new ResponseEntity<>(applicationService.findAllApplicationByBatchId(batchId),HttpStatus.OK);
-    }
-
-
     @DeleteMapping("/{application-id}")
     public ResponseEntity<Void> deleteApplication(
             @PathVariable("application-id") UUID applicationId

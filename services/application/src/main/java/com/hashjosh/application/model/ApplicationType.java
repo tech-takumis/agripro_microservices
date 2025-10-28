@@ -46,7 +46,7 @@ public class ApplicationType {
     @OneToMany(mappedBy = "applicationType", fetch = FetchType.EAGER , cascade = CascadeType.ALL)
     private List<ApplicationSection> sections;
 
-    @OneToMany(mappedBy = "applicationType", fetch = FetchType.EAGER)
-    private List<Batch> batches;
+    @OneToMany(mappedBy = "type")
+    private List<Application> applications;
 
 }
