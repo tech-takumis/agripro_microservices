@@ -4,48 +4,72 @@
         :role-title="roleTitle"
         page-title="Applications"
     >
-        <template #header>
-            <div class="flex items-center justify-between print:hidden">
-                <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
-                <div class="flex items-center gap-3">
-                    <!-- Action buttons (shown when checkboxes are selected) -->
-                    <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
-                        <button
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            @click="handleUpdate"
-                        >
-                            <Edit class="h-4 w-4 mr-2" />
-                            Update
-                        </button>
-                        <button
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            @click="handleDelete"
-                        >
-                            <Trash2 class="h-4 w-4 mr-2" />
-                            Delete ({{ selectedApplications.length }})
-                        </button>
-                    </div>
+    <template #header>
+  <div class="flex items-center justify-between print:hidden">
+    <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
 
-                    <!-- Print button -->
-                    <button
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        @click="handlePrint"
-                    >
-                        <Printer class="h-4 w-4 mr-2" />
-                        Print
-                    </button>
+    <div class="flex items-center gap-3">
 
-                    <!-- Filter button -->
-                    <button
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        @click="showFilterModal = true"
-                    >
-                        <Filter class="h-4 w-4 mr-2" />
-                        Filter
-                    </button>
-                </div>
-            </div>
-        </template>
+      <!-- When items are selected: Update and Delete Buttons -->
+      <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
+
+        <!-- Update Button -->
+        <button
+          @click="handleUpdate"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                 bg-white text-green-700
+                 hover:bg-green-100 hover:text-green-800
+                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                 transition-all duration-200"
+        >
+          <Edit class="w-4 h-4" />
+          Update
+        </button>
+
+        <!-- Delete Button -->
+        <button
+          @click="handleDelete"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                 bg-red-600 text-white
+                 hover:bg-red-700
+                 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+                 transition-all duration-200"
+        >
+          <Trash2 class="w-4 h-4" />
+          Delete ({{ selectedApplications.length }})
+        </button>
+      </div>
+
+      <!-- Print Button -->
+      <button
+        @click="handlePrint"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+               bg-white text-green-700
+               hover:bg-green-100 hover:text-green-800
+               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+               transition-all duration-200"
+      >
+        <Printer class="w-4 h-4" />
+        Print
+      </button>
+
+      <!-- Filter Button -->
+      <button
+        @click="showFilterModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+               bg-white text-green-700
+               hover:bg-green-100 hover:text-green-800
+               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+               transition-all duration-200"
+      >
+        <Filter class="w-4 h-4" />
+        Filter
+      </button>
+
+    </div>
+  </div>
+</template>
+
 
         <!-- Loading state -->
         <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">

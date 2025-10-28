@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl border border-gray-100 p-6">
         <div class="flex items-center space-x-3 mb-6">
             <div class="p-2 bg-green-50 rounded-lg">
                 <Briefcase class="h-6 w-6 text-green-600" />

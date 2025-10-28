@@ -1,24 +1,29 @@
 <template>
-  <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6">
-    <!-- ✏️ Create Post Section -->
-    <div class="space-y-4">
-      <!-- Header -->
+  <div class="bg-gray-100 rounded-2xl border border-none p-6 space-y-6 relative">
+    <!-- Sticky Header (changes text when scrolling) -->
+    <div 
+      ref="stickyHeader"
+      class="sticky-header sticky top-0 z-10 bg-gray-100 pb-4 mb-4 border-b border-gray-100 transition-all duration-200"
+      :class="{ 'shadow-sm': isScrolledPastForm }"
+    >
       <div class="flex items-center space-x-3">
         <div class="p-2 bg-green-50 rounded-xl">
           <FileText class="h-6 w-6 text-green-600" />
         </div>
-        <h3 class="text-lg font-semibold text-green-700">Create a Post</h3>
+        <h3 class="text-lg font-semibold text-green-700 transition-opacity duration-200" :class="{ 'opacity-0': isScrolledPastForm }">
+          Create a Post
+        </h3>
+        <h3 class="text-lg font-semibold text-green-700 absolute left-[3.5rem] transition-opacity duration-200" :class="{ 'opacity-100': isScrolledPastForm, 'opacity-0': !isScrolledPastForm }">
+          Posts
+        </h3>
       </div>
+    </div>
+
+    <!-- ✏️ Create Post Section -->
+    <div ref="createPostSection" class="space-y-4">
 
       <!-- 🧾 Post Input Card -->
-      <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm">
-        <!-- Title -->
-        <input
-          v-model="newTitle"
-          placeholder="Post title..."
-          class="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm transition-all"
-        />
-
+      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
         <!-- Post Text -->
         <textarea
           v-model="newPostContent"
@@ -56,7 +61,7 @@
 
           <button
             class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
-            :disabled="!newPostContent.trim() || !newTitle.trim() || creatingPost"
+            :disabled="!newPostContent.trim() || creatingPost"
             @click="onCreatePost"
           >
             <span v-if="!creatingPost">Post</span>
@@ -156,10 +161,12 @@ import { FileText, Paperclip, Loader2, User, MoreVertical, Heart, MessageCircle,
 
 const postStore = usePostStore()
 const loadTrigger = ref(null)
-const newTitle = ref('')
 const newPostContent = ref('')
 const selectedFile = ref([])
 const creatingPost = ref(false)
+const stickyHeader = ref(null)
+const createPostSection = ref(null)
+const isScrolledPastForm = ref(false)
 
 const props = defineProps({
   posts: {
@@ -183,12 +190,11 @@ const onCreatePost = async () => {
 }
 
 const createPost = async () => {
-    if (!(newPostContent.value.trim() && newTitle.value.trim())) return
+    if (!newPostContent.value.trim()) return
 
     creatingPost.value = true
     try {
         const formData = new FormData()
-        formData.append('title', newTitle.value)
         formData.append('content', newPostContent.value)
         // Append all selected files
         if (selectedFile.value && selectedFile.value.length) {
@@ -206,7 +212,6 @@ const createPost = async () => {
         }
         await postStore.createPost(formData)
         newPostContent.value = ''
-        newTitle.value = ''
         selectedFile.value = []
     } catch (error) {
         console.error('Error creating post:', error)
@@ -234,7 +239,7 @@ const formatDate = (date) => {
 let observer = null
 let handleScroll = null
 
-onMounted(async  () => {
+onMounted(async () => {
     await postStore.fetchPosts()
 
     // IntersectionObserver for infinite scroll
@@ -252,8 +257,19 @@ onMounted(async  () => {
         observer.observe(loadTrigger.value)
     }
 
-    // Fallback scroll listener
-    handleScroll = () => {
+    // Fallback scroll listener and sticky header observer
+    const handleStickyHeaderScroll = () => {
+        if (createPostSection.value) {
+            const rect = createPostSection.value.getBoundingClientRect()
+            isScrolledPastForm.value = rect.bottom < 100 // Adjust threshold as needed
+        }
+    }
+
+    // Use ResizeObserver and scroll events for sticky header
+    const handleScrollEvent = () => {
+        handleStickyHeaderScroll()
+        
+        // Also handle infinite scroll
         if (
             window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
             !loading.value &&
@@ -263,12 +279,28 @@ onMounted(async  () => {
         }
     }
 
-    window.addEventListener('scroll', handleScroll)
+    // Set up scroll listener
+    const scrollableParent = stickyHeader.value?.closest('.overflow-y-auto')
+    if (scrollableParent) {
+        handleScroll = () => {
+            handleStickyHeaderScroll()
+        }
+        scrollableParent.addEventListener('scroll', handleStickyHeaderScroll)
+    } else {
+        handleScroll = handleScrollEvent
+        window.addEventListener('scroll', handleScroll)
+    }
 })
 
 onUnmounted(() => {
+    // Remove scroll listener from window or parent
     if (handleScroll) {
-        window.removeEventListener('scroll', handleScroll)
+        const scrollableParent = stickyHeader.value?.closest('.overflow-y-auto')
+        if (scrollableParent) {
+            scrollableParent.removeEventListener('scroll', handleScroll)
+        } else {
+            window.removeEventListener('scroll', handleScroll)
+        }
     }
     if (observer) {
         observer.disconnect()

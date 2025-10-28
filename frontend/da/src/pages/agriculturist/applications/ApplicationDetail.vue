@@ -52,7 +52,7 @@
         <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200">
         <!-- Section Title -->
         <div class="flex items-center gap-3 pb-4 border-b border-gray-200">
-            <User class="h-7 w-7 text-green-600" />
+            <User class="h-5 w-5 text-green-600" />
             <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
         </div>
 
@@ -212,53 +212,75 @@
     <h2 class="text-lg font-semibold text-gray-900">Lot 1 Information</h2>
   </div>
 
-  <!-- Main Fields -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                <!-- Main Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
 
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Area (hectares)" :value="fields.lot_1_area" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Variety" :value="fields.lot_1_variety" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Soil Type" :value="fields.lot_1_soil_type" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Topography" :value="fields.lot_1_topography" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Land Category" :value="fields.lot_1_land_category" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Tenurial Status" :value="fields.lot_1_tenurial_status" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Planting Method" :value="fields.lot_1_planting_method" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Irrigation Source" :value="fields.lot_1_irrigation_source" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Date of Sowing" :value="formatDate(fields.lot_1_date_sowing)" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Date of Planting" :value="formatDate(fields.lot_1_date_planting)" />
-    </div>
-
-    <div class="bg-gray-50 rounded-lg p-3">
-      <DetailField label="Date of Harvest" :value="formatDate(fields.lot_1_date_harvest)" />
-    </div>
-
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_area}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_variety}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_soil_type}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_topography}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_land_category}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_tenurial_status}}</p>
+                    </div>
+                    </div>
+                                        <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Cover Type</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_planting_method}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Irrigation Source</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_irrigation_source}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Date of Sowing</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_date_sowing}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Date of Planting</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_date_planting}}</p>
+                    </div>
+                    </div>
+                    <div class="flex bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-green-600">Date of Harvest</p>
+                        <p class="text-l font-medium text-gray-900">{{ fields.lot_1_date_harvest}}</p>
+                    </div>
+                    </div>
   </div>
 
   <!-- Location -->
@@ -308,40 +330,76 @@
     </div>
   </div>
 </div>
+<!-- Farmer Signature Section -->
+<div v-if="farmerSignatureDocId" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+  <div class="flex items-center gap-2 mb-4">
+    <FileText class="h-5 w-5 text-green-600" />
+    <h2 class="text-lg font-semibold text-gray-900">Farmer Signature</h2>
+  </div>
+
+  <div class="bg-gray-50 p-4 rounded-lg flex justify-center border border-dashed border-gray-300">
+    <img
+      :src="farmerSignatureDocId"
+      alt="Farmer Signature"
+      class="max-h-40 max-w-full object-contain"
+      @error="handleImageError"
+    />
+  </div>
+
+  <p class="text-xs text-gray-500 mt-2 text-center">
+    This signature was provided by the farmer during registration.
+  </p>
+</div>
 
 
+<!-- Submission Information -->
+<div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+  <div class="flex items-center gap-2 mb-4">
+    <Calendar class="h-5 w-5 text-green-600" />
+    <h2 class="text-lg font-semibold text-gray-900">Submission Information</h2>
+  </div>
 
-            <!-- Farmer Signature section if it exists -->
-            <div v-if="farmerSignatureDocId" class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText class="h-5 w-5" />
-                    Farmer Signature
-                </h2>
-                <div class="border border-gray-200 rounded-lg overflow-hidden inline-block">
-                    <img
-                        :src="farmerSignatureDocId"
-                        alt="Farmer Signature"
-                        class="max-w-md h-auto"
-                        @error="handleImageError"
-                    />
-                </div>
-            </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    
+    <!-- Application ID -->
+    <div class="bg-gray-50 rounded-lg p-3 md:col-span-2">
+      <p class="text-xs text-green-600">Application ID</p>
+      <p class="text-base font-medium text-gray-900">{{ application.id }}</p>
+    </div>
 
-            <!-- Submission Information -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Calendar class="h-5 w-5" />
-                    Submission Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DetailField label="Application ID" :value="application.id" class="md:col-span-2" />
-                    <DetailField label="Application Type ID" :value="application.applicationTypeId" class="md:col-span-2" />
-                    <DetailField label="User ID" :value="application.userId" class="md:col-span-2" />
-                    <DetailField label="Submitted At" :value="formatDateTime(application.submittedAt)" />
-                    <DetailField label="Updated At" :value="formatDateTime(application.updatedAt)" />
-                    <DetailField label="Version" :value="application.version" />
-                </div>
-            </div>
+    <!-- Application Type ID -->
+    <div class="bg-gray-50 rounded-lg p-3 md:col-span-2">
+      <p class="text-xs text-green-600">Application Type ID</p>
+      <p class="text-base font-medium text-gray-900">{{ application.applicationTypeId }}</p>
+    </div>
+
+    <!-- User ID -->
+    <div class="bg-gray-50 rounded-lg p-3 md:col-span-2">
+      <p class="text-xs text-green-600">User ID</p>
+      <p class="text-base font-medium text-gray-900">{{ application.userId }}</p>
+    </div>
+
+    <!-- Submitted At -->
+    <div class="bg-gray-50 rounded-lg p-3">
+      <p class="text-xs text-green-600">Submitted At</p>
+      <p class="text-base font-medium text-gray-900">{{ formatDateTime(application.submittedAt) }}</p>
+    </div>
+
+    <!-- Updated At -->
+    <div class="bg-gray-50 rounded-lg p-3">
+      <p class="text-xs text-green-600">Updated At</p>
+      <p class="text-base font-medium text-gray-900">{{ formatDateTime(application.updatedAt) }}</p>
+    </div>
+
+    <!-- Version -->
+    <div class="bg-gray-50 rounded-lg p-3">
+      <p class="text-xs text-green-600">Version</p>
+      <p class="text-base font-medium text-gray-900">{{ application.version }}</p>
+    </div>
+
+  </div>
+</div>
+
         </div>
     </AuthenticatedLayout>
 </template>
