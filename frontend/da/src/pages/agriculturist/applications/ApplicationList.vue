@@ -39,8 +39,9 @@
                             Delete ({{ selectedApplications.length }})
                         </button>
                     </div>
-
-
+                </div>
+                </div>
+        </template>
         <!-- Loading state -->
         <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
