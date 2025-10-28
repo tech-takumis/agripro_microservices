@@ -1,6 +1,6 @@
 package com.hashjosh.pcic.mapper;
 
-import com.hashjosh.pcic.dto.PcicResponse;
+import com.hashjosh.pcic.dto.user.PcicResponse;
 import com.hashjosh.pcic.entity.Pcic;
 import org.springframework.stereotype.Component;
 

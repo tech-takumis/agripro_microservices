@@ -2,6 +2,7 @@ package com.example.agriculture.clients;
 
 
 import com.example.agriculture.exception.ApiException;
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,10 +25,11 @@ public class ApplicationClient {
                 .build();
     }
 
-    public ApplicationResponseDto getApplicationById(UUID applicationId) {
+    public ApplicationResponseDto getApplicationById(UUID applicationId,String userId) {
         return restClient.get()
                 .uri("/{application-id}", applicationId)
                 .header("X-Internal-Service", applicationName)
+                .header("X-User-Id", userId)
                 .exchange((req, res) -> {
                     if(res.getStatusCode().is2xxSuccessful()) {
                         return res.bodyTo(ApplicationResponseDto.class);

@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
-import { useUserStore } from './stores/user'
+import { useAuthStore } from './stores/auth'
 import './index.css'
 
 const app = createApp(App)
@@ -19,13 +19,10 @@ app.use(
 )
 app.use(router)
 
-// Initialize user store with roles and permissions
-const userStore = useUserStore()
-userStore.initialize().then(() => {
-    // After initialization, check authentication status
-    return userStore.checkAuthStatus()
-}).catch(error => {
-    console.error('Failed to initialize user store:', error)
-})
+// Initialize auth store
+const authStore = useAuthStore()
+// authStore.getAuthenticated().catch(error => {
+//     console.error('Failed to fetch authenticated user:', error)
+// })
 
 app.mount('#app')

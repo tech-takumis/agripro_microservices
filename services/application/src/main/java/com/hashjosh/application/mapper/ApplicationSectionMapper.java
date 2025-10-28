@@ -1,8 +1,8 @@
 package com.hashjosh.application.mapper;
 
-import com.hashjosh.application.dto.ApplicationFieldsResponseDto;
-import com.hashjosh.application.dto.ApplicationSectionRequestDto;
-import com.hashjosh.application.dto.ApplicationSectionResponseDto;
+import com.hashjosh.application.dto.fields.ApplicationFieldsResponseDto;
+import com.hashjosh.application.dto.sections.ApplicationSectionRequestDto;
+import com.hashjosh.application.dto.sections.ApplicationSectionResponseDto;
 import com.hashjosh.application.model.ApplicationSection;
 import com.hashjosh.application.model.ApplicationType;
 import lombok.RequiredArgsConstructor;

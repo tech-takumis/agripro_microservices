@@ -10,13 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Order(2) // Run after AgricultureRbacInitializer
 public class PcicRbacInitializer implements CommandLineRunner {
 
     private final PermissionRepository permissionRepository;
@@ -24,6 +24,7 @@ public class PcicRbacInitializer implements CommandLineRunner {
     private final SlugUtil slug;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         log.info("Starting RBAC initialization for tenant 'pcic'");
         try {
@@ -78,7 +79,7 @@ public class PcicRbacInitializer implements CommandLineRunner {
 
             // Define roles
             List<Role> roles = Arrays.asList(
-                    new Role(null, "UNDERWRITER", slug.toSlug("UNDERWRITER"), new HashSet<>(Arrays.asList(
+                    new Role(null, "UNDERWRITER", slug.toSlug("UNDERWRITER"),"/underwriter/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_ISSUE_POLICY"),
                             permMap.get("CAN_ASSESS_RISK"),
@@ -87,7 +88,7 @@ public class PcicRbacInitializer implements CommandLineRunner {
                             permMap.get("CAN_CONDUCT_BRIEFINGS"),
                             permMap.get("CAN_INSPECT_FIELD")
                     ))),
-                    new Role(null, "ADMIN", slug.toSlug("ADMIN"), new HashSet<>(Arrays.asList(
+                    new Role(null, "ADMIN", slug.toSlug("ADMIN"),"/admin/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_CREATE_USER"),
                             permMap.get("CAN_DELETE_USER"),
                             permMap.get("CAN_UPDATE_USER"),
@@ -97,7 +98,7 @@ public class PcicRbacInitializer implements CommandLineRunner {
                             permMap.get("CAN_APPROVE_DV"),
                             permMap.get("CAN_OVERSIGHT_CLAIMS")
                     ))),
-                    new Role(null, "CLAIMS_ADJUSTMENT_STAFF", slug.toSlug("CLAIMS_ADJUSTMENT_STAFF"), new HashSet<>(Arrays.asList(
+                    new Role(null, "CLAIMS_ADJUSTMENT_STAFF", slug.toSlug("CLAIMS_ADJUSTMENT_STAFF"),"/claims-processor/dashboard", new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_PROCESS_CLAIM"),
                             permMap.get("CAN_VERIFY_CLAIM"),
@@ -106,21 +107,14 @@ public class PcicRbacInitializer implements CommandLineRunner {
                             permMap.get("CAN_PROCESS_INDEMNITY"),
                             permMap.get("CAN_NOTIFY_DENIAL")
                     ))),
-                    new Role(null, "ADMINISTRATIVE_STAFF", slug.toSlug("ADMINISTRATIVE_STAFF"), new HashSet<>(Arrays.asList(
-                            permMap.get("CAN_VIEW_USER"),
-                            permMap.get("CAN_PROCESS_LEAVE"),
-                            permMap.get("CAN_MANAGE_CASH_ADVANCE"),
-                            permMap.get("CAN_ISSUE_CERTIFICATE"),
-                            permMap.get("CAN_MANAGE_PERSONNEL_RECORDS")
-                    ))),
-                    new Role(null, "SUPPORT_STAFF", slug.toSlug("SUPPORT_STAFF"), new HashSet<>(Arrays.asList(
+                    new Role(null, "TELLER_STAFF", slug.toSlug("TELLER_STAFF"), "/teller/dashboard",new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_MANAGE_SUPPLIES"),
                             permMap.get("CAN_HANDLE_REPAIRS"),
                             permMap.get("CAN_PROVIDE_TRANSPORT"),
                             permMap.get("CAN_ISSUE_RECEIPT")
                     ))),
-                    new Role(null, "EXTENSION_FIELD_STAFF", slug.toSlug("EXTENSION_FIELD_STAFF"), new HashSet<>(Arrays.asList(
+                    new Role(null, "EXTENSION_FIELD_STAFF", slug.toSlug("EXTENSION_FIELD_STAFF"), "/extension/dashboard",new HashSet<>(Arrays.asList(
                             permMap.get("CAN_VIEW_USER"),
                             permMap.get("CAN_FACILITATE_APPLICATIONS"),
                             permMap.get("CAN_RECEIVE_CLAIMS_ON_SITE"),

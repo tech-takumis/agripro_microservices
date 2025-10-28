@@ -55,7 +55,7 @@ public class AuthService {
 
         String username = generateSequentialUsername();
 
-            String password = generateUniquePassword();
+        String password = generateUniquePassword();
 
         Agriculture agriculture = userMapper.toUserEntity(request, roles, username,password);
         Agriculture registeredAgriculture = agricultureRepository.save(agriculture);

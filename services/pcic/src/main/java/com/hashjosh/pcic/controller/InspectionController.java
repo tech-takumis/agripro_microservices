@@ -2,7 +2,7 @@ package com.hashjosh.pcic.controller;
 
 import com.hashjosh.constant.program.dto.ScheduleRequestDto;
 import com.hashjosh.constant.program.dto.ScheduleResponseDto;
-import com.hashjosh.pcic.dto.InspectionRequestDto;
+import com.hashjosh.pcic.dto.inspection.InspectionRequestDto;
 import com.hashjosh.pcic.service.InspectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

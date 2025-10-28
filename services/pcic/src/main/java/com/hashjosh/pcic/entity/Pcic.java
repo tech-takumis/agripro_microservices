@@ -1,11 +1,9 @@
 package com.hashjosh.pcic.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,10 +35,10 @@ public class Pcic {
     @Column(nullable = false, unique = true,name = "email")
     private String email;
 
-    @Column(nullable = true, name = "phone_number")
+    @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(nullable = true, name = "address")
+    @Column(name = "address")
     private String address;
 
 
@@ -50,10 +48,11 @@ public class Pcic {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_id", nullable = false)
-    @JsonIgnore
+    @JsonManagedReference("pcic-pcicProfile")
     private PcicProfile pcicProfile;
 }

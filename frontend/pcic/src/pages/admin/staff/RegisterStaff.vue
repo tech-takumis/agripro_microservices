@@ -187,15 +187,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../../layouts/AuthenticatedLayout.vue'
-import { useUserStore } from '@/stores/agriculture'
-import { ADMIN_NAVIGATION } from '@/lib/constants'
-import { useRolePermissionStore } from '../../../stores/rolePermission'
+import { useRoleStore, usePermissionStore } from '@/stores/authorization'
+import { useAuthStore } from '@/stores/auth'
+import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
-const userStore = useUserStore()
-const rolePermission = useRolePermissionStore()
+const roleStore = useRoleStore()
+const permissionStore = usePermissionStore()
+const authStore = useAuthStore()
 
 const adminNavigation = ADMIN_NAVIGATION
 
@@ -214,10 +215,16 @@ const form = ref({
 
 const processing = ref(false)
 
+const roles = computed(() => roleStore.allRoles || [])
+const permissions = computed(() => permissionStore.availablePermissions || [])
+const groupedPermissions = computed(() => permissionStore.groupedPermissions || {})
+const loading = computed(() => roleStore.loading || permissionStore.loading)
+const error = computed(() => roleStore.error || permissionStore.error)
+
 const submitRegistration = async () => {
   processing.value = true
   
-  const result = await userStore.registerStaff(form.value)
+  const result = await authStore.registerStaff(form.value)
 
   if (result.success) {
     alert('Staff registered successfully!')
@@ -244,6 +251,7 @@ const resetForm = () => {
 }
 
 onMounted(() => {
-  rolePermission.fetchRoles()
+  roleStore.fetchRoles()
+  permissionStore.fetchPermissions()
 })
 </script>

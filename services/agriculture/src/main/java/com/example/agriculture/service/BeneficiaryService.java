@@ -1,5 +1,7 @@
 package com.example.agriculture.service;
 
+import com.example.agriculture.clients.FarmerClient;
+import com.example.agriculture.config.CustomUserDetails;
 import com.example.agriculture.dto.beneficiary.BeneficiaryRequest;
 import com.example.agriculture.dto.beneficiary.BeneficiaryResponse;
 import com.example.agriculture.entity.Beneficiary;
@@ -8,6 +10,7 @@ import com.example.agriculture.exception.ApiException;
 import com.example.agriculture.mapper.BeneficiaryMapper;
 import com.example.agriculture.repository.BeneficiaryRepository;
 import com.example.agriculture.repository.ProgramRepository;
+import com.hashjosh.constant.farmer.FarmerReponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,6 +31,7 @@ public class BeneficiaryService {
     private final BeneficiaryMapper beneficiaryMapper;
     private final ProgramRepository programRepository;
     private final BeneficiaryRepository beneficiaryRepository;
+    private final FarmerClient farmerClient;
 
     @Transactional
     public BeneficiaryResponse createBeneficiary(BeneficiaryRequest request) {
@@ -91,5 +98,40 @@ public class BeneficiaryService {
         }
         return beneficiaryRepository.findByProgramId(programId, pageable)
                 .map(beneficiaryMapper::toBeneficiaryResponse);
+    }
+
+
+    public void assignAllFarmerBeneficiariesToProgram(UUID programId) {
+
+        CustomUserDetails user = (CustomUserDetails) org.springframework.security.core.context.SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Program program = programRepository.findById(programId)
+                .orElseThrow(() -> ApiException.notFound(String.format("Program with ID %s not found", programId)));
+
+        List<FarmerReponse> farmers = farmerClient.getAllFarmers(String.valueOf(user.getUserId()));
+
+        // Fix: clear and add to the existing collection, do not replace it
+        if (program.getBeneficiaries() == null) {
+            program.setBeneficiaries(new ArrayList<>());
+        } else {
+            program.getBeneficiaries().clear();
+        }
+
+        for (FarmerReponse farmer : farmers) {
+            Beneficiary beneficiary = new Beneficiary();
+            beneficiary.setUserId(farmer.getId());
+            beneficiary.setType("FARMER");
+            beneficiary.setProgram(program);
+            beneficiary.setActive(true);
+            beneficiary.setAssignAt(LocalDateTime.now());
+            beneficiaryRepository.save(beneficiary);
+            program.addBeneficiary(beneficiary);
+        }
+
+        programRepository.save(program);
+        log.info("Assigned {} farmers to program {}", farmers.size(), programId);
     }
 }

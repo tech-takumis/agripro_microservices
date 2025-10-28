@@ -24,10 +24,9 @@ public class PostController {
     @PostMapping
     public ResponseEntity<PostResponse> createPost(
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
-            @RequestPart("title") String title,
             @RequestPart("content") String content
     ) {
-        return ResponseEntity.ok(postService.createPost(title,content,files));
+        return ResponseEntity.ok(postService.createPost(content,files));
     }
 
     // READ (single post)

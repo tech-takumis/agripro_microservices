@@ -174,10 +174,10 @@ import { computed, ref } from 'vue'
 import { 
   User, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle 
 } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/agriculture'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
-const store = useUserStore()
+const store = useAuthStore()
 
 const form = ref({
   username: '',

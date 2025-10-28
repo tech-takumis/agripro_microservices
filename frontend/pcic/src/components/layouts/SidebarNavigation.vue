@@ -15,14 +15,14 @@
 
     <!-- Navigation -->
     <nav class="mt-8 flex-1 px-2 space-y-1">
-      <template v-for="item in navigation" :key="item.name">
+      <template v-for="item in navigation" :key="item.name || item.title">
         <!-- Single Navigation Item -->
         <router-link
-          v-if="!item.children"
-          :to="item.href"
+          v-if="!item.children && item.to"
+          :to="item.to"
           :class="[
-            isActive(item.href) 
-              ? 'bg-green-600 text-white font-semibold border-r-4 border-green-300' 
+            isActive(item.to)
+              ? 'bg-green-600 text-white font-semibold border-r-4 border-green-300'
               : 'text-green-100 hover:bg-green-700 hover:text-white',
             'group flex items-center px-3 py-2 text-sm rounded-md transition-all'
           ]"
@@ -30,17 +30,21 @@
           <component 
             :is="item.icon" 
             :class="[
-              isActive(item.href) ? 'text-white' : 'text-green-200 group-hover:text-white',
+              isActive(item.to) ? 'text-white' : 'text-green-200 group-hover:text-white',
               'mr-3 h-5 w-5'
             ]" 
           />
-          {{ item.name }}
+          {{ item.title || item.name }}
         </router-link>
+        <span v-else-if="!item.children && !item.to" class="group flex items-center px-3 py-2 text-sm rounded-md transition-all text-green-100 opacity-50 cursor-not-allowed">
+          <component :is="item.icon" class="mr-3 h-5 w-5 text-green-200" />
+          {{ item.title || item.name }}
+        </span>
 
         <!-- Navigation Group with Children -->
         <div v-else>
           <button
-            @click="toggleGroup(item.name)"
+            @click="toggleGroup(item.title || item.name)"
             :class="[
               'text-green-100 hover:bg-green-700 hover:text-white',
               'group w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all'
@@ -51,40 +55,41 @@
                 :is="item.icon" 
                 class="text-green-200 group-hover:text-white mr-3 h-5 w-5" 
               />
-              {{ item.name }}
+              {{ item.title || item.name }}
             </div>
             <ChevronDown 
               :class="[
-                expandedGroups.includes(item.name) ? 'rotate-180 text-white' : 'text-green-200',
+                expandedGroups.includes(item.title || item.name) ? 'rotate-180 text-white' : 'text-green-200',
                 'h-4 w-4 transition-transform'
               ]"
             />
           </button>
-          
           <!-- Submenu with Tree Lines -->
           <div
-            v-show="expandedGroups.includes(item.name)"
+            v-show="expandedGroups.includes(item.title || item.name)"
             class="mt-1 pl-6 border-l border-green-600"
           >
-            <router-link
-              v-for="child in item.children"
-              :key="child.name"
-              :to="child.href"
-              class="group relative flex items-center pl-6 pr-3 py-2 text-sm rounded-md transition-all"
-              :class="isActive(child.href)
-                ? 'bg-green-700 text-white'
-                : 'text-green-100 hover:bg-green-600 hover:text-white'"
-            >
-              <span
-                :class="[
-                  'absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t',
-                  isActive(child.href) ? 'border-green-400' : 'border-green-700 group-hover:border-green-500'
-                ]"
-              ></span>
-
-              <span class="inline-block w-2 h-2 mr-2 rounded-full bg-transparent"></span>
-              <span class="truncate">{{ child.name }}</span>
-            </router-link>
+            <template v-for="child in getChildren(item)" :key="child.name || child.title">
+              <router-link
+                v-if="child.to"
+                :to="child.to"
+                class="group relative flex items-center pl-6 pr-3 py-2 text-sm rounded-md transition-all"
+                :class="isActive(child.to)
+                  ? 'bg-green-700 text-white'
+                  : 'text-green-100 hover:bg-green-600 hover:text-white'"
+              >
+                <span
+                  :class="[
+                    'absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t',
+                    isActive(child.to) ? 'border-green-400' : 'border-green-700 group-hover:border-green-500'
+                  ]"
+                ></span>
+                {{ child.title || child.name }}
+              </router-link>
+              <span v-else class="group relative flex items-center pl-6 pr-3 py-2 text-sm rounded-md transition-all text-green-100 opacity-50 cursor-not-allowed">
+                {{ child.title || child.name }}
+              </span>
+            </template>
           </div>
         </div>
       </template>
@@ -92,30 +97,14 @@
 
     <!-- User Profile Section -->
     <div class="flex-shrink-0 border-t border-green-700 p-4">
-      <div class="flex items-center">
-        <div class="flex-shrink-0">
-          <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-            <span class="text-sm font-medium text-white">
-              {{ userInitials }}
-            </span>
-          </div>
-        </div>
-        <div class="ml-3 flex-1">
-          <p class="text-sm font-medium text-white truncate">
-            {{ userFullName }}
-          </p>
-          <p class="text-xs text-green-200 truncate">
-            {{ userEmail }}
-          </p>
-        </div>
-        <button
-          @click="$emit('logout')"
-          class="ml-2 p-1 rounded-md text-green-200 hover:text-white hover:bg-green-600 transition-colors"
-          title="Logout"
-        >
-          <LogOut class="h-4 w-4" />
-        </button>
-      </div>
+      <button
+        @click="$emit('logout')"
+        class="w-full flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-600 transition-colors text-sm font-semibold"
+        title="Logout"
+      >
+        <LogOut class="h-4 w-4 mr-2" />
+        Logout
+      </button>
     </div>
   </div>
 </template>
@@ -166,5 +155,9 @@ const toggleGroup = (groupName) => {
   } else {
     expandedGroups.value.push(groupName)
   }
+}
+
+function getChildren(item) {
+  return Array.isArray(item.children) ? item.children : [];
 }
 </script>

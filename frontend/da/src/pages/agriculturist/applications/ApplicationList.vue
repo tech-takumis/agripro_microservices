@@ -4,71 +4,41 @@
         :role-title="roleTitle"
         page-title="Applications"
     >
-    <template #header>
-  <div class="flex items-center justify-between print:hidden">
-    <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
+        <template #header>
+            <div class="flex items-center justify-between print:hidden">
+                <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
+                <div class="flex items-center gap-3">
+                    <!-- Create Batch Icon Button -->
+                    <button class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 flex items-center" @click="showCreateBatchModal = true" title="Create Batch">
+                        <Plus class="w-5 h-5" />
+                    </button>
+                    <!-- Batch Select Filter -->
+                    <select v-model="selectedBatch" class="border rounded px-2 py-1 text-sm">
+                        <option value="">All Batches</option>
+                        <option v-for="batch in batches" :key="batch.id" :value="batch.id">
+                            {{ batch.name }}
+                        </option>
+                    </select>
 
-    <div class="flex items-center gap-3">
-
-      <!-- When items are selected: Update and Delete Buttons -->
-      <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
-
-        <!-- Update Button -->
-        <button
-          @click="handleUpdate"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                 bg-white text-green-700
-                 hover:bg-green-100 hover:text-green-800
-                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                 transition-all duration-200"
-        >
-          <Edit class="w-4 h-4" />
-          Update
-        </button>
-
-        <!-- Delete Button -->
-        <button
-          @click="handleDelete"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                 bg-red-600 text-white
-                 hover:bg-red-700
-                 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
-                 transition-all duration-200"
-        >
-          <Trash2 class="w-4 h-4" />
-          Delete ({{ selectedApplications.length }})
-        </button>
-      </div>
-
-      <!-- Print Button -->
-      <button
-        @click="handlePrint"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-               bg-white text-green-700
-               hover:bg-green-100 hover:text-green-800
-               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-               transition-all duration-200"
-      >
-        <Printer class="w-4 h-4" />
-        Print
-      </button>
-
-      <!-- Filter Button -->
-      <button
-        @click="showFilterModal = true"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-               bg-white text-green-700
-               hover:bg-green-100 hover:text-green-800
-               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-               transition-all duration-200"
-      >
-        <Filter class="w-4 h-4" />
-        Filter
-      </button>
-
-    </div>
-  </div>
-</template>
+                    <!-- Action buttons (shown when checkboxes are selected) -->
+                    <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
+                        <button
+                            class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            :disabled="verificationStore.isForwarding.value"
+                            @click="handleForwardToPCIC"
+                        >
+                            <Edit class="h-4 w-4 mr-2" />
+                            <span v-if="verificationStore.isForwarding.value">Forwarding...</span>
+                            <span v-else>Forward to PCIC</span>
+                        </button>
+                        <button
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            @click="handleDelete"
+                        >
+                            <Trash2 class="h-4 w-4 mr-2" />
+                            Delete ({{ selectedApplications.length }})
+                        </button>
+                    </div>
 
 
         <!-- Loading state -->
@@ -173,6 +143,9 @@
             @apply-filters="applyFilters"
             @reset-filters="resetFilters"
         />
+
+        <!-- Create Batch Modal -->
+        <CreateBatchModal :show="showCreateBatchModal" @close="showCreateBatchModal = false" @created="handleBatchCreated" />
 
         <!-- Print Layout (hidden, only visible when printing) -->
         <div id="print-layout">
@@ -504,28 +477,34 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApplicationStore } from '@/stores/application'
+import { useApplicationStore } from '@/stores/applications'
 import { useAuthStore } from '@/stores/auth'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import ApplicationFilterModal from '@/components/modals/ApplicationFilterModal.vue'
-import { Filter, Edit, Trash2, FileText, Printer } from 'lucide-vue-next'
+import CreateBatchModal from '@/components/modals/CreateBatchModal.vue'
+import { Filter, Edit, Trash2, FileText, Printer, Plus } from 'lucide-vue-next'
 import {
     ADMIN_NAVIGATION,
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
+import { useApplicationBatchStore } from '@/stores/applications'
+import { useVerificationStore } from '@/stores/verification'
 
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const authStore = useAuthStore()
+const batchStore = useApplicationBatchStore()
+const verificationStore = useVerificationStore()
 
 // State
 const loading = ref(false)
 const error = ref(null)
 const selectedApplications = ref([])
 const showFilterModal = ref(false)
+const showCreateBatchModal = ref(false)
 const filters = ref({
     cropType: '',
     coverType: '',
@@ -535,22 +514,24 @@ const filters = ref({
     amountMin: '',
     amountMax: ''
 })
+const selectedBatch = ref('')
+const batches = ref([])
 
 const navigation = computed(() => {
-    const role = authStore.userData?.roles?.[0]
+    const role = authStore.userData?.roles?.[0]?.name
     if (role === 'Admin') return ADMIN_NAVIGATION
-    if (role === 'Municipal Agriculturists') return MUNICIPAL_AGRICULTURIST_NAVIGATION
-    if (role === 'Agricultural Extension Workers') return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
+    if (role === 'Municipal Agriculturist') return MUNICIPAL_AGRICULTURIST_NAVIGATION
+    if (role === 'Agricultural Extension Worker') return AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
     return []
 })
 
 const roleTitle = computed(() => {
-    const role = authStore.userData?.roles?.[0].name
+    const role = authStore.userData?.roles?.[0]?.name
     return role || 'Staff Portal'
 })
 
 const filteredApplications = computed(() => {
-    let apps = applicationStore.allApplications // use getter
+    let apps = applicationStore.allApplications
 
     // Apply filters
     if (filters.value.cropType) {
@@ -598,18 +579,27 @@ const isAllSelected = computed(() => {
 })
 
 // Methods
-const fetchApplications = async () => {
+const fetchApplicationsList = async () => {
     loading.value = true
     error.value = null
-
-    const result = await applicationStore.fetchAgricultureApplications()
-
-    if (!result.success) {
-        error.value = result.error?.message || 'Failed to fetch applications'
+    if (selectedBatch.value) {
+        await applicationStore.fetchApplicationByBatches(selectedBatch.value)
+    } else {
+        await applicationStore.fetchVerificationApplication()
     }
-
     loading.value = false
 }
+
+const fetchBatches = async () => {
+    const result = await batchStore.fetchApplicationBatches()
+    if (result.success) {
+        batches.value = result.data
+    }
+}
+
+watch(selectedBatch, async (newBatch) => {
+    await fetchApplicationsList()
+})
 
 const getFullName = (fields) => {
     if (!fields) return 'N/A'
@@ -705,7 +695,7 @@ const handleDelete = async () => {
     }
 
     selectedApplications.value = []
-    await fetchApplications()
+    await fetchApplicationsList()
 }
 
 const applyFilters = (newFilters) => {
@@ -744,8 +734,26 @@ const handleImageError = (event) => {
     event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E'
 }
 
+const handleBatchCreated = async () => {
+  await fetchBatches()
+}
+
+const handleForwardToPCIC = async () => {
+    if (selectedApplications.value.length === 0) return
+    if (!confirm(`Forward ${selectedApplications.value.length} application(s) to PCIC?`)) return
+    const success = await verificationStore.forwardApplicationToPCIC(selectedApplications.value)
+    if (success) {
+        selectedApplications.value = []
+        await fetchApplicationsList()
+        alert('Applications forwarded to PCIC successfully.')
+    } else {
+        alert('Failed to forward applications to PCIC.')
+    }
+}
+
 onMounted(() => {
-    fetchApplications()
+    fetchBatches()
+    fetchApplicationsList()
 })
 </script>
 <style>

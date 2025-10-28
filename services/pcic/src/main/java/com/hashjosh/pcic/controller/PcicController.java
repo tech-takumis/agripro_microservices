@@ -1,7 +1,7 @@
 package com.hashjosh.pcic.controller;
 
 
-import com.hashjosh.pcic.dto.PcicResponse;
+import com.hashjosh.pcic.dto.user.PcicResponse;
 import com.hashjosh.pcic.service.PcicService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,16 +1,14 @@
 package com.hashjosh.realtimegatewayservice.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.kafkacommon.application.*;
 import com.hashjosh.realtimegatewayservice.clients.FarmerResponse;
 import com.hashjosh.realtimegatewayservice.clients.FarmerServiceClient;
 import com.hashjosh.realtimegatewayservice.entity.Notification;
 import com.hashjosh.realtimegatewayservice.repository.NotificationRepository;
 import com.hashjosh.realtimegatewayservice.service.EmailService;
-import com.hashjosh.realtimegatewayservice.wrapper.ApplicationNotificationDTO;
+import com.hashjosh.realtimegatewayservice.dto.NotificationResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -31,98 +29,58 @@ public class ApplicationConsumer {
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-submitted")
     public void listenApplicationSubmitted(@Payload ApplicationSubmittedEvent event) {
-        try {
-            handleApplicationSubmitted(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process ApplicationSubmittedEvent: {}", e.getMessage(), e);
-        }
+        handleApplicationSubmitted(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-started")
     public void listenVerificationStarted(@Payload VerificationStartedEvent event) {
-        try {
-            handleVerificationStarted(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process VerificationStartedEvent: {}", e.getMessage(), e);
-        }
-    }
-
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-under-review")
-    public void listenApplicationUnderReview(@Payload  ApplicationUnderReviewEvent event) {
-        try {
-            handleApplicationUnderReview(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process ApplicationUnderReviewEvent: {}", e.getMessage(), e);
-        }
+        handleVerificationStarted(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-completed")
-    public void listenVerificationCompleted(@Payload  VerificationCompletedEvent event) {
-        try {
-            handleVerificationCompleted(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process VerificationCompletedEvent: {}", e.getMessage(), e);
-        }
+    public void listenVerificationCompleted(@Payload VerificationCompletedEvent event) {
+        handleVerificationCompleted(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-sent-to-pcic")
-    public void listenApplicationSentToPcic(@Payload  ApplicationSentToPcicEvent event) {
-        try {
-            handleApplicationSentToPcic(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process ApplicationSentToPcicEvent: {}", e.getMessage(), e);
-        }
+    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-under-review")
+    public void listenApplicationUnderReview(@Payload ApplicationUnderReviewEvent event) {
+        handleApplicationUnderReview(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-received-by-pcic")
-    public void listenApplicationReceivedByPcic(@Payload  ApplicationReceivedByPcicEvent event) {
-        try {
-            handleApplicationReceivedByPcic(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process ApplicationReceivedByPcicEvent: {}", e.getMessage(), e);
-        }
+    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-forwarded")
+    public void listenApplicationForwarded(@Payload ApplicationForwarded event) {
+        handleApplicationForwarded(event);
+    }
+
+    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-received")
+    public void listenApplicationReceived(@Payload ApplicationReceived event) {
+        handleApplicationReceived(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-scheduled")
-    public void listenInspectionScheduled(@Payload  InspectionScheduledEvent event) {
-        try {
-            handleInspectionScheduled(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process InspectionScheduledEvent: {}", e.getMessage(), e);
-        }
+    public void listenInspectionScheduled(@Payload InspectionScheduledEvent event) {
+        handleInspectionScheduled(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-completed")
-    public void listenInspectionCompleted(@Payload  InspectionCompletedEvent event) {
-        try {
-            handleInspectionCompleted(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process InspectionCompletedEvent: {}", e.getMessage(), e);
-        }
+    public void listenInspectionCompleted(@Payload InspectionCompletedEvent event) {
+        handleInspectionCompleted(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-policy-issued")
-    public void listenPolicyIssued(@Payload  PolicyIssuedEvent event) {
-        try {
-            handlePolicyIssued(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process PolicyIssuedEvent: {}", e.getMessage(), e);
-        }
+    public void listenPolicyIssued(@Payload PolicyIssuedEvent event) {
+        handlePolicyIssued(event);
     }
 
     @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-claim-processed")
-    public void listenClaimProcessed(@Payload  ClaimProcessedEvent event) {
-        try {
-            handleClaimProcessed(event);
-        } catch (Exception e) {
-            log.error("🚫 Failed to process ClaimProcessedEvent: {}", e.getMessage(), e);
-        }
+    public void listenClaimProcessed(@Payload ClaimProcessedEvent event) {
+        handleClaimProcessed(event);
     }
 
     private void handleApplicationSubmitted(ApplicationSubmittedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Submitted")
                 .message("Your application has been submitted successfully.")
@@ -134,10 +92,25 @@ public class ApplicationConsumer {
         );
     }
 
+    private void handleApplicationForwarded(ApplicationForwarded e) {
+        handleNotification(
+                e.getUserId(),
+                NotificationResponseDTO.builder()
+                        .id(e.getSubmissionId())
+                        .title("Application Sent to "+ e.getProvider())
+                        .message("Your application has been sent to "+ e.getProvider())
+                        .time(e.getSentAt() != null ? e.getSentAt() : LocalDateTime.now())
+                        .read(false)
+                        .build(),
+                "Application Sent to "+ e.getProvider(),
+                "Your application has been sent to "+ e.getProvider()
+        );
+    }
+
     private void handleVerificationStarted(VerificationStartedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Verification Started")
                 .message("Verification process has started for your application.")
@@ -149,10 +122,25 @@ public class ApplicationConsumer {
         );
     }
 
+    private void handleVerificationCompleted(VerificationCompletedEvent e) {
+        handleNotification(
+                e.getUserId(),
+                NotificationResponseDTO.builder()
+                        .id(e.getSubmissionId())
+                        .title("Verification Completed")
+                        .message("Verification completed: " + e.getStatus())
+                        .time(e.getVerifiedAt() != null ? e.getVerifiedAt() : LocalDateTime.now())
+                        .read(false)
+                        .build(),
+                "Verification " + e.getStatus(),
+                "Verification completed: " + e.getStatus()
+        );
+    }
+
     private void handleApplicationUnderReview(ApplicationUnderReviewEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Application Under Review")
                 .message("Your application is now under review.")
@@ -164,55 +152,25 @@ public class ApplicationConsumer {
         );
     }
 
-    private void handleVerificationCompleted(VerificationCompletedEvent e) {
+    private void handleApplicationReceived(ApplicationReceived e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
-                .title("Verification Completed")
-                .message("Verification completed: " + e.getStatus())
-                .time(e.getVerifiedAt() != null ? e.getVerifiedAt() : LocalDateTime.now())
-                .read(false)
-                .build(),
-            "Verification " + e.getStatus(),
-            "Verification completed: " + e.getStatus()
-        );
-    }
-
-    private void handleApplicationSentToPcic(ApplicationSentToPcicEvent e) {
-        handleNotification(
-            e.getUserId(),
-            ApplicationNotificationDTO.builder()
-                .id(e.getSubmissionId())
-                .title("Application Sent to PCIC")
-                .message("Your application has been sent to PCIC.")
-                .time(e.getSentAt() != null ? e.getSentAt() : LocalDateTime.now())
-                .read(false)
-                .build(),
-            "Application Sent to PCIC",
-            "Your application has been sent to PCIC."
-        );
-    }
-
-    private void handleApplicationReceivedByPcic(ApplicationReceivedByPcicEvent e) {
-        handleNotification(
-            e.getUserId(),
-            ApplicationNotificationDTO.builder()
-                .id(e.getSubmissionId())
-                .title("Application Received by PCIC")
-                .message("PCIC has received your application. Status: " + e.getVerificationStatus())
+                .title("Application Received by "+e.getProvider())
+                .message(e.getProvider()+ " has received your application. Status: " + e.getStatus())
                 .time(e.getReceivedAt() != null ? e.getReceivedAt() : LocalDateTime.now())
                 .read(false)
                 .build(),
-            "Application Received by PCIC",
-            "PCIC has received your application. Status: " + e.getVerificationStatus()
+            "Application Received by "+e.getProvider(),
+            e.getProvider()+ " has received your application. Status: " + e.getStatus()
         );
     }
 
     private void handleInspectionScheduled(InspectionScheduledEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Inspection Scheduled")
                 .message("An inspection has been scheduled for your application.")
@@ -227,7 +185,7 @@ public class ApplicationConsumer {
     private void handleInspectionCompleted(InspectionCompletedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Inspection Completed")
                 .message("Inspection for your application has been completed.")
@@ -242,7 +200,7 @@ public class ApplicationConsumer {
     private void handlePolicyIssued(PolicyIssuedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Policy Issued")
                 .message("A policy has been issued for your application. Policy #: " + e.getPolicyNumber())
@@ -257,7 +215,7 @@ public class ApplicationConsumer {
     private void handleClaimProcessed(ClaimProcessedEvent e) {
         handleNotification(
             e.getUserId(),
-            ApplicationNotificationDTO.builder()
+            NotificationResponseDTO.builder()
                 .id(e.getSubmissionId())
                 .title("Claim Processed")
                 .message("Your claim has been processed. Status: " + e.getPayoutStatus())
@@ -269,7 +227,7 @@ public class ApplicationConsumer {
         );
     }
 
-    private void handleNotification(UUID receiverId, ApplicationNotificationDTO notification, String emailSubject, String emailMessage) {
+    private void handleNotification(UUID receiverId, NotificationResponseDTO notification, String emailSubject, String emailMessage) {
         if (receiverId == null || notification == null) {
             log.warn("Could not extract receiverId or notification from event");
             return;

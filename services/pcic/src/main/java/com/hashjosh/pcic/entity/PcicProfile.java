@@ -1,11 +1,9 @@
 package com.hashjosh.pcic.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -48,8 +46,10 @@ public class PcicProfile {
     // Audit fields
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    @OneToOne(mappedBy = "pcicProfile",cascade = CascadeType.PERSIST)
-    @JsonIgnore
+
+    @OneToOne(mappedBy = "pcicProfile", cascade = CascadeType.PERSIST)
+    @JsonBackReference("pcic-pcicProfile")
     private Pcic pcic;
+
 
 }

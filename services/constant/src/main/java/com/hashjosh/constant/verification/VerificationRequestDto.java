@@ -12,9 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class VerificationRequestDto {
-    private UUID submissionId;
-    private UUID uploadedBy;
     private String report;
-    private VerificationStatus status;
+    private String status;
     private String rejectionReason;
 }

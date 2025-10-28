@@ -1,6 +1,6 @@
 package com.hashjosh.farmer.controller;
 
-import com.hashjosh.farmer.dto.FarmerReponse;
+import com.hashjosh.constant.farmer.FarmerReponse;
 import com.hashjosh.farmer.service.FarmerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

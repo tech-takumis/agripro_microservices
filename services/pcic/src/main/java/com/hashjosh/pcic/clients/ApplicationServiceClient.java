@@ -1,5 +1,6 @@
 package com.hashjosh.pcic.clients;
 
+import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.pcic.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

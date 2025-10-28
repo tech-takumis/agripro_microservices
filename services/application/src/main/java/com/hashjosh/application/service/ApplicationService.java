@@ -2,32 +2,30 @@ package com.hashjosh.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hashjosh.application.clients.AgricultureHttpClient;
-import com.hashjosh.application.clients.DocumentServiceClient;
 import com.hashjosh.application.configs.CustomUserDetails;
-import com.hashjosh.application.dto.ApplicationResponseDto;
-import com.hashjosh.application.dto.ApplicationSubmissionDto;
-import com.hashjosh.application.dto.ValidationError;
-import com.hashjosh.application.dto.ValidationErrors;
+import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
+import com.hashjosh.application.dto.validation.ValidationError;
+import com.hashjosh.application.dto.validation.ValidationErrors;
 import com.hashjosh.application.exceptions.ApiException;
 import com.hashjosh.application.kafka.ApplicationProducer;
 import com.hashjosh.application.mapper.ApplicationMapper;
 import com.hashjosh.application.model.Application;
 import com.hashjosh.application.model.ApplicationField;
 import com.hashjosh.application.model.ApplicationType;
+import com.hashjosh.application.model.Batch;
 import com.hashjosh.application.repository.ApplicationRepository;
 import com.hashjosh.application.repository.ApplicationTypeRepository;
+import com.hashjosh.application.repository.BatchRepository;
 import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
-import com.hashjosh.constant.document.dto.DocumentResponse;
-import com.hashjosh.constant.verification.VerificationRequestDto;
+import com.hashjosh.constant.application.ApplicationResponseDto;
+import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +40,8 @@ public class ApplicationService {
     private final FieldValidatorFactory fieldValidatorFactory;
     private final ApplicationTypeRepository applicationTypeRepository;
     private final ApplicationMapper applicationMapper;
-    private final AgricultureHttpClient agricultureHttpClient;
+    private final BatchRepository batchRepository;
+    private final ApplicationProducer  applicationProducer;
 
 
     public Application processSubmission(
@@ -52,10 +51,27 @@ public class ApplicationService {
             CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
                     .getContext().getAuthentication().getPrincipal();
 
-            ApplicationType applicationType = applicationTypeRepository.findById(submission.getApplicationTypeId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Application type not found: " + submission.getApplicationTypeId()));
+            // Set the userId
+            submission.setUseId(UUID.fromString(userDetails.getUserId()));
 
+            // Fetch all batches for the application type, ordered by oldest first
+            List<Batch> batches = batchRepository.findAllByApplicationTypeIdOrderByCreatedAtAsc(submission.getApplicationTypeId());
+            Batch selectedBatch = null;
+            for (Batch batch : batches) {
+                // Check if batch is available (not full and not closed)
+                boolean notFull = batch.getApplications().size() < batch.getMaxApplications();
+                boolean available = batch.isAvailable(); // Assuming isAvailable() checks for open status
+                if (notFull && available) {
+                    selectedBatch = batch;
+                    break;
+                }
+            }
+            if (selectedBatch == null) {
+                throw ApiException.badRequest("No available batch for this application type");
+            }
+
+            // We get the application type through the batch
+            ApplicationType applicationType = selectedBatch.getApplicationType();
             List<ApplicationField> fields = applicationType.getSections().stream()
                     .flatMap(section -> section.getFields().stream())
                     .collect(Collectors.toList());
@@ -70,15 +86,20 @@ public class ApplicationService {
                 throw ApiException.badRequest("Validation failed: " + validationErrors);
             }
 
-            Application application = applicationMapper.toEntity(submission,applicationType, userDetails.getUserId());
+            Application application = applicationMapper.toEntity(submission, selectedBatch);
             Application savedApplication = applicationRepository.save(application);
-            agricultureHttpClient.submitApplication(
-                    VerificationRequestDto.builder()
+
+            // Increment the batch's application count and save
+            selectedBatch.setMaxApplications(selectedBatch.getMaxApplications() + 1);
+            batchRepository.save(selectedBatch);
+
+            applicationProducer.publishEvent("application-lifecycle",
+                    ApplicationSubmittedEvent.builder()
                             .submissionId(savedApplication.getId())
-                            .uploadedBy(UUID.fromString(userDetails.getUserId()))
-                            .report("Application submitted for verification")
-                            .build(),
-                    userDetails.getUserId()
+                            .provider(applicationType.getProvider().getName())
+                            .userId(UUID.fromString(userDetails.getUserId()))
+                            .submittedAt(LocalDateTime.now())
+                            .build()
             );
 
             return application;
@@ -87,6 +108,36 @@ public class ApplicationService {
         } catch (Exception e) {
             throw ApiException.internalError("An error occurred while processing your application: " + e.getMessage());
         }
+    }
+
+    public List<ApplicationResponseDto> findAllApplicationByBatchName(String bacthName) {
+
+        Batch batch = batchRepository.findByName(bacthName)
+                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ bacthName));
+        ApplicationType type = batch.getApplicationType();
+        List<Application> applications = applicationRepository.findAllByBatchNameAndApplicationTypeId(
+                bacthName,
+                type.getId()
+        );
+
+        return applications.stream()
+                .map(applicationMapper::toApplicationResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ApplicationResponseDto> findAllApplicationByBatchId(UUID batchId) {
+
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> ApiException.notFound("Batch not found with id "+ batchId));
+        ApplicationType type = batch.getApplicationType();
+        List<Application> applications = applicationRepository.findAllByBatchIdAndApplicationTypeId(
+                batchId,
+                type.getId()
+        );
+
+        return applications.stream()
+                .map(applicationMapper::toApplicationResponseDto)
+                .collect(Collectors.toList());
     }
 
     private List<ValidationError> validateSubmission(
@@ -152,22 +203,19 @@ public class ApplicationService {
                 .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
 
-    public List<ApplicationResponseDto> findApplicationbyType(UUID applicationTypeId) {
-        return applicationRepository.findByApplicationTypeId(applicationTypeId)
-                .stream().map(applicationMapper::toApplicationResponseDto)
-                .collect(Collectors.toList());
-    }
-
     private Application findApplicationById(UUID applicationId) {
         return  applicationRepository.findById(applicationId)
                 .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
     }
 
-    public List<ApplicationResponseDto> findAllAgricultureApplication() {
-        ApplicationType type = applicationTypeRepository.findByNameContains("Crop Insurance Application")
-                .orElseThrow(() -> ApiException.notFound("Application type not found with name Crop Insurance Application"));
-        List<Application> application = applicationRepository.findByApplicationTypeId(type.getId());
+    public List<ApplicationResponseDto> findAllProviderApplication(
+            String provider
+    ) {
 
+       ApplicationType type = applicationTypeRepository.findByProvider_Name(provider)
+               .orElseThrow(() -> ApiException.notFound("Application type not found for provider "+ provider));
+
+       List<Application> application = applicationRepository.findAllByApplicationTypeId(type.getId());
 
         return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
     }
@@ -176,4 +224,5 @@ public class ApplicationService {
         Application application = findApplicationById(applicationId);
         applicationRepository.delete(application);
     }
+
 }

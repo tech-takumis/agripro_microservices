@@ -1,11 +1,10 @@
 package com.hashjosh.farmer.service;
 
-import com.hashjosh.farmer.dto.FarmerReponse;
+import com.hashjosh.constant.farmer.FarmerReponse;
 import com.hashjosh.farmer.exception.ApiException;
 import com.hashjosh.farmer.mapper.FarmerMapper;
 import com.hashjosh.farmer.repository.FarmerRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

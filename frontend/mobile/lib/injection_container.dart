@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mobile/data/services/application_api_service.dart';
 import 'package:mobile/data/services/auth_api_service.dart';
 import 'package:mobile/data/services/document_service.dart';
@@ -9,10 +8,6 @@ import 'package:mobile/data/services/psgc_service.dart';
 import 'package:mobile/data/services/storage_service.dart';
 import 'package:mobile/presentation/controllers/application_controller.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
-import 'package:mobile/presentation/pages/home_page.dart';
-import 'package:mobile/presentation/pages/login_page.dart';
-import 'package:mobile/presentation/pages/multi_step_register_page.dart';
-
 import 'data/services/message_service.dart';
 import 'data/services/websocket.dart';
 
