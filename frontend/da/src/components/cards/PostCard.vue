@@ -169,7 +169,6 @@
         <p>No posts yet — be the first to share!</p>
       </div>
     </div>
-  </div>
 </template>
 
 
