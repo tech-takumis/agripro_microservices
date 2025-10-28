@@ -64,13 +64,7 @@ public class VerificationService {
         VerificationRecord record = verificationRecordRepository.findBySubmissionId(submissionId)
                 .orElseThrow(() -> ApiException.notFound("Verification record not found: " + submissionId));
 
-//        if (record.getStatus() != VerificationStatus.COMPLETED) {
-//            throw new IllegalStateException("Application not verified: " + submissionId);
-//        }
-        /* TODO: Lets make a soft delete here instead so that we can keep track of forwarded applications
-                so we need to return the application now every provider using the is not deleted field
-                to return only not deleted applications
-         */
+
         record.setStatus(VerificationStatus.COMPLETED);
         record.setForwarded(true);
         record.getBatch().setMaxApplications(record.getBatch().getMaxApplications() - 1);
