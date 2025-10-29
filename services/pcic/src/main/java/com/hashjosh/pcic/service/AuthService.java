@@ -12,7 +12,7 @@ import com.hashjosh.pcic.entity.Pcic;
 import com.hashjosh.pcic.entity.Permission;
 import com.hashjosh.pcic.entity.Role;
 import com.hashjosh.pcic.exception.ApiException;
-import com.hashjosh.pcic.kafka.PcicProducer;
+import com.hashjosh.pcic.kafka.KafkaProducer;
 import com.hashjosh.pcic.mapper.UserMapper;
 import com.hashjosh.pcic.repository.PcicRepository;
 import com.hashjosh.pcic.repository.RoleRepository;
@@ -37,7 +37,7 @@ public class AuthService {
     private final PcicRepository pcicRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final PcicProducer pcicProducer;
+    private final KafkaProducer pcicProducer;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
