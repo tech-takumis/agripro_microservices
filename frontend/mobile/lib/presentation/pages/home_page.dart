@@ -1,9 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/data/models/post_models.dart';
 import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/injection_container.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
+import 'package:mobile/presentation/controllers/post_controller.dart';
+import 'package:mobile/presentation/widgets/loading_indicator.dart';
+import 'package:mobile/presentation/widgets/error_retry_widget.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'application_page.dart';
 import 'contact_department_page.dart';
@@ -24,6 +31,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
+    
+    // Initialize timeago messages
+    timeago.setLocaleMessages('en', timeago.EnMessages());
+    
+    // Fetch posts when the page initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(postControllerProvider.notifier).fetchPosts();
+    });
   }
 
   @override
@@ -94,23 +109,167 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  // Removed duplicate initState
+
   Widget _buildHomePage() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.home, size: 100, color: Colors.green),
-          SizedBox(height: 24),
-          Text(
-            'Welcome to the Dashboard!',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    final postsAsync = ref.watch(postsProvider);
+    final isLoading = ref.watch(postsLoadingProvider);
+    final error = ref.watch(postsErrorProvider);
+    final postController = ref.read(postControllerProvider.notifier);
+
+    return RefreshIndicator(
+      onRefresh: () => postController.fetchPosts(),
+      child: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            title: const Text('Community Posts'),
+            floating: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  // TODO: Implement create post
+                },
+              ),
+            ],
           ),
-          SizedBox(height: 12),
-          Text(
-            'Manage your agricultural programs easily.',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+          if (isLoading && postsAsync.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: LoadingIndicator()),
+            )
+          else if (error != null)
+            SliverFillRemaining(
+              child: ErrorRetryWidget(
+                error: error,
+                onRetry: () => postController.fetchPosts(),
+              ),
+            )
+          else if (postsAsync.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text('No posts yet. Be the first to post!'),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final post = postsAsync[index];
+                  return _buildPostCard(post);
+                },
+                childCount: postsAsync.length,
+              ),
+            ),
+          if (isLoading && postsAsync.isNotEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostCard(PostResponse post) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Post Header
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Text(
+                post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            title: Text(
+              post.authorName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(timeago.format(post.createdAt)),
+            trailing: PopupMenuButton<String>(
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Text('Report Post'),
+                ),
+              ],
+              onSelected: (value) {
+                // Handle menu item selection
+              },
+            ),
+          ),
+          
+          // Post Content
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(post.content),
+          ),
+          
+          // Image Carousel
+          if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
+          
+          // Post Actions
+          ButtonBar(
+            alignment: MainAxisAlignment.spaceAround,
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.thumb_up_outlined, size: 20),
+                label: const Text('Like'),
+                onPressed: () {},
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.comment_outlined, size: 20),
+                label: const Text('Comment'),
+                onPressed: () {},
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.share_outlined, size: 20),
+                label: const Text('Share'),
+                onPressed: () {},
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildImageCarousel(List<String> imageUrls) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: CarouselSlider.builder(
+        options: CarouselOptions(
+          height: 250.0,
+          autoPlay: imageUrls.length > 1,
+          enlargeCenterPage: true,
+          viewportFraction: 1.0,
+          aspectRatio: 1.0,
+        ),
+        itemCount: imageUrls.length,
+        itemBuilder: (context, index, realIndex) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: CachedNetworkImage(
+                imageUrl: imageUrls[index],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
