@@ -29,16 +29,6 @@ public class PostController {
         return ResponseEntity.ok(postService.createPost(content,files));
     }
 
-    // READ (single post)
-    @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> getPost(@PathVariable UUID id) {
-        return ResponseEntity.ok(postService.getPostById(id));
-    }
-
-    @GetMapping("/author/{authorId}")
-    public ResponseEntity<List<PostResponse>> getPostsByAuthor(@PathVariable UUID authorId) {
-        return ResponseEntity.ok(postService.getPostsByAuthor(authorId));
-    }
 
     @GetMapping
     public ResponseEntity<PostPageResponse> getAllPosts(
@@ -67,6 +57,17 @@ public class PostController {
         fetch.setHasMore(hasMore);
         return ResponseEntity.ok(fetch);
     }
+    // READ (single post)
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponse> getPost(@PathVariable UUID id) {
+        return ResponseEntity.ok(postService.getPostById(id));
+    }
+
+    @GetMapping("/author/{authorId}")
+    public ResponseEntity<List<PostResponse>> getPostsByAuthor(@PathVariable UUID authorId) {
+        return ResponseEntity.ok(postService.getPostsByAuthor(authorId));
+    }
+
 
 
     // DELETE

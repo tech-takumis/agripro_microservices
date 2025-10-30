@@ -11,20 +11,20 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/pcic/inspection")
+@RequestMapping("/api/v1/inspection")
 public class InspectionController {
 
     private final InspectionService inspectionService;
 
-    @PostMapping("/applications/{submissionId}/schedule")
+    @PostMapping("/{submissionId}/schedule")
     public ScheduleResponseDto scheduleInspection(@PathVariable UUID submissionId,
                                                   @RequestBody ScheduleRequestDto scheduleDto) {
         return inspectionService.scheduleInspection(submissionId, scheduleDto);
     }
 
-    @PutMapping("/applications/{submissionId}/inspection")
+    @PutMapping("/{submissionId}/inspection")
     public void completeInspection(@PathVariable UUID submissionId,
                                    @RequestBody InspectionRequestDto request) {
-        inspectionService.completeInspection(submissionId, request.getStatus(), request.getComments());
+        inspectionService.completeInspection(submissionId, request);
     }
 }

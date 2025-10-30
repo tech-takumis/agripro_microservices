@@ -2,14 +2,13 @@ package com.hashjosh.insurance.service;
 
 import com.hashjosh.constant.program.dto.ScheduleRequestDto;
 import com.hashjosh.constant.program.dto.ScheduleResponseDto;
-import com.hashjosh.insurance.entity.Claim;
+import com.hashjosh.insurance.dto.inspection.InspectionRequestDto;
 import com.hashjosh.insurance.entity.InspectionRecord;
 import com.hashjosh.insurance.entity.Policy;
+import com.hashjosh.insurance.exception.ApiException;
 import com.hashjosh.insurance.kafka.KafkaProducer;
-import com.hashjosh.insurance.repository.ClaimRepository;
 import com.hashjosh.insurance.repository.InspectionRecordRepository;
 import com.hashjosh.insurance.repository.PolicyRepository;
-import com.hashjosh.kafkacommon.application.ClaimProcessedEvent;
 import com.hashjosh.kafkacommon.application.InspectionCompletedEvent;
 import com.hashjosh.kafkacommon.application.InspectionScheduledEvent;
 import com.hashjosh.kafkacommon.application.PolicyIssuedEvent;
@@ -28,13 +27,10 @@ import java.util.UUID;
 public class InspectionService {
 
     private final InspectionRecordRepository inspectionRepository;
-    private final ClaimRepository claimRepository;
     private final PolicyRepository policyRepository;
     private final KafkaProducer producer;
     private final PolicyService policyService;
-    private final ClaimService claimService;
     private final ScheduleClient scheduleClient;
-
 
     public ScheduleResponseDto scheduleInspection(UUID submissionId, ScheduleRequestDto dto) {
         InspectionRecord inspection = inspectionRepository.findBySubmissionId(submissionId)
@@ -57,24 +53,25 @@ public class InspectionService {
         return schedule;
     }
 
-    public void completeInspection(UUID submissionId, InspectionStatus status, String comments) {
+    public void completeInspection(UUID submissionId, InspectionRequestDto requestDto) {
         InspectionRecord record = inspectionRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> new IllegalStateException("Inspection record not found: " + submissionId));
-        record.setStatus(status);
-        record.setComments(comments);
+                .orElseThrow(() -> ApiException.notFound("Inspection record not found for submission: " + submissionId));
+
+        record.setStatus(requestDto.getStatus());
+        record.setComments(requestDto.getComments());
         inspectionRepository.save(record);
 
         producer.publishEvent("application-lifecycle",
                 InspectionCompletedEvent.builder()
                         .submissionId(record.getSubmissionId())
                         .userId(record.getSubmittedBy())
-                        .status(status.name())
-                        .comments(comments)
+                        .status(requestDto.getStatus().name())
+                        .comments(requestDto.getComments() != null ? requestDto.getComments() : "")
                         .inspectedAt(LocalDateTime.now())
                         .build()
                 );
 
-        if (status == InspectionStatus.COMPLETED && validateFurther(submissionId, record)) {
+        if (requestDto.getStatus() == InspectionStatus.COMPLETED && validateFurther(submissionId, record)) {
             Policy policy = policyService.createPolicy(submissionId);
             policyRepository.save(policy);
 
@@ -88,22 +85,8 @@ public class InspectionService {
                             LocalDateTime.now()
                     ));
 
-
-            Claim claim = claimService.createClaim(submissionId, policy.getId());
-            claimRepository.save(claim);
-
-            producer.publishEvent("application-lifecycle",
-                    new ClaimProcessedEvent(
-                            submissionId,
-                            record.getSubmissionId(),
-                            claim.getId(),
-                            claim.getPayoutStatus().name(),
-                            claim.getClaimAmount(),
-                            LocalDateTime.now()
-                    ));
-
         }
-        log.info("Inspection completed for application: {}, status: {}", submissionId, status);
+        log.info("Inspection completed for application: {}, status: {}", submissionId, requestDto.getStatus());
     }
 
     private boolean validateFurther(UUID submissionId, InspectionRecord record) {

@@ -1,7 +1,7 @@
 package com.hashjosh.insurance.clients;
 
 import com.hashjosh.constant.application.ApplicationResponseDto;
-import com.hashjosh.pcic.exception.ApiException;
+import com.hashjosh.insurance.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
