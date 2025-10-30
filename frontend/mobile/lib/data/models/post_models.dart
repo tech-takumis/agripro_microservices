@@ -1,5 +1,6 @@
 class PostResponse {
   final String id;
+  final String title;
   final String content;
   final String authorId;
   final String authorName;
@@ -9,6 +10,7 @@ class PostResponse {
 
   PostResponse({
     required this.id,
+    required this.title,
     required this.content,
     required this.authorId,
     required this.authorName,
@@ -20,6 +22,7 @@ class PostResponse {
   factory PostResponse.fromJson(Map<String, dynamic> json) {
     return PostResponse(
       id: json['id'] as String,
+      title: json['title'] as String? ?? '',
       content: json['content'] as String? ?? '',
       authorId: json['authorId'] as String? ?? '',
       authorName: json['authorName'] as String? ?? 'Unknown',
@@ -43,23 +46,23 @@ class PostResponse {
 }
 
 class PostPageResponse {
-  final List<PostResponse> content;
+  final List<PostResponse> posts;
   final String? nextCursor;
-  final bool hasNext;
+  final bool hasMore;
 
   PostPageResponse({
-    required this.content,
+    required this.posts,
     this.nextCursor,
-    required this.hasNext,
+    required this.hasMore,
   });
 
   factory PostPageResponse.fromJson(Map<String, dynamic> json) {
     return PostPageResponse(
-      content: (json['content'] as List<dynamic>)
+      posts: (json['posts'] as List<dynamic>? ?? [])
           .map((item) => PostResponse.fromJson(item as Map<String, dynamic>))
           .toList(),
       nextCursor: json['nextCursor'] as String?,
-      hasNext: json['hasNext'] as bool? ?? false,
+      hasMore: json['hasMore'] as bool? ?? false,
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart' as carousel;
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,16 +122,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
-            title: const Text('Community Posts'),
+            title: const Text('Agriculturist Posts'),
             floating: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  // TODO: Implement create post
-                },
-              ),
-            ],
           ),
           if (isLoading && postsAsync.isEmpty)
             const SliverFillRemaining(
@@ -213,63 +205,80 @@ class _HomePageState extends ConsumerState<HomePage> {
           
           // Image Carousel
           if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
-          
-          // Post Actions
-          ButtonBar(
-            alignment: MainAxisAlignment.spaceAround,
-            children: [
-              TextButton.icon(
-                icon: const Icon(Icons.thumb_up_outlined, size: 20),
-                label: const Text('Like'),
-                onPressed: () {},
-              ),
-              TextButton.icon(
-                icon: const Icon(Icons.comment_outlined, size: 20),
-                label: const Text('Comment'),
-                onPressed: () {},
-              ),
-              TextButton.icon(
-                icon: const Icon(Icons.share_outlined, size: 20),
-                label: const Text('Share'),
-                onPressed: () {},
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
   
   Widget _buildImageCarousel(List<String> imageUrls) {
+    // Debug: Print the received image URLs
+    debugPrint('Image URLs received: $imageUrls');
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: CarouselSlider.builder(
-        options: CarouselOptions(
+      child: carousel.CarouselSlider(
+        options: carousel.CarouselOptions(
           height: 250.0,
           autoPlay: imageUrls.length > 1,
           enlargeCenterPage: true,
           viewportFraction: 1.0,
           aspectRatio: 1.0,
+          onPageChanged: (index, reason) {
+            debugPrint('Page changed to index $index');
+          },
         ),
-        itemCount: imageUrls.length,
-        itemBuilder: (context, index, realIndex) {
+        items: imageUrls.map((imageUrl) {
+          // Use the original URL as is, including all query parameters
+          debugPrint('Using image URL: $imageUrl');
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: CachedNetworkImage(
-                imageUrl: imageUrls[index],
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 width: double.infinity,
+                maxHeightDiskCache: 1000, // Increase cache size if needed
+                memCacheHeight: 1000, // Cache higher resolution images
+                httpHeaders: const {
+                  'Accept': 'image/*',
+                },
                 placeholder: (context, url) => Container(
                   color: Colors.grey[200],
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
                 ),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+                errorWidget: (context, url, error) {
+                  debugPrint('Error loading image: $error\nURL: $url');
+                  return Container(
+                    color: Colors.grey[200],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 30),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to load image',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }

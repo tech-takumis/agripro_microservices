@@ -16,6 +16,7 @@ class PostState {
   final String? error;
   final bool isCreating;
   final bool hasMore;
+  final bool hasNext;
   final String? nextCursor;
 
   const PostState({
@@ -24,6 +25,7 @@ class PostState {
     this.error,
     this.isCreating = false,
     this.hasMore = true,
+    this.hasNext = false,
     this.nextCursor,
   });
 
@@ -33,6 +35,7 @@ class PostState {
     String? error,
     bool? isCreating,
     bool? hasMore,
+    bool? hasNext,
     String? nextCursor,
   }) {
     return PostState(
@@ -40,7 +43,8 @@ class PostState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isCreating: isCreating ?? this.isCreating,
-      hasMore: hasMore ?? this.hasMore,
+hasMore: hasMore ?? this.hasMore,
+      hasNext: hasNext ?? this.hasNext,
       nextCursor: nextCursor ?? this.nextCursor,
     );
   }
@@ -65,11 +69,12 @@ class PostController extends StateNotifier<PostState> {
       
       state = state.copyWith(
         posts: cursor == null 
-            ? response.content 
-            : [...state.posts, ...response.content],
+            ? response.posts 
+            : [...state.posts, ...response.posts],
         isLoading: false,
-        hasMore: !response.last,
-        nextCursor: response.cursor,
+        hasMore: response.hasMore,
+        nextCursor: response.nextCursor,
+        hasNext: response.hasMore,
       );
     } catch (e) {
       state = state.copyWith(

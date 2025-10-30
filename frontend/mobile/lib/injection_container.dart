@@ -50,9 +50,9 @@ Future<void> setupDependencies() async {
     ApplicationApiService(appDio, baseUrl: 'http://localhost:9001/api/v1'),
   );
 
-  // Register PostApiService
+  // Register PostApiService with authenticated Dio instance
   getIt.registerSingleton<PostApiService>(
-    PostApiService(appDio),
+    PostApiService(authDio, baseUrl: 'http://localhost:9001/api/v1'),
   );
 
   final psgcDio = Dio();
