@@ -23,7 +23,7 @@ class _ContactDepartmentPageState extends ConsumerState<ContactDepartmentPage> {
   final ScrollController _scrollController = ScrollController();
   final List<PlatformFile> _uploadedFiles = [];
 
-  static const int maxFileSize = 1048576; // 1MB in bytes
+  static const int maxFileSize = 1048576;
 
   Future<DesignatedResponse>? _designatedStaffFuture;
   DesignatedResponse? _designatedStaff;

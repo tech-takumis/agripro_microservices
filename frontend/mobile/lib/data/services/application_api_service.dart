@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/application_submission.dart';
 import 'package:mobile/injection_container.dart'; // For getIt
 import '../../presentation/controllers/auth_controller.dart';
 import 'storage_service.dart';
 import 'package:mobile/data/utils/address_utils.dart';
+import 'package:http_parser/http_parser.dart'; // <-- Add this import for MediaType
+import 'package:mime/mime.dart'; // <-- Add this import
 
 class ApplicationApiService {
   final Dio _dio;
@@ -102,33 +105,102 @@ class ApplicationApiService {
   }
 
   Future<ApplicationSubmissionResponse> submitApplication(
-      AuthState authState,
-      ApplicationSubmissionRequest request) async {
+    AuthState authState,
+    ApplicationSubmissionRequest request,
+    List<PlatformFile> files,
+  ) async {
     try {
       if (!(authState.isLoggedIn && authState.token != null && authState.token!.isNotEmpty)) {
         print('User not logged in, skipping submitApplication');
         return ApplicationSubmissionResponse(success: false, message: 'User not logged in', applicationId: '');
       }
-      // Convert farm_location object to string if needed
+
+      // Prepare submission JSON
       final Map<String, dynamic> updatedFieldValues = Map<String, dynamic>.from(request.fieldValues);
       if (updatedFieldValues['farm_location'] is Map<String, dynamic>) {
         updatedFieldValues['farm_location'] = farmLocationToString(updatedFieldValues['farm_location']);
       }
+
+      // Get coordinates before submission (replace with your actual logic)
+      final coordinates = request.coordinates;
+
+      final submissionJson = jsonEncode({
+        'applicationTypeId': request.applicationTypeId,
+        'fieldValues': updatedFieldValues,
+        'coordinates': coordinates,
+      });
+
       print('🚀 Submitting application for type: \\${request.applicationTypeId}');
       print('📋 Field values: \\${updatedFieldValues}');
-      print('📎 Document IDs: \\${request.documentIds}');
+      print('📁 Files: ${files.length}');
+      print('🌍 Coordinates: $coordinates');
 
-      // Send as application/json
+      // Allowed mime types mapping
+      const allowedMimeTypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      };
+
+      final multipartFiles = <MultipartFile>[];
+      for (final file in files) {
+        String? mimeType = file.extension != null
+            ? lookupMimeType(file.name, headerBytes: file.bytes)
+            : null;
+
+        // Use mapping if lookupMimeType fails or returns application/octet-stream
+        if (mimeType == null || mimeType == 'application/octet-stream') {
+          mimeType = allowedMimeTypes[file.extension?.toLowerCase() ?? ''];
+        }
+
+        // If still not allowed, abort and show error
+        if (mimeType == null || !allowedMimeTypes.containsValue(mimeType)) {
+          throw Exception(
+            "File type '${file.extension ?? 'unknown'}' is not supported. Allowed types: ${allowedMimeTypes.keys.join(', ')}."
+          );
+        }
+
+        final mediaTypeParts = mimeType.split('/');
+        final mediaType = MediaType(mediaTypeParts[0], mediaTypeParts[1]);
+
+        if (file.bytes != null) {
+          multipartFiles.add(
+            MultipartFile.fromBytes(
+              file.bytes!,
+              filename: file.name,
+              contentType: mediaType,
+            ),
+          );
+        } else if (file.path != null) {
+          multipartFiles.add(
+            await MultipartFile.fromFile(
+              file.path!,
+              filename: file.name,
+              contentType: mediaType,
+            ),
+          );
+        }
+      }
+
+      // Build FormData with correct field names matching @RequestPart names
+      final formData = FormData.fromMap({
+        'submission': MultipartFile.fromString(
+          submissionJson,
+          contentType: MediaType('application', 'json'),
+        ),
+        'files': multipartFiles,
+      });
+
       final response = await _dio.post(
         '/applications/submit',
-        data: {
-          'applicationTypeId': request.applicationTypeId,
-          'fieldValues': updatedFieldValues,
-          'documentIds': request.documentIds,
-        },
+        data: formData,
         options: Options(
           headers: {
-            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${authState.token}',
+            'Content-Type': 'multipart/form-data',
             'Accept': 'application/json',
           },
         ),
@@ -138,7 +210,6 @@ class ApplicationApiService {
       if (response.data is Map<String, dynamic> || response.data is Map) {
         return ApplicationSubmissionResponse.fromJson(response.data);
       } else if (response.data is String) {
-        // Try to decode if backend returns a stringified JSON
         try {
           final Map<String, dynamic> json = jsonDecode(response.data);
           return ApplicationSubmissionResponse.fromJson(json);
@@ -170,8 +241,9 @@ class ApplicationApiService {
       }
       return ApplicationSubmissionResponse(success: false, message: 'Failed to submit application', applicationId: '');
     } catch (e) {
-      print('❌ Unexpected error: \\${e.toString()}');
-      return ApplicationSubmissionResponse(success: false, message: 'Unexpected error: \\${e.toString()}', applicationId: '');
+      print('❌ Unexpected error: ${e.toString()}');
+      // Show error for unsupported file type
+      return ApplicationSubmissionResponse(success: false, message: e.toString(), applicationId: '');
     }
   }
 }
