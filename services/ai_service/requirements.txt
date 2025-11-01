@@ -3,3 +3,4 @@ sqlalchemy
 asyncpg
 pydantic
 psycopg2-binary
+confluent-kafka
