@@ -1,0 +1,38 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.venv/
+venv/
+
+# IDE/project files
+.idea/
+.vscode/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Database files
+*.db
+*.sqlite3
+
+# Log files
+*.log
+
+# Build/temp files
+build/
+dist/
+*.egg-info/
+
+# Other
+*.bak
+*.swp
+
+# Node/npm (if any JS code)
+node_modules/
+
