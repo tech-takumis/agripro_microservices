@@ -22,7 +22,7 @@ public class FarmerClient {
     private String applicationName;
 
     public FarmerClient(RestClient.Builder clientBuilder) {
-        this.restClient = RestClient.builder()
+        this.restClient = clientBuilder
                 .baseUrl(BASE_URL)
                 .build();
 
