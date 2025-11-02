@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
 import 'package:mobile/data/services/storage_service.dart';
+import 'package:geolocator/geolocator.dart'; // Add this import
 
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/application_submission.dart';
@@ -27,8 +28,8 @@ class MultiStepApplicationController {
   // Field values storage
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, String?> _selectValues = {};
-  final Map<String, PlatformFile?> _fileValues = {}; // <-- Use PlatformFile?
-  final Map<String, bool?> _booleanValues = {}; // <-- Add boolean field storage
+  final Map<String, PlatformFile?> _fileValues = {};
+  final Map<String, bool?> _booleanValues = {};
 
   // Location field values (for PSGC location fields)
   final Map<String, Map<String, String?>> _locationValues = {};
@@ -283,29 +284,23 @@ class MultiStepApplicationController {
       _errorMessage = '';
       _uploadProgress = 0.0;
 
-      // Step 1: Upload files and signatures, collect document IDs and field-to-documentId mapping
-      final documentIds = <String>[];
-      final documentService = getIt<DocumentService>();
+      // Collect files (no need to upload one by one)
       final fileEntries = _fileValues.entries.where((entry) => entry.value != null);
-      final Map<String, String> fileFieldDocumentIds = {};
-      for (final entry in fileEntries) {
-        final file = entry.value!;
-        try {
-          final response = await documentService.uploadDocument(
-            authState: authState,
-            file: file,
-          );
-          documentIds.add(response.documentId);
-          fileFieldDocumentIds[entry.key] = response.documentId;
-        } catch (e) {
-          final fileName = file.name;
-          return ApplicationSubmissionResponse(
-              success: false,
-              message: 'Failed to upload "$fileName".', applicationId: '');
+
+      // Ensure required signature field is present in files
+      for (var section in application.sections) {
+        for (var field in section.fields) {
+          if (field.fieldType == 'SIGNATURE' && field.required) {
+            final file = _fileValues[field.key];
+            if (file == null) {
+              _errorMessage = "Signature field '${field.fieldName ?? field.key}' is required.";
+              return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
+            }
+          }
         }
       }
 
-      // Step 2: Prepare field values
+      // Prepare field values
       final Map<String, dynamic> fieldValues = {};
       for (var section in application.sections) {
         for (var field in section.fields) {
@@ -357,37 +352,30 @@ class MultiStepApplicationController {
           } else if (field.fieldType == 'SELECT') {
             fieldValues[key] = _selectValues[key] ?? '';
           } else if (field.fieldType == 'FILE') {
-            fieldValues[key] = fileFieldDocumentIds[key] ?? null;
+            fieldValues[key] = null; // No pre-uploaded docs
           } else if (field.fieldType == 'SIGNATURE') {
-            fieldValues[key] = fileFieldDocumentIds[key] != null ? 'signature:${fileFieldDocumentIds[key]}' : null;
+            fieldValues[key] = null; // No pre-uploaded docs
           } else if (field.fieldType == 'BOOLEAN') {
             fieldValues[key] = _booleanValues[key] ?? false;
           }
         }
       }
 
-      // Validate required SIGNATURE fields
-      for (var section in application.sections) {
-        for (var field in section.fields) {
-          if (field.fieldType == 'SIGNATURE' && field.required) {
-            if (fieldValues[field.key] == null) {
-              _errorMessage = "Signature field '${field.fieldName ?? field.key}' is required.";
-              return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
-            }
-          }
-        }
-      }
+      // Prepare request
+      // Get coordinates before submission (replace with your actual logic)
+      final coordinates = await _getCoordinates();
 
-      // Step 3: Submit application
       final request = ApplicationSubmissionRequest(
         applicationTypeId: application.id,
         fieldValues: fieldValues,
-        documentIds: documentIds,
+        coordinates: coordinates,
       );
 
+      // Pass all files to the API service
       final response = await getIt<ApplicationApiService>().submitApplication(
         authState,
         request,
+        fileEntries.map((e) => e.value!).toList(),
       );
 
       return response;
@@ -398,6 +386,29 @@ class MultiStepApplicationController {
       return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
     } finally {
       _isLoading = false;
+    }
+  }
+
+  // Dummy coordinates getter (replace with your actual logic)
+  Future<String> _getCoordinates() async {
+    try {
+      // Request location permission if not already granted
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      // If permission is granted, get current position
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        return "${position.latitude},${position.longitude}";
+      } else {
+        // Permission not granted, return default or empty coordinates
+        return "0.00000,0.00000";
+      }
+    } catch (e) {
+      print("Error getting coordinates: $e");
+      return "0.00000,0.00000";
     }
   }
 

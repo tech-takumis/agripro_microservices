@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mobile/data/services/application_api_service.dart';
 import 'package:mobile/data/services/auth_api_service.dart';
 import 'package:mobile/data/services/document_service.dart';
+import 'package:mobile/data/services/post_api_service.dart';
 import 'package:mobile/data/services/location_service.dart';
 import 'package:mobile/data/services/psgc_service.dart';
 import 'package:mobile/data/services/storage_service.dart';
@@ -48,6 +49,12 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<ApplicationApiService>(
     ApplicationApiService(appDio, baseUrl: 'http://localhost:9001/api/v1'),
   );
+
+  // Register PostApiService with authenticated Dio instance
+  getIt.registerSingleton<PostApiService>(
+    PostApiService(authDio, baseUrl: 'http://localhost:9001/api/v1'),
+  );
+
   final psgcDio = Dio();
   getIt.registerSingleton<PSGCService>(
     PSGCService(psgcDio),

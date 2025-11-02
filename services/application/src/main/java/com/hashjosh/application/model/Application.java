@@ -1,6 +1,5 @@
 package com.hashjosh.application.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
@@ -9,7 +8,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,9 +36,13 @@ public class Application implements Serializable {
     @JsonProperty("userId")
     private UUID userId;
 
-    @Column(name = "document_id", nullable = true)
-    @JsonProperty("documentId")
-    private List<UUID> documentId;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "application_documents",
+            joinColumns = @JoinColumn(name = "application_id"),
+            inverseJoinColumns = @JoinColumn(name = "document_id")
+    )
+    private List<Document> documents;
 
     @Type(JsonBinaryType.class)
     @Column(name = "dynamic_fields", columnDefinition = "jsonb", nullable = false)

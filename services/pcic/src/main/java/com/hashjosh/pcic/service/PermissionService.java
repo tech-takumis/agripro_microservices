@@ -5,7 +5,6 @@ import com.hashjosh.pcic.dto.permission.PermissionRequest;
 import com.hashjosh.pcic.dto.permission.PermissionResponse;
 import com.hashjosh.pcic.entity.*;
 import com.hashjosh.pcic.mapper.PermissionMapper;
-import com.hashjosh.pcic.mapper.RoleMapper;
 import com.hashjosh.pcic.repository.PermissionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

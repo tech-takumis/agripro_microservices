@@ -8,20 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class PermissionMapper {
 
     private final SlugUtil slugUtil;
-
-    public Permission toPermission(PermissionRequest request) {
-        return Permission.builder()
-                .name(request.getName())
-                .slug(slugUtil.toSlug(request.getName()))
-                .description(request.getDescription())
-                .build();
+    public List<PermissionResponse> toPermissionResponseList(List<Permission> list) {
+        return list.stream()
+                .map(this::toPermissionResponse)
+                .toList();
     }
 
     public PermissionResponse toPermissionResponse(Permission permission) {
@@ -33,9 +29,11 @@ public class PermissionMapper {
                 .build();
     }
 
-    public List<PermissionResponse> toPermissionResponseList(List<Permission> permissions) {
-        return permissions.stream()
-                .map(this::toPermissionResponse)
-                .collect(Collectors.toList());
+    public Permission toPermission(PermissionRequest request) {
+        return Permission.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .slug(slugUtil.toSlug(request.getName()))
+                .build();
     }
 }

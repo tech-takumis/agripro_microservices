@@ -3,6 +3,7 @@ package com.hashjosh.application.mapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashjosh.application.clients.DocumentServiceClient;
+import com.hashjosh.application.model.Document;
 import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.application.dto.submission.ApplicationSubmissionDto;
 import com.hashjosh.application.model.Application;
@@ -32,7 +33,13 @@ public class ApplicationMapper {
         dto.setVersion(entity.getVersion());
 
         List<String> generatedUrl = new ArrayList<>();
-        entity.getDocumentId().forEach(document -> generatedUrl.add(documentServiceClient.generatePresignedUrl(document,30)));
+
+        entity.getDocuments().forEach(document -> {
+            generatedUrl.add(documentServiceClient
+                    .generatePresignedUrl(document.getDocumentId(),30));
+        });
+
+
         dto.setFileUploads(generatedUrl);
         dto.setJsonDynamicFields(entity.getDynamicFields());
         return dto;
@@ -46,8 +53,8 @@ public class ApplicationMapper {
         return Application.builder()
                 .type(type)
                 .userId(submission.getUseId())
-                .documentId(submission.getDocumentIds())
-                .dynamicFields(dynamicFieldsNode)  // Now passing JsonNode instead of Map
+                .dynamicFields(dynamicFieldsNode)
+                .documents(submission.getDocuments())
                 .submittedAt(LocalDateTime.now())
                 .build();
     }
