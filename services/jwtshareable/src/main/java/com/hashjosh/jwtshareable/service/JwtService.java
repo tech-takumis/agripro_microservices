@@ -6,15 +6,13 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 
 public class JwtService {
     private final SecretKey secretKey;
@@ -115,9 +113,8 @@ public class JwtService {
     public String generateRefreshToken(String username, String clientIp, String userAgent, long expiryMillis) {
         // Use SecureRandom for cryptographic strength
         byte[] randomBytes = new byte[64];
-        new java.security.SecureRandom().nextBytes(randomBytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-        return token;
+        new SecureRandom().nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
 }
