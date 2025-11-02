@@ -1,9 +1,9 @@
 <template>
     <!-- Outer Container Wrapper -->
-    <div class="h-screen flex items-start justify-start p-4 bg-white">
+    <div class="h-screen flex items-start justify-start py-4 px-2 bg-white">
         <!-- Sidebar Container with white background -->
         <div
-            class="flex flex-col w-72 h-full bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+            class="flex flex-col w-72 h-full bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
             <!-- Header Section with reduced margins -->
             <div
                 class="flex flex-col items-center px-4 pt-4 pb-4 border-b border-gray-200">
@@ -13,12 +13,12 @@
                     class="h-12 w-auto rounded-lg transition-transform duration-300 hover:scale-110" />
 
                 <h1
-                    class="mt-2 text-sm font-semibold text-gray-800 tracking-wide text-center">
+                    class="mt-2 text-lg font-semibold text-gray-800 tracking-wide text-center">
                     Department of Agriculture
                 </h1>
 
                 <span
-                    class="mt-2 text-xs font-semibold bg-green-50 text-green-700 px-4 py-1.5 rounded-full transition duration-300 hover:bg-green-100">
+                    class="mt-2 text-xs font-semibold bg-green-100 text-gray-700 px-4 py-1.5 rounded-full transition duration-300 hover:bg-green-100">
                     {{ roleTitle }}
                 </span>
             </div>

@@ -39,13 +39,29 @@
                             Delete ({{ selectedApplications.length }})
                         </button>
                     </div>
+
                 </div>
-                </div>
+            </div>
         </template>
-        <!-- Loading state -->
-        <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+
+
+<!-- Loading state -->
+<div 
+  v-if="loading" 
+  class="flex flex-col items-center justify-center min-h-[200px] space-y-4 print:hidden"
+>
+  <!-- Spinner -->
+  <div class="relative">
+    <div class="h-14 w-14 rounded-full border-4 border-gray-200"></div>
+    <div class="absolute top-0 left-0 h-14 w-14 rounded-full border-4 border-green-600 border-t-transparent animate-spin"></div>
+  </div>
+
+  <!-- Loading Label -->
+  <p class="text-gray-600 font-medium tracking-wide">
+    Loading data…
+  </p>
+</div>
+
 
         <!-- Error state -->
         <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 print:hidden">

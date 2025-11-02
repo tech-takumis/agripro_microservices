@@ -28,8 +28,8 @@
                 class="relative flex flex-col h-full w-[280px] max-w-[95vw] bg-white">
                 <div class="absolute top-0 right-0 -mr-12 pt-2">
                     <button
-                        @click="sidebarOpen = false"
-                        class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                        @click="sidebarOpen = false">
                         <X class="h-6 w-6 text-white" />
                         <span class="sr-only">Close sidebar</span>
                     </button>
@@ -50,8 +50,8 @@
                         <div class="space-y-3">
                             <div class="border-t border-gray-200"></div>
                             <button
-                                @click="handleLogout"
-                                class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg group transition-colors">
+                                class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg group transition-colors"
+                                @click="handleLogout">
                                 <div class="flex items-center">
                                     <LogOut class="w-5 h-5 mr-3" />
                                     <span>Sign Out</span>
@@ -71,9 +71,9 @@
             <div
                 class="md:hidden bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm print:hidden">
                 <button
-                    @click="sidebarOpen = true"
                     class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                    aria-label="Open sidebar">
+                    aria-label="Open sidebar"
+                    @click="sidebarOpen = true">
                     <Menu class="h-6 w-6" />
                 </button>
                 <h1 class="text-lg font-semibold text-gray-900 truncate">
@@ -85,7 +85,7 @@
             <!-- Page header -->
             <header
                 v-if="$slots.header"
-                class="bg-white shadow-sm border-b border-gray-200 hidden md:block print:hidden">
+                class="bg-white shadow-sm border-b border-none hidden md:block print:hidden">
                 <div
                     class="px-4 py-4 sm:px-6 lg:px-8 max-w-full overflow-hidden">
                     <slot name="header" />
@@ -105,9 +105,9 @@
             <!-- Main content Container -->
             <main
                 class="flex-1 relative overflow-hidden print:overflow-visible print:bg-white border-none bg-white">
-                <div class="h-full px-1 sm:px-4 lg:px-6 py-4 max-w-7xl mx-auto w-full flex flex-col">
+                <div class="h-full pl-0 pr-2 py-4 max-w-7xl w-full flex flex-col m-0 rounded-full">
                     <!-- Dashboard Content with proper flex layout -->
-                    <div class="h-full w-full p-4 lg:p-6 bg-gray-100 rounded-xl flex flex-col min-h-0">
+                    <div class="h-full w-full p-4 rounded-lg bg-gray-100 flex flex-col min-h-0">
                         <slot />
                     </div>
                 </div>
@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Menu, X, LogOut, ArrowRight } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
@@ -125,7 +125,7 @@ import SidebarNavigation from '@/components/layouts/SidebarNavigation.vue'
 
 const authStore = useAuthStore()
 const wsStore = useWebSocketStore()
-const { disconnect, connect } = wsStore
+const { disconnect } = wsStore
 
 const props = defineProps({
     navigation: {

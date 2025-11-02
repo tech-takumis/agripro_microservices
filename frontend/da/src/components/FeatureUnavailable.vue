@@ -25,42 +25,50 @@ const handleBack = () => {
   emit('back')
 }
 </script>
-
 <template>
-  <div class="flex items-center justify-center min-h-[400px] p-8">
-    <div class="text-center max-w-md">
-      <div v-if="props.showIcon" class="flex justify-center mb-6">
-        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-          <Construction class="w-8 h-8 text-gray-400" />
+  <div class="flex items-center justify-center min-h-[450px] p-8 bg-transparent">
+    <div class="text-center max-w-lg w-full">
+
+      <!-- Icon Section -->
+      <div v-if="props.showIcon" class="flex justify-center mb-5">
+        <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+          <Construction class="w-10 h-10 text-green-600" />
         </div>
       </div>
-      
-      <h2 class="text-2xl font-semibold text-gray-800 mb-3">
+
+      <!-- Title -->
+      <h2 class="text-3xl font-bold text-gray-800 mb-3">
         {{ props.title }}
       </h2>
-      
-      <p class="text-gray-600 leading-relaxed">
+
+      <!-- Description -->
+      <p class="text-gray-600 text-base leading-relaxed px-4">
         {{ props.description }}
       </p>
-      
+
+      <!-- Back Button -->
       <div v-if="props.showBackButton" class="mt-8">
         <button
           @click="handleBack"
-          class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium"
+          class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg
+                 bg-green-600 text-white font-semibold
+                 hover:bg-green-700 transition-all duration-200 focus:outline-none"
         >
-          <ArrowLeft class="w-4 h-4" />
+          <ArrowLeft class="w-5 h-5" />
           Back to Dashboard
         </button>
       </div>
-      
-      <div class="mt-6 pt-6 border-t border-gray-200">
-        <p class="text-sm text-gray-500">
-          Check back later for updates
-        </p>
-      </div>
+
+      <!-- Footer -->
+      <p class="text-sm text-gray-500 mt-10">
+        More features available soon
+      </p>
+
     </div>
   </div>
 </template>
+
+
 
 <style scoped>
 /* Minimal scoped styles - relying on Tailwind for consistency */
