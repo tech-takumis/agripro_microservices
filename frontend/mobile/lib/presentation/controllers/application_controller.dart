@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
 
-import '../../data/models/application_data.dart';
-import '../../data/services/application_api_service.dart';
-import '../../injection_container.dart';
+import 'package:mobile/data/models/application_data.dart';
+import 'package:mobile/data/services/application_api_service.dart';
+import 'package:mobile/injection_container.dart';
 
 // Add a provider reference to check authentication state
 class ApplicationController extends GetxController {

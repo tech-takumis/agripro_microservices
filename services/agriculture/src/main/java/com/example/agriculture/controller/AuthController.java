@@ -5,6 +5,7 @@ import com.example.agriculture.dto.auth.*;
 import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
 import com.example.agriculture.service.AuthService;
+import com.example.agriculture.service.InvitationService;
 import com.example.agriculture.service.RefreshTokenService;
 import com.example.agriculture.service.RoleService;
 import com.hashjosh.jwtshareable.service.JwtService;
@@ -36,14 +37,25 @@ public class AuthController {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final RoleService roleService;
+    private final InvitationService invitationService;
+
+
+    @PostMapping("/invite")
+    public ResponseEntity<String> inviteStaff(
+            @RequestParam String email
+    ){
+        invitationService.sendInvitationEmail(email);
+        return ResponseEntity.ok("Invitation sent to " + email);
+    }
 
     @PostMapping("/registration")
     public ResponseEntity<RegistrationResponse> register(
+            @RequestParam() String token,
             @RequestBody @Valid RegistrationRequest request
     ){
-
+        invitationService.validateInvitationToken(token);
         Agriculture agriculture = authService.register(request);
-
+        invitationService.markAsUsed(token);
         return ResponseEntity.ok(
                 RegistrationResponse.builder()
                         .username(agriculture.getUsername())

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,12 +24,13 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping(value = "/submit")
+    @PostMapping(value = "/submit",consumes = {"multipart/form-data"})
     public ResponseEntity<ApplicationSubmissionResponse> submitApplication(
-            @Valid @RequestBody ApplicationSubmissionDto submission
+            @Valid @RequestPart(value = "submission") ApplicationSubmissionDto submission,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
 
-        Application application = applicationService.processSubmission(submission);
+        Application application = applicationService.processSubmission(submission,files);
         return ResponseEntity.ok(ApplicationSubmissionResponse.builder()
                         .applicationId(application.getId())
                         .success(true)

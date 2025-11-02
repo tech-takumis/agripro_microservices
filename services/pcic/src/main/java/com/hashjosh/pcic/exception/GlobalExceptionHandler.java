@@ -3,6 +3,7 @@ package com.hashjosh.pcic.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -26,6 +27,21 @@ public class GlobalExceptionHandler {
                         .timestamp(Instant.now())
                         .build());
     }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Handled BadCredentialsException: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiErrorResponse.builder()
+                        .success(false)
+                        .message("Invalid username or password.")
+                        .status(HttpStatus.UNAUTHORIZED.value())
+                        .timestamp(Instant.now())
+                        .build());
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex) {

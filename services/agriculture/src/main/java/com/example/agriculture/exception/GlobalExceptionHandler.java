@@ -3,6 +3,7 @@ package com.example.agriculture.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,6 +28,20 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .message(ex.getMessage())
                         .status(ex.getStatus().value())
+                        .timestamp(Instant.now())
+                        .build());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiErrorResponse.builder()
+                        .success(false)
+                        .message("Invalid username or password")
+                        .status(HttpStatus.UNAUTHORIZED.value())
                         .timestamp(Instant.now())
                         .build());
     }

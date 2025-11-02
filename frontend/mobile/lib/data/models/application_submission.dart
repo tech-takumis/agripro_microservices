@@ -1,19 +1,19 @@
 class ApplicationSubmissionRequest {
   final String applicationTypeId;
   final Map<String, dynamic> fieldValues;
-  final List<String> documentIds;
+  final String coordinates; // new field
 
   ApplicationSubmissionRequest({
     required this.applicationTypeId,
     required this.fieldValues,
-    required this.documentIds,
+    required this.coordinates,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'applicationTypeId': applicationTypeId,
       'fieldValues': fieldValues,
-      'documentIds': documentIds,
+      'coordinates': coordinates,
     };
   }
 }

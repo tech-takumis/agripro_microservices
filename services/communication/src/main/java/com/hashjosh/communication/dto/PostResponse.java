@@ -22,5 +22,4 @@ public class PostResponse {
     private List<String> urls;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

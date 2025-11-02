@@ -12,6 +12,7 @@
     <modules>
         <module>farmer</module>
         <module>agriculture</module>
+        <module>insurance</module>
         <module>pcic</module>
         <module>verification</module>
         <module>communication</module>

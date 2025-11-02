@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invitation to join the platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7fafc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 32px;
+        }
+        .header {
+            text-align: center;
+            color: #2d7a2d;
+            font-size: 1.6em;
+            margin-bottom: 16px;
+        }
+        .content {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 24px;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: #2d7a2d;
+            color: #fff;
+            padding: 14px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 16px;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">Invitation to Join Our Platform</div>
+    <div class="content">
+        Hello,<br><br>
+        You have been invited to join our platform.<br>
+        Please click the button below to complete your registration.<br><br>
+        <strong>This invitation expires on:</strong> <span th:text="${expiryDate}"></span>
+    </div>
+    <a th:href="${registrationLink}" class="button">Register Now</a>
+    <div class="footer">
+        If you did not expect this invitation, you can safely ignore this email.<br>
+        For any questions, contact us at support@example.com.
+    </div>
+</div>
+</body>
+</html>
