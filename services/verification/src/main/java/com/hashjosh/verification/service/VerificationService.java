@@ -70,7 +70,7 @@ public class VerificationService {
         record.getBatch().setMaxApplications(record.getBatch().getMaxApplications() - 1);
         verificationRecordRepository.save(record);
 
-        publisher.publishEvent("application-lifecycle",
+        publisher.publishEvent("application-forwarded",
                 ApplicationForwarded.builder()
                         .userId(record.getUploadedBy())
                         .provider("AGRICULTURE")

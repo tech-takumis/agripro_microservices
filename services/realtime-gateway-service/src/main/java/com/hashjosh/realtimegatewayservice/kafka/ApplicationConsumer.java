@@ -27,52 +27,47 @@ public class ApplicationConsumer {
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-submitted")
+    @KafkaListener(topics = "application-submitted", groupId = "realtime-group-app-submitted")
     public void listenApplicationSubmitted(@Payload ApplicationSubmittedEvent event) {
         handleApplicationSubmitted(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-started")
-    public void listenVerificationStarted(@Payload VerificationStartedEvent event) {
-        handleVerificationStarted(event);
-    }
-
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-verification-completed")
+    @KafkaListener(topics = "application-verified", groupId = "realtime-group-verification-completed")
     public void listenVerificationCompleted(@Payload VerificationCompletedEvent event) {
         handleVerificationCompleted(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-under-review")
+    @KafkaListener(topics = "application-underReview", groupId = "realtime-group-app-under-review")
     public void listenApplicationUnderReview(@Payload ApplicationUnderReviewEvent event) {
         handleApplicationUnderReview(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-forwarded")
+    @KafkaListener(topics = "application-forwarded", groupId = "realtime-group-app-forwarded")
     public void listenApplicationForwarded(@Payload ApplicationForwarded event) {
         handleApplicationForwarded(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-app-received")
+    @KafkaListener(topics = "application-received", groupId = "realtime-group-app-received")
     public void listenApplicationReceived(@Payload ApplicationReceived event) {
         handleApplicationReceived(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-scheduled")
+    @KafkaListener(topics = "application-inspection-schedule", groupId = "realtime-group-inspection-scheduled")
     public void listenInspectionScheduled(@Payload InspectionScheduledEvent event) {
         handleInspectionScheduled(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-inspection-completed")
+    @KafkaListener(topics = "application-inspection-completed", groupId = "realtime-group-inspection-completed")
     public void listenInspectionCompleted(@Payload InspectionCompletedEvent event) {
         handleInspectionCompleted(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-policy-issued")
+    @KafkaListener(topics = "application-policy-issued", groupId = "realtime-group-policy-issued")
     public void listenPolicyIssued(@Payload PolicyIssuedEvent event) {
         handlePolicyIssued(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "realtime-group-claim-processed")
+    @KafkaListener(topics = "application-claim", groupId = "realtime-group-claim-processed")
     public void listenClaimProcessed(@Payload ClaimProcessedEvent event) {
         handleClaimProcessed(event);
     }
@@ -107,20 +102,6 @@ public class ApplicationConsumer {
         );
     }
 
-    private void handleVerificationStarted(VerificationStartedEvent e) {
-        handleNotification(
-            e.getUserId(),
-            NotificationResponseDTO.builder()
-                .id(e.getSubmissionId())
-                .title("Verification Started")
-                .message("Verification process has started for your application.")
-                .time(e.getStartedAt() != null ? e.getStartedAt() : LocalDateTime.now())
-                .read(false)
-                .build(),
-            "Verification Started",
-            "Verification process has started for your application."
-        );
-    }
 
     private void handleVerificationCompleted(VerificationCompletedEvent e) {
         handleNotification(
@@ -242,6 +223,7 @@ public class ApplicationConsumer {
                 .build();
         log.info("✅ Saved notification to database for user {}", receiverId);
         notificationRepository.save(notificationEntity);
+
         messagingTemplate.convertAndSendToUser(
                 receiverId.toString(),
                 "/queue/application.notifications",
@@ -250,6 +232,7 @@ public class ApplicationConsumer {
         log.info("✅ Sent WebSocket notification to user {}", receiverId);
         try {
             FarmerResponse farmer = farmerServiceClient.getFarmerById(receiverId);
+            log.info("Farmer response: {}", farmer);
             String recipientEmail = farmer.getEmail();
             if (recipientEmail != null && !recipientEmail.isBlank()) {
                 emailService.sendEmail(recipientEmail, emailSubject, emailMessage, false);

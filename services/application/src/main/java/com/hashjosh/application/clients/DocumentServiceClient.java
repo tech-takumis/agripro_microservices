@@ -29,23 +29,11 @@ public class DocumentServiceClient {
                 .build();
     }
 
-    public boolean documentExists(UUID documentId) {
-        try {
-            restClient.head()
-                    .uri("/{documentId}", documentId)
-                    .header("X-Internal-Service",applicationName)
-                    .retrieve()
-                    .toBodilessEntity();
-            return true;
-        } catch (Exception e) {
-            log.debug("Document not found: {}", documentId);
-            return false;
-        }
-    }
-    public String generatePresignedUrl(UUID documentId, int expiry) {
+    public String generatePresignedUrl(String userId,UUID documentId, int expiry) {
         return restClient.get()
                 .uri("/{id}/download-url?expiryMinutes={expiry}", documentId, expiry)
                 .header("X-Internal-Service", applicationName)
+                .header("X-User-Id",userId)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),

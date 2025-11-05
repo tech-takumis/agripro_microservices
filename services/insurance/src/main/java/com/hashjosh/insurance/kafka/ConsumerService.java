@@ -17,12 +17,12 @@ public class ConsumerService {
     private final InspectionRecordRepository inspectionRepository;
     private final KafkaProducer producer;
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "pcic-application-submitted-group")
+    @KafkaListener(topics = "application-submitted", groupId = "pcic-application-submitted-group")
     public void listenApplicationSubmitted(@Payload ApplicationSubmittedEvent event) {
         handleApplicationSubmittedEvent(event);
     }
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "pcic-application-forwarded-group")
+    @KafkaListener(topics = "application-forwarded", groupId = "pcic-application-forwarded-group")
     public void listenApplicationForwarded(@Payload ApplicationForwarded event) {
         handleApplicationForwarded(event);
     }
@@ -59,7 +59,7 @@ public class ConsumerService {
                 .build();
         inspectionRepository.save(record);
 
-        producer.publishEvent("application-lifecycle",
+        producer.publishEvent("application-received",
         ApplicationReceived.builder()
                 .provider("PCIC")
                 .userId(event.getUserId())

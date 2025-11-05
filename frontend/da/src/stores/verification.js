@@ -13,6 +13,7 @@ export function useVerificationStore() {
   const errorsList = computed(() => errors.value || [])
   const isForwardingStatus = computed(() => isForwarding.value)
 
+
   async function forwardApplicationToPCIC(applicationIds) {
     isForwarding.value = true
     errors.value = null
@@ -33,8 +34,8 @@ export function useVerificationStore() {
       applications.value = response.data
       return { success: true, data: response.data }
     } catch (e) {
-      console.error("Error fetching verification applications:", e.response?.data || e.message)
-      errors.value = e.error
+      console.error("Error fetching verification applications:", e.response?.data)
+      errors.value = e.response?.data?.message
       return { success: false, error: e.response?.data || e.message }
     }
   }

@@ -36,7 +36,7 @@ public class ApplicationMapper {
 
         entity.getDocuments().forEach(document -> {
             generatedUrl.add(documentServiceClient
-                    .generatePresignedUrl(document.getDocumentId(),30));
+                    .generatePresignedUrl(String.valueOf(entity.getUserId()),document.getDocumentId(),30));
         });
 
 

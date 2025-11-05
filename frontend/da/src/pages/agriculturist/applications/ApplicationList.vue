@@ -68,7 +68,7 @@
 
         <!-- Error state -->
         <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 print:hidden">
-            <p class="text-red-800">{{ error }}</p>
+            <p class="text-red-800">{{ error.message }}</p>
         </div>
 
         <!-- Applications table -->

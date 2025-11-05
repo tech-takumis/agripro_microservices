@@ -30,6 +30,7 @@ trusted:
     - communication-service
     - farmer-service
     - application-service
+    - realtime-service
     - pcic-service
     - document-service
     - rsbsa-service

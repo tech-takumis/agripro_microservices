@@ -50,7 +50,7 @@ public class CustomUserDetails implements UserDetails {
     }
 
     // Constructor for internal service
-    public CustomUserDetails(String serviceId, Set<SimpleGrantedAuthority> authorities) {
+    public CustomUserDetails(String serviceId,UUID userId, Set<SimpleGrantedAuthority> authorities) {
         this.username = serviceId;
         this.password = null; // No password needed for internal service auth
         this.authorities = authorities;
@@ -58,7 +58,7 @@ public class CustomUserDetails implements UserDetails {
         this.lastName = null;
         this.email = null;
         this.phoneNumber = null;
-        this.userId = null;
+        this.userId = userId;
         this.farmer = null;
     }
 

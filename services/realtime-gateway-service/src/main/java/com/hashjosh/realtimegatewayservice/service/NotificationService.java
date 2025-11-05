@@ -6,6 +6,7 @@ import com.hashjosh.realtimegatewayservice.entity.Notification;
 import com.hashjosh.realtimegatewayservice.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     public NotificationResponseDTO createNotification(NotificationRequestDTO requestDTO) {
@@ -28,6 +30,10 @@ public class NotificationService {
                 .build();
 
         Notification savedNotification = notificationRepository.save(notification);
+
+        messagingTemplate.convertAndSend("/topic/application.notifications",
+                savedNotification);
+
         return NotificationResponseDTO.builder()
                 .id(savedNotification.getId())
                 .title(savedNotification.getTitle())
@@ -41,7 +47,7 @@ public class NotificationService {
 
         List<Notification> notifications = notificationRepository.findByRecipientOrRecipient("ALL", username);
 
-        List<NotificationResponseDTO> responses = notifications.stream().map(notification ->
+        return notifications.stream().map(notification ->
             NotificationResponseDTO.builder()
                 .id(notification.getId())
                 .title(notification.getTitle())
@@ -50,6 +56,5 @@ public class NotificationService {
                 .read(false)
                 .build()
         ).toList();
-        return responses;
     }
 }

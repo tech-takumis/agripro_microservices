@@ -54,6 +54,7 @@ trusted:
     - notification-service
     - communication-service
     - farmer-service
+    - realtime-service
     - application-service
     - pcic-service
     - document-service
