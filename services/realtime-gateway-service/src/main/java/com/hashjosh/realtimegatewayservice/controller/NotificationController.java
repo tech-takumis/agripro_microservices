@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,12 +26,29 @@ public class NotificationController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/{recipientId}")
     public ResponseEntity<List<NotificationResponseDTO>> getNotificationsForUser(
             @PathVariable("recipientId") String recipientId
     ) {
         List<NotificationResponseDTO> response = notificationService.getNotificationsForUser(recipientId);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{notificationId}/read")
+    public ResponseEntity<Void> markNotificationAsRead(
+            @PathVariable("notificationId") UUID notificationId
+    ) {
+        notificationService.markAsRead(notificationId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable("notificationId") UUID notificationId
+    ) {
+        notificationService.deleteNotification(notificationId);
+        return ResponseEntity.noContent().build();
     }
 
 }

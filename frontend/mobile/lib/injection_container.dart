@@ -11,6 +11,8 @@ import 'package:mobile/presentation/controllers/application_controller.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
 import 'data/services/message_service.dart';
 import 'data/services/websocket.dart';
+import 'data/services/notification_api.dart';
+import 'data/services/notification_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -60,11 +62,17 @@ Future<void> setupDependencies() async {
     PSGCService(psgcDio),
   );
 
+  // Register NotificationApiService with authenticated Dio instance
+  getIt.registerSingleton<NotificationApiService>(
+    NotificationApiService(authDio, baseUrl: 'http://localhost:9001/api/v1'),
+  );
+
   // Other services
   getIt.registerSingleton<LocationService>(LocationService());
   getIt.registerSingleton<WebSocketService>(WebSocketService());
   getIt.registerLazySingleton<DocumentService>(() => DocumentService());
   getIt.registerLazySingleton<MessageService>(() => MessageService());
+  getIt.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // Controllers
   getIt.registerSingleton<ApplicationController>(

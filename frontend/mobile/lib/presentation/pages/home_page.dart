@@ -11,9 +11,10 @@ import 'package:mobile/presentation/controllers/post_controller.dart';
 import 'package:mobile/presentation/widgets/loading_indicator.dart';
 import 'package:mobile/presentation/widgets/error_retry_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
-
+import 'package:mobile/features/messages/providers/notification_provider.dart';
 import 'application_page.dart';
 import 'contact_department_page.dart';
+import 'notification_page.dart';
 import 'profile_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -26,6 +27,13 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
   late PageController _pageController;
+
+  // Add helper method to get the appropriate icon
+  IconData _getNotificationIcon(int unreadCount) {
+    return unreadCount > 0
+        ? Icons.notifications_active_rounded
+        : Icons.notifications_rounded;
+  }
 
   @override
   void initState() {
@@ -46,6 +54,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final notificationState = ref.watch(notificationProvider);
+    final unreadCount = notificationState.unreadCount;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6FAF5),
@@ -64,6 +74,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         children: [
           _buildHomePage(),
           const ApplicationPage(),
+          const NotificationPage(),
           const ProfilePage(),
         ],
       ),
@@ -93,22 +104,62 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: CrystalNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-              _pageController.jumpToPage(index);
-            });
+            _pageController.jumpToPage(index);
           },
+          items: [
+            CrystalNavigationBarItem(
+              icon: Icons.home_rounded,
+            ),
+            CrystalNavigationBarItem(
+              icon: Icons.assignment_rounded,
+            ),
+            CrystalNavigationBarItem(
+              icon: _getNotificationIcon(unreadCount),
+            ),
+            CrystalNavigationBarItem(
+              icon: Icons.person_rounded,
+            ),
+          ],
           indicatorColor: const Color(0xFF2E7D32),
           unselectedItemColor: const Color(0xFF9E9E9E),
           selectedItemColor: const Color(0xFFFFEB3B),
           backgroundColor: Colors.white.withOpacity(0.95),
-          items: [
-            CrystalNavigationBarItem(icon: Icons.home_rounded),
-            CrystalNavigationBarItem(icon: Icons.assignment_rounded),
-            CrystalNavigationBarItem(icon: Icons.person_rounded),
-          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNotificationIconWithBadge(int count) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.notifications_rounded),
+        if (count > 0)
+          Positioned(
+            right: -6,
+            top: -6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                count > 99 ? '99+' : count.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -152,24 +203,24 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             )
           else if (postsAsync.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                child: Text(
-                  'No posts available yet 🌱',
-                  style: TextStyle(color: Colors.grey),
+              const SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    'No posts available yet 🌱',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final post = postsAsync[index];
+                    return _buildPostCard(post);
+                  },
+                  childCount: postsAsync.length,
                 ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final post = postsAsync[index];
-                  return _buildPostCard(post);
-                },
-                childCount: postsAsync.length,
-              ),
-            ),
           if (isLoading && postsAsync.isNotEmpty)
             const SliverToBoxAdapter(
               child: Padding(
@@ -182,113 +233,111 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-Widget _buildPostCard(PostResponse post) {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.green.withOpacity(0.15),
-          blurRadius: 5,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile row: user/admin + time
-          Row(
-            children: [
-              // Profile Icon
-              const CircleAvatar(
-                backgroundColor: Color(0xFFE8F5E9),
-                radius: 22,
-                child: Icon(Icons.person, color: Color(0xFF2E7D32)),
-              ),
-              const SizedBox(width: 10),
-
-              // User Information
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-// Poster name (default only)
-Text(
-  "Department of Agriculture",
-  style: const TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w600,
-    color: Colors.black87,
-  ),
-),
-
-                    // Date & Time
-                    Row(
-                      children: [
-                        Text(
-                          timeago.format(post.createdAt, locale: 'en'),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '• ${_formatExactTime(post.createdAt)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Post content
-          Text(
-            post.content,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black87,
-              height: 1.4,
-            ),
-          ),
-
-          // Post images (if any)
-          if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
-
-          const SizedBox(height: 10),
-          const Divider(thickness: 0.8),
-
-          // Reaction buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _reactionButton(Icons.thumb_up_alt_outlined, "React"),
-                _reactionButton(Icons.comment_outlined, "Comment"),
-              ],
-            ),
+  Widget _buildPostCard(PostResponse post) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.15),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-    ),
-  );
-}
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile row: user/admin + time
+            Row(
+              children: [
+                // Profile Icon
+                const CircleAvatar(
+                  backgroundColor: Color(0xFFE8F5E9),
+                  radius: 22,
+                  child: Icon(Icons.person, color: Color(0xFF2E7D32)),
+                ),
+                const SizedBox(width: 10),
 
+                // User Information
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Poster name
+                      const Text(
+                        "Department of Agriculture",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
 
+                      // Date & Time
+                      Row(
+                        children: [
+                          Text(
+                            timeago.format(post.createdAt, locale: 'en'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '• ${_formatExactTime(post.createdAt)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Post content
+            Text(
+              post.content,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+
+            // Post images (if any)
+            if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
+
+            const SizedBox(height: 10),
+            const Divider(thickness: 0.8),
+
+            // Reaction buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _reactionButton(Icons.thumb_up_alt_outlined, "React"),
+                  _reactionButton(Icons.comment_outlined, "Comment"),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _reactionButton(IconData icon, String label) {
     return InkWell(
@@ -345,10 +394,10 @@ Text(
       ),
     );
   }
-}
 
-String _formatExactTime(DateTime dateTime) {
-  final hours = dateTime.hour.toString().padLeft(2, '0');
-  final minutes = dateTime.minute.toString().padLeft(2, '0');
-  return '$hours:$minutes';
+  String _formatExactTime(DateTime dateTime) {
+    final hours = dateTime.hour.toString().padLeft(2, '0');
+    final minutes = dateTime.minute.toString().padLeft(2, '0');
+    return '$hours:$minutes';
+  }
 }
