@@ -82,16 +82,6 @@
                 <div class="w-10"></div>
             </div>
 
-            <!-- Page header -->
-            <header
-                v-if="$slots.header"
-                class="bg-white shadow-sm border-b border-none hidden md:block print:hidden">
-                <div
-                    class="px-4 py-4 sm:px-6 lg:px-8 max-w-full overflow-hidden">
-                    <slot name="header" />
-                </div>
-            </header>
-
             <!-- Mobile header -->
             <header
                 v-if="$slots.header"
