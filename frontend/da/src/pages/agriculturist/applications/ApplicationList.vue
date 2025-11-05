@@ -4,67 +4,109 @@
         :role-title="roleTitle"
         page-title="Applications"
     >
-        <template #header>
-            <div class="flex items-center justify-between print:hidden">
-                <h1 class="text-2xl font-semibold text-gray-900">Farmer Applications</h1>
-                <div class="flex items-center gap-3">
-                    <!-- Create Batch Icon Button -->
-                    <button class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 flex items-center" @click="showCreateBatchModal = true" title="Create Batch">
-                        <Plus class="w-5 h-5" />
-                    </button>
-                    <!-- Batch Select Filter -->
-                    <select v-model="selectedBatch" class="border rounded px-2 py-1 text-sm">
-                        <option value="">All Batches</option>
-                        <option v-for="batch in batches" :key="batch.id" :value="batch.id">
-                            {{ batch.name }}
-                        </option>
-                    </select>
+<div class="flex flex-col mb-4 sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
 
-                    <!-- Action buttons (shown when checkboxes are selected) -->
-                    <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
-                        <button
-                            class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            :disabled="verificationStore.isForwarding.value"
-                            @click="handleForwardToPCIC"
-                        >
-                            <Edit class="h-4 w-4 mr-2" />
-                            <span v-if="verificationStore.isForwarding.value">Forwarding...</span>
-                            <span v-else>Forward to PCIC</span>
-                        </button>
-                        <button
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            @click="handleDelete"
-                        >
-                            <Trash2 class="h-4 w-4 mr-2" />
-                            Delete ({{ selectedApplications.length }})
-                        </button>
-                    </div>
+  <!-- Title -->
+  <h1 class="text-2xl font-semibold text-gray-900">
+    Farmer Applications
+  </h1>
 
-                    <!-- Print button -->
-                    <button
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        @click="handlePrint"
-                    >
-                        <Printer class="h-4 w-4 mr-2" />
-                        Print
-                    </button>
+  <!-- Control Section -->
+  <div class="flex flex-wrap items-center gap-3">
 
-                    <!-- Filter button -->
-                    <button
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        @click="showFilterModal = true"
-                    >
-                        <Filter class="h-4 w-4 mr-2" />
-                        Filter
-                    </button>
-                </div>
-            </div>
-        </template>
+    <!-- Batch Management -->
+    <div class="flex items-center gap-2">
+      <!-- Create Batch -->
+      <button
+        class="flex items-center justify-center p-2 bg-green-600 text-white rounded-full shadow-sm hover:bg-gray-400 transition-colors"
+        @click="showCreateBatchModal = true"
+        title="Create Batch"
+      >
+        <Plus class="w-5 h-5" />
+      </button>
 
-        <!-- Loading state -->
-        <div v-if="loading" class="flex items-center justify-center py-12 print:hidden">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+<!-- Batch Dropdown -->
+<select
+  v-model="selectedBatch"
+  class="w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-400 focus:border-green-50 focus:outline-none transition"
+>
+  <option value="">All Batches</option>
+  <option
+    v-for="batch in batches"
+    :key="batch.id"
+    :value="batch.id"
+  >
+    {{ batch.name }}
+  </option>
+</select>
+</div>
+
+    <!-- Conditional Action Buttons -->
+    <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
+      <button
+        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        :disabled="verificationStore.isForwarding.value"
+        @click="handleForwardToPCIC"
+      >
+        <Edit class="h-4 w-4 mr-2" />
+        <span v-if="verificationStore.isForwarding.value">Forwarding...</span>
+        <span v-else>Forward to PCIC</span>
+      </button>
+
+      <button
+        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        @click="handleDelete"
+      >
+        <Trash2 class="h-4 w-4 mr-2" />
+        Delete ({{ selectedApplications.length }})
+      </button>
+    </div>
+
+    <!-- Utility Buttons -->
+    <div class="flex items-center gap-2">
+      <!-- Print -->
+      <button
+        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm 
+hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
+transition-all duration-300 ease-in-out"
+        @click="handlePrint"
+      >
+        <Printer class="h-4 w-4 mr-2" />
+        Print
+      </button>
+
+      <!-- Filter -->
+      <button
+        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm 
+hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
+transition-all duration-300 ease-in-out"
+        @click="showFilterModal = true"
+      >
+        <Filter class="h-4 w-4 mr-2" />
+        Filter
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Loading state -->
+<div 
+  v-if="loading" 
+  class="flex flex-col items-center justify-center min-h-[200px] space-y-4 print:hidden"
+>
+  <!-- Spinner -->
+  <div class="relative">
+    <div class="h-14 w-14 rounded-full border-4 border-gray-200"></div>
+    <div class="absolute top-0 left-0 h-14 w-14 rounded-full border-4 border-green-600 border-t-transparent animate-spin"></div>
+  </div>
+
+  <!-- Loading Label -->
+  <p class="text-gray-600 font-medium tracking-wide">
+    Loading data…
+  </p>
+</div>
+
 
         <!-- Error state -->
         <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 print:hidden">
@@ -75,13 +117,13 @@
         <div v-else class="bg-white shadow-sm rounded-lg overflow-hidden print:hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-100">
                     <tr>
                         <th scope="col" class="w-12 px-6 py-3">
                             <input
                                 type="checkbox"
                                 :checked="isAllSelected"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                class="h-4 w-4 text-green-600 focus:ring-green-400 focus:border-green-50 border-gray-300 rounded"
                                 @change="toggleSelectAll"
                             />
                         </th>

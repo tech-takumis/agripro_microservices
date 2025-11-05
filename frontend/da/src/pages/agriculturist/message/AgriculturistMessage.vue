@@ -10,36 +10,27 @@
       </div>
     </template>
 
-    <!-- 💬 Main Container -->
-    <div
-      class="flex flex-col md:flex-row bg-white rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-10rem)] border border-gray-100"
-    >
-      <!-- 💭 Chat Interface -->
+    <!-- 💬 Main Wrapper -->
+    <div class="flex flex-col md:flex-row gap-4 h-[calc(200vh-10rem)]">
+    
+      <!-- 💭 Chat Messages Container -->
       <div
-        class="flex-1 flex flex-col min-w-0 order-2 md:order-1 transition-all duration-300"
-        :class="{ 'hidden md:flex': !selectedFarmer && isMobile }"
+        class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
       >
-        <!-- 🌤️ Empty State -->
-        <div
-          v-if="!selectedFarmer"
-          class="flex-1 flex items-center justify-center bg-gray-50"
-        >
+        <div v-if="!selectedFarmer" class="flex-1 flex items-center justify-center bg-white">
           <div class="text-center space-y-3">
             <User class="h-20 w-20 text-gray-300 mx-auto" />
-            <h3 class="text-xl font-medium text-gray-900">
-              No conversation selected
-            </h3>
+            <h3 class="text-xl font-medium text-gray-900">No conversation selected</h3>
             <p class="text-gray-500 text-sm">
               Choose a farmer from the list to start messaging
             </p>
           </div>
         </div>
 
-        <!-- 🧑‍🌾 Chat Section -->
         <template v-else>
           <!-- Header -->
           <div
-            class="bg-white border-b border-gray-200 p-4 md:p-5 flex items-center gap-4 sticky top-0 z-10 shadow-sm"
+            class="bg-white border-b border-gray-200 p-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm"
           >
             <button
               v-if="isMobile"
@@ -49,7 +40,6 @@
               <ChevronLeft class="h-6 w-6 text-gray-600" />
             </button>
 
-            <!-- Avatar + Online Status -->
             <div class="relative">
               <div
                 class="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-medium text-lg"
@@ -62,7 +52,6 @@
               ></span>
             </div>
 
-            <!-- Farmer Info -->
             <div>
               <h3 class="text-lg font-semibold text-gray-900 leading-tight">
                 {{ selectedFarmerName }}
@@ -74,19 +63,15 @@
             </div>
           </div>
 
-          <!-- Messages -->
+          <!-- Message List -->
           <div
             ref="messagesContainer"
-            class="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50 scroll-smooth"
+            class="flex-1 overflow-y-auto p-5 space-y-4 bg-white scroll-smooth"
           >
-            <div
-              v-if="messages.length === 0"
-              class="text-center text-gray-500 mt-8"
-            >
+            <div v-if="messages.length === 0" class="text-center text-gray-500 mt-8">
               No messages yet. Start the conversation!
             </div>
 
-            <!-- 💬 Message Bubbles -->
             <div
               v-for="message in messages"
               :key="message.id"
@@ -104,28 +89,6 @@
                 ]"
               >
                 <p class="text-sm leading-relaxed">{{ message.text }}</p>
-
-                <!-- Attachments -->
-                <div
-                  v-if="message.attachments?.length"
-                  class="mt-2 flex flex-wrap gap-2"
-                >
-                  <div
-                    v-for="(attachment, index) in message.attachments"
-                    :key="attachment.documentId"
-                    @click="openAttachment(attachment.url)"
-                    class="h-24 w-24 bg-gray-100 hover:bg-gray-200 flex items-center justify-center rounded-lg cursor-pointer transition"
-                  >
-                    <img
-                      v-if="attachment.url"
-                      :src="attachment.url"
-                      class="h-full w-full object-cover rounded-lg"
-                      :alt="'Attachment ' + (index + 1)"
-                    />
-                    <Paperclip v-else class="h-5 w-5 text-gray-400" />
-                  </div>
-                </div>
-
                 <p
                   :class="[
                     'text-xs mt-1',
@@ -138,49 +101,11 @@
             </div>
           </div>
 
-          <!-- 🧾 File Preview -->
-          <div
-            v-if="localFiles.length > 0"
-            class="bg-gray-50 border-t border-gray-200 px-4 py-3"
-          >
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="(file, index) in localFiles"
-                :key="index"
-                class="group relative flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 hover:border-green-400 transition"
-              >
-                <img
-                  v-if="file.preview"
-                  :src="file.preview"
-                  class="h-8 w-8 object-cover rounded"
-                  :alt="file.name"
-                />
-                <Paperclip
-                  v-else
-                  class="h-4 w-4 text-gray-400 flex-shrink-0"
-                />
-                <span
-                  class="text-sm text-gray-700 truncate max-w-[150px] md:max-w-[200px]"
-                >
-                  {{ file.name }}
-                </span>
-                <button
-                  class="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
-                  type="button"
-                  @click="removeFile(index)"
-                >
-                  <X class="h-4 w-4 text-gray-500" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ✉️ Input Section -->
-          <div class="bg-white border-t border-gray-200 p-4 md:p-5">
+          <!-- Input Section -->
+          <div class="bg-white border-t border-gray-200 p-4">
             <form @submit.prevent="sendChatMessage" class="flex gap-3">
-              <!-- File Upload -->
               <label
-                class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-500 transition cursor-pointer flex items-center justify-center"
+                class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-400 transition cursor-pointer flex items-center justify-center"
               >
                 <Paperclip class="h-5 w-5" />
                 <input
@@ -193,7 +118,6 @@
                 />
               </label>
 
-              <!-- Input Field -->
               <input
                 v-model="messageInput"
                 type="text"
@@ -201,7 +125,6 @@
                 class="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
 
-              <!-- Send Button -->
               <button
                 type="submit"
                 :disabled="isSendDisabled"
@@ -214,15 +137,13 @@
         </template>
       </div>
 
-      <!-- 👨‍🌾 Farmer List Sidebar -->
+       
+      <!-- 🧑‍🌾 Farmer List Sidebar -->
       <div
-        class="border-b md:border-l md:border-b-0 border-gray-200 flex flex-col order-1 md:order-2 md:w-80 lg:w-96 bg-gray-50"
-        :class="{ 'hidden md:flex': selectedFarmer && isMobile }"
+        class="md:w-80 lg:w-96 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
       >
-        <!-- Search Bar -->
-        <div
-          class="p-4 md:p-6 border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm"
-        >
+        <!-- 🔍 Search Bar -->
+        <div class="p-4 border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
           <div class="relative">
             <Search
               class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
@@ -236,18 +157,12 @@
           </div>
         </div>
 
-        <!-- Farmer List -->
+        <!-- 👨‍🌾 Farmer List -->
         <div class="flex-1 overflow-y-auto">
-          <div
-            v-if="farmerStore.isLoading"
-            class="p-4 text-center text-gray-500"
-          >
+          <div v-if="farmerStore.isLoading" class="p-4 text-center text-gray-500">
             Loading farmers...
           </div>
-          <div
-            v-else-if="filteredFarmers.length === 0"
-            class="p-4 text-center text-gray-500"
-          >
+          <div v-else-if="filteredFarmers.length === 0" class="p-4 text-center text-gray-500">
             No farmers found
           </div>
           <div v-else>
@@ -260,7 +175,7 @@
                 selectedFarmer?.id === farmer.id ? 'bg-green-100' : '',
               ]"
             >
-              <!-- Avatar + Online Dot -->
+              <!-- Avatar -->
               <div class="relative">
                 <div
                   class="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-medium text-lg"
@@ -273,16 +188,13 @@
                 ></span>
               </div>
 
-              <!-- Info -->
+              <!-- Farmer Info -->
               <div class="flex-1 min-w-0">
                 <p class="font-semibold text-gray-900 truncate">
                   {{ farmer.firstName }} {{ farmer.lastName }}
                 </p>
                 <p class="text-xs text-gray-500 truncate">
                   {{ farmer.username || "No RSBSA" }}
-                </p>
-                <p class="text-xs text-gray-500 truncate">
-                  {{ farmer.email || "No email" }}
                 </p>
               </div>
             </button>

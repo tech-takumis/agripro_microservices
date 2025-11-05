@@ -1,30 +1,12 @@
 <template>
-  <div class="bg-gray-100 rounded-2xl border border-none p-6 space-y-6 relative">
-    <!-- Sticky Header (changes text when scrolling) -->
-    <div 
-      ref="stickyHeader"
-      class="sticky-header sticky top-0 z-10 bg-gray-100 pb-4 mb-4 border-b border-gray-100 transition-all duration-200"
-      :class="{ 'shadow-sm': isScrolledPastForm }"
-    >
-      <div class="flex items-center space-x-3">
-        <div class="p-2 bg-green-50 rounded-xl">
-          <FileText class="h-6 w-6 text-green-600" />
-        </div>
-        <h3 class="text-lg font-semibold text-green-700 transition-opacity duration-200" :class="{ 'opacity-0': isScrolledPastForm }">
-          Create a Post
-        </h3>
-        <h3 class="text-lg font-semibold text-green-700 absolute left-[3.5rem] transition-opacity duration-200" :class="{ 'opacity-100': isScrolledPastForm, 'opacity-0': !isScrolledPastForm }">
-          Posts
-        </h3>
-      </div>
-    </div>
+  <div class="bg-gray-100 rounded-2xl border border-none pb-4 space-y-6 relative">
 
       <!-- 🧾 Post Input Card -->
-      <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm">
+      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
         <!-- Post Text -->
         <textarea
           v-model="newPostContent"
-          placeholder="Share your thoughts..."
+          placeholder="Write Post..."
           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm resize-none transition-all"
           rows="3"
         ></textarea>

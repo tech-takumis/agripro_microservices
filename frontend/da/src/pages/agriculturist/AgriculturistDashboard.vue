@@ -8,7 +8,7 @@
             <!-- Fixed Navbar (does not scroll) -->
             <nav
                 class="flex-shrink-0 bg-transparent border-0 shadow-none px-2 lg:px-4 py-3 mb-4 flex items-center justify-between">
-                <h4 class="text-3xl font-bold text-black-700">Dashboard</h4>
+                <h4 class="text-3xl font-bold text-gray-700">Dashboard</h4>
                 <!-- Right Side: Notifications + Profile -->
                 <div class="flex items-center space-x-6">
                     <!-- Notifications -->
@@ -326,8 +326,8 @@
                                                 ? 'text-green-700 bg-green-50'
                                                 : programsChange < 0
                                                 ? 'text-red-700 bg-red-50'
-                                                : 'text-gray-700 bg-gray-50',
-                                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                                                : 'text-gray-800 bg-gray-50',
+                                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-600',
                                         ]">
                                         <ArrowUpRight
                                             v-if="programsChange > 0"
@@ -344,7 +344,7 @@
                                     class="mt-2 flex items-center justify-between">
                                     <div class="p-2 rounded-lg bg-green-600">
                                         <Users
-                                            class="h-7 w-7 text-green-900 bg-green-600" />
+                                            class="h-7 w-7 text-green-800 bg-green-600" />
                                     </div>
                                     <p
                                         class="text-3xl font-semibold text-white">
