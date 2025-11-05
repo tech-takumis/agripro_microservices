@@ -7,9 +7,8 @@ import 'package:mobile/presentation/widgets/message_input_field.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mobile/data/models/message_request_dto.dart';
-
-import '../../data/models/designated_response.dart';
-import '../../data/services/message_api.dart';
+import 'package:mobile/data/models/designated_response.dart';
+import 'package:mobile/data/services/message_api.dart';
 
 class ContactDepartmentPage extends ConsumerStatefulWidget {
   final String serviceType;

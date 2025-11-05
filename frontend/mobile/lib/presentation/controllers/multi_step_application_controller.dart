@@ -1,13 +1,11 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/presentation/controllers/auth_controller.dart'; // Add this import
+import 'package:mobile/presentation/controllers/auth_controller.dart'; 
 import 'package:mobile/data/services/storage_service.dart';
-import 'package:geolocator/geolocator.dart'; // Add this import
-
+import 'package:geolocator/geolocator.dart'; 
 import 'package:mobile/data/models/application_data.dart';
 import 'package:mobile/data/models/application_submission.dart';
 import 'package:mobile/data/services/application_api_service.dart';
-import 'package:mobile/data/services/document_service.dart';
 import 'package:mobile/injection_container.dart';
 
 
@@ -293,7 +291,7 @@ class MultiStepApplicationController {
           if (field.fieldType == 'SIGNATURE' && field.required) {
             final file = _fileValues[field.key];
             if (file == null) {
-              _errorMessage = "Signature field '${field.fieldName ?? field.key}' is required.";
+              _errorMessage = "Signature field '${field.fieldName}' is required.";
               return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
             }
           }
