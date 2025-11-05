@@ -68,6 +68,7 @@ trusted:
     - agriculture-service
     - application-service
     - verification-service
+    - realtime-service
     - notification-service
     - communication-service
     - farmer-service

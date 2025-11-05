@@ -32,14 +32,8 @@ spring:
           applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
           inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
           policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
-          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
           verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
-          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
-          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
-          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
-
-
-
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
     consumer:
       group-id: agriculture-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -49,7 +43,11 @@ spring:
         spring.json.type.mapping: >
           applicationSubmittedEvent:com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent,
           applicationForwarded:com.hashjosh.kafkacommon.application.ApplicationForwarded,
-          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived
+          applicationReceived:com.hashjosh.kafkacommon.application.ApplicationReceived,
+          inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
+          policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
+          verificationStartedEvent:com.hashjosh.kafkacommon.application.VerificationStartedEvent,
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
 
 token:
   secret: lJ43fZtwCfh2qNM0uFx3mHSYGh/qrfXUtrM4Vl/kiZE=

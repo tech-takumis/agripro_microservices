@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import axios from '@/lib/axios';
 import { ref, computed } from 'vue';
 import { router } from '@/router';
-import { useWebSocketStore } from '@/stores/websocket'; 
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -83,10 +82,12 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const response = await axios.get('/api/v1/agriculture/auth/me');
             userData.value = response.data;
+            console.log('Fetched current user:', userData.value);
             normalizeUserData();
             isAuthenticated.value = true;
             return response.data;
         } catch (error) {
+            isAuthenticated.value = false
             console.error('Failed to fetch current user:', error);
             reset();
             throw error;

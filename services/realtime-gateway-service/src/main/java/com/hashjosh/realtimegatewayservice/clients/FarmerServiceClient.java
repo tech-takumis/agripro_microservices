@@ -1,12 +1,8 @@
 package com.hashjosh.realtimegatewayservice.clients;
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -16,7 +12,7 @@ public class FarmerServiceClient {
 
     public FarmerServiceClient(RestClient.Builder builder){
         this.restClient = builder
-                .baseUrl("http://localhost:8020/api/v1/farmers")
+                .baseUrl("http://localhost:9020/api/v1/farmer")
                 .build();
     }
 
@@ -27,14 +23,8 @@ public class FarmerServiceClient {
         return restClient.get()
                 .uri("/{farmer-id}", farmerId)
                 .header("X-Internal-Service", applicationName)
+                .header("X-User-Id", String.valueOf(farmerId))
                 .retrieve()
                 .body(FarmerResponse.class);
-    }
-
-    public List<FarmerResponse> getAllFarmers() {
-        return restClient.get()
-                .header("X-Internal-Service", applicationName)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<FarmerResponse>>() {});
     }
 }

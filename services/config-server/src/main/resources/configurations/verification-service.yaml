@@ -59,6 +59,7 @@ token:
 trusted:
   internal-service-ids:
     - agriculture-service
+    - realtime-service
     - verification-service
     - notification-service
     - communication-service

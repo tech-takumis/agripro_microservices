@@ -91,11 +91,11 @@ public class ApplicationService {
             Application application = applicationMapper.toEntity(submission, applicationType);
             Application savedApplication = applicationRepository.save(application);
 
-            applicationProducer.publishEvent("application-lifecycle",
+            applicationProducer.publishEvent("application-submitted",
                     ApplicationSubmittedEvent.builder()
                             .submissionId(savedApplication.getId())
                             .provider(applicationType.getProvider().getName())
-                            .userId(UUID.fromString(userDetails.getUserId()))
+                            .userId(savedApplication.getUserId())
                             .submittedAt(LocalDateTime.now())
                             .build()
             );

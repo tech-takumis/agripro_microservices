@@ -24,7 +24,7 @@ public class ApplicationConsumer {
     private final VerificationProducer publisher;
     private final BatchRepository batchRepository;
 
-    @KafkaListener(topics = "application-lifecycle", groupId = "verification-group")
+    @KafkaListener(topics = "application-submitted", groupId = "verification-group")
     public void listen(@Payload ApplicationSubmittedEvent event) {
         handleApplicationSubmittedEvent(event);
     }
@@ -58,7 +58,7 @@ public class ApplicationConsumer {
                         .build();
                 verificationRecordRepository.save(record);
 
-                publisher.publishEvent("application-lifecycle",
+                publisher.publishEvent("application-received",
                         ApplicationReceived.builder()
                                 .submissionId(event.getSubmissionId())
                                 .provider(event.getProvider())

@@ -31,6 +31,9 @@ public class Notification {
     @Column(name = "status", length = 20)
     private String status; // e.g., PENDING, SENT, FAILED
 
+    @Column(name = "is_read")
+    private boolean read;
+
     @Column(name = "title", nullable = false, length = 100)
     private String title; // Title or subject of the notification
 

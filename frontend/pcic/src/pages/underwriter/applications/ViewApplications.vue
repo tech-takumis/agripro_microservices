@@ -633,7 +633,6 @@ import {
   Info, Users, MapPin, Leaf, CheckCircle2, Clock, XCircle, Layers, Calendar, UserCheck, User, Trash2 
 } from "lucide-vue-next";
 
-const router = useRouter()
 const underwriterNavigation = UNDERWRITER_NAVIGATION
 
 // State

@@ -31,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TrustedConfig trustedConfig;
 
     private static final String INTERNAL_SERVICE_HEADER = "X-Internal-Service";
+    private static final String USER_ID_HEADER = "X-User-Id";
     private static final Set<String> PUBLIC_ENDPOINTS = Set.of(
             "/api/v1/farmer/auth/login",
             "/api/v1/farmer/auth/registration"
@@ -52,6 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Check for internal service header
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
+        String userIdHeader = request.getHeader(USER_ID_HEADER);
+        UUID userUUIdHeader = UUID.fromString(userIdHeader);
         log.debug("X-Internal-Service header: {}, Trusted service IDs: {}", internalServiceHeader, trustedConfig.getInternalServiceIds());
 
         if (internalServiceHeader != null) {
@@ -59,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("Internal service request from {} to {}", internalServiceHeader, requestUri);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                new CustomUserDetails(internalServiceHeader, Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))),
+                                new CustomUserDetails(internalServiceHeader,userUUIdHeader, Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))),
                                 null,
                                 Set.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
                         );
