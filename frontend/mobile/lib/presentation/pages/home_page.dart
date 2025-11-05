@@ -31,11 +31,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    
-    // Initialize timeago messages
     timeago.setLocaleMessages('en', timeago.EnMessages());
-    
-    // Fetch posts when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(postControllerProvider.notifier).fetchPosts();
     });
@@ -52,7 +48,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF6FAF5),
       extendBody: true,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 0,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -65,13 +68,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF2E7D32),
         onPressed: () async {
           final token = authState.token;
           final userId = authState.userId;
           if (token == null || userId == null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Authentication required. Please log in again.')),
+              const SnackBar(content: Text('Please log in again.')),
             );
             return;
           }
@@ -83,7 +86,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           );
         },
-        child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+        child: const Icon(Icons.chat_rounded, color: Colors.white),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
@@ -95,21 +98,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               _pageController.jumpToPage(index);
             });
           },
-          indicatorColor: Theme.of(context).primaryColor,
-          unselectedItemColor: const Color.fromARGB(255, 24, 171, 46),
-          selectedItemColor: Theme.of(context).primaryColor,
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255).withAlpha(240),
+          indicatorColor: const Color(0xFF2E7D32),
+          unselectedItemColor: const Color(0xFF9E9E9E),
+          selectedItemColor: const Color(0xFFFFEB3B),
+          backgroundColor: Colors.white.withOpacity(0.95),
           items: [
-            CrystalNavigationBarItem(icon: Icons.home_outlined),
-            CrystalNavigationBarItem(icon: Icons.description_outlined),
-            CrystalNavigationBarItem(icon: Icons.person_outline),
+            CrystalNavigationBarItem(icon: Icons.home_rounded),
+            CrystalNavigationBarItem(icon: Icons.assignment_rounded),
+            CrystalNavigationBarItem(icon: Icons.person_rounded),
           ],
         ),
       ),
     );
   }
-
-  // Removed duplicate initState
 
   Widget _buildHomePage() {
     final postsAsync = ref.watch(postsProvider);
@@ -118,12 +119,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     final postController = ref.read(postControllerProvider.notifier);
 
     return RefreshIndicator(
+      color: const Color(0xFF2E7D32),
       onRefresh: () => postController.fetchPosts(),
       child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            title: const Text('Agriculturist Posts'),
-            floating: true,
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "News Feed",
+                  style: TextStyle(
+                    color: Color(0xFF2E7D32),
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ),
           if (isLoading && postsAsync.isEmpty)
             const SliverFillRemaining(
@@ -139,7 +154,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           else if (postsAsync.isEmpty)
             const SliverFillRemaining(
               child: Center(
-                child: Text('No posts yet. Be the first to post!'),
+                child: Text(
+                  'No posts available yet 🌱',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
             )
           else
@@ -156,7 +174,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32))),
               ),
             ),
         ],
@@ -164,122 +182,173 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildPostCard(PostResponse post) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+Widget _buildPostCard(PostResponse post) {
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16.0),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.green.withOpacity(0.15),
+          blurRadius: 5,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Post Header
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              child: Text(
-                post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white),
+          // Profile row: user/admin + time
+          Row(
+            children: [
+              // Profile Icon
+              const CircleAvatar(
+                backgroundColor: Color(0xFFE8F5E9),
+                radius: 22,
+                child: Icon(Icons.person, color: Color(0xFF2E7D32)),
+              ),
+              const SizedBox(width: 10),
+
+              // User Information
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+// Poster name (default only)
+Text(
+  "Department of Agriculture",
+  style: const TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: Colors.black87,
+  ),
+),
+
+                    // Date & Time
+                    Row(
+                      children: [
+                        Text(
+                          timeago.format(post.createdAt, locale: 'en'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '• ${_formatExactTime(post.createdAt)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Post content
+          Text(
+            post.content,
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black87,
+              height: 1.4,
+            ),
+          ),
+
+          // Post images (if any)
+          if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
+
+          const SizedBox(height: 10),
+          const Divider(thickness: 0.8),
+
+          // Reaction buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _reactionButton(Icons.thumb_up_alt_outlined, "React"),
+                _reactionButton(Icons.comment_outlined, "Comment"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+  Widget _reactionButton(IconData icon, String label) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey[600], size: 20),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            title: Text(
-              post.authorName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(timeago.format(post.createdAt)),
-            trailing: PopupMenuButton<String>(
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'report',
-                  child: Text('Report Post'),
-                ),
-              ],
-              onSelected: (value) {
-                // Handle menu item selection
-              },
-            ),
-          ),
-          
-          // Post Content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Text(post.content),
-          ),
-          
-          // Image Carousel
-          if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
-        ],
+          ],
+        ),
       ),
     );
   }
-  
-  Widget _buildImageCarousel(List<String> imageUrls) {
-    // Debug: Print the received image URLs
-    debugPrint('Image URLs received: $imageUrls');
 
+  Widget _buildImageCarousel(List<String> imageUrls) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: carousel.CarouselSlider(
         options: carousel.CarouselOptions(
-          height: 250.0,
+          height: 220.0,
           autoPlay: imageUrls.length > 1,
           enlargeCenterPage: true,
-          viewportFraction: 1.0,
-          aspectRatio: 1.0,
-          onPageChanged: (index, reason) {
-            debugPrint('Page changed to index $index');
-          },
+          viewportFraction: 0.95,
+          aspectRatio: 16 / 9,
         ),
-        items: imageUrls.map((imageUrl) {
-          // Use the original URL as is, including all query parameters
-          debugPrint('Using image URL: $imageUrl');
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                maxHeightDiskCache: 1000, // Increase cache size if needed
-                memCacheHeight: 1000, // Cache higher resolution images
-                httpHeaders: const {
-                  'Accept': 'image/*',
-                },
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
+        items: imageUrls.map((url) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12.0),
+            child: CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              placeholder: (context, _) => Container(
+                color: const Color(0xFFE8F5E9),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF2E7D32), strokeWidth: 2),
                 ),
-                errorWidget: (context, url, error) {
-                  debugPrint('Error loading image: $error\nURL: $url');
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 30),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Failed to load image',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
               ),
+              errorWidget: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.redAccent),
             ),
           );
         }).toList(),
       ),
     );
   }
+}
+
+String _formatExactTime(DateTime dateTime) {
+  final hours = dateTime.hour.toString().padLeft(2, '0');
+  final minutes = dateTime.minute.toString().padLeft(2, '0');
+  return '$hours:$minutes';
 }

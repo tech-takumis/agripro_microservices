@@ -1,10 +1,10 @@
 <template>
     <div class="bg-white rounded-2xl border border-gray-100 p-6">
         <div class="flex items-center space-x-3 mb-6">
-            <div class="p-2 bg-green-50 rounded-lg">
-                <Briefcase class="h-6 w-6 text-green-600" />
+            <div class="p-2 bg-yellow-50 rounded-lg">
+                <Briefcase class="h-6 w-6 text-yellow-500" />
             </div>
-            <h3 class="text-lg font-semibold text-green-700">Latest Programs</h3>
+            <h3 class="text-lg font-semibold text-yellow-500">Latest Programs</h3>
         </div>
 
         <div class="space-y-3">
