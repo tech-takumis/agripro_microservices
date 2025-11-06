@@ -18,7 +18,7 @@ public class InvitationService {
 
     private final InvitationTokenRepository invitationTokenRepository;
     private final InvitationMapper invitationMapper;
-    private AgricultureProducer producer;
+    private final AgricultureProducer producer;
 
     public void sendInvitationEmail(String email){
         String token = generateInvitationToken();
@@ -32,7 +32,7 @@ public class InvitationService {
                 .expiryDate(savedToken.getExpiryDate())
                 .build();
 
-        producer.publishEvent("agriculture-events",event);
+        producer.publishEvent("agriculture-invitations",event);
     }
 
 
@@ -43,7 +43,7 @@ public class InvitationService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
-    public InvitationToken validateInvitationToken(String token){
+    public void validateInvitationToken(String token){
         InvitationToken invitationToken = invitationTokenRepository.findByToken(token)
                 .orElseThrow(() -> ApiException.notFound("Invalid invitation token"));
 
@@ -55,7 +55,6 @@ public class InvitationService {
             throw ApiException.badRequest("Invitation token has already been used");
         }
 
-        return invitationToken;
     }
 
     public void markAsUsed(String token){

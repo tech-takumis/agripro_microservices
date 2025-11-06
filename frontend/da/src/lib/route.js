@@ -40,16 +40,6 @@ export const ADMIN_ROUTES = [
         }
     },
     {
-        path: '/admin/staff/register',
-        name: 'admin-register-staff',
-        component: () => import('@/pages/admin/staff/RegisterStaff.vue'),
-        meta: {
-            title: 'Register New Staff',
-            guard: 'auth',
-            role: 'ADMIN'
-        }
-    },
-    {
         path: '/admin/roles',
         name: 'admin-roles-permissions',
         component: () => import('@/pages/admin/roles/RolesPermissions.vue'),

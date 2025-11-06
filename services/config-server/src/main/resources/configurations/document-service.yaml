@@ -2,8 +2,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 200MB
-      max-request-size: 200MB
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
     hikari:
       maximum-pool-size: 10
@@ -31,7 +31,7 @@ minio:
 
 app:
   file:
-    max-file-size: 5242880  # 5MB in bytes
+    max-file-size: 20971520  # 20MB in bytes
     allowed-file-types:
       - application/pdf
       - image/jpeg

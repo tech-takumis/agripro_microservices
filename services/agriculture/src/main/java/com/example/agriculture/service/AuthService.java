@@ -55,23 +55,21 @@ public class AuthService {
 
         String username = generateSequentialUsername();
 
-        String password = generateUniquePassword();
-
-        Agriculture agriculture = userMapper.toUserEntity(request, roles, username,password);
+        Agriculture agriculture = userMapper.toUserEntity(request, roles, username);
         Agriculture registeredAgriculture = agricultureRepository.save(agriculture);
 
         AgricultureRegistrationContract agricultureRegistrationContract =
                 AgricultureRegistrationContract.builder()
                         .userId(registeredAgriculture.getId())
                         .username(username)
-                        .password(password)
+                        .password(request.getPassword())
                         .firstName(registeredAgriculture.getFirstName())
                         .lastName(registeredAgriculture.getLastName())
                         .email(registeredAgriculture.getEmail())
                         .phoneNumber(registeredAgriculture.getPhoneNumber())
                         .build();
 
-        agricultureProducer.publishEvent("agriculture-events",agricultureRegistrationContract);
+        agricultureProducer.publishEvent("agriculture-registration",agricultureRegistrationContract);
 
         return registeredAgriculture;
     }

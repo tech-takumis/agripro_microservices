@@ -79,13 +79,14 @@
                 <Trash2 class="h-4 w-4 mr-2" />
                 Delete Selected ({{ selectedUsers.length }})
               </button>
-              <router-link
-                to="/admin/staff/register"
+              <!-- Add New User Button triggers modal -->
+              <button
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                @click="showInviteModal = true"
               >
                 <UserPlus class="h-4 w-4 mr-2" />
                 Add New User
-              </router-link>
+              </button>
             </div>
           </div>
         </div>
@@ -214,6 +215,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Add New User Modal -->
+    <template v-if="showInviteModal">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h2 class="text-lg font-semibold mb-2 text-purple-700">Invite New User</h2>
+          <label class="block mb-2 text-sm font-medium text-gray-700">Email Address</label>
+          <input v-model="inviteEmail" type="email" placeholder="Enter staff email" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" />
+          <div v-if="inviteError" class="text-red-600 text-sm mb-2">{{ inviteError }}</div>
+          <div v-if="inviteSuccess" class="text-green-600 text-sm mb-2">{{ inviteSuccess }}</div>
+          <div class="flex justify-end gap-2">
+            <button @click="showInviteModal = false" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+            <button @click="handleInvite" :disabled="inviteLoading" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50">{{ inviteLoading ? 'Inviting...' : 'Send Invite' }}</button>
+          </div>
+        </div>
+      </div>
+    </template>
   </AuthenticatedLayout>
 </template>
 
@@ -227,17 +245,24 @@ import {
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { useAgricultureStore } from '@/stores/agriculture'
 import { useRoleStore } from '@/stores/role'
+import { useAuthStore } from '@/stores/auth'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const router = useRouter()
 const userStore = useAgricultureStore()
 const roleStore = useRoleStore()
+const authStore = useAuthStore()
 const adminNavigation = ADMIN_NAVIGATION
 
 // Reactive variables
 const searchTerm = ref('')
 const selectedRole = ref('')
 const isInitialized = ref(false)
+const showInviteModal = ref(false)
+const inviteEmail = ref('')
+const inviteLoading = ref(false)
+const inviteError = ref('')
+const inviteSuccess = ref('')
 
 // Computed properties
 const roleOptions = computed(() => {
@@ -403,6 +428,26 @@ const deleteSelectedUsers = async () => {
       console.error('Error deleting users:', error)
       alert('An error occurred while deleting the selected users.')
     }
+  }
+}
+
+// Invite new user function
+const handleInvite = async () => {
+  inviteError.value = ''
+  inviteSuccess.value = ''
+  inviteLoading.value = true
+  try {
+    const result = await authStore.inviteStaff(inviteEmail.value)
+    if (result.success) {
+      inviteSuccess.value = 'Invitation sent successfully!'
+      inviteEmail.value = ''
+    } else {
+      inviteError.value = result.error || 'Failed to send invitation.'
+    }
+  } catch (err) {
+    inviteError.value = err.message || 'Failed to send invitation.'
+  } finally {
+    inviteLoading.value = false
   }
 }
 

@@ -16,7 +16,16 @@ public class KafkaConfig {
     @Bean
     public NewTopic agricultureTopic(){
         return TopicBuilder
-                .name("agriculture-events")
+                .name("agriculture-registration")
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic invitationTopic(){
+        return TopicBuilder
+                .name("agriculture-invitations")
                 .partitions(1)
                 .replicas(1)
                 .build();

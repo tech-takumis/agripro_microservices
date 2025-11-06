@@ -10,7 +10,7 @@ import java.util.Set;
 @ConfigurationProperties(prefix = "app.file")
 @Data
 public class FileUploadProperties {
-    private long maxFileSize = 5 * 1024 * 1024; // 5MB default
+    private long maxFileSize = 20 * 1024 * 1024; // 20MB default
     private Set<String> allowedFileTypes = Set.of(
         "application/pdf",
         "image/jpeg",
