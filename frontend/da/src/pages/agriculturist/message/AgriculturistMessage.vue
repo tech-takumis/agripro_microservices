@@ -125,11 +125,11 @@
                     </button>
 
                     <!-- Image Preview -->
-                    <div v-if="isImageFile(attachment.url)" class="max-w-sm">
+                    <div v-if="isImageFile(attachment.url)" class="w-64 h-48">
                       <img
                         :src="attachment.url"
                         :alt="`Attachment ${index + 1}`"
-                        class="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition border"
+                        class="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition border shadow-sm"
                         @click="openImageModal(attachment.url, message)"
                         @error="handleImageError"
                       />
@@ -182,11 +182,11 @@
                       v-if="isImageFile(fileItem.file)"
                       :src="getFilePreviewUrl(fileItem.file)"
                       alt="Preview"
-                      class="w-10 h-10 object-cover rounded"
+                      class="w-12 h-12 object-cover rounded border"
                     />
                     <div
                       v-else
-                      class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center"
+                      class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center border"
                     >
                       <Paperclip class="h-4 w-4 text-gray-600" />
                     </div>
@@ -429,13 +429,13 @@ const messages = computed(() => messageStore.messages)
 
 // Add disabled state for send button with debug logging
 const isSendDisabled = computed(() => {
-    const isEmptyMessage = messageInput.value.trim() === ''
-    const hasNoFiles = localFiles.value.length === 0
-    const isDisabled = (isEmptyMessage && hasNoFiles) || isUploading.value
-    
+    const hasText = messageInput.value.trim() !== ''
+    const hasFiles = localFiles.value.length > 0
+    const isDisabled = (!hasText && !hasFiles) || isUploading.value
+
     console.log('[MessageComponent] Send button state:', {
-        hasText: !isEmptyMessage,
-        hasFiles: !hasNoFiles,
+        hasText,
+        hasFiles,
         isUploading: isUploading.value,
         isDisabled
     })
@@ -552,13 +552,22 @@ const sendChatMessage = async () => {
         }
 
         const files = localFiles.value.map(f => f.file)
-        console.log(`[MessageComponent] Prepared ${files.length} files for upload`, 
+        const messageText = messageInput.value.trim()
+
+        // Allow sending if either text or files are present
+        if (!messageText && files.length === 0) {
+            errorMessage.value = 'Please enter a message or select files to send.'
+            showErrorModal.value = true
+            return
+        }
+
+        console.log(`[MessageComponent] Prepared ${files.length} files for upload`,
             files.map(f => ({ name: f.name, type: f.type, size: f.size })))
 
-        // Prepare message payload
+        // Prepare message payload - text is optional if files are present
         const messagePayload = {
-            receiverId: receiverId,  // Use the validated receiverId
-            text: messageInput.value.trim() || (files.length ? 'File Uploaded' : ''),
+            receiverId: receiverId,
+            text: messageText || '', // Allow empty text if files are present
             type: 'FARMER_AGRICULTURE',
             files: files,
             sentAt: new Date().toISOString()
@@ -567,15 +576,6 @@ const sendChatMessage = async () => {
         console.log('[MessageComponent] Sending message with payload:', {
             ...messagePayload,
             files: files.map(f => `${f.name} (${f.type}, ${(f.size / 1024).toFixed(2)} KB)`)
-        })
-        
-        console.log('[MessageComponent] Sending message with payload:', {
-            ...messagePayload,
-            files: files.map(f => ({
-                name: f.name,
-                type: f.type,
-                size: f.size
-            }))
         })
         
         await messageStore.sendMessage(messagePayload)

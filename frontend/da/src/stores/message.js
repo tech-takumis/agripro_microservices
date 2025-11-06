@@ -58,7 +58,7 @@ export const useMessageStore = defineStore('message', () => {
                 senderId: auth.userId,
                 receiverId: messageData.receiverId,
                 conversationId: messageData.conversationId || null,
-                text: messageData.text,
+                text: messageData.text || '', // Allow empty text
                 type: 'FARMER_AGRICULTURE',
                 sentAt: messageData.sentAt || new Date().toISOString()
             }

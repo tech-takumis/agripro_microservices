@@ -82,13 +82,48 @@ export const useDocumentStore = defineStore('document', () => {
             })
 
             if(response.status === 200){
+                // Extract filename from Content-Disposition header or use document ID as fallback
+                let filename = `document-${documentId}`
+
+                const contentDisposition = response.headers['content-disposition']
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '')
+                    }
+                }
+
+                // If no filename from header, try to determine extension from content-type
+                if (!filename.includes('.')) {
+                    const contentType = response.headers['content-type']
+                    if (contentType) {
+                        if (contentType.includes('image/jpeg') || contentType.includes('image/jpg')) {
+                            filename += '.jpg'
+                        } else if (contentType.includes('image/png')) {
+                            filename += '.png'
+                        } else if (contentType.includes('image/gif')) {
+                            filename += '.gif'
+                        } else if (contentType.includes('application/pdf')) {
+                            filename += '.pdf'
+                        } else if (contentType.includes('text/plain')) {
+                            filename += '.txt'
+                        } else if (contentType.includes('application/msword')) {
+                            filename += '.doc'
+                        } else if (contentType.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+                            filename += '.docx'
+                        }
+                        // Add more content-type mappings as needed
+                    }
+                }
+
                 const url = window.URL.createObjectURL(new Blob([response.data]))
                 const link = document.createElement('a')
                 link.href = url
-                link.setAttribute('download', 'document.pdf')
+                link.setAttribute('download', filename)
                 document.body.appendChild(link)
                 link.click()
                 link.remove()
+                window.URL.revokeObjectURL(url)
 
                 return {success: "true", message: "Document downloaded successfully", data: null}
             }

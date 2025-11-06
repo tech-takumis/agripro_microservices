@@ -19,14 +19,14 @@ export const useAuthStore = defineStore('auth', () => {
     const userFullName = computed(() =>
         userData.value?.firstName && userData.value?.lastName
             ? `${userData.value.firstName} ${userData.value.lastName}`
-            : userData.value?.username || ""
+            : userData.value?.username
     );
 
-    const userEmail = computed(() => userData.value?.email || "");
+    const userEmail = computed(() => userData.value?.email);
     const userRoles = computed(() => Array.from(normalizedRoles.value));
     const userPermissions = computed(() => Array.from(normalizedPermissions.value));
-    const userPhoneNumber = computed(() => userData.value?.phoneNumber || "");
-    const userId = computed(() => userData.value?.id || "");
+    const userPhoneNumber = computed(() => userData.value?.phoneNumber);
+    const userId = computed(() => userData.value?.id);
 
     const defaultRoute = computed(() => {
         if (!userData.value?.roles || userData.value.roles.length === 0) return null;
