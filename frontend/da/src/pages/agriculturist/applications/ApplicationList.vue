@@ -4,6 +4,32 @@
         :role-title="roleTitle"
         page-title="Applications"
     >
+<!-- Batch/Application Summary Section -->
+<div class="flex items-center gap-6 mb-2 print:hidden">
+  <div v-if="selectedBatch">
+    <span class="text-green-700 font-semibold">
+      {{
+        batches.find(b => b.id === selectedBatch)?.name
+      }}
+    </span>
+    <span class="ml-2 text-xs text-gray-500">
+        <span class="m-2"> Total Applications:</span>
+      {{
+        batches.find(b => b.id === selectedBatch)?.totalApplications
+          ?? filteredApplications.length
+      }}
+    </span>
+    <span v-if="batches.find(b => b.id === selectedBatch)?.maxApplications" class="ml-2 text-xs text-gray-400">
+      / Max: {{ batches.find(b => b.id === selectedBatch)?.maxApplications }}
+    </span>
+  </div>
+  <div v-else>
+    <span class="font-medium text-gray-700">All Applications:</span>
+    <span class="text-green-700 font-semibold">{{ filteredApplications.length }}</span>
+  </div>
+</div>
+
+
 <!-- Fixed Header - Single Row Layout -->
 <div class="flex items-center justify-between mb-4 gap-4 print:hidden">
   <!-- Title -->
@@ -34,7 +60,7 @@
           :key="batch.id"
           :value="batch.id"
         >
-          {{ batch.name }}
+          {{ batch.name }} ({{ batch.totalApplications }})
         </option>
       </select>
     </div>
@@ -481,6 +507,7 @@
                                 <div>&nbsp;</div>
                                 <div class="mt-0.5">IP <input type="checkbox" class="align-middle" /> Tribe: ___________</div>
                             </td>
+                            <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
                             <td class="border border-black px-0.5 py-0.5 text-xs">&nbsp;</td>
