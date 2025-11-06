@@ -5,6 +5,7 @@ import {
     MUNICIPALITY_ROUTES,
     AGRICULTURAL_EXTENSION_WORKER_ROUTES
 } from '@/lib/route';
+import Register from '@/pages/auth/Register.vue';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME;
 
@@ -20,6 +21,18 @@ const routes = [
         meta: {
             title: 'PCIC Staff Login',
             guard: 'guest'
+        }
+    },
+    // Registration
+    {
+        path: '/register',
+        name: 'register',
+        component: Register,
+        meta: {
+            title: 'User Registration',
+            guard: 'guest',
+            role: 'PERSOR',
+            requiresToken: true
         }
     },
     // Error Pages
@@ -64,11 +77,12 @@ router.beforeEach(async (to, from, next) => {
         if (to.meta.guard === 'guest') {
             if (auth.isAuthenticated) {
                 // If already authenticated, redirect to user's default route
-                const defaultRoute = auth.defaultRoute;
-                if (defaultRoute) {
+                const defaultRoute = auth.defaultRoute || '/admin/dashboard'; // fallback to admin dashboard
+                if (to.path === '/') {
+                    // If user lands on login page and is authenticated, redirect to dashboard
                     return next(defaultRoute);
                 }
-                return next('/');
+                return next(defaultRoute);
             }
             // Skip auth check for guest routes
             await auth.initialize(true);
@@ -101,5 +115,13 @@ router.beforeEach(async (to, from, next) => {
             return next({ name: 'login' });
         }
         return next();
+    }
+
+    // In case of register route, check for token
+    if (to.name === 'register') {
+        const token = to.query.token;
+        if (!token) {
+            return next({ name: 'access-denied' });
+        }
     }
 });

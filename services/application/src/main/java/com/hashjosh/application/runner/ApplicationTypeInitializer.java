@@ -69,6 +69,8 @@ public class ApplicationTypeInitializer implements CommandLineRunner {
         // Sections for Crop Insurance
         List<ApplicationSection> cropInsuranceSections = new ArrayList<>();
 
+
+
         // Section I: Basic Information
         ApplicationSection basicInfoSection = ApplicationSection.builder()
                 .title("Basic Information")

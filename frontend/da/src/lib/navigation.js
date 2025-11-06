@@ -19,10 +19,6 @@ export const ADMIN_NAVIGATION = [
                 to: { name: 'admin-users' }
             },
             {
-                title: 'Register Staff',
-                to: { name: 'admin-register-staff' }
-            },
-            {
                 title: 'Roles & Permissions',
                 to: { name: 'admin-roles-permissions' }
             }

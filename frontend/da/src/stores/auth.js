@@ -164,29 +164,52 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function register(userData) {
+    async function register(userData, token) {
         try {
             loading.value = true;
             error.value = null;
-
-            const response = await axios.post('/api/v1/agriculture/auth/registration',
-                userData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                }
+            if (!token) throw new Error('Invitation token is required for registration.');
+            const response = await axios.post(`/api/v1/agriculture/auth/registration?token=${encodeURIComponent(token)}`,
+                userData
             );
-
             if (response.status === 201 || response.status === 200) {
-                return { success: true, data: response.data };
+                // RegistrationResponse structure
+                return {
+                    success: response.data.success,
+                    data: response.data,
+                    message: response.data.message,
+                    error: response.data.error,
+                    status: response.data.status,
+                    username: response.data.username,
+                    timestamp: response.data.timestamp
+                };
             } else {
                 throw new Error('Registration failed');
             }
         } catch (err) {
             console.error('Registration error:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+            error.value = errorMessage;
+            return { success: false, error: errorMessage };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function inviteStaff(email) {
+        try {
+            loading.value = true;
+            error.value = null;
+            if (!email) throw new Error('Email is required for invitation.');
+            const response = await axios.post(`/api/v1/agriculture/auth/invite?email=${encodeURIComponent(email)}`);
+            if (response.status === 200) {
+                return { success: true, message: response.data };
+            } else {
+                throw new Error('Invitation failed');
+            }
+        } catch (err) {
+            console.error('Invite error:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Invitation failed. Please try again.';
             error.value = errorMessage;
             return { success: false, error: errorMessage };
         } finally {
@@ -241,6 +264,7 @@ export const useAuthStore = defineStore('auth', () => {
         initialize,
         login,
         register,
+        inviteStaff,
         logout,
         reset
     };

@@ -9,6 +9,7 @@ import com.hashjosh.realtimegatewayservice.utils.NotificationUtils;
 import com.sun.jdi.event.ExceptionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -27,8 +28,11 @@ public class AgricultureNotificationService {
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;
 
-    @KafkaListener(topics = "agriculture-events", groupId = "notification-group" )
-    public void sendAgricultureRegistrationEmailNotification(AgricultureRegistrationContract event) {
+    @Value("${frontend[0].da_url}")
+    private static final String DA_URL = "http://localhost:5173";
+
+    @KafkaListener(topics = "agriculture-registration", groupId = "notification-group" )
+    public void sendAgricultureRegistrationEmailNotification(@Payload AgricultureRegistrationContract event) {
         try {
             // Prepare email content
             String subject = "Welcome to Our Platform - Your Account Details";
@@ -69,11 +73,11 @@ public class AgricultureNotificationService {
         }
     }
 
-    @KafkaListener(topics = "agriculture-events", groupId = "new-invitation" )
+    @KafkaListener(topics = "agriculture-invitations", groupId = "new-invitation" )
     public void sendAgricultureInvitationEvent(@Payload NewInvitationEvent event){
         try{
             String subject = "Invitation to join the platform";
-            String registrationLink = "https://localhost:5174/register?token=" + event.getToken();
+            String registrationLink = "http://localhost:5174/register?token=" + event.getToken();
             String recipientEmail = event.getEmail();
 
             //Create the context using thymeleaf

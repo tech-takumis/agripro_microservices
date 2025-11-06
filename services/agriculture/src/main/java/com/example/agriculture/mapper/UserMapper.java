@@ -1,19 +1,15 @@
 package com.example.agriculture.mapper;
 
 import com.example.agriculture.dto.auth.AgricultureResponseDto;
-import com.example.agriculture.dto.auth.AuthenticatedResponse;
-import com.example.agriculture.dto.rbac.PermissionResponse;
 import com.example.agriculture.dto.auth.RegistrationRequest;
 import com.example.agriculture.dto.rbac.RoleResponse;
 import com.example.agriculture.entity.Agriculture;
-import com.example.agriculture.entity.Role;
 import com.example.agriculture.entity.AgricultureProfile;
-import com.example.agriculture.repository.AgricultureRepository;
+import com.example.agriculture.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,11 +19,10 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
     private final RoleMapper roleMapper;
-    private final PermissionMapper permissionMapper;
 
     public Agriculture toUserEntity(
             RegistrationRequest request, Set<Role> roles,
-            String username, String password) {
+            String username) {
 
 
         AgricultureProfile agricultureProfile = toUserProfileEntity(request);
@@ -35,7 +30,7 @@ public class UserMapper {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .username(username)
-                .password(passwordEncoder.encode(password))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .agricultureProfile(agricultureProfile)

@@ -35,7 +35,8 @@ spring:
           inspectionScheduledEvent:com.hashjosh.kafkacommon.application.InspectionScheduledEvent,
           inspectionCompletedEvent:com.hashjosh.kafkacommon.application.InspectionCompletedEvent,
           policyIssuedEvent:com.hashjosh.kafkacommon.application.PolicyIssuedEvent,
-          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent
+          claimProcessedEvent:com.hashjosh.kafkacommon.application.ClaimProcessedEvent,
+          newInvitationEvent:com.hashjosh.kafkacommon.agriculture.NewInvitationEvent
 
   mail:
     host: smtp.gmail.com

@@ -34,8 +34,8 @@
           >
             <button
               v-if="isMobile"
-              @click="backToList"
               class="p-2 rounded-full hover:bg-gray-100 transition"
+              @click="backToList"
             >
               <ChevronLeft class="h-6 w-6 text-gray-600" />
             </button>
@@ -103,7 +103,7 @@
 
           <!-- Input Section -->
           <div class="bg-white border-t border-gray-200 p-4">
-            <form @submit.prevent="sendChatMessage" class="flex gap-3">
+            <form class="flex gap-3" @submit.prevent="sendChatMessage">
               <label
                 class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-400 transition cursor-pointer flex items-center justify-center"
               >
@@ -169,11 +169,11 @@
             <button
               v-for="farmer in filteredFarmers"
               :key="farmer.id"
-              @click="selectFarmer(farmer)"
               :class="[
                 'w-full p-4 flex items-center gap-4 hover:bg-gray-100 transition border-b border-gray-100 text-left',
                 selectedFarmer?.id === farmer.id ? 'bg-green-100' : '',
               ]"
+              @click="selectFarmer(farmer)"
             >
               <!-- Avatar -->
               <div class="relative">
@@ -202,12 +202,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Error Modal -->
+    <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+        <h2 class="text-lg font-semibold mb-2 text-red-600">Error</h2>
+        <p class="mb-4 text-gray-700">{{ errorMessage }}</p>
+        <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" @click="showErrorModal = false">Close</button>
+      </div>
+    </div>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { Search, Send, User, ChevronLeft, Paperclip, X, Mail } from 'lucide-vue-next'
+import { Search, Send, User, ChevronLeft, Paperclip, Mail } from 'lucide-vue-next'
 import { useFarmerStore } from '@/stores/farmer'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'
@@ -255,6 +264,18 @@ const isSendDisabled = computed(() => {
 const localFiles = ref([])
 const isUploading = ref(false)
 
+// File validation states
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+const ALLOWED_FILE_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+]
+const errorMessage = ref('')
+const showErrorModal = ref(false)
+
 // Computed properties for farmers
 const filteredFarmers = computed(() => {
     if (farmerStore.isLoading || !isInitialized.value) return []
@@ -288,25 +309,20 @@ const backToList = () => {
 
 const handleFileSelect = async event => {
     const files = Array.from(event.target.files)
-
     for (const file of files) {
-        localFiles.value.push({
-            file,
-            name: file.name,
-            type: file.type
-        })
+        if (file.size > MAX_FILE_SIZE) {
+            errorMessage.value = `File ${file.name} exceeds 20MB limit.`
+            showErrorModal.value = true
+            continue
+        }
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            errorMessage.value = `File type ${file.type} is not allowed.`
+            showErrorModal.value = true
+            continue
+        }
+        localFiles.value.push({ file, name: file.name, type: file.type })
     }
-
-    if (fileInput.value) {
-        fileInput.value.value = '' 
-    }
-}
-
-const removeFile = index => {
-    if (localFiles.value[index]?.preview) {
-        URL.revokeObjectURL(localFiles.value[index].preview)
-    }
-    localFiles.value.splice(index, 1)
+    if (fileInput.value) fileInput.value.value = ''
 }
 
 const selectFarmer = async farmer => {
@@ -347,7 +363,8 @@ const sendChatMessage = async () => {
     try {
         const receiverId = selectedFarmer.value.userId
         if (!receiverId) {
-            console.error('[MessageComponent] No receiverId available for sending message')
+            errorMessage.value = 'Role not implemented or receiver not found.'
+            showErrorModal.value = true
             return
         }
 
@@ -384,11 +401,13 @@ const sendChatMessage = async () => {
         localFiles.value = []
         scrollToBottom()
     } catch (error) {
-        console.error('[MessageComponent] Failed to send message:', {
-            error: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        })
+        if (error.response?.status === 403 || error.response?.data?.error === 'ROLE_NOT_IMPLEMENTED') {
+            errorMessage.value = 'Your role is not implemented for this action.'
+            showErrorModal.value = true
+        } else {
+            errorMessage.value = 'Failed to send message.'
+            showErrorModal.value = true
+        }
     } finally {
         isUploading.value = false
     }
@@ -422,13 +441,6 @@ const getInitials = user => {
     const firstName = user.firstName || ''
     const lastName = user.lastName || ''
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
-// Remove the utility functions and just keep the core functionality
-const openAttachment = (url) => {
-    if (url) {
-        window.open(url, '_blank')
-    }
 }
 
 // Lifecycle hooks
