@@ -7,8 +7,8 @@ import 'application_detail_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
 
-/// 🌿 Main Application Page
-/// Displays all available application types in card format.
+/// 🌿 Redesigned Application Page
+/// Minimalist UI without AppBar background or refresh button.
 class ApplicationPage extends ConsumerWidget {
   const ApplicationPage({super.key});
 
@@ -17,12 +17,11 @@ class ApplicationPage extends ConsumerWidget {
     final controller = getIt<ApplicationController>();
     final authState = ref.watch(authProvider);
 
-    // Ensure applications are fetched if already logged in and still loading
+    // Fetch applications on login
     if (authState.isLoggedIn && controller.isLoading.value && controller.applications.isEmpty) {
       controller.fetchApplications(authState);
     }
 
-    // Listen for login state changes and fetch applications after login
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.isLoggedIn && prev?.isLoggedIn != true) {
         controller.fetchApplications(next);
@@ -30,126 +29,110 @@ class ApplicationPage extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(72, 248, 248, 248),
-      appBar: AppBar(
-        title: const Text('Applications'),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
-        actions: [
-          Obx(
-            () => IconButton(
-              onPressed: controller.isLoading.value || controller.isRetrying.value
-                  ? null
-                  : () => controller.fetchApplications(authState),
-              icon: controller.isLoading.value || controller.isRetrying.value
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.refresh),
-              tooltip: 'Refresh',
-            ),
-          ),
-        ],
-      ),
-      body: Obx(() {
-        // 🌀 Loading State
-        if (controller.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        // ❌ Error State
-        if (controller.errorMessage.value.isNotEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header section (simple text, no AppBar)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red[300],
-                  ),
-                  const SizedBox(height: 16),
                   Text(
-                    'Error Loading Applications',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                    'Applications',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
                         ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    controller.errorMessage.value,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => controller.retryFetchApplications(authState),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
                   ),
                 ],
               ),
             ),
-          );
-        }
 
-        // 📭 Empty State
-        if (controller.applications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Applications Available',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
+            // Main content section
+            Expanded(
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (controller.errorMessage.value.isNotEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error Loading Applications',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            controller.errorMessage.value,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                        ],
                       ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Check back later for new applications',
-                  style: TextStyle(color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          );
-        }
+                    ),
+                  );
+                }
 
-        // ✅ Success State — Show List
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          itemCount: controller.applications.length,
-          itemBuilder: (context, index) {
-            final application = controller.applications[index];
-            return ApplicationCard(
-              application: application,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ApplicationDetailPage(application: application),
-                  ),
+                if (controller.applications.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Applications Available',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Check back later for new applications',
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // ✅ Application List
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: controller.applications.length,
+                  itemBuilder: (context, index) {
+                    final application = controller.applications[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ApplicationCard(
+                        application: application,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ApplicationDetailPage(application: application),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 );
-              },
-            );
-          },
-        );
-      }),
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
