@@ -30,20 +30,25 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
     final authState = ref.watch(authProvider);
     final notificationNotifier = ref.read(notificationProvider.notifier);
 
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FAF5),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Notifications',
-          style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: false,
         actions: [
           if (notificationState.notifications.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_sweep, color: Color(0xFF2E7D32)),
+              icon: const Icon(Icons.delete_sweep, color: Color.fromARGB(255, 234, 21, 21)),
+              tooltip: 'Clear all notifications',
               onPressed: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
@@ -62,7 +67,6 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                     ],
                   ),
                 );
-
                 if (confirmed == true) {
                   try {
                     await notificationNotifier.clearNotifications();
@@ -83,6 +87,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
             ),
         ],
       ),
+
       body: RefreshIndicator(
         color: const Color(0xFF2E7D32),
         onRefresh: () async {
@@ -91,81 +96,65 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
           }
         },
         child: notificationState.isLoading && notificationState.notifications.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32)))
-          : notificationState.notifications.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No notifications yet',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey),
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32)))
+            : notificationState.notifications.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.notifications_none, size: 72, color: Colors.grey[400]),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'No notifications yet',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                itemCount: notificationState.notifications.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemBuilder: (context, index) {
-                  final notification = notificationState.notifications[index];
-                  return Dismissible(
-                    key: Key(notification.id),
-                    background: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.red),
+                  )
+                : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: notificationState.notifications.length,
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      thickness: 0.5,
+                      color: Colors.grey.shade300,
+                      indent: 16,
+                      endIndent: 16,
                     ),
-                    direction: DismissDirection.endToStart,
-                    confirmDismiss: (direction) async {
-                      return await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Delete Notification'),
-                          content: const Text('Are you sure you want to delete this notification?'),
-                          actions: [
-                            TextButton(
-                              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-                              onPressed: () => Navigator.of(context).pop(false),
+                    itemBuilder: (context, index) {
+                      final notification = notificationState.notifications[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: notification.read
+                              ? Colors.grey.shade200
+                              : const Color(0xFF2E7D32),
+                          child: const Icon(Icons.notifications, color: Colors.white),
+                        ),
+                        title: Text(
+                          notification.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: notification.read ? FontWeight.bold : FontWeight.bold,
+                            color: const Color.fromARGB(221, 0, 0, 0),
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              notification.message,
+                              style: const TextStyle(fontSize: 14, color: Color.fromARGB(221, 48, 46, 46)),
                             ),
-                            TextButton(
-                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                              onPressed: () => Navigator.of(context).pop(true),
+                            const SizedBox(height: 4),
+                            Text(
+                              timeago.format(notification.time),
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                             ),
                           ],
                         ),
-                      );
-                    },
-                    onDismissed: (direction) async {
-                      try {
-                        await notificationNotifier.deleteNotification(notification.id);
-                        if (context.mounted) {
-                          ErrorDisplay.showSuccess(context, 'Notification deleted');
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ErrorDisplay.showError(context, e);
-                        }
-                      }
-                    },
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: notification.read ? Colors.grey.shade200 : const Color(0xFF2E7D32),
-                          width: 1,
-                        ),
-                      ),
-                      color: notification.read ? Colors.white : const Color(0xFFE8F5E9),
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: InkWell(
                         onTap: () async {
                           if (!notification.read) {
                             try {
@@ -177,59 +166,9 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                             }
                           }
                         },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      notification.title,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: notification.read ? FontWeight.normal : FontWeight.bold,
-                                        color: const Color(0xFF2E7D32),
-                                      ),
-                                    ),
-                                  ),
-                                  if (!notification.read)
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color(0xFF2E7D32),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                notification.message,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                timeago.format(notification.time),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
       ),
     );
   }

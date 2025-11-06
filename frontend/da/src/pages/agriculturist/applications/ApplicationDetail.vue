@@ -34,6 +34,7 @@
             </div>
         </template>
 
+        <div class="overflow-y-auto max-h-[calc(200vh-8rem)] px-6 pb-10">
         <!-- Loading state -->
         <div v-if="loading" class="flex items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -366,6 +367,7 @@
                     <DetailField label="Updated At" :value="formatDateTime(application.updatedAt)" />
                 </div>
             </div>
+        </div>
         </div>
     </AuthenticatedLayout>
 </template>

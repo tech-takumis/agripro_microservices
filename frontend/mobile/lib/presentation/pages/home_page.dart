@@ -50,84 +50,85 @@ class _HomePageState extends ConsumerState<HomePage> {
     _pageController.dispose();
     super.dispose();
   }
+@override
+Widget build(BuildContext context) {
+  final authState = ref.watch(authProvider);
+  final notificationState = ref.watch(notificationProvider);
+  final unreadCount = notificationState.unreadCount;
 
-  @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final notificationState = ref.watch(notificationProvider);
-    final unreadCount = notificationState.unreadCount;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6FAF5),
-      extendBody: true,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        toolbarHeight: 0,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _currentIndex = index);
-        },
-        children: [
-          _buildHomePage(),
-          const ApplicationPage(),
-          const NotificationPage(),
-          const ProfilePage(),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF2E7D32),
-        onPressed: () async {
-          final token = authState.token;
-          final userId = authState.userId;
-          if (token == null || userId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Please log in again.')),
-            );
-            return;
-          }
-          await getIt<MessageService>().init(token: token, userId: userId);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ContactDepartmentPage(serviceType: 'Chat with Agriculturist'),
-            ),
+  return Scaffold(
+    backgroundColor: Colors.white,
+    extendBody: true,
+    appBar: AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: 0,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ),
+    body: PageView(
+      controller: _pageController,
+      onPageChanged: (index) {
+        setState(() => _currentIndex = index);
+      },
+      children: [
+        _buildHomePage(),
+        const ApplicationPage(),
+        const NotificationPage(),
+        const ProfilePage(),
+      ],
+    ),
+    floatingActionButton: FloatingActionButton(
+      backgroundColor: const Color.fromARGB(255, 53, 129, 40), // replaced green with dark neutral
+      onPressed: () async {
+        final token = authState.token;
+        final userId = authState.userId;
+        if (token == null || userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in again.')),
           );
+          return;
+        }
+        await getIt<MessageService>().init(token: token, userId: userId);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ContactDepartmentPage(
+              serviceType: 'Chat with Agriculturist',
+            ),
+          ),
+        );
+      },
+      child: const Icon(Icons.chat_rounded, color: Colors.white),
+    ),
+    bottomNavigationBar: Padding(
+      padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+      child: CrystalNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          _pageController.jumpToPage(index);
         },
-        child: const Icon(Icons.chat_rounded, color: Colors.white),
+        items: [
+          CrystalNavigationBarItem(
+            icon: Icons.home_rounded,
+          ),
+          CrystalNavigationBarItem(
+            icon: Icons.assignment_rounded,
+          ),
+          CrystalNavigationBarItem(
+            icon: _getNotificationIcon(unreadCount),
+          ),
+          CrystalNavigationBarItem(
+            icon: Icons.person_rounded,
+          ),
+        ],
+        indicatorColor: const Color.fromARGB(255, 53, 129, 40), // neutral indicator
+        unselectedItemColor: const Color.fromARGB(255, 53, 129, 40),
+        selectedItemColor: const Color.fromARGB(255, 187, 186, 186),
+        backgroundColor: Color.fromARGB(255, 223, 240, 223).withOpacity(0.95),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
-        child: CrystalNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            _pageController.jumpToPage(index);
-          },
-          items: [
-            CrystalNavigationBarItem(
-              icon: Icons.home_rounded,
-            ),
-            CrystalNavigationBarItem(
-              icon: Icons.assignment_rounded,
-            ),
-            CrystalNavigationBarItem(
-              icon: _getNotificationIcon(unreadCount),
-            ),
-            CrystalNavigationBarItem(
-              icon: Icons.person_rounded,
-            ),
-          ],
-          indicatorColor: const Color(0xFF2E7D32),
-          unselectedItemColor: const Color(0xFF9E9E9E),
-          selectedItemColor: const Color(0xFFFFEB3B),
-          backgroundColor: Colors.white.withOpacity(0.95),
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildNotificationIconWithBadge(int count) {
     return Stack(
@@ -183,8 +184,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Text(
                   "News Feed",
                   style: TextStyle(
-                    color: Color(0xFF2E7D32),
-                    fontSize: 22,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -233,135 +234,138 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildPostCard(PostResponse post) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.15),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
+Widget _buildPostCard(PostResponse post) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Header section (Profile + Name + Time)
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile row: user/admin + time
-            Row(
-              children: [
-                // Profile Icon
-                const CircleAvatar(
-                  backgroundColor: Color(0xFFE8F5E9),
-                  radius: 22,
-                  child: Icon(Icons.person, color: Color(0xFF2E7D32)),
-                ),
-                const SizedBox(width: 10),
-
-                // User Information
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            const CircleAvatar(
+              backgroundColor: Color(0xFF358128),
+              radius: 22,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Department of Agriculture",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
                     children: [
-                      // Poster name
-                      const Text(
-                        "Department of Agriculture",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                      Text(
+                        timeago.format(post.createdAt, locale: 'en'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
                         ),
                       ),
-
-                      // Date & Time
-                      Row(
-                        children: [
-                          Text(
-                            timeago.format(post.createdAt, locale: 'en'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '• ${_formatExactTime(post.createdAt)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 6),
+                      Text(
+                        '• ${_formatExactTime(post.createdAt)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Post content
-            Text(
-              post.content,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-                height: 1.4,
-              ),
-            ),
-
-            // Post images (if any)
-            if (post.urls.isNotEmpty) _buildImageCarousel(post.urls),
-
-            const SizedBox(height: 10),
-            const Divider(thickness: 0.8),
-
-            // Reaction buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _reactionButton(Icons.thumb_up_alt_outlined, "React"),
-                  _reactionButton(Icons.comment_outlined, "Comment"),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _reactionButton(IconData icon, String label) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () {},
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.grey[600], size: 20),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.more_horiz, color: Colors.grey),
             ),
           ],
         ),
       ),
-    );
-  }
+
+      // Post text content
+      if (post.content.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0),
+          child: Text(
+            post.content,
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+
+      const SizedBox(height: 8),
+
+      // Image section (carousel style)
+      if (post.urls.isNotEmpty)
+        _buildImageCarousel(post.urls),
+
+      const SizedBox(height: 6),
+
+      // Divider between content and actions
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: Divider(color: Colors.grey[300], thickness: 0.8),
+      ),
+
+      // Reaction row (Like, Comment)
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _reactionButton(Icons.thumb_up_alt_outlined, "Like"),
+            _reactionButton(Icons.comment_outlined, "Comment"),
+          ],
+        ),
+      ),
+
+      // Spacing between posts
+      const SizedBox(height: 10),
+      Container(
+        height: 6,
+        color: const Color(0xFFF0F2F5), // subtle gray background like Facebook
+      ),
+    ],
+  );
+}
+
+Widget _reactionButton(IconData icon, String label) {
+  return InkWell(
+    borderRadius: BorderRadius.circular(8),
+    onTap: () {},
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey[700], size: 20),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildImageCarousel(List<String> imageUrls) {
     return Padding(
