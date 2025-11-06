@@ -67,7 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
 
         if (skipForGuest) {
             isAuthenticated.value = false;
-            return Promise.resolve();
+            return Promise.resolve({ success: true, message: 'Skipped for guest' });
         }
 
         initializationPromise.value = fetchCurrentUser()
@@ -85,12 +85,14 @@ export const useAuthStore = defineStore('auth', () => {
             console.log('Fetched current user:', userData.value);
             normalizeUserData();
             isAuthenticated.value = true;
-            return response.data;
+            return { success: true, message: 'User data fetched successfully', data: response.data };
         } catch (error) {
-            isAuthenticated.value = false
+            isAuthenticated.value = false;
             console.error('Failed to fetch current user:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch user data';
+            error.value = errorMessage;
             reset();
-            throw error;
+            return { success: false, message: errorMessage, error: error };
         }
     }
 
@@ -131,6 +133,7 @@ export const useAuthStore = defineStore('auth', () => {
                     localStorage.setItem('webSocketToken', response.data.webSocketToken);
                 }
 
+                console.log('[Auth Store] Login successful, setting authentication state');
                 isAuthenticated.value = true;
                 // Update to use the new user object structure
                 userData.value = response.data.user;
@@ -138,24 +141,31 @@ export const useAuthStore = defineStore('auth', () => {
 
                 if (userData.value && isAuthenticated.value) {
                     const route = defaultRoute.value;
+                    console.log('[Auth Store] Default route:', route);
                     if (route) {
+                        console.log('[Auth Store] Navigating to:', route);
                         await router.push(route);
+                        return { success: true, message: 'Login successful! Redirecting to dashboard...' };
                     } else {
-                        throw new Error('No default route found for user role');
+                        return { success: false, message: 'No default route found for user role' };
                     }
-                    return { success: true };
                 } else {
-                    throw new Error('Failed to authenticate user');
+                    return { success: false, message: 'Failed to authenticate user' };
                 }
             }
         } catch (err) {
             console.error('Login error:', err);
+            console.log('[Auth Store] Setting isAuthenticated to false after login error');
             const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
             error.value = errorMessage;
+            isAuthenticated.value = false;
+            userData.value = { roles: [], permissions: [] }; // Reset user data
+            normalizedRoles.value.clear();
+            normalizedPermissions.value.clear();
             if (setErrors) {
                 setErrors.value = [errorMessage];
             }
-            return { success: false, error: errorMessage };
+            return { success: false, message: errorMessage };
         } finally {
             loading.value = false;
             if (processing) {
@@ -168,7 +178,9 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             loading.value = true;
             error.value = null;
-            if (!token) throw new Error('Invitation token is required for registration.');
+            if (!token) {
+                return { success: false, message: 'Invitation token is required for registration.' };
+            }
             const response = await axios.post(`/api/v1/agriculture/auth/registration?token=${encodeURIComponent(token)}`,
                 userData
             );
@@ -177,20 +189,20 @@ export const useAuthStore = defineStore('auth', () => {
                 return {
                     success: response.data.success,
                     data: response.data,
-                    message: response.data.message,
+                    message: response.data.message || 'Registration successful!',
                     error: response.data.error,
                     status: response.data.status,
                     username: response.data.username,
                     timestamp: response.data.timestamp
                 };
             } else {
-                throw new Error('Registration failed');
+                return { success: false, message: 'Registration failed' };
             }
         } catch (err) {
             console.error('Registration error:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
             error.value = errorMessage;
-            return { success: false, error: errorMessage };
+            return { success: false, message: errorMessage };
         } finally {
             loading.value = false;
         }
@@ -200,18 +212,20 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             loading.value = true;
             error.value = null;
-            if (!email) throw new Error('Email is required for invitation.');
+            if (!email) {
+                return { success: false, message: 'Email is required for invitation.' };
+            }
             const response = await axios.post(`/api/v1/agriculture/auth/invite?email=${encodeURIComponent(email)}`);
             if (response.status === 200) {
                 return { success: true, message: response.data };
             } else {
-                throw new Error('Invitation failed');
+                return { success: false, message: 'Invitation failed' };
             }
         } catch (err) {
             console.error('Invite error:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Invitation failed. Please try again.';
             error.value = errorMessage;
-            return { success: false, error: errorMessage };
+            return { success: false, message: errorMessage };
         } finally {
             loading.value = false;
         }

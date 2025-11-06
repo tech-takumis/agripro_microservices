@@ -17,7 +17,7 @@ export default defineConfig({
         },
     },
     plugins: [
-        VueDevTools(),
+        // VueDevTools(),
         vue()
     ],
 });

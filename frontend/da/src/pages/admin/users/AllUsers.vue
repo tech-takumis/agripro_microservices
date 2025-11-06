@@ -246,12 +246,14 @@ import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { useAgricultureStore } from '@/stores/agriculture'
 import { useRoleStore } from '@/stores/role'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const router = useRouter()
 const userStore = useAgricultureStore()
 const roleStore = useRoleStore()
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 const adminNavigation = ADMIN_NAVIGATION
 
 // Reactive variables
@@ -439,13 +441,18 @@ const handleInvite = async () => {
   try {
     const result = await authStore.inviteStaff(inviteEmail.value)
     if (result.success) {
+      notificationStore.showSuccess(result.message || 'Invitation sent successfully!')
       inviteSuccess.value = 'Invitation sent successfully!'
       inviteEmail.value = ''
+      showInviteModal.value = false
     } else {
-      inviteError.value = result.error || 'Failed to send invitation.'
+      notificationStore.showError(result.message || 'Failed to send invitation.')
+      inviteError.value = result.message || 'Failed to send invitation.'
     }
   } catch (err) {
-    inviteError.value = err.message || 'Failed to send invitation.'
+    const errorMessage = err.message || 'Failed to send invitation.'
+    notificationStore.showError(errorMessage)
+    inviteError.value = errorMessage
   } finally {
     inviteLoading.value = false
   }

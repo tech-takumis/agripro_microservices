@@ -6,10 +6,12 @@ import TextInput from '@/components/TextInput.vue'
 import InputLabel from '@/components/InputLabel.vue'
 import ValidationErrors from '@/components/ValidationErrors.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 import { usePsgcStore } from '@/stores/psgc'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 const psgcStore = usePsgcStore()
 const route = useRoute()
 const router = useRouter()
@@ -181,12 +183,14 @@ const submitRegister = async () => {
         const result = await authStore.register(userData, token)
         console.log('[Register] Registration API result:', result)
         if (result.success) {
+            notificationStore.showSuccess(result.message || 'Registration successful!')
             successMessage.value = result.message || 'Registration successful!'
-             router.push({name: 'login'})
+            router.push({name: 'login'})
         } else {
-            errorMessage.value = result.error || 'Registration failed.'
-            setErrors.value = [result.error]
-            console.error('[Register] Registration failed:', result.error)
+            notificationStore.showError(result.message || 'Registration failed.')
+            errorMessage.value = result.message || 'Registration failed.'
+            setErrors.value = [result.message || 'Registration failed.']
+            console.error('[Register] Registration failed:', result.message)
         }
     } catch (err) {
         errorMessage.value = err.message || 'Registration failed.'
