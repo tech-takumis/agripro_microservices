@@ -85,7 +85,6 @@ public class DocumentController {
 
 
     @GetMapping("/{documentId}/download")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(
             @PathVariable UUID documentId) {
         var document = documentService.download(documentId);

@@ -28,6 +28,14 @@ export const useWebSocketStore = defineStore('websocket', () => {
     lastMessage.value = message.body
     try {
       const data = JSON.parse(message.body)
+
+      // Log attachment information if present
+      if (data.attachmentResponses && data.attachmentResponses.length > 0) {
+        console.log(`[WebSocket] 📎 Message has ${data.attachmentResponses.length} attachment(s):`,
+          data.attachmentResponses.map(att => ({ documentId: att.documentId, url: att.url }))
+        )
+      }
+
       messageStore.addIncomingMessage(data)
     } catch (err) {
       console.error('[WebSocket] Error parsing private message:', err)

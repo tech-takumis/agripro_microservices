@@ -11,8 +11,8 @@
     </template>
 
     <!-- 💬 Main Wrapper -->
-    <div class="flex flex-col md:flex-row gap-4 h-[calc(200vh-10rem)]">
-    
+    <div class="flex flex-col md:flex-row gap-4 h-[calc(110vh-8rem)]">
+
       <!-- 💭 Chat Messages Container -->
       <div
         class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
@@ -88,7 +88,43 @@
                     : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
                 ]"
               >
-                <p class="text-sm leading-relaxed">{{ message.text }}</p>
+                <!-- Message Text -->
+                <p v-if="message.text" class="text-sm leading-relaxed mb-2">{{ message.text }}</p>
+
+                <!-- Attachments Preview -->
+                <div v-if="message.attachments && message.attachments.length > 0" class="space-y-2">
+                  <div
+                    v-for="(attachment, index) in message.attachments"
+                    :key="attachment.documentId || index"
+                    class="attachment-item"
+                  >
+                    <!-- Image Preview -->
+                    <div v-if="isImageFile(attachment.url)" class="max-w-sm">
+                      <img
+                        :src="attachment.url"
+                        :alt="`Attachment ${index + 1}`"
+                        class="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
+                        @click="openImageModal(attachment.url)"
+                        @error="handleImageError"
+                      />
+                    </div>
+
+                    <!-- File Download Link -->
+                    <div v-else class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+                      <Paperclip class="h-4 w-4 text-gray-500" />
+                      <a
+                        :href="attachment.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-sm text-blue-600 hover:text-blue-800 underline"
+                      >
+                        {{ getFileName(attachment.url) }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Timestamp -->
                 <p
                   :class="[
                     'text-xs mt-1',
@@ -103,6 +139,60 @@
 
           <!-- Input Section -->
           <div class="bg-white border-t border-gray-200 p-4">
+            <!-- File Preview Section -->
+            <div v-if="localFiles.length > 0" class="mb-3 p-3 bg-gray-50 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Files to send ({{ localFiles.length }})</span>
+                <button
+                  type="button"
+                  @click="clearAllFiles"
+                  class="text-xs text-red-600 hover:text-red-800"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div class="space-y-2 max-h-32 overflow-y-auto">
+                <div
+                  v-for="(fileItem, index) in localFiles"
+                  :key="index"
+                  class="flex items-center gap-3 p-2 bg-white rounded border"
+                >
+                  <!-- File Preview -->
+                  <div class="flex-shrink-0">
+                    <img
+                      v-if="isImageFile(fileItem.file)"
+                      :src="getFilePreviewUrl(fileItem.file)"
+                      alt="Preview"
+                      class="w-10 h-10 object-cover rounded"
+                    />
+                    <div
+                      v-else
+                      class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center"
+                    >
+                      <Paperclip class="h-4 w-4 text-gray-600" />
+                    </div>
+                  </div>
+
+                  <!-- File Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ fileItem.name }}</p>
+                    <p class="text-xs text-gray-500">{{ formatFileSize(fileItem.file.size) }}</p>
+                  </div>
+
+                  <!-- Remove Button -->
+                  <button
+                    type="button"
+                    @click="removeFile(index)"
+                    class="flex-shrink-0 text-red-600 hover:text-red-800"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <form class="flex gap-3" @submit.prevent="sendChatMessage">
               <label
                 class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-400 transition cursor-pointer flex items-center justify-center"
@@ -200,6 +290,27 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div
+      v-if="showImageModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+      @click="closeImageModal"
+    >
+      <div class="relative max-w-4xl max-h-full p-4">
+        <img
+          :src="selectedImage"
+          alt="Full size image"
+          class="max-w-full max-h-full rounded-lg"
+        />
+        <button
+          class="absolute top-2 right-2 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100"
+          @click="closeImageModal"
+        >
+          ×
+        </button>
       </div>
     </div>
 
@@ -443,6 +554,77 @@ const getInitials = user => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
+// Add new state for image modal
+const showImageModal = ref(false)
+const selectedImage = ref('')
+
+// Add utility functions for attachments (updated to handle both URLs and File objects)
+const isImageFile = (urlOrFile) => {
+  if (!urlOrFile) return false
+
+  // If it's a File object, check the type
+  if (urlOrFile.type) {
+    return urlOrFile.type.startsWith('image/')
+  }
+
+  // If it's a URL string, check the extension
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  return imageExtensions.some(ext => urlOrFile.toLowerCase().includes(ext))
+}
+
+const getFileName = (url) => {
+  if (!url) return 'Unknown file'
+  try {
+    const urlParts = url.split('/')
+    const fileName = urlParts[urlParts.length - 1]
+    // Remove query parameters
+    return fileName.split('?')[0] || 'Download file'
+  } catch {
+    return 'Download file'
+  }
+}
+
+const openImageModal = (imageUrl) => {
+  selectedImage.value = imageUrl
+  showImageModal.value = true
+}
+
+const closeImageModal = () => {
+  showImageModal.value = false
+  selectedImage.value = ''
+}
+
+const handleImageError = (event) => {
+  console.warn('Failed to load image:', event.target.src)
+  event.target.style.display = 'none'
+}
+
+// New utility functions for file preview
+const getFilePreviewUrl = (file) => {
+  try {
+    return URL.createObjectURL(file)
+  } catch (error) {
+    console.error('Error creating preview URL:', error)
+    return null
+  }
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const removeFile = (index) => {
+  localFiles.value.splice(index, 1)
+}
+
+const clearAllFiles = () => {
+  localFiles.value = []
+}
+
 // Lifecycle hooks
 onMounted(async () => {
     try {
@@ -487,5 +669,13 @@ onBeforeUnmount(() => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background-color: rgba(156, 163, 175, 0.5);
     border-radius: 3px;
+}
+
+.attachment-item {
+  margin-bottom: 8px;
+}
+
+.attachment-item:last-child {
+  margin-bottom: 0;
 }
 </style>

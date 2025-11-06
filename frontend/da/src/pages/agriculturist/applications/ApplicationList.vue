@@ -4,85 +4,80 @@
         :role-title="roleTitle"
         page-title="Applications"
     >
-<div class="flex flex-col mb-4 sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
-
+<!-- Fixed Header - Single Row Layout -->
+<div class="flex items-center justify-between mb-4 gap-4 print:hidden">
   <!-- Title -->
-  <h1 class="text-2xl font-semibold text-gray-900">
+  <h1 class="text-2xl font-semibold text-gray-900 flex-shrink-0">
     Farmer Applications
   </h1>
 
-  <!-- Control Section -->
-  <div class="flex flex-wrap items-center gap-3">
-
+  <!-- All Controls in One Row -->
+  <div class="flex items-center gap-3 flex-wrap">
     <!-- Batch Management -->
     <div class="flex items-center gap-2">
       <!-- Create Batch -->
       <button
-        class="flex items-center justify-center p-2 bg-green-600 text-white rounded-full shadow-sm hover:bg-gray-400 transition-colors"
+        class="flex items-center justify-center p-2 bg-green-600 text-white rounded-full shadow-sm hover:bg-gray-400 transition-colors flex-shrink-0"
         @click="showCreateBatchModal = true"
         title="Create Batch"
       >
         <Plus class="w-5 h-5" />
       </button>
 
-<!-- Batch Dropdown -->
-<select
-  v-model="selectedBatch"
-  class="w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-400 focus:border-green-50 focus:outline-none transition"
->
-  <option value="">All Batches</option>
-  <option
-    v-for="batch in batches"
-    :key="batch.id"
-    :value="batch.id"
-  >
-    {{ batch.name }}
-  </option>
-</select>
-</div>
+      <!-- Batch Dropdown -->
+      <select
+        v-model="selectedBatch"
+        class="w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-400 focus:border-green-50 focus:outline-none transition flex-shrink-0"
+      >
+        <option value="">All Batches</option>
+        <option
+          v-for="batch in batches"
+          :key="batch.id"
+          :value="batch.id"
+        >
+          {{ batch.name }}
+        </option>
+      </select>
+    </div>
 
-    <!-- Conditional Action Buttons -->
-    <div v-if="selectedApplications.length > 0" class="flex items-center gap-2">
+    <!-- Action Buttons - Show inline when applications are selected -->
+    <template v-if="selectedApplications.length > 0">
       <button
-        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex-shrink-0"
         :disabled="verificationStore.isForwarding.value"
         @click="handleForwardToPCIC"
       >
-        <Edit class="h-4 w-4 mr-2" />
+        <Edit class="h-4 w-4 mr-1" />
         <span v-if="verificationStore.isForwarding.value">Forwarding...</span>
         <span v-else>Forward to PCIC</span>
       </button>
 
       <button
-        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex-shrink-0"
         @click="handleDelete"
       >
-        <Trash2 class="h-4 w-4 mr-2" />
+        <Trash2 class="h-4 w-4 mr-1" />
         Delete ({{ selectedApplications.length }})
       </button>
-    </div>
+    </template>
 
     <!-- Utility Buttons -->
     <div class="flex items-center gap-2">
       <!-- Print -->
       <button
-        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm 
-hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
-transition-all duration-300 ease-in-out"
+        class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 ease-in-out flex-shrink-0"
         @click="handlePrint"
       >
-        <Printer class="h-4 w-4 mr-2" />
+        <Printer class="h-4 w-4 mr-1" />
         Print
       </button>
 
       <!-- Filter -->
       <button
-        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm 
-hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
-transition-all duration-300 ease-in-out"
+        class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 shadow-sm hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 ease-in-out flex-shrink-0"
         @click="showFilterModal = true"
       >
-        <Filter class="h-4 w-4 mr-2" />
+        <Filter class="h-4 w-4 mr-1" />
         Filter
       </button>
     </div>
