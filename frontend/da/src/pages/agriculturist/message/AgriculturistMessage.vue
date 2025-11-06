@@ -11,8 +11,8 @@
     </template>
 
     <!-- 💬 Main Wrapper -->
-    <div class="flex flex-col md:flex-row gap-4 h-[calc(200vh-10rem)]">
-    
+    <div class="flex flex-col md:flex-row gap-4 h-[calc(110vh-8rem)]">
+
       <!-- 💭 Chat Messages Container -->
       <div
         class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
@@ -80,29 +80,138 @@
                 message.isOwn ? 'justify-end' : 'justify-start',
               ]"
             >
-              <div
-                :class="[
-                  'max-w-[80%] md:max-w-xl px-4 py-3 rounded-2xl shadow-sm transition-all duration-200',
-                  message.isOwn
-                    ? 'bg-green-600 text-white rounded-br-none'
-                    : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
-                ]"
-              >
-                <p class="text-sm leading-relaxed">{{ message.text }}</p>
-                <p
+              <div class="max-w-[80%] md:max-w-xl space-y-2">
+                <!-- Message Text (separate from attachments) -->
+                <div
+                  v-if="message.text"
                   :class="[
-                    'text-xs mt-1',
-                    message.isOwn ? 'text-green-100' : 'text-gray-500',
+                    'px-4 py-3 rounded-2xl shadow-sm transition-all duration-200',
+                    message.isOwn
+                      ? 'bg-green-600 text-white rounded-br-none ml-auto'
+                      : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
                   ]"
                 >
-                  {{ formatTime(message.timestamp) }}
-                </p>
+                  <p class="text-sm leading-relaxed">{{ message.text }}</p>
+                  <p
+                    :class="[
+                      'text-xs mt-1',
+                      message.isOwn ? 'text-green-100' : 'text-gray-500',
+                    ]"
+                  >
+                    {{ formatTime(message.timestamp) }}
+                  </p>
+                </div>
+
+                <!-- Attachments (separate from text) -->
+                <div
+                  v-if="message.attachments && message.attachments.length > 0"
+                  :class="[
+                    'space-y-2',
+                    message.isOwn ? 'ml-auto' : ''
+                  ]"
+                >
+                  <div
+                    v-for="(attachment, index) in message.attachments"
+                    :key="attachment.documentId || index"
+                    class="relative group"
+                  >
+                    <!-- Download Icon -->
+                    <button
+                      @click="handleDownload(attachment.documentId)"
+                      class="absolute top-2 left-2 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      :disabled="documentStore.isLoading"
+                    >
+                      <Download class="h-4 w-4" />
+                    </button>
+
+                    <!-- Image Preview -->
+                    <div v-if="isImageFile(attachment.url)" class="w-64 h-48">
+                      <img
+                        :src="attachment.url"
+                        :alt="`Attachment ${index + 1}`"
+                        class="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition border shadow-sm"
+                        @click="openImageModal(attachment.url, message)"
+                        @error="handleImageError"
+                      />
+                    </div>
+
+                    <!-- File Download Link -->
+                    <div v-else class="flex items-center gap-2 p-3 bg-gray-100 rounded-lg border max-w-xs">
+                      <Paperclip class="h-4 w-4 text-gray-500" />
+                      <span class="text-sm text-gray-700 truncate flex-1">
+                        {{ getFileName(attachment.url) }}
+                      </span>
+                    </div>
+
+                    <!-- Timestamp for attachments only -->
+                    <p
+                      v-if="!message.text"
+                      class="text-xs text-gray-500 mt-1 px-1"
+                    >
+                      {{ formatTime(message.timestamp) }}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Input Section -->
           <div class="bg-white border-t border-gray-200 p-4">
+            <!-- File Preview Section -->
+            <div v-if="localFiles.length > 0" class="mb-3 p-3 bg-gray-50 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Files to send ({{ localFiles.length }})</span>
+                <button
+                  type="button"
+                  @click="clearAllFiles"
+                  class="text-xs text-red-600 hover:text-red-800"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div class="space-y-2 max-h-32 overflow-y-auto">
+                <div
+                  v-for="(fileItem, index) in localFiles"
+                  :key="index"
+                  class="flex items-center gap-3 p-2 bg-white rounded border"
+                >
+                  <!-- File Preview -->
+                  <div class="flex-shrink-0">
+                    <img
+                      v-if="isImageFile(fileItem.file)"
+                      :src="getFilePreviewUrl(fileItem.file)"
+                      alt="Preview"
+                      class="w-12 h-12 object-cover rounded border"
+                    />
+                    <div
+                      v-else
+                      class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center border"
+                    >
+                      <Paperclip class="h-4 w-4 text-gray-600" />
+                    </div>
+                  </div>
+
+                  <!-- File Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ fileItem.name }}</p>
+                    <p class="text-xs text-gray-500">{{ formatFileSize(fileItem.file.size) }}</p>
+                  </div>
+
+                  <!-- Remove Button -->
+                  <button
+                    type="button"
+                    @click="removeFile(index)"
+                    class="flex-shrink-0 text-red-600 hover:text-red-800"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <form class="flex gap-3" @submit.prevent="sendChatMessage">
               <label
                 class="flex-shrink-0 p-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-green-400 transition cursor-pointer flex items-center justify-center"
@@ -203,6 +312,78 @@
       </div>
     </div>
 
+    <!-- Enhanced Image Modal with Message Context -->
+    <div
+      v-if="showImageModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+      @click="closeImageModal"
+    >
+      <div class="relative max-w-6xl max-h-full p-4 flex gap-4">
+        <!-- Image -->
+        <div class="flex-1 flex items-center justify-center">
+          <img
+            :src="selectedImage"
+            alt="Full size image"
+            class="max-w-full max-h-full rounded-lg"
+            @click.stop
+          />
+        </div>
+
+        <!-- Message Context Panel -->
+        <div
+          v-if="selectedMessageContext"
+          class="w-80 bg-white rounded-lg p-4 overflow-y-auto max-h-full"
+          @click.stop
+        >
+          <div class="flex items-center gap-3 mb-4 pb-3 border-b">
+            <div
+              class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-medium"
+            >
+              {{ selectedMessageContext.isOwn ? 'You' : getInitials(selectedFarmer) }}
+            </div>
+            <div>
+              <p class="font-medium text-gray-900">
+                {{ selectedMessageContext.isOwn ? 'You' : selectedFarmerName }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ formatTime(selectedMessageContext.timestamp) }}
+              </p>
+            </div>
+          </div>
+
+          <div v-if="selectedMessageContext.text" class="mb-3">
+            <p class="text-sm text-gray-700 leading-relaxed">
+              {{ selectedMessageContext.text }}
+            </p>
+          </div>
+
+          <div v-if="selectedMessageContext.attachments?.length > 1" class="space-y-2">
+            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">
+              Other Attachments ({{ selectedMessageContext.attachments.length - 1 }})
+            </p>
+            <div
+              v-for="(attachment, index) in selectedMessageContext.attachments"
+              :key="attachment.documentId || index"
+              class="flex items-center gap-2 text-xs text-gray-600"
+            >
+              <template v-if="attachment.url !== selectedImage">
+                <Paperclip class="h-3 w-3" />
+                <span class="truncate">{{ getFileName(attachment.url) }}</span>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Close Button -->
+        <button
+          class="absolute top-4 right-4 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 z-10"
+          @click="closeImageModal"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+
     <!-- Error Modal -->
     <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
@@ -216,16 +397,18 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { Search, Send, User, ChevronLeft, Paperclip, Mail } from 'lucide-vue-next'
+import { Search, Send, User, ChevronLeft, Paperclip, Mail, Download } from 'lucide-vue-next'
 import { useFarmerStore } from '@/stores/farmer'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'
+import { useDocumentStore } from '@/stores/document'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
 const messageStore = useMessageStore()
+const documentStore = useDocumentStore()
 
 // Use the navigation directly
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
@@ -246,13 +429,13 @@ const messages = computed(() => messageStore.messages)
 
 // Add disabled state for send button with debug logging
 const isSendDisabled = computed(() => {
-    const isEmptyMessage = messageInput.value.trim() === ''
-    const hasNoFiles = localFiles.value.length === 0
-    const isDisabled = (isEmptyMessage && hasNoFiles) || isUploading.value
-    
+    const hasText = messageInput.value.trim() !== ''
+    const hasFiles = localFiles.value.length > 0
+    const isDisabled = (!hasText && !hasFiles) || isUploading.value
+
     console.log('[MessageComponent] Send button state:', {
-        hasText: !isEmptyMessage,
-        hasFiles: !hasNoFiles,
+        hasText,
+        hasFiles,
         isUploading: isUploading.value,
         isDisabled
     })
@@ -369,13 +552,22 @@ const sendChatMessage = async () => {
         }
 
         const files = localFiles.value.map(f => f.file)
-        console.log(`[MessageComponent] Prepared ${files.length} files for upload`, 
+        const messageText = messageInput.value.trim()
+
+        // Allow sending if either text or files are present
+        if (!messageText && files.length === 0) {
+            errorMessage.value = 'Please enter a message or select files to send.'
+            showErrorModal.value = true
+            return
+        }
+
+        console.log(`[MessageComponent] Prepared ${files.length} files for upload`,
             files.map(f => ({ name: f.name, type: f.type, size: f.size })))
 
-        // Prepare message payload
+        // Prepare message payload - text is optional if files are present
         const messagePayload = {
-            receiverId: receiverId,  // Use the validated receiverId
-            text: messageInput.value.trim() || (files.length ? 'File Uploaded' : ''),
+            receiverId: receiverId,
+            text: messageText || '', // Allow empty text if files are present
             type: 'FARMER_AGRICULTURE',
             files: files,
             sentAt: new Date().toISOString()
@@ -384,15 +576,6 @@ const sendChatMessage = async () => {
         console.log('[MessageComponent] Sending message with payload:', {
             ...messagePayload,
             files: files.map(f => `${f.name} (${f.type}, ${(f.size / 1024).toFixed(2)} KB)`)
-        })
-        
-        console.log('[MessageComponent] Sending message with payload:', {
-            ...messagePayload,
-            files: files.map(f => ({
-                name: f.name,
-                type: f.type,
-                size: f.size
-            }))
         })
         
         await messageStore.sendMessage(messagePayload)
@@ -443,6 +626,102 @@ const getInitials = user => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
+// Add new state for image modal
+const showImageModal = ref(false)
+const selectedImage = ref('')
+
+// Add new state for enhanced image modal
+const selectedMessageContext = ref(null)
+
+// Add utility functions for attachments (updated to handle both URLs and File objects)
+const isImageFile = (urlOrFile) => {
+  if (!urlOrFile) return false
+
+  // If it's a File object, check the type
+  if (urlOrFile.type) {
+    return urlOrFile.type.startsWith('image/')
+  }
+
+  // If it's a URL string, check the extension
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  return imageExtensions.some(ext => urlOrFile.toLowerCase().includes(ext))
+}
+
+const getFileName = (url) => {
+  if (!url) return 'Unknown file'
+  try {
+    const urlParts = url.split('/')
+    const fileName = urlParts[urlParts.length - 1]
+    // Remove query parameters
+    return fileName.split('?')[0] || 'Download file'
+  } catch {
+    return 'Download file'
+  }
+}
+
+const handleDownload = async (documentId) => {
+  if (!documentId) {
+    errorMessage.value = 'Document ID not found'
+    showErrorModal.value = true
+    return
+  }
+
+  try {
+    const result = await documentStore.downloadDocument(documentId)
+    if (!result.success) {
+      errorMessage.value = result.message || 'Failed to download document'
+      showErrorModal.value = true
+    }
+  } catch (error) {
+    console.error('Error downloading document:', error)
+    errorMessage.value = 'Failed to download document'
+    showErrorModal.value = true
+  }
+}
+
+const openImageModal = (imageUrl, messageContext = null) => {
+  selectedImage.value = imageUrl
+  selectedMessageContext.value = messageContext
+  showImageModal.value = true
+}
+
+const closeImageModal = () => {
+  showImageModal.value = false
+  selectedImage.value = ''
+  selectedMessageContext.value = null
+}
+
+const handleImageError = (event) => {
+  console.warn('Failed to load image:', event.target.src)
+  event.target.style.display = 'none'
+}
+
+// New utility functions for file preview
+const getFilePreviewUrl = (file) => {
+  try {
+    return URL.createObjectURL(file)
+  } catch (error) {
+    console.error('Error creating preview URL:', error)
+    return null
+  }
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const removeFile = (index) => {
+  localFiles.value.splice(index, 1)
+}
+
+const clearAllFiles = () => {
+  localFiles.value = []
+}
+
 // Lifecycle hooks
 onMounted(async () => {
     try {
@@ -487,5 +766,13 @@ onBeforeUnmount(() => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background-color: rgba(156, 163, 175, 0.5);
     border-radius: 3px;
+}
+
+.attachment-item {
+  margin-bottom: 8px;
+}
+
+.attachment-item:last-child {
+  margin-bottom: 0;
 }
 </style>

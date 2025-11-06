@@ -1,63 +1,76 @@
-import {defineStore} from 'pinia'
-import { computed, ref } from 'vue'
-import axios from 'axios'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 export const useNotificationStore = defineStore('notification', () => {
     const notifications = ref([])
-    const loading = ref(false)
-    const error = ref(null)
+    const nextId = ref(0)
 
-    // Getter
-    const allNotifications = computed(() => notifications.value)
-    const isLoading = computed(() => loading.value)
-    const hasError = computed(() => error.value !== null)
+    const addNotification = (type, message, duration = 5000) => {
+        const id = nextId.value++
+        const notification = {
+            id,
+            type, // 'success', 'error', 'info', 'warning'
+            message,
+            duration,
+            visible: true,
+            timestamp: Date.now()
+        }
 
-    //Actions
-    const fetchNotifications = async () => {
-        loading.value = true
-        error.value = null
-        try {
-            const response = await axios.get('/api/v1/notification')
-            notifications.value = response.data
-            console.log('Fetched notifications:', notifications.value)
-            return { success: true, data: notifications.value }
-        }catch (error){
-            console.error('Error fetching notifications:', error)
-            return { success: false, error: error.message }
-        }finally {
-            loading.value = false
+        notifications.value.push(notification)
+
+        // Auto remove notification after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                removeNotification(id)
+            }, duration)
+        }
+
+        return id
+    }
+
+    const removeNotification = (id) => {
+        const index = notifications.value.findIndex(n => n.id === id)
+        if (index > -1) {
+            notifications.value[index].visible = false
+            // Remove from array after animation
+            setTimeout(() => {
+                notifications.value.splice(index, 1)
+            }, 300)
         }
     }
 
-    const fetchUserNotifications = async (username) => {
-        try{
-            loading.value = true
-            error.value = null
-
-            const response = await axios.get(`/api/v1/notification/user/${username}`)
-            notifications.value = response.data
-            console.log(`Fetched notifications for user ${username}:`, notifications.value)
-            return { success: true, data: notifications.value }
-        }catch (error){
-            console.error('Error fetching user notifications:', error)
-            error.value = error.message
-            return { success: false, error: error.message }
-        }finally {
-            loading.value = false
-            error.value = null
-        }
+    const clearAllNotifications = () => {
+        notifications.value.forEach(n => n.visible = false)
+        setTimeout(() => {
+            notifications.value.length = 0
+        }, 300)
     }
 
-    const addIncomingNotifications = (notifications) => {
-        notifications.value.unshift(...notifications)
-        console.log('New notifications added:', notifications)
+    // Convenience methods
+    const showSuccess = (message, duration = 5000) => {
+        return addNotification('success', message, duration)
+    }
+
+    const showError = (message, duration = 7000) => {
+        return addNotification('error', message, duration)
+    }
+
+    const showInfo = (message, duration = 5000) => {
+        return addNotification('info', message, duration)
+    }
+
+    const showWarning = (message, duration = 6000) => {
+        return addNotification('warning', message, duration)
     }
 
     return {
-        allNotifications,
-        isLoading,
-        hasError,
-        addIncomingNotifications,
-        fetchNotifications
+        notifications,
+        addNotification,
+        removeNotification,
+        clearAllNotifications,
+        showSuccess,
+        showError,
+        showInfo,
+        showWarning
     }
 })

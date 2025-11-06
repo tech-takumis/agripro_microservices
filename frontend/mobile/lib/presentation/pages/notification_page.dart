@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:mobile/features/messages/providers/notification_provider.dart';
 import 'package:mobile/presentation/controllers/auth_controller.dart';
-import 'package:mobile/presentation/widgets/error_display.dart';
+import 'package:mobile/data/models/api_error_response.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationPage extends StatefulHookConsumerWidget {
@@ -22,6 +23,79 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
         ref.read(notificationProvider.notifier).fetchNotifications(authState.userId!);
       }
     });
+  }
+
+  void _showErrorFlushbar(BuildContext context, dynamic error) {
+    String message = 'An error occurred';
+
+    if (error is ApiErrorResponse) {
+      message = error.message;
+    } else if (error is Exception) {
+      message = error.toString().replaceFirst('Exception: ', '');
+    } else {
+      message = error.toString();
+    }
+
+    Flushbar(
+      message: message,
+      backgroundColor: Colors.red.withOpacity(0.9),
+      duration: const Duration(seconds: 4),
+      margin: const EdgeInsets.all(12),
+      borderRadius: BorderRadius.circular(8),
+      flushbarPosition: FlushbarPosition.TOP,
+      icon: const Icon(
+        Icons.error,
+        color: Colors.white,
+      ),
+    ).show(context);
+  }
+
+  Future<void> _deleteNotification(
+    BuildContext context,
+    String notificationId,
+    dynamic notificationNotifier,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Notification'),
+        content: const Text('Are you sure you want to delete this notification?'),
+        actions: [
+          TextButton(
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await notificationNotifier.deleteNotification(notificationId);
+        if (context.mounted) {
+          Flushbar(
+            message: 'Notification deleted successfully',
+            backgroundColor: Colors.green.withOpacity(0.9),
+            duration: const Duration(seconds: 2),
+            margin: const EdgeInsets.all(12),
+            borderRadius: BorderRadius.circular(8),
+            flushbarPosition: FlushbarPosition.TOP,
+            icon: const Icon(
+              Icons.check_circle,
+              color: Colors.white,
+            ),
+          ).show(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          _showErrorFlushbar(context, e);
+        }
+      }
+    }
   }
 
   @override
@@ -71,15 +145,22 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                   try {
                     await notificationNotifier.clearNotifications();
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('All notifications cleared')),
-                      );
+                      Flushbar(
+                        message: 'All notifications cleared',
+                        backgroundColor: Colors.green.withOpacity(0.9),
+                        duration: const Duration(seconds: 2),
+                        margin: const EdgeInsets.all(12),
+                        borderRadius: BorderRadius.circular(8),
+                        flushbarPosition: FlushbarPosition.TOP,
+                        icon: const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                        ),
+                      ).show(context);
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to clear notifications: $e')),
-                      );
+                      _showErrorFlushbar(context, e);
                     }
                   }
                 }
@@ -161,11 +242,49 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                               await notificationNotifier.markAsRead(notification.id);
                             } catch (e) {
                               if (context.mounted) {
-                                ErrorDisplay.showError(context, e);
+                                _showErrorFlushbar(context, e);
                               }
                             }
                           }
                         },
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            if (value == 'delete') {
+                              await _deleteNotification(context, notification.id, notificationNotifier);
+                            } else if (value == 'mark_read') {
+                              try {
+                                await notificationNotifier.markAsRead(notification.id);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  _showErrorFlushbar(context, e);
+                                }
+                              }
+                            }
+                          },
+                          itemBuilder: (BuildContext context) => [
+                            if (!notification.read)
+                              const PopupMenuItem<String>(
+                                value: 'mark_read',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.mark_email_read, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Mark as read'),
+                                  ],
+                                ),
+                              ),
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Delete', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),

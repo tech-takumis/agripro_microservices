@@ -59,6 +59,15 @@ public class ApplicationController {
         return  new ResponseEntity<>(applicationService.findAll(),HttpStatus.OK);
     }
 
+    @PutMapping("/{application-id}/update-documents")
+    public ResponseEntity<String> updateApplicationDocuments(
+            @PathVariable("application-id") UUID applicationId,
+            @RequestParam("files") List<MultipartFile> files
+    ){
+        applicationService.updateApplicationDocuments(applicationId,files);
+        return new ResponseEntity<>("Application documents updated successfully",HttpStatus.OK);
+    }
+
     @DeleteMapping("/{application-id}")
     public ResponseEntity<Void> deleteApplication(
             @PathVariable("application-id") UUID applicationId

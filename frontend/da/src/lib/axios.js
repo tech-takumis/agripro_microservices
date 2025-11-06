@@ -30,8 +30,15 @@ axios.interceptors.response.use(
     error => {
         // Handle authentication errors (401 Unauthorized)
         if (error.response?.status === 401) {
-            // Redirect to login page if authentication fails
-            window.location.href = '/';
+            // Only redirect if this is NOT a login request
+            // Login requests should handle their own 401 errors
+            const isLoginRequest = error.config?.url?.includes('/auth/login');
+            if (!isLoginRequest) {
+                console.log('[Axios] 401 detected, redirecting to login');
+                window.location.href = '/';
+            } else {
+                console.log('[Axios] 401 from login request, letting login handler deal with it');
+            }
         }
         // Handle 403 Forbidden errors
         if (error.response?.status === 403) {

@@ -91,12 +91,21 @@ router.beforeEach(async (to, from, next) => {
 
         // For protected routes, initialize normally
         if (!auth.isAuthenticated) {
-            await auth.initialize();
+            // Don't initialize if we're already on the login page
+            // This prevents page refresh after failed login attempts
+            if (to.name !== 'login') {
+                await auth.initialize();
+            }
         }
 
         // Check authentication for protected routes
         if (!auth.isAuthenticated) {
-            return next({ name: 'login' });
+            if (to.name !== 'login') {
+                console.log('[Router Guard] Redirecting to login...');
+                return next({ name: 'login' });
+            }
+            console.log('[Router Guard] Already on login, not redirecting.');
+            return next();
         }
 
         // Check role-based access

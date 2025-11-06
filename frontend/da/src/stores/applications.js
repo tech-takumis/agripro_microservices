@@ -40,6 +40,7 @@ export const useApplicationStore = defineStore('application', () => {
     async function fetchApplicationById(id) {
         try {
             const response = await axios.get(`/api/v1/applications/${id}`)
+            console.log("Fetched application:", response.data)
             return { success: true, data: response.data }
         } catch (error) {
             console.error("Error fetching application:", error.response?.data || error.message)
@@ -59,6 +60,41 @@ export const useApplicationStore = defineStore('application', () => {
         } catch (error) {
             console.error("Error updating application:", error.response?.data || error.message)
             return { success: false, error: error.response?.data || error.message }
+        }
+    }
+
+    const updateApplicationDocuments = async (applicationId, files) => {
+        try {
+            loading.value = true
+            error.value = null
+
+            const formData = new FormData()
+
+            // Add each file to the FormData with the key "files"
+            if (files && files.length > 0) {
+                files.forEach(file => {
+                    formData.append('files', file)
+                })
+            }
+
+            const response = await axios.put(
+                `${basePath.value}/${applicationId}/update-documents`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            )
+
+            return { success: true, message: response.data, data: response.data }
+        } catch (err) {
+            console.error("Error updating application documents:", err)
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to update application documents'
+            error.value = errorMessage
+            return { success: false, message: errorMessage }
+        } finally {
+            loading.value = false
         }
     }
 
@@ -84,8 +120,11 @@ export const useApplicationStore = defineStore('application', () => {
         isLoading,
         errors,
 
+        createInsuranceApplication,
+        fetchApplications,
         fetchApplicationById,
         updateApplication,
+        updateApplicationDocuments,
         deleteApplication,
     }
 })
@@ -160,41 +199,6 @@ export const useApplicationTypeStore = defineStore('applicationType', () => {
     }
 
 
-})
-
-
-export const useApplicationFieldStore = defineStore('applicationField', () => {
-    const applicationFields = ref([])
-    const loading = ref(false)
-    const error = ref(null)
-    const basePath = ref('/api/v1/application/fields')
-
-    const allApplicationFields = computed(() => applicationFields.value || [])
-    const isLoading = computed(() => loading.value)
-    const errors = computed(() => errors.value)
-
-    const fetchApplicationFields = async () => {
-        try {
-            const response = await axios.get(basePath.value)
-            applicationFields.value = response.data
-            return { success: true, data: response.data }
-        } catch (error) {
-            console.error("Error fetching application fields:", error.response?.data || error.message)
-            return { success: false, error: error.response?.data || error.message }
-        }
-    }
-
-
-    return {
-        applicationFields,
-        loading,
-        error,
-        basePath,
-        allApplicationFields,
-        isLoading,
-        errors,
-        fetchApplicationFields,
-    }
 })
 
 

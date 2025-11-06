@@ -85,7 +85,6 @@ public class DocumentController {
 
 
     @GetMapping("/{documentId}/download")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadDocument(
             @PathVariable UUID documentId) {
         var document = documentService.download(documentId);
@@ -97,7 +96,7 @@ public class DocumentController {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/document-id")
+    @DeleteMapping("/{document-id}")
     public ResponseEntity<Void> delete(
             @PathVariable("document-id") UUID documentId
     ){

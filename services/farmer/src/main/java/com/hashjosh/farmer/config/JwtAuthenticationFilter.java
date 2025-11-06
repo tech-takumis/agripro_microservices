@@ -54,7 +54,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Check for internal service header
         String internalServiceHeader = request.getHeader(INTERNAL_SERVICE_HEADER);
         String userIdHeader = request.getHeader(USER_ID_HEADER);
-        UUID userUUIdHeader = UUID.fromString(userIdHeader);
+        UUID userUUIdHeader = null;
+        if (userIdHeader != null && !userIdHeader.isEmpty()) {
+            try {
+                userUUIdHeader = UUID.fromString(userIdHeader);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid X-User-Id header value: {}", userIdHeader);
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid X-User-Id header value");
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                        "{\"message\": \"Bad Request - Invalid X-User-Id header value\"}"
+                    );
+                    response.getWriter().flush();
+                }
+                return;
+            }
+        }
         log.debug("X-Internal-Service header: {}, Trusted service IDs: {}", internalServiceHeader, trustedConfig.getInternalServiceIds());
 
         if (internalServiceHeader != null) {

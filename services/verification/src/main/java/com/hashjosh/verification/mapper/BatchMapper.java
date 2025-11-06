@@ -26,6 +26,7 @@ public class BatchMapper {
                 .name(save.getName())
                 .description(save.getDescription())
                 .maxApplications(save.getMaxApplications())
+                .totalApplications(save.getTotalApplications())
                 .isAvailable(save.isAvailable())
                 .endDate(save.getEndDate())
                 .startDate(save.getStartDate())

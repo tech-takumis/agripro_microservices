@@ -58,7 +58,7 @@ export const useMessageStore = defineStore('message', () => {
                 senderId: auth.userId,
                 receiverId: messageData.receiverId,
                 conversationId: messageData.conversationId || null,
-                text: messageData.text,
+                text: messageData.text || '', // Allow empty text
                 type: 'FARMER_AGRICULTURE',
                 sentAt: messageData.sentAt || new Date().toISOString()
             }
@@ -150,18 +150,31 @@ export const useMessageStore = defineStore('message', () => {
 
     const addIncomingMessage = (data) => {
         const currentUserId = useAuthStore().userId
+
+        // Map attachmentResponses to attachments format for UI consistency
+        const attachments = data.attachmentResponses ?
+            data.attachmentResponses.map(attachment => ({
+                attachmentId: attachment.attachmentId,
+                documentId: attachment.documentId,
+                url: attachment.url
+            })) : []
+
         const newMsg = {
             id: data.messageId,
             text: data.text,
             senderId: data.senderId,
             receiverId: data.receiverId,
-            timestamp: data.sentAt,
-            type: data.type,
+            timestamp: data.timestamp || new Date().toISOString(),
+            type: data.conversationType || data.type,
             isOwn: data.senderId === currentUserId,
-            attachments: data.attachments || []
+            attachments: attachments
         }
+
         messages.value.push(newMsg)
-        console.log('[MessageStore] 📨 Added incoming message:', newMsg)
+        console.log('[MessageStore] 📨 Added incoming message:', {
+            ...newMsg,
+            attachments: attachments.length > 0 ? `${attachments.length} attachment(s)` : 'none'
+        })
     }
 
     return {

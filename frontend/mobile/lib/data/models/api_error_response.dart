@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 class ApiErrorResponse {
   final bool success;
   final String message;
   final int status;
   final DateTime timestamp;
-  final Map<String, dynamic>? details;
+  final Map<String, Object>? details;
 
   ApiErrorResponse({
     required this.success,
@@ -17,26 +15,11 @@ class ApiErrorResponse {
 
   factory ApiErrorResponse.fromJson(Map<String, dynamic> json) {
     return ApiErrorResponse(
-      success: json['success'] as bool? ?? false,
-      message: json['message'] as String? ?? 'Unknown error occurred',
-      status: json['status'] as int? ?? 500,
-      timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'] as String)
-          : DateTime.now(),
-      details: json['details'] as Map<String, dynamic>?,
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      status: json['status'] ?? 500,
+      timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      details: json['details'] as Map<String, Object>?,
     );
-  }
-
-  String get formattedMessage {
-    if (details != null && details!['error'] != null) {
-      return '${details!['error']}';
-    }
-    return message;
-  }
-
-  Color get statusColor {
-    if (status >= 500) return Colors.red;
-    if (status >= 400) return Colors.orange;
-    return Colors.green;
   }
 }

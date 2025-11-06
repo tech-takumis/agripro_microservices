@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface ApplicationProviderRepository extends JpaRepository<ApplicationProvider, UUID> {
     Optional<ApplicationProvider> findByName(String name);
+
+    boolean existsByName(String name);
 }
