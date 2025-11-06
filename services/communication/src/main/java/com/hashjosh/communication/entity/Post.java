@@ -27,7 +27,7 @@ public class Post {
     @JoinColumn(name = "author_id", nullable = false)
     private UUID authorId;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, length = 999)
     private String content;
 
     @ElementCollection

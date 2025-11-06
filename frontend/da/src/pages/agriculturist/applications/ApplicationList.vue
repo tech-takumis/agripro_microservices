@@ -158,7 +158,7 @@ transition-all duration-300 ease-in-out"
                             <input
                                 type="checkbox"
                                 :checked="isSelected(application.id)"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                 @change="toggleSelection(application.id)"
                             />
                         </td>
