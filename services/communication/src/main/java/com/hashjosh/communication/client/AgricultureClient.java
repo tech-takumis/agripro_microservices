@@ -19,11 +19,17 @@ public class AgricultureClient {
                 .build();
     }
 
-    public String getAgricultureName(UUID id){
-        return restClient.get()
-                .uri("/{id}/name",id)
-                .header("X-Internal-Service",applicationName)
-                .retrieve()
-                .body(String.class);
+    public String getAgricultureName(UUID id) {
+        try {
+            return restClient.get()
+                    .uri("/{id}/name", id)
+                    .header("X-Internal-Service", applicationName)
+                    .retrieve()
+                    .body(String.class);
+        } catch (Exception e) {
+            // Provide a fallback value or handle the error gracefully
+            return "Unknown Agriculture";
+        }
     }
+
 }

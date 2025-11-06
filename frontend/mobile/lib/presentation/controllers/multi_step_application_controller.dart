@@ -274,6 +274,7 @@ class MultiStepApplicationController {
   Future<ApplicationSubmissionResponse> submitApplication(AuthState authState) async {
     if (!_validateCurrentStep()) {
       _errorMessage = 'Please fill in all required fields';
+      _isLoading = false;
       return ApplicationSubmissionResponse(success: false, message: _errorMessage, applicationId: '');
     }
 
@@ -376,6 +377,8 @@ class MultiStepApplicationController {
         fileEntries.map((e) => e.value!).toList(),
       );
 
+      _isLoading = false;
+      print('✅ Application submission completed: ${response.success}');
       return response;
     } catch (e) {
       _isLoading = false;
