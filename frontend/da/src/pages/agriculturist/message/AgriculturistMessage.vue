@@ -80,59 +80,78 @@
                 message.isOwn ? 'justify-end' : 'justify-start',
               ]"
             >
-              <div
-                :class="[
-                  'max-w-[80%] md:max-w-xl px-4 py-3 rounded-2xl shadow-sm transition-all duration-200',
-                  message.isOwn
-                    ? 'bg-green-600 text-white rounded-br-none'
-                    : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
-                ]"
-              >
-                <!-- Message Text -->
-                <p v-if="message.text" class="text-sm leading-relaxed mb-2">{{ message.text }}</p>
+              <div class="max-w-[80%] md:max-w-xl space-y-2">
+                <!-- Message Text (separate from attachments) -->
+                <div
+                  v-if="message.text"
+                  :class="[
+                    'px-4 py-3 rounded-2xl shadow-sm transition-all duration-200',
+                    message.isOwn
+                      ? 'bg-green-600 text-white rounded-br-none ml-auto'
+                      : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none',
+                  ]"
+                >
+                  <p class="text-sm leading-relaxed">{{ message.text }}</p>
+                  <p
+                    :class="[
+                      'text-xs mt-1',
+                      message.isOwn ? 'text-green-100' : 'text-gray-500',
+                    ]"
+                  >
+                    {{ formatTime(message.timestamp) }}
+                  </p>
+                </div>
 
-                <!-- Attachments Preview -->
-                <div v-if="message.attachments && message.attachments.length > 0" class="space-y-2">
+                <!-- Attachments (separate from text) -->
+                <div
+                  v-if="message.attachments && message.attachments.length > 0"
+                  :class="[
+                    'space-y-2',
+                    message.isOwn ? 'ml-auto' : ''
+                  ]"
+                >
                   <div
                     v-for="(attachment, index) in message.attachments"
                     :key="attachment.documentId || index"
-                    class="attachment-item"
+                    class="relative group"
                   >
+                    <!-- Download Icon -->
+                    <button
+                      @click="handleDownload(attachment.documentId)"
+                      class="absolute top-2 left-2 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      :disabled="documentStore.isLoading"
+                    >
+                      <Download class="h-4 w-4" />
+                    </button>
+
                     <!-- Image Preview -->
                     <div v-if="isImageFile(attachment.url)" class="max-w-sm">
                       <img
                         :src="attachment.url"
                         :alt="`Attachment ${index + 1}`"
-                        class="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
-                        @click="openImageModal(attachment.url)"
+                        class="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition border"
+                        @click="openImageModal(attachment.url, message)"
                         @error="handleImageError"
                       />
                     </div>
 
                     <!-- File Download Link -->
-                    <div v-else class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+                    <div v-else class="flex items-center gap-2 p-3 bg-gray-100 rounded-lg border max-w-xs">
                       <Paperclip class="h-4 w-4 text-gray-500" />
-                      <a
-                        :href="attachment.url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-sm text-blue-600 hover:text-blue-800 underline"
-                      >
+                      <span class="text-sm text-gray-700 truncate flex-1">
                         {{ getFileName(attachment.url) }}
-                      </a>
+                      </span>
                     </div>
+
+                    <!-- Timestamp for attachments only -->
+                    <p
+                      v-if="!message.text"
+                      class="text-xs text-gray-500 mt-1 px-1"
+                    >
+                      {{ formatTime(message.timestamp) }}
+                    </p>
                   </div>
                 </div>
-
-                <!-- Timestamp -->
-                <p
-                  :class="[
-                    'text-xs mt-1',
-                    message.isOwn ? 'text-green-100' : 'text-gray-500',
-                  ]"
-                >
-                  {{ formatTime(message.timestamp) }}
-                </p>
               </div>
             </div>
           </div>
@@ -293,23 +312,74 @@
       </div>
     </div>
 
-    <!-- Image Modal -->
+    <!-- Enhanced Image Modal with Message Context -->
     <div
       v-if="showImageModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
       @click="closeImageModal"
     >
-      <div class="relative max-w-4xl max-h-full p-4">
-        <img
-          :src="selectedImage"
-          alt="Full size image"
-          class="max-w-full max-h-full rounded-lg"
-        />
+      <div class="relative max-w-6xl max-h-full p-4 flex gap-4">
+        <!-- Image -->
+        <div class="flex-1 flex items-center justify-center">
+          <img
+            :src="selectedImage"
+            alt="Full size image"
+            class="max-w-full max-h-full rounded-lg"
+            @click.stop
+          />
+        </div>
+
+        <!-- Message Context Panel -->
+        <div
+          v-if="selectedMessageContext"
+          class="w-80 bg-white rounded-lg p-4 overflow-y-auto max-h-full"
+          @click.stop
+        >
+          <div class="flex items-center gap-3 mb-4 pb-3 border-b">
+            <div
+              class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-medium"
+            >
+              {{ selectedMessageContext.isOwn ? 'You' : getInitials(selectedFarmer) }}
+            </div>
+            <div>
+              <p class="font-medium text-gray-900">
+                {{ selectedMessageContext.isOwn ? 'You' : selectedFarmerName }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ formatTime(selectedMessageContext.timestamp) }}
+              </p>
+            </div>
+          </div>
+
+          <div v-if="selectedMessageContext.text" class="mb-3">
+            <p class="text-sm text-gray-700 leading-relaxed">
+              {{ selectedMessageContext.text }}
+            </p>
+          </div>
+
+          <div v-if="selectedMessageContext.attachments?.length > 1" class="space-y-2">
+            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">
+              Other Attachments ({{ selectedMessageContext.attachments.length - 1 }})
+            </p>
+            <div
+              v-for="(attachment, index) in selectedMessageContext.attachments"
+              :key="attachment.documentId || index"
+              class="flex items-center gap-2 text-xs text-gray-600"
+            >
+              <template v-if="attachment.url !== selectedImage">
+                <Paperclip class="h-3 w-3" />
+                <span class="truncate">{{ getFileName(attachment.url) }}</span>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Close Button -->
         <button
-          class="absolute top-2 right-2 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100"
+          class="absolute top-4 right-4 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 z-10"
           @click="closeImageModal"
         >
-          ×
+          ✕
         </button>
       </div>
     </div>
@@ -327,16 +397,18 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { Search, Send, User, ChevronLeft, Paperclip, Mail } from 'lucide-vue-next'
+import { Search, Send, User, ChevronLeft, Paperclip, Mail, Download } from 'lucide-vue-next'
 import { useFarmerStore } from '@/stores/farmer'
 import { useAuthStore } from '@/stores/auth'
 import { useMessageStore } from '@/stores/message'
+import { useDocumentStore } from '@/stores/document'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import { MUNICIPAL_AGRICULTURIST_NAVIGATION } from '@/lib/navigation'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
 const messageStore = useMessageStore()
+const documentStore = useDocumentStore()
 
 // Use the navigation directly
 const navigation = MUNICIPAL_AGRICULTURIST_NAVIGATION
@@ -558,6 +630,9 @@ const getInitials = user => {
 const showImageModal = ref(false)
 const selectedImage = ref('')
 
+// Add new state for enhanced image modal
+const selectedMessageContext = ref(null)
+
 // Add utility functions for attachments (updated to handle both URLs and File objects)
 const isImageFile = (urlOrFile) => {
   if (!urlOrFile) return false
@@ -584,14 +659,36 @@ const getFileName = (url) => {
   }
 }
 
-const openImageModal = (imageUrl) => {
+const handleDownload = async (documentId) => {
+  if (!documentId) {
+    errorMessage.value = 'Document ID not found'
+    showErrorModal.value = true
+    return
+  }
+
+  try {
+    const result = await documentStore.downloadDocument(documentId)
+    if (!result.success) {
+      errorMessage.value = result.message || 'Failed to download document'
+      showErrorModal.value = true
+    }
+  } catch (error) {
+    console.error('Error downloading document:', error)
+    errorMessage.value = 'Failed to download document'
+    showErrorModal.value = true
+  }
+}
+
+const openImageModal = (imageUrl, messageContext = null) => {
   selectedImage.value = imageUrl
+  selectedMessageContext.value = messageContext
   showImageModal.value = true
 }
 
 const closeImageModal = () => {
   showImageModal.value = false
   selectedImage.value = ''
+  selectedMessageContext.value = null
 }
 
 const handleImageError = (event) => {

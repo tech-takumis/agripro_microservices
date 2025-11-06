@@ -19,7 +19,6 @@
       <button
         class="flex items-center justify-center p-2 bg-green-600 text-white rounded-full shadow-sm hover:bg-gray-400 transition-colors flex-shrink-0"
         @click="showCreateBatchModal = true"
-        title="Create Batch"
       >
         <Plus class="w-5 h-5" />
       </button>
