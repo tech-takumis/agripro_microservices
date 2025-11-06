@@ -96,7 +96,7 @@ public class DocumentController {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/document-id")
+    @DeleteMapping("/{document-id}")
     public ResponseEntity<Void> delete(
             @PathVariable("document-id") UUID documentId
     ){

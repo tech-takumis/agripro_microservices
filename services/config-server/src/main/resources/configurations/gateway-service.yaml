@@ -41,7 +41,7 @@ spring:
             - id: application-service
               uri: lb://application-service
               predicates:
-                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,/api/v1/batches/**
+                - Path=/api/v1/applications/**,/api/v1/application/types/**,/api/v1/application/fields/**,/api/v1/application/sections/**,/api/v1/providers
 
             - id: verification-service
               uri: lb://verification-service
