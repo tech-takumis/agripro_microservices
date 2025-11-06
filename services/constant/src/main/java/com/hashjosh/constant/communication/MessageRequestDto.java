@@ -18,7 +18,6 @@ import java.util.UUID;
 public class MessageRequestDto {
     private UUID senderId;
     private UUID receiverId;
-    @NotBlank(message = "Message text cannot be blank")
     private String text;
     @EnumValidator(enumClass = ConversationType.class, message = "Conversation type must be valid")
     private ConversationType type;

@@ -16,6 +16,7 @@ public class BatchResponseDTO {
     String name;
     String description;
     boolean isAvailable;
+    int totalApplications;
     int maxApplications;
     LocalDateTime startDate;
     LocalDateTime endDate;

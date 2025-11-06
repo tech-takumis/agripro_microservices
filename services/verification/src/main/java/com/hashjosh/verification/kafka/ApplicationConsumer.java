@@ -45,6 +45,9 @@ public class ApplicationConsumer {
 
                     if(notFull && available) {
                         selectedBatch = batch;
+
+                        selectedBatch.setTotalApplications(selectedBatch.getTotalApplications() + 1);
+                        batchRepository.save(selectedBatch);
                         break;
                     }
                 }

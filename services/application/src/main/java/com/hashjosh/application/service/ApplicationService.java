@@ -21,6 +21,7 @@ import com.hashjosh.application.validators.FieldValidatorFactory;
 import com.hashjosh.application.validators.ValidatorStrategy;
 import com.hashjosh.constant.application.ApplicationResponseDto;
 import com.hashjosh.kafkacommon.application.ApplicationSubmittedEvent;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,7 @@ public class ApplicationService {
     private final DocumentServiceClient documentServiceClient;
     private final DocumentRepository documentRepository;
 
+    @Transactional
     public Application processSubmission(
             ApplicationSubmissionDto submission,
             List<MultipartFile> files
@@ -108,6 +110,99 @@ public class ApplicationService {
         }
     }
 
+    @Transactional
+    public ApplicationResponseDto getApplicationById(UUID applicationId) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
+        return applicationMapper.toApplicationResponseDto(application);
+    }
+
+
+    @Transactional
+    public List<ApplicationResponseDto> findAll() {
+        return applicationRepository.findAll()
+                .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public List<ApplicationResponseDto> findAllProviderApplication(
+            String provider
+    ) {
+
+       ApplicationType type = applicationTypeRepository.findByProvider_Name(provider)
+               .orElseThrow(() -> ApiException.notFound("Application type not found for provider "+ provider));
+
+       List<Application> application = applicationRepository.findAllByApplicationTypeId(type.getId());
+
+        return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteApplication(UUID applicationId) {
+        Application application = findApplicationById(applicationId);
+        applicationRepository.delete(application);
+    }
+
+    @Transactional
+    public void updateApplicationDocuments(UUID applicationId, List<MultipartFile> files) {
+        try {
+            // Get current user details
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+
+            // Find the existing application
+            Application application = findApplicationById(applicationId);
+
+            // Validate that files are provided
+            if (files == null || files.isEmpty()) {
+                throw ApiException.badRequest("No files provided for document update");
+            }
+
+            // Get existing coordinates from the first document if available
+            String coordinates = null;
+            if (!application.getDocuments().isEmpty()) {
+                coordinates = application.getDocuments().get(0).getCoordinates();
+            }
+
+            // Upload new files and create Document entities
+            List<Document> newDocuments = new ArrayList<>();
+            for (MultipartFile file : files) {
+                // Upload document using DocumentServiceClient
+                var docResponse = documentServiceClient.uploadDocument(file, userDetails.getUserId());
+
+                // Create new Document entity
+                Document document = Document.builder()
+                        .documentId(docResponse.getDocumentId())
+                        .fileName(docResponse.getFileName())
+                        .fileType(docResponse.getFileType())
+                        .coordinates(coordinates) // Use existing coordinates or null
+                        .uploadedAt(docResponse.getUploadedAt())
+                        .build();
+
+                // Save the document entity
+                documentRepository.save(document);
+                newDocuments.add(document);
+            }
+
+            // Replace old documents with new ones
+            application.setDocuments(newDocuments);
+
+            // Save the updated application
+            applicationRepository.save(application);
+
+            log.info("Successfully updated documents for application {}: {} new documents",
+                    applicationId, newDocuments.size());
+
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to update documents for application {}: {}", applicationId, e.getMessage(), e);
+            throw ApiException.internalError("Failed to update application documents: " + e.getMessage());
+        }
+    }
+
+
     private List<ValidationError> validateSubmission(
             ApplicationSubmissionDto submission,
             List<ApplicationField> fields) {
@@ -139,17 +234,17 @@ public class ApplicationService {
                             if (fieldErrors != null && !fieldErrors.isEmpty()) {
                                 // Since ValidationErrors is being used as a single error, we'll treat it as such
                                 // and create a ValidationError with the same field and message
-                                fieldErrors.forEach(validationError -> 
-                                    errors.add(new ValidationError(
-                                        field.getKey(),  // Using the field key as the field name
-                                        validationError.toString()  // Convert the error to string as the message
-                                    ))
+                                fieldErrors.forEach(validationError ->
+                                        errors.add(new ValidationError(
+                                                field.getKey(),  // Using the field key as the field name
+                                                validationError.toString()  // Convert the error to string as the message
+                                        ))
                                 );
                             }
                         } catch (IllegalArgumentException e) {
                             errors.add(new ValidationError(
-                                field.getKey(),
-                                String.format("Unsupported field type: %s", field.getFieldType())
+                                    field.getKey(),
+                                    String.format("Unsupported field type: %s", field.getFieldType())
                             ));
                         }
                     });
@@ -159,38 +254,8 @@ public class ApplicationService {
     }
 
 
-    public ApplicationResponseDto getApplicationById(UUID applicationId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
-        return applicationMapper.toApplicationResponseDto(application);
-    }
-
-
-    public List<ApplicationResponseDto> findAll() {
-        return applicationRepository.findAll()
-                .stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
-    }
-
     private Application findApplicationById(UUID applicationId) {
         return  applicationRepository.findById(applicationId)
                 .orElseThrow(() -> ApiException.notFound("Application not found with id "+ applicationId));
     }
-
-    public List<ApplicationResponseDto> findAllProviderApplication(
-            String provider
-    ) {
-
-       ApplicationType type = applicationTypeRepository.findByProvider_Name(provider)
-               .orElseThrow(() -> ApiException.notFound("Application type not found for provider "+ provider));
-
-       List<Application> application = applicationRepository.findAllByApplicationTypeId(type.getId());
-
-        return application.stream().map(applicationMapper::toApplicationResponseDto).collect(Collectors.toList());
-    }
-
-    public void deleteApplication(UUID applicationId) {
-        Application application = findApplicationById(applicationId);
-        applicationRepository.delete(application);
-    }
-
 }

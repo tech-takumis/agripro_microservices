@@ -27,6 +27,9 @@ public class Batch {
     @Column(name = "name", length = 255)
     private String name;
 
+    @Column(name = "total_applications", columnDefinition = "int default 0")
+    private int totalApplications;
+
     private String description;
 
     private boolean isAvailable;
