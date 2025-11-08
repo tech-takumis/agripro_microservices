@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class ApiErrorResponse {
   final bool success;
   final String message;
@@ -12,6 +14,31 @@ class ApiErrorResponse {
     required this.timestamp,
     this.details,
   });
+
+  String get formattedMessage {
+    if (details != null && details!.isNotEmpty) {
+      final buffer = StringBuffer(message);
+      buffer.write('\n');
+      details!.forEach((key, value) {
+        buffer.write('$key: $value\n');
+      });
+      return buffer.toString().trim();
+    }
+    return message;
+  }
+
+  Color get statusColor {
+    if (status >= 500) {
+      return Colors.red; // Server errors
+    } else if (status >= 400) {
+      return Colors.orange; // Client errors
+    } else if (status >= 300) {
+      return Colors.blue; // Redirects
+    } else if (status >= 200) {
+      return Colors.green; // Success
+    }
+    return Colors.grey; // Unknown
+  }
 
   factory ApiErrorResponse.fromJson(Map<String, dynamic> json) {
     return ApiErrorResponse(
