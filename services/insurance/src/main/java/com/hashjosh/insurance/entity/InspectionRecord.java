@@ -22,12 +22,6 @@ public class InspectionRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "submission_id", nullable = false)
-    private UUID submissionId; // Maps to Application.id
-
-    @Column(name = "submitted_by")
-    private UUID submittedBy;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
     private InspectionStatus status; // PENDING, COMPLETED, INVALID
@@ -42,6 +36,10 @@ public class InspectionRecord {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToOne
+    @JoinColumn(name = "insurance_id")
+    private Insurance insurance;
 
     @Version
     private Long version;

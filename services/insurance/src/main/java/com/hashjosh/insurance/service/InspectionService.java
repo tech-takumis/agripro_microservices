@@ -1,13 +1,17 @@
 package com.hashjosh.insurance.service;
 
+import com.hashjosh.constant.pcic.enums.PolicyStatus;
 import com.hashjosh.constant.program.dto.ScheduleRequestDto;
 import com.hashjosh.constant.program.dto.ScheduleResponseDto;
 import com.hashjosh.insurance.dto.inspection.InspectionRequestDto;
+import com.hashjosh.insurance.dto.policy.PolicyRequest;
 import com.hashjosh.insurance.entity.InspectionRecord;
+import com.hashjosh.insurance.entity.Insurance;
 import com.hashjosh.insurance.entity.Policy;
 import com.hashjosh.insurance.exception.ApiException;
 import com.hashjosh.insurance.kafka.KafkaProducer;
 import com.hashjosh.insurance.repository.InspectionRecordRepository;
+import com.hashjosh.insurance.repository.InsuranceRepository;
 import com.hashjosh.insurance.repository.PolicyRepository;
 import com.hashjosh.kafkacommon.application.InspectionCompletedEvent;
 import com.hashjosh.kafkacommon.application.InspectionScheduledEvent;
@@ -27,6 +31,7 @@ import java.util.UUID;
 public class InspectionService {
 
     private final InspectionRecordRepository inspectionRepository;
+    private final InsuranceRepository insuranceRepository;
     private final PolicyRepository policyRepository;
     private final KafkaProducer producer;
     private final PolicyService policyService;
@@ -44,7 +49,7 @@ public class InspectionService {
         producer.publishEvent("application-lifecycle",
                 new InspectionScheduledEvent(
                         submissionId,
-                        inspection.getSubmittedBy(),
+                        inspection.getInsurance().getSubmittedBy(),
                         schedule.getId(),
                         schedule.getScheduleDate(),
                         LocalDateTime.now()
@@ -53,32 +58,30 @@ public class InspectionService {
         return schedule;
     }
 
-    public void completeInspection(UUID submissionId, InspectionRequestDto requestDto) {
-        InspectionRecord record = inspectionRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> ApiException.notFound("Inspection record not found for submission: " + submissionId));
-
+    public void completeInspection(UUID insuranceId, InspectionRequestDto requestDto, PolicyRequest request) {
+        Insurance insurance = getInsurance(insuranceId);
+        InspectionRecord record = insurance.getInspectionRecord();
         record.setStatus(requestDto.getStatus());
         record.setComments(requestDto.getComments());
         inspectionRepository.save(record);
 
         producer.publishEvent("application-lifecycle",
                 InspectionCompletedEvent.builder()
-                        .submissionId(record.getSubmissionId())
-                        .userId(record.getSubmittedBy())
+                        .submissionId(record.getInsurance().getSubmissionId())
+                        .userId(record.getInsurance().getSubmittedBy())
                         .status(requestDto.getStatus().name())
                         .comments(requestDto.getComments() != null ? requestDto.getComments() : "")
                         .inspectedAt(LocalDateTime.now())
                         .build()
                 );
 
-        if (requestDto.getStatus() == InspectionStatus.COMPLETED && validateFurther(submissionId, record)) {
-            Policy policy = policyService.createPolicy(submissionId);
-            policyRepository.save(policy);
+        if (requestDto.getStatus() == InspectionStatus.COMPLETED && validateFurther(insuranceId, record)) {
+            Policy policy = policyService.createPolicy(request);
 
             producer.publishEvent("application-lifecycle",
                     new PolicyIssuedEvent(
-                            submissionId,
-                            record.getSubmittedBy(),
+                            insuranceId,
+                            record.getInsurance().getSubmittedBy(),
                             policy.getId(),
                             policy.getPolicyNumber(),
                             policy.getCoverageAmount(),
@@ -86,10 +89,19 @@ public class InspectionService {
                     ));
 
         }
-        log.info("Inspection completed for application: {}, status: {}", submissionId, requestDto.getStatus());
+        log.info("Inspection completed for application: {}, status: {}", insuranceId, requestDto.getStatus());
     }
 
     private boolean validateFurther(UUID submissionId, InspectionRecord record) {
         return record.getStatus() == InspectionStatus.COMPLETED; // Add custom validation
+    }
+
+    private Insurance getInsurance(UUID insuranceId) {
+        return  insuranceRepository.findById(insuranceId)
+                .orElseThrow(() -> ApiException.notFound("Insurance not found"));
+    }
+
+    private String getPolicyNumber() {
+        return "";
     }
 }

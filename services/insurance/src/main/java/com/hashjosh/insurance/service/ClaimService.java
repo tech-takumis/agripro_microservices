@@ -24,7 +24,6 @@ import java.util.UUID;
 @Slf4j
 public class ClaimService {
     private final ClaimRepository claimRepository;
-    private final PolicyRepository policyRepository;
     private final ClaimMapper claimMapper;
 
     public ClaimResponse updateClaim(UUID claimId,
@@ -40,14 +39,9 @@ public class ClaimService {
         return claimMapper.toClaimResponse(savedClaim);
     }
 
-    public ClaimResponse createClaim(UUID submissionId, UUID policyId,ClaimRequest request) {
+    public ClaimResponse createClaim(ClaimRequest request) {
 
-        Claim claim = Claim.builder()
-                .submissionId(submissionId)
-                .policyId(policyId)
-                .claimAmount(request.claimAmount() != null ? request.claimAmount() : 0.0)
-                .payoutStatus(ClaimStatus.PENDING)
-                .build();
+        Claim claim = claimMapper.toClaimEntity(request);
 
         return  claimMapper.toClaimResponse(claim);
     }

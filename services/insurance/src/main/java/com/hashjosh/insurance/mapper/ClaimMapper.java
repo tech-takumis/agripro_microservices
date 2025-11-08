@@ -11,7 +11,6 @@ public class ClaimMapper {
     public ClaimResponse toClaimResponse(Claim savedClaim) {
         return new ClaimResponse(
             savedClaim.getId(),
-                savedClaim.getSubmissionId(),
                 savedClaim.getClaimAmount(),
                 savedClaim.getPayoutStatus()
         );
@@ -19,7 +18,6 @@ public class ClaimMapper {
 
     public Claim toClaimEntity(ClaimRequest claim) {
         return Claim.builder()
-                .submissionId(claim.submissionId())
                 .claimAmount(claim.claimAmount())
                 .payoutStatus(ClaimStatus.PENDING)
                 .policyId(claim.policyId())

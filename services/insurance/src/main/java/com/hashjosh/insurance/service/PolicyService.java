@@ -1,6 +1,7 @@
 package com.hashjosh.insurance.service;
 
 import com.hashjosh.constant.pcic.enums.PolicyStatus;
+import com.hashjosh.insurance.dto.policy.PolicyRequest;
 import com.hashjosh.insurance.entity.Policy;
 import com.hashjosh.insurance.mapper.PolicyMapper;
 import com.hashjosh.insurance.repository.PolicyRepository;
@@ -18,13 +19,11 @@ public class PolicyService {
     private final PolicyRepository policyRepository;
     private final PolicyMapper policyMapper;
 
-    public Policy createPolicy(UUID submissionId) {
-        return Policy.builder()
-                .submissionId(submissionId)
-                .policyNumber("POL-" + UUID.randomUUID().toString().substring(0, 8))
-                .coverageAmount(10000.0)
-                .status(PolicyStatus.APPROVED)
-                .build();
+    public Policy createPolicy(PolicyRequest request) {
+
+        Policy policy = policyMapper.toPolicyEntity(request);
+
+        return policyRepository.save(policy);
     }
 
 }

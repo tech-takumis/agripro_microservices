@@ -21,14 +21,12 @@ public class ClaimController {
 
     private final ClaimService claimService;
 
-    @PostMapping("/{submission-id}/{policy-id}")
+    @PostMapping()
     public  ResponseEntity<ClaimResponse> createClaim(
-            @PathVariable("submission-id") UUID submissionId,
-            @PathVariable("policy-id") UUID policyId,
             @RequestBody ClaimRequest request
 
     ) {
-        ClaimResponse claimResponse = claimService.createClaim(submissionId, policyId,request);
+        ClaimResponse claimResponse = claimService.createClaim(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(claimResponse);
     }
 
