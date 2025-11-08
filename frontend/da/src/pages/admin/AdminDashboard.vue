@@ -19,7 +19,7 @@
     </template>
 
     <!-- Dashboard Content -->
-    <div class="space-y-6">
+    <div class="space-y-6 overflow-y-auto h-full">
       <!-- Admin Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <ApplicationCard
@@ -54,55 +54,6 @@
           :icon="Activity"
           variant="success"
         />
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <UnderwriterQuickActionButton
-            title="Register New Staff"
-            description="Add a new agriculture account"
-            :icon="UserPlus"
-            variant="primary"
-            @click="navigateTo('/admin/staff/register')"
-          />
-          <UnderwriterQuickActionButton
-            title="Create App Type"
-            description="Define new insurance product"
-            :icon="FileText"
-            variant="secondary"
-            @click="navigateTo('/admin/applications/new')"
-          />
-          <UnderwriterQuickActionButton
-            title="Manage Staff"
-            description="Edit agriculture roles & access"
-            :icon="Users"
-            variant="default"
-            @click="navigateTo('/admin/staff/manage')"
-          />
-          <UnderwriterQuickActionButton
-            title="View Audit Logs"
-            description="Monitor system activity"
-            :icon="ClipboardList"
-            variant="default"
-            @click="navigateTo('/admin/settings/audit-logs')"
-          />
-          <UnderwriterQuickActionButton
-            title="System Settings"
-            description="Configure application"
-            :icon="Settings"
-            variant="default"
-            @click="navigateTo('/admin/settings/general')"
-          />
-          <UnderwriterQuickActionButton
-            title="Generate Reports"
-            description="Access admin reports"
-            :icon="BarChart3"
-            variant="default"
-            @click="navigateTo('/admin/reports/overall')"
-          />
-        </div>
       </div>
 
       <!-- Recent System Activity / Audit Logs -->
@@ -161,18 +112,15 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { 
-  Users, FileText, ClipboardList, Activity, UserPlus, Settings, BarChart3
+  Users, FileText, ClipboardList, Activity
 } from 'lucide-vue-next'
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout.vue'
 import ApplicationCard from '@/components/cards/ApplicationCard.vue'
-import UnderwriterQuickActionButton from '@/components/buttons/UnderwriterQuickActionButton.vue'
 import {useAuthStore} from '@/stores/auth'
 import { ADMIN_NAVIGATION } from '@/lib/navigation'
 
 const authStore = useAuthStore()
-const router = useRouter()
 
 const adminNavigation = ADMIN_NAVIGATION
 
@@ -221,8 +169,4 @@ const currentDate = computed(() => {
     day: 'numeric'
   })
 })
-
-const navigateTo = (path) => {
-  router.push(path)
-}
 </script>
