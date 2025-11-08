@@ -1,5 +1,8 @@
 package com.hashjosh.insurance.controller;
 
+import com.hashjosh.insurance.dto.insurance.InsuranceRequestDTO;
+import com.hashjosh.insurance.dto.insurance.InsuranceResponse;
+import com.hashjosh.insurance.service.InsuranceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +27,7 @@ public class InsuranceController {
             @PathVariable("insurance-Id")UUID insuranceId,
             @RequestBody @Valid InsuranceRequestDTO request
             ){
-        return ResponseEntity.ok(insuranceService.update(request));
+        return ResponseEntity.ok(insuranceService.update(insuranceId,request));
     }
 
     @DeleteMapping("/{insurance-Id}")
