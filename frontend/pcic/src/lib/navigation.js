@@ -22,6 +22,7 @@ export const UNDERWRITER_NAVIGATION = [
     icon: FileText,
     children: [
       { title: "All Applications", to: { name: "underwriter-applications-all" } },
+      { title: "Damage Claim Review", to: { name: "damage-claim-review" } },
     ],
   },
   {

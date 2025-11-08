@@ -1,20 +1,27 @@
 <template>
-  <div class="flex flex-col flex-grow pt-5 overflow-y-auto bg-green-900 text-white">
-    <!-- Logo -->
-    <div class="flex items-center flex-shrink-0 px-4">
-      <img 
-        src="@/assets/pcic-logo.png" 
-        alt="PCIC Logo" 
-        class="h-10 w-auto rounded"
-      />
-      <div class="ml-3">
-        <h1 class="text-lg font-bold text-white">PCIC</h1>
-        <p class="text-xs text-green-200">{{ roleTitle }}</p>
-      </div>
-    </div>
+<!-- Logo / Header -->
+<div class="flex flex-col items-center mb-5 mt-2 px-4 py-4 bg-green-600 border-b border-white">
+  <!-- Logo -->
+  <img
+    src="@/assets/pcic.svg"
+    alt="PCIC Logo"
+    class="h-12 w-10 mb-2"
+  />
+
+  <!-- Title -->
+  <h1 class="text-2xl font-bold text-white leading-tight">PCIC</h1>
+
+  <!-- Role Badge -->
+  <span
+    class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full mb-2 mt-2"
+  >
+    {{ roleTitle }}
+  </span>
+</div>
+
 
     <!-- Navigation -->
-    <nav class="mt-8 flex-1 px-2 space-y-1">
+    <nav class="flex-1 px-2 space-y-1 bg-green-600">
       <template v-for="item in navigation" :key="item.name || item.title">
         <!-- Single Navigation Item -->
         <router-link
@@ -23,14 +30,14 @@
           :class="[
             isActive(item.to)
               ? 'bg-green-600 text-white font-semibold border-r-4 border-green-300'
-              : 'text-green-100 hover:bg-green-700 hover:text-white',
+              : 'text-white hover:bg-green-700 hover:text-white',
             'group flex items-center px-3 py-2 text-sm rounded-md transition-all'
           ]"
         >
           <component 
             :is="item.icon" 
             :class="[
-              isActive(item.to) ? 'text-white' : 'text-green-200 group-hover:text-white',
+              isActive(item.to) ? 'text-white' : 'text-white group-hover:text-yellow-300',
               'mr-3 h-5 w-5'
             ]" 
           />
@@ -46,20 +53,20 @@
           <button
             @click="toggleGroup(item.title || item.name)"
             :class="[
-              'text-green-100 hover:bg-green-700 hover:text-white',
+              'text-white hover:bg-green-700 hover:text-white',
               'group w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all'
             ]"
           >
             <div class="flex items-center">
               <component 
                 :is="item.icon" 
-                class="text-green-200 group-hover:text-white mr-3 h-5 w-5" 
+                class="text-white group-hover:text-yellow-300 mr-3 h-5 w-5" 
               />
               {{ item.title || item.name }}
             </div>
             <ChevronDown 
               :class="[
-                expandedGroups.includes(item.title || item.name) ? 'rotate-180 text-white' : 'text-green-200',
+                expandedGroups.includes(item.title || item.name) ? 'rotate-180 text-white' : 'text-white',
                 'h-4 w-4 transition-transform'
               ]"
             />
@@ -76,7 +83,7 @@
                 class="group relative flex items-center pl-6 pr-3 py-2 text-sm rounded-md transition-all"
                 :class="isActive(child.to)
                   ? 'bg-green-700 text-white'
-                  : 'text-green-100 hover:bg-green-600 hover:text-white'"
+                  : 'text-white hover:bg-green-600 hover:text-yellow-300'"
               >
                 <span
                   :class="[
@@ -95,18 +102,18 @@
       </template>
     </nav>
 
-    <!-- User Profile Section -->
-    <div class="flex-shrink-0 border-t border-green-700 p-4">
-      <button
-        @click="$emit('logout')"
-        class="w-full flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-600 transition-colors text-sm font-semibold"
-        title="Logout"
-      >
-        <LogOut class="h-4 w-4 mr-2" />
-        Logout
-      </button>
-    </div>
-  </div>
+<!-- User Profile Section -->
+<div class="flex-shrink-0 border-t border-white px-4 py-3 bg-green-600">
+  <button
+    @click="$emit('logout')"
+    class="group flex w-full px-4 py-3 text-sm font-semibold bg-white text-red-600 rounded-lg border-2 border-none transition-all duration-200 hover:bg-red-500 hover:border-red-100 hover:text-white hover:shadow-md active:scale-95"
+    title="Logout"
+  >
+    <LogOut class="h-4 w-4 mr-2" />
+    <span>Logout</span>
+  </button>
+</div>
+
 </template>
 
 

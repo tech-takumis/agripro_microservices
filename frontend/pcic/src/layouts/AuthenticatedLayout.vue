@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="flex h-screen bg-green-600">
     <!-- Desktop Sidebar -->
     <div class="hidden md:flex md:w-64 md:flex-col">
       <SidebarNavigation
@@ -52,11 +52,12 @@
       </div>
 
       <!-- Page header (visible on all screens, but mobile has its own top bar) -->
-      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 hidden md:block">
-        <div class="px-4 py-4 sm:px-6 lg:px-8">
+      <header v-if="$slots.header" class="bg-white shadow-sm border-b border-none hidden md:block">
+        <div class="px-4 py-4 sm:px-6 lg:px-8 bg-white">
           <slot name="header" />
         </div>
       </header>
+      
       <!-- Mobile header for consistency with desktop header slot -->
       <header v-if="$slots.header" class="bg-white shadow-sm border-b border-gray-200 md:hidden">
         <div class="px-4 py-4 sm:px-6 lg:px-8">
@@ -64,12 +65,10 @@
         </div>
       </header>
 
-      <!-- Main content area -->
-      <main class="flex-1 overflow-y-auto bg-gray-50">
-        <div class="p-4 sm:p-6 lg:p-8">
-          <slot />
-        </div>
-      </main>
+<!-- Main content area (Containerized Layout) -->
+<main class="flex-1 overflow-y-auto bg-white"> 
+  <div class="p-4 sm:p-6 lg:p-6"> <slot /> </div> </main>
+
     </div>
   </div>
 </template>

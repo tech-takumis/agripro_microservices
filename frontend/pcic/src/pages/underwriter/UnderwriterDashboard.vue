@@ -4,29 +4,20 @@
     role-title="Underwriter Portal"
     page-title="Dashboard"
   >
-  <template #header>
-    <div class="flex items-center justify-between bg-gray-100 px-6 py-4 border-b border-gray-200 rounded-lg">
-    
-<!-- Left: Logo + Title -->
-<div class="flex items-center space-x-3">
-  <!-- Logo -->
-  <img 
-    src="@/assets/pcic-logo.png" 
-    alt="PCIC Logo" 
-    class="h-10 w-auto"
-  />
+<template #header>
+  <div class="flex items-center justify-between w-full">
+    <!-- Left: Logo + Title -->
+    <div class="flex items-center space-x-3">
+      <div>
+        <h1 class="text-2xl font-bold text-green-600">Underwriter Dashboard</h1>
+        <p class="text-sm text-gray-600">
+          Evaluate risks and manage insurance applications for rice farmers.
+        </p>
+      </div>
+    </div>
 
-  <!-- Title -->
-  <div>
-    <h1 class="text-2xl font-bold text-green-800">Underwriter Dashboard</h1>
-    <p class="text-sm text-black-600">
-      Evaluate risks and manage insurance applications for rice farmers.
-    </p>
-  </div>
-</div>
     <!-- Right: Search + Actions -->
     <div class="flex items-center gap-4">
-
       <!-- Notification Bell -->
       <button class="relative p-2 rounded-full hover:bg-green-100 transition">
         <svg
@@ -47,7 +38,7 @@
       </button>
 
       <!-- Profile Dropdown -->
-      <div class="relative">
+      <div class="relative group">
         <button class="flex items-center gap-2 focus:outline-none">
           <img
             class="w-8 h-8 rounded-full border border-gray-200"
@@ -73,6 +64,8 @@
     </div>
   </div>
 </template>
+
+
     <!-- Dashboard Content -->
     <div class="space-y-6">
      <!-- Underwriter StatsCards -->
@@ -80,7 +73,7 @@
   <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
     <!-- Applications Pending -->
     <div
-      class="bg-gray-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
+      class="bg-yellow-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
     >
       <!-- Top: Icon + Title -->
       <div class="flex items-center gap-2 text-black-200 text-sm font-semibold mb-2">
@@ -107,7 +100,7 @@
 
     <!-- Applications Approved -->
     <div
-      class="bg-gray-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
+      class="bg-green-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
     >
       <div class="flex items-center gap-2 text-black-200 text-sm font-semibold mb-2">
         <CheckCircle class="w-5 h-5 text-green-600" />
@@ -131,7 +124,7 @@
 
     <!-- Applications Rejected -->
     <div
-      class="bg-gray-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
+      class="bg-red-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
     >
       <div class="flex items-center gap-2 text-black-200 text-sm font-semibold mb-2">
         <XCircle class="w-5 h-5 text-red-600" />
@@ -155,7 +148,7 @@
 
     <!-- Average Processing Time -->
     <div
-      class="bg-gray-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
+      class="bg-blue-100 rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col justify-between"
     >
       <div class="flex items-center gap-2 text-black-200 text-sm font-semibold mb-2">
         <Clock class="w-5 h-5 text-blue-600" />
