@@ -7,6 +7,7 @@ import com.hashjosh.insurance.entity.Claim;
 import com.hashjosh.insurance.exception.ApiException;
 import com.hashjosh.insurance.mapper.ClaimMapper;
 import com.hashjosh.insurance.repository.ClaimRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class ClaimService {
     private final ClaimRepository claimRepository;
     private final ClaimMapper claimMapper;
 
+    @Transactional
     public ClaimResponse updateClaim(UUID claimId,
                                      ClaimRequest claim) {
         Claim savedClaim = claimRepository.findById(claimId)
@@ -34,6 +36,7 @@ public class ClaimService {
         return claimMapper.toClaimResponse(savedClaim);
     }
 
+    @Transactional
     public ClaimResponse createClaim(ClaimRequest request) {
 
         Claim claim = claimMapper.toClaimEntity(request);
@@ -41,10 +44,16 @@ public class ClaimService {
         return  claimMapper.toClaimResponse(claim);
     }
 
+    @Transactional
     public List<ClaimResponse> getAllClaims() {
         return claimRepository.findAll()
                 .stream()
                 .map(claimMapper::toClaimResponse)
                 .toList();
+    }
+
+    @Transactional
+    public void delete(UUID claimId) {
+        claimRepository.deleteById(claimId);
     }
 }
