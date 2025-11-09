@@ -5,11 +5,13 @@ import com.hashjosh.constant.program.dto.ScheduleRequestDto;
 import com.hashjosh.constant.program.dto.ScheduleResponseDto;
 import com.hashjosh.insurance.clients.ScheduleClient;
 import com.hashjosh.insurance.dto.inspection.InspectionRequestDto;
+import com.hashjosh.insurance.dto.inspection.InspectionResponse;
 import com.hashjosh.insurance.entity.InspectionRecord;
 import com.hashjosh.insurance.entity.Insurance;
 import com.hashjosh.insurance.entity.Policy;
 import com.hashjosh.insurance.exception.ApiException;
 import com.hashjosh.insurance.kafka.KafkaProducer;
+import com.hashjosh.insurance.mapper.InspectionMapper;
 import com.hashjosh.insurance.repository.InspectionRecordRepository;
 import com.hashjosh.insurance.repository.InsuranceRepository;
 import com.hashjosh.insurance.repository.PolicyRepository;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,6 +37,7 @@ public class InspectionService {
     private final KafkaProducer producer;
     private final PolicyService policyService;
     private final ScheduleClient scheduleClient;
+    private final InspectionMapper inspectionMapper;
 
     public ScheduleResponseDto scheduleInspection(UUID insuranceId, ScheduleRequestDto dto) {
         InspectionRecord inspection = inspectionRepository.findByInsurance_Id(insuranceId)
@@ -90,8 +94,12 @@ public class InspectionService {
         log.info("Inspection completed for application: {}, status: {}", insuranceId, requestDto.getStatus());
     }
 
-    private boolean validateFurther(UUID submissionId, InspectionRecord record) {
-        return record.getStatus() == InspectionStatus.COMPLETED; // Add custom validation
+    public List<InspectionResponse> getAllInspections() {
+        return inspectionRepository.findAll().stream().map(inspectionMapper::toInspectionResposeDTO).toList();
+    }
+
+    public void deleteInspection(UUID inspectionId) {
+        inspectionRepository.deleteById(inspectionId);
     }
 
     private Insurance getInsurance(UUID insuranceId) {
@@ -99,7 +107,9 @@ public class InspectionService {
                 .orElseThrow(() -> ApiException.notFound("Insurance not found"));
     }
 
-    private String getPolicyNumber() {
-        return "";
+    private boolean validateFurther(UUID submissionId, InspectionRecord record) {
+        return record.getStatus() == InspectionStatus.COMPLETED; // Add custom validation
     }
+
+
 }
