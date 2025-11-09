@@ -1,10 +1,10 @@
 package com.hashjosh.insurance.service;
 
-import com.hashjosh.constant.pcic.enums.PolicyStatus;
+import com.hashjosh.constant.pcic.enums.InspectionStatus;
 import com.hashjosh.constant.program.dto.ScheduleRequestDto;
 import com.hashjosh.constant.program.dto.ScheduleResponseDto;
+import com.hashjosh.insurance.clients.ScheduleClient;
 import com.hashjosh.insurance.dto.inspection.InspectionRequestDto;
-import com.hashjosh.insurance.dto.policy.PolicyRequest;
 import com.hashjosh.insurance.entity.InspectionRecord;
 import com.hashjosh.insurance.entity.Insurance;
 import com.hashjosh.insurance.entity.Policy;
@@ -16,8 +16,6 @@ import com.hashjosh.insurance.repository.PolicyRepository;
 import com.hashjosh.kafkacommon.application.InspectionCompletedEvent;
 import com.hashjosh.kafkacommon.application.InspectionScheduledEvent;
 import com.hashjosh.kafkacommon.application.PolicyIssuedEvent;
-import com.hashjosh.insurance.clients.ScheduleClient;
-import com.hashjosh.constant.pcic.enums.InspectionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,18 +35,18 @@ public class InspectionService {
     private final PolicyService policyService;
     private final ScheduleClient scheduleClient;
 
-    public ScheduleResponseDto scheduleInspection(UUID submissionId, ScheduleRequestDto dto) {
-        InspectionRecord inspection = inspectionRepository.findBySubmissionId(submissionId)
-                .orElseThrow(() -> new IllegalStateException("Inspection record not found: " + submissionId));
+    public ScheduleResponseDto scheduleInspection(UUID insuranceId, ScheduleRequestDto dto) {
+        InspectionRecord inspection = inspectionRepository.findByInsurance_Id(insuranceId)
+                .orElseThrow(() -> new IllegalStateException("Inspection record not found: " + insuranceId));
         if (inspection.getStatus() != InspectionStatus.PENDING) {
-            throw new IllegalStateException("Inspection not pending: " + submissionId);
+            throw new IllegalStateException("Inspection not pending: " + insuranceId);
         }
 
         ScheduleResponseDto schedule = scheduleClient.createSchedule(dto);
 
-        producer.publishEvent("application-lifecycle",
+        producer.publishEvent("application-inspection-schedule",
                 new InspectionScheduledEvent(
-                        submissionId,
+                        insuranceId,
                         inspection.getInsurance().getSubmittedBy(),
                         schedule.getId(),
                         schedule.getScheduleDate(),
@@ -58,14 +56,14 @@ public class InspectionService {
         return schedule;
     }
 
-    public void completeInspection(UUID insuranceId, InspectionRequestDto requestDto, PolicyRequest request) {
+    public void completeInspection(UUID insuranceId, InspectionRequestDto requestDto) {
         Insurance insurance = getInsurance(insuranceId);
         InspectionRecord record = insurance.getInspectionRecord();
         record.setStatus(requestDto.getStatus());
         record.setComments(requestDto.getComments());
         inspectionRepository.save(record);
 
-        producer.publishEvent("application-lifecycle",
+        producer.publishEvent("application-inspection-completed",
                 InspectionCompletedEvent.builder()
                         .submissionId(record.getInsurance().getSubmissionId())
                         .userId(record.getInsurance().getSubmittedBy())
@@ -76,9 +74,9 @@ public class InspectionService {
                 );
 
         if (requestDto.getStatus() == InspectionStatus.COMPLETED && validateFurther(insuranceId, record)) {
-            Policy policy = policyService.createPolicy(request);
+            Policy policy = policyService.createPolicy(requestDto.getPolicy());
 
-            producer.publishEvent("application-lifecycle",
+            producer.publishEvent("application-policy-issued",
                     new PolicyIssuedEvent(
                             insuranceId,
                             record.getInsurance().getSubmittedBy(),

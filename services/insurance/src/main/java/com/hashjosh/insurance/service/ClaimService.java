@@ -1,17 +1,12 @@
 package com.hashjosh.insurance.service;
 
 
-import com.hashjosh.constant.pcic.enums.ClaimStatus;
-import com.hashjosh.constant.pcic.enums.PolicyStatus;
 import com.hashjosh.insurance.dto.claim.ClaimRequest;
 import com.hashjosh.insurance.dto.claim.ClaimResponse;
 import com.hashjosh.insurance.entity.Claim;
-import com.hashjosh.insurance.entity.Policy;
 import com.hashjosh.insurance.exception.ApiException;
 import com.hashjosh.insurance.mapper.ClaimMapper;
 import com.hashjosh.insurance.repository.ClaimRepository;
-import com.hashjosh.insurance.repository.PolicyRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
