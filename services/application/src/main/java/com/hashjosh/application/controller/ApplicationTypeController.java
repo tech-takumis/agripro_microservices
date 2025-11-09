@@ -46,5 +46,11 @@ public class ApplicationTypeController {
         return ResponseEntity.ok(applicationTypeService.findByProviderName(provider));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable UUID id){
+        applicationTypeService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }
 

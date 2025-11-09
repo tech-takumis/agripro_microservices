@@ -21,9 +21,6 @@ public class Policy {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "submission_id", nullable = false)
-    private UUID submissionId; // Maps to Application.id
-
     @Column(name = "policy_number", length = 50, unique = true)
     private String policyNumber;
 
@@ -36,6 +33,10 @@ public class Policy {
 
     @Column(name = "rejection_reason", length = 255)
     private String rejectionReason;
+
+    @OneToOne
+    @JoinColumn(name = "insurance_id")
+    private Insurance insurance;
 
     @CreationTimestamp
     @Column(name = "issued_at")

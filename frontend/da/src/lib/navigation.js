@@ -74,7 +74,7 @@ export const MUNICIPAL_AGRICULTURIST_NAVIGATION = [
                 to: { name: 'agriculturist-submit-crop-data' }
             },
             {
-                title: 'Develop Plans',
+                title: 'Voucher',
                 to: { name: 'agriculturist-develop-plans' }
             },
             {

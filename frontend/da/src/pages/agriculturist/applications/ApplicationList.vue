@@ -572,11 +572,12 @@ import {
     MUNICIPAL_AGRICULTURIST_NAVIGATION,
     AGRICULTURAL_EXTENSION_WORKER_NAVIGATION
 } from '@/lib/navigation'
-import { useApplicationBatchStore } from '@/stores/applications'
+import { useApplicationBatchStore, useApplicationStore } from '@/stores/applications'
 import { useVerificationStore } from '@/stores/verification'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const applicationStore = useApplicationStore()
 const batchStore = useApplicationBatchStore()
 const verificationStore = useVerificationStore()
 

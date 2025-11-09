@@ -17,7 +17,7 @@ export const useApplicationStore = defineStore('application', () => {
     async function createInsuranceApplication(applicationData) {
         try {
             console.log("Creating insurance application:", JSON.stringify(applicationData, null, 2))
-            const response = await axios.post("/api/v1/applications", applicationData)
+            const response = await axios.post(basePath.value, applicationData)
             console.log("Application created successfully:", response.data)
             return { success: true, data: response.data }
         } catch (error) {
@@ -28,7 +28,7 @@ export const useApplicationStore = defineStore('application', () => {
 
     async function fetchApplications() {
         try {
-            const response = await axios.get("/api/v1/applications")
+            const response = await axios.get(basePath.value)
             applications.value = response.data
             return { success: true, data: response.data }
         } catch (error) {
@@ -39,7 +39,7 @@ export const useApplicationStore = defineStore('application', () => {
 
     async function fetchApplicationById(id) {
         try {
-            const response = await axios.get(`/api/v1/applications/${id}`)
+            const response = await axios.get(`${basePath.value}/${id}`)
             console.log("Fetched application:", response.data)
             return { success: true, data: response.data }
         } catch (error) {
@@ -50,7 +50,7 @@ export const useApplicationStore = defineStore('application', () => {
 
     async function updateApplication(id, applicationData) {
         try {
-            const response = await axios.put(`/api/v1/applications/${id}`, applicationData)
+            const response = await axios.put(`${basePath.value}/${id}`, applicationData)
             // Update the application in the store
             const index = applications.value.findIndex((app) => app.id === id)
             if (index !== -1) {
@@ -100,7 +100,7 @@ export const useApplicationStore = defineStore('application', () => {
 
     async function deleteApplication(id) {
         try {
-            await axios.delete(`/api/v1/applications/${id}`)
+            await axios.delete(`${basePath.value}/${id}`)
             // Remove the application from the store
             applications.value = applications.value.filter((app) => app.id !== id)
             return { success: true }

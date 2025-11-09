@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InspectionRecordRepository extends JpaRepository<InspectionRecord, UUID> {
-    Optional<InspectionRecord> findBySubmissionId(UUID submissionId);
+    Optional<InspectionRecord> findByInsurance_Id(UUID insuranceId);
 }

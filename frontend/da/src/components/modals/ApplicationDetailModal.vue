@@ -25,35 +25,12 @@
                   Application Type Details
                 </p>
               </div>
-              <div class="flex items-center space-x-2">
-                <button
-                  @click="$emit('edit', application)"
-                  class="p-2 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-100 transition-colors"
-                  title="Edit Application"
-                >
-                  <Edit class="h-5 w-5" />
-                </button>
-                <button
-                  @click="$emit('duplicate', application)"
-                  class="p-2 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-100 transition-colors"
-                  title="Duplicate Application"
-                >
-                  <Copy class="h-5 w-5" />
-                </button>
-                <button
-                  @click="$emit('delete', application)"
-                  class="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-100 transition-colors"
-                  title="Delete Application"
-                >
-                  <Trash2 class="h-5 w-5" />
-                </button>
-                <button
-                  @click="closeModal"
-                  class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  <X class="h-5 w-5" />
-                </button>
-              </div>
+              <button
+                @click="closeModal"
+                class="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <X class="h-5 w-5" />
+              </button>
             </div>
           </div>
 
@@ -69,24 +46,11 @@
                       {{ application.description || 'No description provided' }}
                     </p>
                   </div>
-                  <div class="space-y-4">
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-700 mb-2">Layout Type</h4>
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {{ formatLayout(application.layout) }}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-700 mb-2">AI Analysis</h4>
-                      <span :class="[
-                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                        application.requiredAIAnalysis 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      ]">
-                        {{ application.requiredAIAnalysis ? 'Enabled' : 'Disabled' }}
-                      </span>
-                    </div>
+                  <div>
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Layout Type</h4>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {{ formatLayout(application.layout) }}
+                    </span>
                   </div>
                 </div>
 
@@ -142,43 +106,41 @@
                             :key="field.id"
                             class="p-3 border border-gray-200 rounded-lg bg-gray-50"
                           >
-                            <div class="flex items-start justify-between">
-                              <div class="flex-1 min-w-0">
-                                <h6 class="text-sm font-semibold text-gray-900 truncate">
-                                  {{ field.label }}
-                                </h6>
-                                <p class="text-xs text-gray-500 truncate mt-1">
-                                  Key: {{ field.key }}
-                                </p>
-                                <div class="flex items-center mt-2 space-x-2">
-                                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ formatFieldType(field.fieldType) }}
+                            <div class="flex-1 min-w-0">
+                              <h6 class="text-sm font-semibold text-gray-900 truncate">
+                                {{ field.fieldName }}
+                              </h6>
+                              <p class="text-xs text-gray-500 truncate mt-1">
+                                Key: {{ field.key }}
+                              </p>
+                              <div class="flex items-center mt-2 space-x-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {{ formatFieldType(field.fieldType) }}
+                                </span>
+                                <span v-if="field.required" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Required
+                                </span>
+                              </div>
+                              <div v-if="field.choices && field.choices.length > 0" class="mt-2">
+                                <p class="text-xs text-gray-600 mb-1">Choices:</p>
+                                <div class="flex flex-wrap gap-1">
+                                  <span 
+                                    v-for="choice in field.choices.slice(0, 3)" 
+                                    :key="choice"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-200 text-gray-700"
+                                  >
+                                    {{ choice }}
                                   </span>
-                                  <span v-if="field.required" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Required
+                                  <span 
+                                    v-if="field.choices.length > 3"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-300 text-gray-600"
+                                  >
+                                    +{{ field.choices.length - 3 }}
                                   </span>
                                 </div>
-                                <div v-if="field.choices && field.choices.length > 0" class="mt-2">
-                                  <p class="text-xs text-gray-600 mb-1">Choices:</p>
-                                  <div class="flex flex-wrap gap-1">
-                                    <span 
-                                      v-for="choice in field.choices.slice(0, 3)" 
-                                      :key="choice"
-                                      class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-200 text-gray-700"
-                                    >
-                                      {{ choice }}
-                                    </span>
-                                    <span 
-                                      v-if="field.choices.length > 3"
-                                      class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-300 text-gray-600"
-                                    >
-                                      +{{ field.choices.length - 3 }}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div v-if="field.defaultValue" class="mt-2">
-                                  <p class="text-xs text-gray-600">Default: <span class="font-medium">{{ field.defaultValue }}</span></p>
-                                </div>
+                              </div>
+                              <div v-if="field.defaultValue" class="mt-2">
+                                <p class="text-xs text-gray-600">Default: <span class="font-medium">{{ field.defaultValue }}</span></p>
                               </div>
                             </div>
                           </div>
@@ -193,19 +155,29 @@
 
           <!-- Modal Footer -->
           <div class="px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
-            <div class="flex justify-end space-x-3">
+            <div class="flex justify-between items-center">
               <button
-                @click="closeModal"
-                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                @click="$emit('delete', application)"
+                class="px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors"
               >
-                Close
+                <Trash2 class="h-4 w-4 inline mr-2" />
+                Delete
               </button>
-              <button
-                @click="$emit('edit', application)"
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-              >
-                Edit Application
-              </button>
+              <div class="flex space-x-3">
+                <button
+                  @click="closeModal"
+                  class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  @click="$emit('edit', application)"
+                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                >
+                  <Edit class="h-4 w-4 inline mr-2" />
+                  Edit
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -222,7 +194,7 @@ const props = defineProps({
   application: Object
 })
 
-const emit = defineEmits(['close', 'edit', 'duplicate', 'delete'])
+const emit = defineEmits(['close', 'edit', 'delete'])
 
 const closeModal = () => {
   emit('close')

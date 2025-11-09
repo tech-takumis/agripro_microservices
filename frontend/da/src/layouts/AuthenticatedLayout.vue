@@ -193,12 +193,12 @@ onMounted(async () => {
         display: block !important;
     }
 }
-/* Hide scrollbars but keep scroll functionality */
+
 .overflow-y-auto {
-    scrollbar-width: none !important; /* Firefox */
+    scrollbar-width: none !important;
 }
 
 .overflow-y-auto::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari, Edge */
+    display: none !important; 
 }
 </style>

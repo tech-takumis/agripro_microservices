@@ -21,28 +21,13 @@ public class ClaimController {
 
     private final ClaimService claimService;
 
-    @PostMapping("/{submission-id}/{policy-id}")
+    @PostMapping()
     public  ResponseEntity<ClaimResponse> createClaim(
-            @PathVariable("submission-id") UUID submissionId,
-            @PathVariable("policy-id") UUID policyId,
             @RequestBody ClaimRequest request
 
     ) {
-        ClaimResponse claimResponse = claimService.createClaim(submissionId, policyId,request);
+        ClaimResponse claimResponse = claimService.createClaim(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(claimResponse);
-    }
-
-    @PutMapping("/{claim-id}")
-    public ResponseEntity<Map<String,Object>> updateClaim(
-            @PathVariable("claim-id") UUID claimId,
-            @RequestBody ClaimRequest claim) {
-
-        return  ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "message", "Claim updated successfully!",
-                        "data", claimService.updateClaim(claimId,claim)
-                ));
-
     }
 
     @GetMapping
@@ -50,5 +35,22 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.getAllClaims());
     }
 
+
+    @PutMapping("/{claim-id}")
+    public ResponseEntity<ClaimResponse> updateClaim(
+            @PathVariable("claim-id") UUID claimId,
+            @RequestBody ClaimRequest claim) {
+
+        return  ResponseEntity.status(HttpStatus.CREATED)
+                .body(claimService.updateClaim(claimId,claim));
+    }
+
+    @DeleteMapping("/{claim-id}")
+    public ResponseEntity<Void> deleteClaim(
+            @PathVariable("claim-id") UUID claimId
+    ){
+        claimService.delete(claimId);
+        return ResponseEntity.noContent().build();
+    }
 
 }

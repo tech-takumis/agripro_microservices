@@ -14,7 +14,7 @@
 
                 <h1
                     class="mt-2 text-lg font-semibold text-gray-800 tracking-wide text-center">
-                    Department of Agriculture
+                    Bayugan City Agriculture
                 </h1>
 
                 <span

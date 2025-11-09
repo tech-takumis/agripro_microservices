@@ -1,7 +1,8 @@
 package com.hashjosh.insurance.kafka;
 
-import com.hashjosh.insurance.entity.InspectionRecord;
-import com.hashjosh.insurance.repository.InspectionRecordRepository;
+import com.hashjosh.constant.pcic.enums.InsuranceStatus;
+import com.hashjosh.insurance.entity.Insurance;
+import com.hashjosh.insurance.repository.InsuranceRepository;
 import com.hashjosh.kafkacommon.application.*;
 import com.hashjosh.constant.pcic.enums.InspectionStatus;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class ConsumerService {
-    private final InspectionRecordRepository inspectionRepository;
+    private final InsuranceRepository insuranceRepository;
     private final KafkaProducer producer;
 
     @KafkaListener(topics = "application-submitted", groupId = "pcic-application-submitted-group")
@@ -29,13 +30,14 @@ public class ConsumerService {
 
     private void handleApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
         if("PCIC".equalsIgnoreCase(event.getProvider())){
-           InspectionRecord record = InspectionRecord.builder()
-                   .submittedBy(event.getUserId())
-                   .submissionId(event.getSubmissionId())
-                   .status(InspectionStatus.PENDING)
-                   .build();
 
-           inspectionRepository.save(record);
+            Insurance insurance = Insurance.builder()
+                    .submissionId(event.getSubmissionId())
+                    .submittedBy(event.getUserId())
+                    .status(InsuranceStatus.PENDING)
+                    .build();
+
+           insuranceRepository.save(insurance);
 
            ApplicationReceived receivedEvent = ApplicationReceived.builder()
                    .provider("PCIC")
@@ -52,12 +54,13 @@ public class ConsumerService {
 
     private void handleApplicationForwarded(ApplicationForwarded event) {
 
-        InspectionRecord record = InspectionRecord.builder()
+        Insurance insurance = Insurance.builder()
                 .submissionId(event.getSubmissionId())
-                .status(InspectionStatus.PENDING)
                 .submittedBy(event.getUserId())
+                .status(InsuranceStatus.PENDING)
                 .build();
-        inspectionRepository.save(record);
+
+        insuranceRepository.save(insurance);
 
         producer.publishEvent("application-received",
         ApplicationReceived.builder()

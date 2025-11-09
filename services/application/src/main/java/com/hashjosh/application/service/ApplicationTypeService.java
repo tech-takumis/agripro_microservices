@@ -58,20 +58,29 @@ public class ApplicationTypeService {
         return applicationTypeMapper.toApplicationResponse(applicationType);
     }
 
+    @Transactional
     public List<ApplicationTypeResponseDto> findAll() {
             return applicationTypeRepository.findAll().stream()
                     .map(applicationTypeMapper::toApplicationResponse)
                     .collect(Collectors.toList());
     }
 
+    @Transactional
     public ApplicationTypeResponseDto findById(UUID id) {
         return applicationTypeMapper.toApplicationResponse(applicationTypeRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Application type not found")));
     }
 
+    @Transactional
     public List<ApplicationTypeResponseDto> findByProviderName(String provider) {
         return applicationTypeRepository.findAllByProvider_Name(provider).stream()
                 .map(applicationTypeMapper::toApplicationResponse)
                 .collect(Collectors.toList());
+    }
+    @Transactional
+    public void deleteById(UUID id) {
+        ApplicationType applicationType = applicationTypeRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Application type not found"));
+        applicationTypeRepository.delete(applicationType);
     }
 }

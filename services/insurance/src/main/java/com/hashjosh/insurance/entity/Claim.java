@@ -25,9 +25,6 @@ public class Claim {
     @Column(name = "policy_id", nullable = false)
     private UUID policyId;
 
-    @Column(name = "submission_id", nullable = false)
-    private UUID submissionId; // Maps to Application.id
-
     @Column(name = "claim_amount", nullable = false)
     private Double claimAmount;
 
@@ -42,6 +39,10 @@ public class Claim {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToOne
+    @JoinColumn(name = "insurance_id")
+    private Insurance insurance;
 
     @Version
     private Long version;

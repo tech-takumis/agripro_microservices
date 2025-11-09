@@ -8,7 +8,6 @@ import java.util.UUID;
 public record ClaimResponse(
 
         UUID claimId,
-        UUID applicationId,
         Double claimAmount,
         ClaimStatus payoutStatus
 ) {
