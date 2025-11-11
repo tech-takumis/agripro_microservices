@@ -9,7 +9,7 @@
   <div class="flex items-center space-x-3">
     <!-- Title -->
     <div>
-      <h1 class="text-2xl font-bold text-green-600">
+      <h1 class="text-2xl font-bold text-black">
         All Applications
       </h1>
       <p class="text-sm text-black-600">
@@ -28,7 +28,7 @@
       v-model="searchQuery"
       type="text"
       placeholder="Search..."
-      class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+      class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:border-green-400 focus:ring-2 focus:ring-green-400/40 transition duration-200 disabled:opacity-50"
     />
   </div>
 
@@ -38,7 +38,7 @@
 <div class="flex items-center">
 <select
   v-model="selectedStatus"
-  class="w-32 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+  class="w-32 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:border-green-400 focus:ring-2 focus:ring-green-400/40 transition duration-200 disabled:opacity-50"
 >
   <option value="">All Status</option>
   <option value="pending">Pending</option>
