@@ -156,7 +156,15 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (err) {
             console.error('Login error:', err);
             console.log('[Auth Store] Setting isAuthenticated to false after login error');
-            const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+            const errorMessage = null;
+            if(err.response.status === 503){
+                errorMessage = 'Service is currently unavailable. Please try again later.';
+                error.value = errorMessage;
+                isAuthenticated.value = false;
+                userData.value = { roles: [], permissions: [] };
+                return { success: false, message: 'Service is currently unavailable. Please try again later.' };
+            }
+            errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
             error.value = errorMessage;
             isAuthenticated.value = false;
             userData.value = { roles: [], permissions: [] }; // Reset user data

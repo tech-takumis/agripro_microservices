@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="min-h-screen bg-gray-100 flex">
 <!-- Left Column - PCIC Image (Hidden on mobile) -->
 <div class="hidden lg:flex lg:w-1/2 bg-gray-50 items-center justify-center p-8">
   <div class="max-w-md text-center">
