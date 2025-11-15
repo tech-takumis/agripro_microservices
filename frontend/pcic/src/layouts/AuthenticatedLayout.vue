@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen bg-gray-100 flex flex-col">
+  <div class="h-screen bg-white flex flex-col">
     <!-- Mobile Sidebar (Off-canvas) -->
     <div v-if="sidebarOpen" class="fixed inset-0 z-40 md:hidden">
       <!-- Overlay -->
@@ -9,7 +9,7 @@
       ></div>
 
       <!-- Sidebar -->
-      <div class="relative flex flex-col w-64 max-w-xs bg-white h-full shadow-xl rounded-lg">
+      <div class="relative flex flex-col w-64 max-w-xs bg-white h-full rounded-lg">
         <div class="absolute top-0 right-0 -mr-12 pt-2">
           <button
             @click="sidebarOpen = false"
@@ -35,7 +35,7 @@
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden px-1 md:px-2 py-2 md:py-3 gap-2 md:gap-3 rounded-lg">
       <!-- Sidebar: Tight spacing, closer to screen edge -->
       <aside
-        class="hidden md:flex md:flex-col md:h-full bg-white shadow-lg rounded-lg md:w-72 overflow-hidden"
+        class="hidden md:flex md:flex-col md:h-full bg-white rounded-lg md:w-72 overflow-hidden"
       >
 
         <SidebarNavigation
@@ -70,7 +70,7 @@
         <!-- Page Header -->
         <header
           v-if="$slots.header"
-          class="bg-white border-b border-gray-200 flex-shrink-0"
+          class="bg-gray-100 border-b border-gray-200 flex-shrink-0"
         >
           <div class="px-6 py-5">
             <slot name="header" />
@@ -78,7 +78,7 @@
         </header>
 
         <!-- Dashboard Content -->
-        <div class="flex-1 overflow-y-auto bg-white">
+        <div class="flex-1 overflow-y-auto bg-gray-100">
           <div class="px-6 py-6">
             <slot />
           </div>

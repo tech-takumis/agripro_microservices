@@ -57,7 +57,7 @@
                             @click="toggleGroup(item.title)"
                             :class="[
                                 expandedGroups.includes(item.title)
-                                    ? 'bg-green-600 text-white'
+                                    ? 'text-gray-700'
                                     : 'text-gray-700 hover:bg-green-50',
                                 'w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
                             ]">
@@ -66,7 +66,7 @@
                                     :is="item.icon"
                                     :class="[
                                         expandedGroups.includes(item.title)
-                                            ? 'text-yellow-300'
+                                            ? 'text-yellow-400'
                                             : 'text-green-600 group-hover:text-green-600',
                                         'h-5 w-5 mr-3 transition-colors duration-200',
                                     ]" />
@@ -79,7 +79,7 @@
                             <ChevronDown
                                 :class="[
                                     expandedGroups.includes(item.title)
-                                        ? 'rotate-180 text-white'
+                                        ? 'rotate-180 text-gray-700'
                                         : 'text-gray-500',
                                     'h-4 w-4 transition-transform duration-300',
                                 ]" />
@@ -96,8 +96,8 @@
                                     :to="child.to"
                                     :class="[
                                         isActive(child.to)
-                                            ? 'bg-green-50 text-green-700 border-l-4 border-green-600 font-semibold'
-                                            : 'text-gray-600 hover:bg-green-50 hover:text-green-700',
+                                            ? 'bg-green-600 text-yellow-300 border-l-4 border-yellow-300 font-semibold'
+                                            : 'text-gray-600 hover:text-yellow-400',
                                         'flex items-center pl-7 pr-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
                                     ]">
                                     <span class="truncate">
@@ -219,12 +219,17 @@ watch(
 onMounted(() => {
     const saved = localStorage.getItem('expandedGroups')
     if (saved) expandedGroups.value = JSON.parse(saved)
-    autoExpandActiveGroup()
 })
+
+let shouldSkipNextAutoExpand = true
 
 watch(
     () => route.path,
     () => {
+        if (shouldSkipNextAutoExpand) {
+            shouldSkipNextAutoExpand = false
+            return
+        }
         autoExpandActiveGroup()
     },
 )

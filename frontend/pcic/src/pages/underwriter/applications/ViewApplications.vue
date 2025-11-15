@@ -63,7 +63,7 @@
 
             <!-- Applications List -->
             <div
-                class="bg-gray-100 rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <!-- Header -->
                 <div
                     class="flex items-center justify-between px-6 py-4 border-b border-gray-50">
@@ -78,7 +78,7 @@
                 <!-- Table -->
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-white">
                             <tr>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -115,7 +115,7 @@
                                 v-for="application in filteredApplications"
                                 :key="application.id"
                                 :class="[
-                                    'hover:bg-indigo-50 transition cursor-pointer',
+                                    'hover:bg-green-50 transition cursor-pointer',
                                     selectedApplication?.id === application.id
                                         ? 'bg-indigo-100'
                                         : '',
