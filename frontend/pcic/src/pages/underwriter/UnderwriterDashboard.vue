@@ -173,7 +173,7 @@
 </div>
 
 <!-- Recent Applications for Review -->
-<div class="bg-gray-100 rounded-lg shadow-sm border border-gray-200">
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
   <!-- Header -->
   <div class="px-6 py-4 border-b border-gray-200">
     <div class="flex items-center justify-between">
@@ -211,7 +211,7 @@
   <div class="relative">
     <button
       @click="showFilter = !showFilter"
-      class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-sm border border-gray-300 hover:bg-gray-200 transition"
+      class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-100 transition"
     >
       <Filter class="w-4 h-4 text-gray-600" />
       <span>{{ filterStatus || 'Filter' }}</span>
@@ -263,7 +263,7 @@
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
+      <thead class="bg-white">
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Application ID

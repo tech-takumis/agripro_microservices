@@ -7,7 +7,7 @@
         <textarea
           v-model="newPostContent"
           placeholder="Write Post..."
-          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-500 text-sm resize-none transition-all"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:border-green-400 focus:ring-2 focus:ring-green-400/40 transition duration-200 disabled:opacity-50"
           rows="3"
         ></textarea>
 
