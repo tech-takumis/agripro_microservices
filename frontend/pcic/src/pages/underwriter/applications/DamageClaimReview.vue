@@ -24,18 +24,11 @@
           >
             Approve
           </button>
-          <router-link
-            :to="{ name: 'underwriter-applications-all' }"
-            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-            aria-label="Close damage claim review"
-          >
-            <X class="h-5 w-5" />
-          </router-link>
         </div>
       </div>
     </template>
 
-    <div class="space-y-10">
+    <div class="space-y-10 overflow-x-hidden">
       <!-- Section: AI Damage Analysis -->
       <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <!-- AI Image + Confidence -->
@@ -157,3 +150,16 @@ import { X } from 'lucide-vue-next'
 
 const underwriterNavigation = UNDERWRITER_NAVIGATION
 </script>
+
+<style>
+/* Hide scrollbar for Chrome, Safari and Opera */
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.overflow-y-auto {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+</style>

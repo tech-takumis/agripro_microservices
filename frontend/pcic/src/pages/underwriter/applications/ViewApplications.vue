@@ -104,10 +104,6 @@
                                     class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Applied
                                 </th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -164,17 +160,6 @@
                                 <!-- Date -->
                                 <td class="px-6 py-4 text-sm text-gray-500">
                                     {{ formatDate(application.dateApplied) }}
-                                </td>
-                                <!-- Actions -->
-                                <td class="px-6 py-4 text-right">
-                                    <button
-                                        @click.stop="
-                                            viewApplication(application)
-                                        "
-                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-900 rounded-lg hover:bg-indigo-50 transition">
-                                        <Eye class="w-4 h-4 mr-1.5" />
-                                        View
-                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -787,6 +772,7 @@ import {
 } from 'lucide-vue-next'
 
 const underwriterNavigation = UNDERWRITER_NAVIGATION
+const router = useRouter()
 
 // State
 const applications = ref([])
@@ -1161,7 +1147,7 @@ const refreshApplications = () => {
 }
 
 const selectApplication = application => {
-    selectedApplication.value = application
+    router.push({ name: 'damage-claim-review', query: { id: application.id } })
 }
 
 const viewApplication = application => {
